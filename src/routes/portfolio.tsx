@@ -4,6 +4,7 @@ import { Reveal } from "../components/Reveal";
 import { ProjectGallery } from "../components/ProjectGallery";
 import { SpecCard } from "../components/SpecCard";
 import { TankDimensions } from "../components/TankDimensions";
+import { EquipmentCard } from "../components/EquipmentCard";
 import { whatsappLink } from "../components/WhatsAppButton";
 import {
   X,
