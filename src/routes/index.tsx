@@ -16,6 +16,7 @@ import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json"
 import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
 
 const hero = livingRoomTankAsset.url;
+const livingRoomTank = livingRoomTankAsset.url;
 const saudiService = saudiServiceAsset.url;
 const marineCube = marineCubeAsset.url;
 const styledAquarium = styledAquariumAsset.url;
