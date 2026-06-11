@@ -56,11 +56,11 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-bold mb-4 text-gradient-gold">تابعنا</h4>
             <div className="flex gap-3">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="إنستغرام"
                 className="grid place-items-center h-10 w-10 rounded-xl glass hover:glass-gold transition">
-                <Instagram size={18} />
+                <Instagram size={18} aria-hidden />
               </a>
-              <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer"
+              <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="تيك توك"
                 className="grid place-items-center h-10 w-10 rounded-xl glass hover:glass-gold transition">
                 <TikTokIcon />
               </a>
