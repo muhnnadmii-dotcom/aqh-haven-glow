@@ -11,7 +11,9 @@ export const Route = createFileRoute("/contact")({
       { name: "description", content: "تواصل مع أكوا هيفن للاستفسار، طلب مشروع، الدعم الفني، أو الشراكات التجارية." },
       { property: "og:title", content: "تواصل معنا — أكوا هيفن" },
       { property: "og:description", content: "تواصل معنا في الرياض." },
+      { property: "og:url", content: "/contact" },
     ],
+    links: [{ rel: "canonical", href: "/contact" }],
   }),
   component: ContactPage,
 });
