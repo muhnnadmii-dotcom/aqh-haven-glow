@@ -210,7 +210,9 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
           {/* Specs */}
           <Section title="المواصفات التقنية">
             <div className="grid gap-3 sm:grid-cols-2">
-              <SpecCard icon={Box} label="نوع الزجاج" value={project.specs.glassType} />
+              {project.specs.glassType && (
+                <SpecCard icon={Box} label="نوع الزجاج" value={project.specs.glassType} />
+              )}
               <SpecCard icon={Waves} label="النظام" value={project.specs.systemType} />
               {project.specs.totalSystemVolume && (
                 <SpecCard icon={Layers} label="السعة الإجمالية للنظام" value={project.specs.totalSystemVolume} />
@@ -248,84 +250,89 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
               {project.equipment.waveMakers && (
                 <EquipmentCard icon={Wind} label="مضخات الموجة" value={project.equipment.waveMakers} />
               )}
+              {project.equipment.dosing && (
+                <EquipmentCard icon={Droplet} label="موزع الجرعات (Dosing)" value={project.equipment.dosing} />
+              )}
               {project.equipment.co2 && (
                 <EquipmentCard icon={Leaf} label="نظام CO₂" value={project.equipment.co2} />
               )}
             </div>
           </Section>
 
-          {/* Water System */}
-          {project.waterSystem && (
-            <Section title="نظام المياه و RO/DI">
-              <div className="grid gap-3 sm:grid-cols-2">
-                {project.waterSystem.roDi && (
-                  <EquipmentCard icon={Droplet} label="وحدة RO/DI" value={project.waterSystem.roDi} />
-                )}
-                {project.waterSystem.storage && (
-                  <EquipmentCard icon={Layers} label="خزانات التحضير" value={project.waterSystem.storage} />
-                )}
-                {project.waterSystem.ato && (
-                  <EquipmentCard icon={Activity} label="تعويض التبخر ATO" value={project.waterSystem.ato} />
-                )}
-                {project.waterSystem.salt && (
-                  <EquipmentCard icon={Waves} label="الملح المستخدم" value={project.waterSystem.salt} />
-                )}
+          {/* Water System — bullets */}
+          {project.waterSystem && project.waterSystem.length > 0 && (
+            <Section title="نظام المياه">
+              <div className="glass-gold rounded-2xl p-6">
+                <ul className="space-y-3">
+                  {project.waterSystem.map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm leading-relaxed">
+                      <div className="h-8 w-8 grid place-items-center rounded-lg bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+                        <Droplet size={14} />
+                      </div>
+                      <span className="text-foreground/90 pt-1.5">{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </Section>
           )}
 
-          {/* Automation */}
-          {project.automation && (
-            <Section title="الأتمتة والمراقبة">
-              <div className="grid gap-3 sm:grid-cols-2">
-                {project.automation.controller && (
-                  <EquipmentCard icon={Cpu} label="وحدة التحكم" value={project.automation.controller} />
-                )}
-                {project.automation.sensors && (
-                  <EquipmentCard icon={Gauge} label="الحساسات" value={project.automation.sensors} />
-                )}
-                {project.automation.dosing && (
-                  <EquipmentCard icon={Droplet} label="موزع الجرعات" value={project.automation.dosing} />
-                )}
-                {project.automation.alerts && (
-                  <EquipmentCard icon={Bell} label="التنبيهات" value={project.automation.alerts} />
-                )}
-              </div>
-            </Section>
-          )}
-
-          {/* Service & Warranty */}
-          {project.serviceWarranty && (
-            <Section title="الصيانة والضمان">
-              <div className="glass-gold rounded-2xl p-6 space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-[color:var(--gold)]/20">
-                  <div className="h-11 w-11 grid place-items-center rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
-                    <ShieldCheck size={20} />
+          {/* Add-ons / extra equipment */}
+          {project.addOns && project.addOns.length > 0 && (
+            <Section title="تجهيزات إضافية مشمولة">
+              <div className="grid gap-2 sm:grid-cols-2">
+                {project.addOns.map((item, i) => (
+                  <div
+                    key={i}
+                    className="glass rounded-xl px-4 py-3 border border-white/10 flex items-start gap-2.5 text-sm"
+                  >
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] shrink-0" />
+                    <span className="text-foreground/90 leading-relaxed">{item}</span>
                   </div>
-                  <div className="text-sm font-bold">باقة الرعاية الشاملة</div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <WarrantyItem
-                    icon={CalendarCheck}
-                    label="جدول الصيانة"
-                    value={project.serviceWarranty.schedule}
-                  />
-                  <WarrantyItem
-                    icon={Wrench}
-                    label="ضمان المعدات"
-                    value={project.serviceWarranty.equipmentWarranty}
-                  />
-                  <WarrantyItem
-                    icon={Heart}
-                    label="ضمان الكائنات الحية"
-                    value={project.serviceWarranty.livestockWarranty}
-                  />
-                  <WarrantyItem
-                    icon={Headphones}
-                    label="الدعم الفني"
-                    value={project.serviceWarranty.support}
-                  />
-                </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* Service Packages + Livestock Warranty */}
+          {(project.servicePackages?.length || project.livestockWarranty) && (
+            <Section title="باقات الخدمة والضمان">
+              <div className="space-y-4">
+                {project.livestockWarranty && (
+                  <div className="glass-gold rounded-2xl p-5 flex items-start gap-3">
+                    <div className="h-11 w-11 grid place-items-center rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+                      <Heart size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-xs font-bold text-[color:var(--gold)] mb-1">
+                        ضمان الكائنات الحية (مشمول)
+                      </div>
+                      <div className="text-sm text-foreground/90 leading-relaxed">
+                        {project.livestockWarranty}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {project.servicePackages && project.servicePackages.length > 0 && (
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-3 flex items-center gap-2">
+                      <Sparkles size={14} className="text-[color:var(--gold)]" />
+                      باقات اختيارية يمكن إضافتها للمشروع:
+                    </div>
+                    <div className="grid gap-2">
+                      {project.servicePackages.map((pkg, i) => (
+                        <div
+                          key={i}
+                          className="glass rounded-xl px-4 py-3 border border-white/10 flex items-start gap-3 text-sm"
+                        >
+                          <ShieldCheck size={16} className="text-[color:var(--gold)] mt-0.5 shrink-0" />
+                          <span className="text-foreground/90 leading-relaxed">{pkg}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </Section>
           )}
