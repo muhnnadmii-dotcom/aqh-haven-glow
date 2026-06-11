@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { WhatsAppFloating } from "../components/WhatsAppButton";
+import { ScrollProgress } from "../components/ScrollProgress";
 
 function NotFoundComponent() {
   return (
