@@ -11,7 +11,9 @@ export const Route = createFileRoute("/about")({
       { name: "description", content: "قصة أكوا هيفن ورؤيتنا لنكون العلامة الرائدة في عالم الأحواض المائية بالمملكة." },
       { property: "og:title", content: "من نحن — أكوا هيفن" },
       { property: "og:description", content: "قصة ورؤية أكوا هيفن AQH." },
+      { property: "og:url", content: "/about" },
     ],
+    links: [{ rel: "canonical", href: "/about" }],
   }),
   component: AboutPage,
 });
