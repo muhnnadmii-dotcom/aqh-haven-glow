@@ -1,10 +1,15 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Reveal } from "../components/Reveal";
 import { ArrowRight, Clock } from "lucide-react";
-import betta from "../assets/article-betta.jpg";
-import shrimp from "../assets/article-shrimp.jpg";
-import chem from "../assets/article-chemistry.jpg";
-import planted from "../assets/project-4.jpg";
+import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
+import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
+import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
+import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
+
+const styledAquarium = styledAquariumAsset.url;
+const counterAquarium = counterAquariumAsset.url;
+const canisterFilter = canisterFilterAsset.url;
+const livingRoomTank = livingRoomTankAsset.url;
 
 type Article = {
   slug: string;
@@ -19,7 +24,7 @@ type Article = {
 const articles: Article[] = [
   {
     slug: "betta-care", title: "العناية بسمك البيتا", excerpt: "دليلك الشامل لتربية البيتا في بيئة صحية ومستقرة.",
-    img: betta, time: "6 دقائق", tag: "العناية بالأسماك",
+    img: styledAquarium, time: "6 دقائق", tag: "العناية بالأسماك",
     body: [
       { h: "الحوض المناسب", p: "البيتا يحتاج حداً أدنى 20 لتراً، مع غطاء لأنه قافز بطبيعته. تجنّب الأحواض الدائرية الصغيرة فهي غير مناسبة لصحته." },
       { h: "درجة الحرارة والمياه", p: "الحرارة المثالية بين 24-28°م، مع pH بين 6.5 و7.5. استخدم سخاناً وتأكد من ثبات الحرارة." },
@@ -29,7 +34,7 @@ const articles: Article[] = [
   },
   {
     slug: "shrimp-breeding", title: "تربية الروبيان", excerpt: "كل ما تحتاج لتربية روبيان النيوكاريدينا بنجاح.",
-    img: shrimp, time: "8 دقائق", tag: "اللافقاريات",
+    img: counterAquarium, time: "8 دقائق", tag: "اللافقاريات",
     body: [
       { h: "نوع الروبيان", p: "ابدأ بالنيوكاريدينا (الشيري) فهو الأسهل، ثم انتقل إلى الكاريدينا (الكرستال) بعد اكتساب الخبرة." },
       { h: "المياه", p: "النيوكاريدينا يفضل pH بين 6.5-7.5 وقساوة معتدلة. الكاريدينا تحتاج مياهاً أنعم وحموضة أقل." },
@@ -39,7 +44,7 @@ const articles: Article[] = [
   },
   {
     slug: "planted-tank", title: "تأسيس حوض نباتي", excerpt: "خطوات تأسيس حوض نباتي ناجح من الصفر.",
-    img: planted, time: "10 دقائق", tag: "الأحواض النباتية",
+    img: livingRoomTank, time: "10 دقائق", tag: "الأحواض النباتية",
     body: [
       { h: "الركيزة المغذية", p: "استخدم ركيزة نشطة أو أضف طبقة سماد تحت رمل الحوض لتوفير المغذيات للنباتات." },
       { h: "الإضاءة", p: "إضاءة LED طيف كامل بـ 6500K لمدة 6-8 ساعات يومياً تكفي لمعظم النباتات." },
@@ -49,7 +54,7 @@ const articles: Article[] = [
   },
   {
     slug: "water-chemistry", title: "كيمياء المياه", excerpt: "أساسيات pH والقساوة وتوازن الأمونيا في حوضك.",
-    img: chem, time: "12 دقيقة", tag: "أساسيات",
+    img: canisterFilter, time: "12 دقيقة", tag: "أساسيات",
     body: [
       { h: "ما هي الدورة النيتروجينية؟", p: "تحويل الأمونيا الناتجة من الفضلات إلى نتريت ثم نترات أقل ضرراً، وهي أهم عملية في أي حوض." },
       { h: "pH والقساوة", p: "pH يقيس الحموضة، KH يثبتها. حافظ على قيم مستقرة بدلاً من السعي للأرقام المثالية." },
@@ -59,7 +64,7 @@ const articles: Article[] = [
   },
   {
     slug: "choosing-plants", title: "اختيار النباتات المناسبة", excerpt: "كيف تختار نباتات تتناسب مع إضاءتك وحوضك.",
-    img: planted, time: "7 دقائق", tag: "الأحواض النباتية",
+    img: livingRoomTank, time: "7 دقائق", tag: "الأحواض النباتية",
     body: [
       { h: "النباتات منخفضة الإضاءة", p: "Anubias, Java Moss, Cryptocoryne مناسبة للإضاءة المتوسطة بلا CO₂." },
       { h: "النباتات عالية الإضاءة", p: "HC Cuba, Monte Carlo, Rotala تحتاج إضاءة قوية و CO₂ للحصول على نمو مثالي." },
@@ -68,7 +73,7 @@ const articles: Article[] = [
   },
   {
     slug: "shrimp-breeding-advanced", title: "تكاثر الروبيان", excerpt: "متطلبات نجاح تكاثر الروبيان في المنزل.",
-    img: shrimp, time: "9 دقائق", tag: "اللافقاريات",
+    img: counterAquarium, time: "9 دقائق", tag: "اللافقاريات",
     body: [
       { h: "النضج الجنسي", p: "يصل الروبيان لمرحلة التكاثر بعد 3-4 أشهر. يمكنك تمييز الأنثى من سرجها الأصفر تحت البطن." },
       { h: "البيئة المثالية", p: "مياه مستقرة، حرارة 22-26°م، ونباتات كثيفة تشجع التكاثر." },

@@ -8,13 +8,20 @@ import {
   ShieldCheck, Sparkles, Clock, BadgeCheck,
   Search, PenTool, Hammer, LifeBuoy, Plus, Minus, Star, Quote,
 } from "lucide-react";
-import hero from "../assets/hero-aquarium.jpg";
-import p1 from "../assets/project-1.jpg";
-import p2 from "../assets/project-2.jpg";
-import p3 from "../assets/project-3.jpg";
-import aBetta from "../assets/article-betta.jpg";
-import aShrimp from "../assets/article-shrimp.jpg";
-import aChem from "../assets/article-chemistry.jpg";
+import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
+import saudiServiceAsset from "../assets/aqh-saudi-service.png.asset.json";
+import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
+import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
+import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
+import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
+
+const hero = livingRoomTankAsset.url;
+const livingRoomTank = livingRoomTankAsset.url;
+const saudiService = saudiServiceAsset.url;
+const marineCube = marineCubeAsset.url;
+const styledAquarium = styledAquariumAsset.url;
+const counterAquarium = counterAquariumAsset.url;
+const canisterFilter = canisterFilterAsset.url;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -52,9 +59,9 @@ const process = [
 ];
 
 const featured = [
-  { img: p1, title: "حوض فيلا الرياض", cat: "حوض منزلي" },
-  { img: p2, title: "مطعم الواجهة البحرية", cat: "مشروع تجاري" },
-  { img: p3, title: "حوض مرجاني خاص", cat: "حوض بحري" },
+  { img: livingRoomTank, title: "حوض فيلا الرياض", cat: "حوض منزلي" },
+  { img: saudiService, title: "تنفيذ احترافي داخل الموقع", cat: "خدمة ميدانية" },
+  { img: marineCube, title: "حوض بحري خاص", cat: "حوض بحري" },
 ];
 
 const stats = [
@@ -75,9 +82,9 @@ const testimonials = [
 ];
 
 const articles = [
-  { slug: "betta-care", img: aBetta, title: "العناية بسمك البيتا", excerpt: "دليلك الشامل لتربية سمكة البيتا في بيئة مثالية." },
-  { slug: "shrimp-breeding", img: aShrimp, title: "تربية الروبيان", excerpt: "كل ما تحتاج معرفته عن تربية روبيان النيوكاريدينا." },
-  { slug: "water-chemistry", img: aChem, title: "كيمياء المياه", excerpt: "أساسيات pH والقساوة وتوازن الأمونيا في حوضك." },
+  { slug: "betta-care", img: styledAquarium, title: "العناية بسمك البيتا", excerpt: "دليلك الشامل لتربية سمكة البيتا في بيئة مثالية." },
+  { slug: "shrimp-breeding", img: counterAquarium, title: "تربية الروبيان", excerpt: "كل ما تحتاج معرفته عن تربية روبيان النيوكاريدينا." },
+  { slug: "water-chemistry", img: canisterFilter, title: "كيمياء المياه", excerpt: "أساسيات pH والقساوة وتوازن الأمونيا في حوضك." },
 ];
 
 const faqs = [
@@ -96,7 +103,7 @@ function HomePage() {
       {/* HERO */}
       <section className="relative min-h-[92dvh] overflow-hidden -mt-24 pt-24 flex items-center">
         <div className="absolute inset-0">
-          <img src={hero} alt="حوض أكوا هيفن الفاخر مع شعاع ضوئي" className="h-full w-full object-cover opacity-40" width={1920} height={1080} />
+          <img src={hero} alt="حوض نباتي فاخر داخل مساحة معيشة عصرية من أعمال أكوا هيفن" className="h-full w-full object-cover opacity-40" width={1920} height={1080} />
           <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/40 to-background" />
         </div>
         <div className="light-rays" aria-hidden />

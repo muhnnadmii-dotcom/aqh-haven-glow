@@ -1,12 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Reveal } from "../components/Reveal";
-import p1 from "../assets/project-1.jpg";
-import p3 from "../assets/project-3.jpg";
-import p4 from "../assets/project-4.jpg";
-import shrimp from "../assets/article-shrimp.jpg";
-import betta from "../assets/article-betta.jpg";
-import chem from "../assets/article-chemistry.jpg";
+import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
+import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
+import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
+import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
+import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
+import hangonFilterAsset from "../assets/aqh-hangon-filter.jpg.asset.json";
+
+const livingRoomTank = livingRoomTankAsset.url;
+const marineCube = marineCubeAsset.url;
+const styledAquarium = styledAquariumAsset.url;
+const counterAquarium = counterAquariumAsset.url;
+const canisterFilter = canisterFilterAsset.url;
+const hangonFilter = hangonFilterAsset.url;
 
 export const Route = createFileRoute("/catalog")({
   head: () => ({
@@ -25,16 +32,16 @@ export const Route = createFileRoute("/catalog")({
 type Cat = "all" | "tanks" | "fish" | "shrimp" | "plants" | "equipment";
 
 const products: { id: number; name: string; cat: Exclude<Cat, "all">; desc: string; img: string }[] = [
-  { id: 1, name: "حوض زجاجي بصري ١٢٠ سم", cat: "tanks", desc: "زجاج بصري عالي الشفافية بإطار خفي.", img: p1 },
-  { id: 2, name: "حوض نباتي ٦٠ سم", cat: "tanks", desc: "حوض جاهز للزراعة بأبعاد مثالية.", img: p4 },
-  { id: 3, name: "سمكة البيتا - هاف مون", cat: "fish", desc: "ذكر بيتا ذيل هلال، ألوان فاخرة.", img: betta },
-  { id: 4, name: "سمكة المهرج Ocellaris", cat: "fish", desc: "سمكة بحرية شهيرة وسهلة الرعاية.", img: p3 },
-  { id: 5, name: "روبيان كرستال أحمر", cat: "shrimp", desc: "روبيان زينة بدرجة A تدريجية.", img: shrimp },
-  { id: 6, name: "روبيان نيوكاريدينا", cat: "shrimp", desc: "ألوان متعددة وسهل التربية.", img: shrimp },
-  { id: 7, name: "نبات Monte Carlo", cat: "plants", desc: "نبات أرضي زاحف منخفض النمو.", img: p4 },
-  { id: 8, name: "نبات Buce", cat: "plants", desc: "نبات بطيء النمو ومناسب للمبتدئين.", img: p4 },
-  { id: 9, name: "فلتر خارجي 1200L/h", cat: "equipment", desc: "فلتر احترافي بفعالية فلترة عالية.", img: chem },
-  { id: 10, name: "إضاءة LED للنباتات", cat: "equipment", desc: "إضاءة طيف كامل لنمو النباتات.", img: chem },
+  { id: 1, name: "حوض زجاجي بصري ١٢٠ سم", cat: "tanks", desc: "زجاج بصري عالي الشفافية بإطار خفي.", img: livingRoomTank },
+  { id: 2, name: "حوض نباتي ٦٠ سم", cat: "tanks", desc: "حوض جاهز للزراعة بأبعاد مثالية.", img: styledAquarium },
+  { id: 3, name: "سمكة البيتا - هاف مون", cat: "fish", desc: "خيار مثالي للأحواض الصغيرة الأنيقة.", img: styledAquarium },
+  { id: 4, name: "سمكة المهرج Ocellaris", cat: "fish", desc: "سمكة بحرية شهيرة وسهلة الرعاية.", img: marineCube },
+  { id: 5, name: "روبيان كرستال أحمر", cat: "shrimp", desc: "روبيان زينة بدرجة A تدريجية.", img: counterAquarium },
+  { id: 6, name: "روبيان نيوكاريدينا", cat: "shrimp", desc: "ألوان متعددة وسهل التربية.", img: counterAquarium },
+  { id: 7, name: "نبات Monte Carlo", cat: "plants", desc: "نبات أرضي زاحف منخفض النمو.", img: livingRoomTank },
+  { id: 8, name: "نبات Buce", cat: "plants", desc: "نبات بطيء النمو ومناسب للمبتدئين.", img: styledAquarium },
+  { id: 9, name: "فلتر خارجي 1200L/h", cat: "equipment", desc: "فلتر احترافي بفعالية فلترة عالية.", img: canisterFilter },
+  { id: 10, name: "فلتر علوي مدمج", cat: "equipment", desc: "حل عملي للأحواض المنزلية الصغيرة والمتوسطة.", img: hangonFilter },
 ];
 
 const tabs: { id: Cat; label: string }[] = [

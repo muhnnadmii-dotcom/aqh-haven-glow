@@ -2,10 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Reveal } from "../components/Reveal";
 import { X } from "lucide-react";
-import p1 from "../assets/project-1.jpg";
-import p2 from "../assets/project-2.jpg";
-import p3 from "../assets/project-3.jpg";
-import p4 from "../assets/project-4.jpg";
+import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
+import saudiServiceAsset from "../assets/aqh-saudi-service.png.asset.json";
+import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
+import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
+import consultationTankAsset from "../assets/aqh-consultation-tank.png.asset.json";
+import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
+
+const livingRoomTank = livingRoomTankAsset.url;
+const saudiService = saudiServiceAsset.url;
+const marineCube = marineCubeAsset.url;
+const styledAquarium = styledAquariumAsset.url;
+const consultationTank = consultationTankAsset.url;
+const counterAquarium = counterAquariumAsset.url;
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
@@ -34,12 +43,12 @@ const projects: {
   equip: string;
   desc: string;
 }[] = [
-  { id: 1, img: p1, title: "حوض فيلا الرياض", cat: "home", catLabel: "حوض منزلي", dims: "240×80×70 سم", system: "نباتي مفتوح", equip: "فلتر خارجي، إضاءة LED مخصصة", desc: "حوض جداري فاخر مدمج في صالة فيلا، يجمع بين الديكور المعاصر وحياة مائية متنوعة." },
-  { id: 2, img: p2, title: "مطعم الواجهة البحرية", cat: "commercial", catLabel: "مشروع تجاري", dims: "400×120×100 سم", system: "حي بحري", equip: "نظام تبريد متقدم، فلتر بروتين", desc: "نظام مأكولات بحرية حية يضمن جودة عرض وحفظ المخزون الحي في المطعم." },
-  { id: 3, img: p3, title: "حوض مرجاني خاص", cat: "marine", catLabel: "حوض بحري", dims: "180×60×60 سم", system: "ريف بحري", equip: "إضاءة Reef LED، Skimmer، Wave Maker", desc: "حوض مرجاني مزدهر بمرجانيات ملونة وأسماك مهرج، بإضاءة احترافية." },
-  { id: 4, img: p4, title: "حوض نباتي طبيعي", cat: "planted", catLabel: "حوض نباتي", dims: "120×50×50 سم", system: "نباتي عذب", equip: "CO₂، ركيزة مغذية، فلتر داخلي", desc: "تكوين Aquascape طبيعي على طراز الغابات اليابانية." },
-  { id: 5, img: p1, title: "مكتب تنفيذي - حي السفارات", cat: "home", catLabel: "حوض منزلي", dims: "200×60×70 سم", system: "نباتي عذب", equip: "إضاءة احترافية، Sump فلتر", desc: "حوض زجاجي بإطار خفي، تركيب في مكتب تنفيذي." },
-  { id: 6, img: p2, title: "فندق راقي - الرياض", cat: "commercial", catLabel: "مشروع تجاري", dims: "600×100×150 سم", system: "بحري سيكلت", equip: "نظام إعادة تدوير، فلتر صناعي", desc: "حوض ضخم في لوبي فندق ٥ نجوم بأسماك بحرية متنوعة." },
+  { id: 1, img: livingRoomTank, title: "حوض فيلا الرياض", cat: "home", catLabel: "حوض منزلي", dims: "240×80×70 سم", system: "نباتي مفتوح", equip: "فلتر خارجي، إضاءة LED مخصصة", desc: "حوض جداري فاخر مدمج في صالة فيلا، يجمع بين الديكور المعاصر وحياة مائية متنوعة." },
+  { id: 2, img: saudiService, title: "مطعم الواجهة البحرية", cat: "commercial", catLabel: "مشروع تجاري", dims: "400×120×100 سم", system: "حي بحري", equip: "نظام تبريد متقدم، فلتر بروتين", desc: "تنفيذ احترافي يعكس مستوى العرض والعناية اليومية للأنظمة المائية الراقية." },
+  { id: 3, img: marineCube, title: "حوض مرجاني خاص", cat: "marine", catLabel: "حوض بحري", dims: "180×60×60 سم", system: "ريف بحري", equip: "إضاءة Reef LED، Skimmer، Wave Maker", desc: "حوض بحري صغير بتركيب نظيف وتوازن بصري يبرز الأسماك والكائنات البحرية." },
+  { id: 4, img: styledAquarium, title: "حوض نباتي طبيعي", cat: "planted", catLabel: "حوض نباتي", dims: "120×50×50 سم", system: "نباتي عذب", equip: "CO₂، ركيزة مغذية، فلتر داخلي", desc: "تكوين Aquascape طبيعي على طراز الغابات اليابانية بإخراج بصري هادئ وفاخر." },
+  { id: 5, img: consultationTank, title: "مكتب تنفيذي - حي السفارات", cat: "home", catLabel: "حوض منزلي", dims: "200×60×70 سم", system: "نباتي عذب", equip: "إضاءة احترافية، Sump فلتر", desc: "حوض زجاجي بإطار خفي ينسجم مع بيئات العمل والضيافة الراقية." },
+  { id: 6, img: counterAquarium, title: "ركن عرض داخلي - الرياض", cat: "commercial", catLabel: "مشروع تجاري", dims: "160×60×60 سم", system: "عذب مزروع", equip: "فلترة هادئة، إضاءة عرض", desc: "تصميم مناسب لأسطح العرض والكونترات مع حضور بصري قوي ومساحة مدمجة." },
 ];
 
 const tabs: { id: Cat; label: string }[] = [
