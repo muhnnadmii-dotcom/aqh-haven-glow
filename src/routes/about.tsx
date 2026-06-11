@@ -11,7 +11,9 @@ export const Route = createFileRoute("/about")({
       { name: "description", content: "قصة أكوا هيفن ورؤيتنا لنكون العلامة الرائدة في عالم الأحواض المائية بالمملكة." },
       { property: "og:title", content: "من نحن — أكوا هيفن" },
       { property: "og:description", content: "قصة ورؤية أكوا هيفن AQH." },
+      { property: "og:url", content: "/about" },
     ],
+    links: [{ rel: "canonical", href: "/about" }],
   }),
   component: AboutPage,
 });
@@ -81,7 +83,7 @@ function AboutPage() {
             <Reveal key={v.title} delay={i * 100}>
               <div className="glass rounded-2xl p-6 text-center h-full">
                 <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl glass-gold mb-4">
-                  <v.icon className="text-gradient-gold" size={24} />
+                  <v.icon className="text-gold" size={24} />
                 </div>
                 <h3 className="font-bold mb-2">{v.title}</h3>
                 <p className="text-sm text-muted-foreground">{v.desc}</p>

@@ -10,7 +10,9 @@ export const Route = createFileRoute("/services")({
       { name: "description", content: "تصميم أحواض مخصصة، أنظمة مأكولات بحرية حية للمطاعم، صيانة دورية، واستشارات احترافية." },
       { property: "og:title", content: "خدماتنا — أكوا هيفن" },
       { property: "og:description", content: "خدمات متكاملة لعالمك المائي من التصميم حتى الصيانة." },
+      { property: "og:url", content: "/services" },
     ],
+    links: [{ rel: "canonical", href: "/services" }],
   }),
   component: ServicesPage,
 });
@@ -64,7 +66,7 @@ function ServicesPage() {
           <Reveal key={s.title} delay={i * 80}>
             <div className={`glass rounded-3xl p-8 md:p-12 grid gap-8 md:grid-cols-[auto_1fr_auto] items-start`}>
               <div className="grid h-16 w-16 place-items-center rounded-2xl glass-gold">
-                <s.icon className="text-gradient-gold" size={28} />
+                <s.icon className="text-gold" size={28} />
               </div>
               <div>
                 <h3 className="text-2xl font-bold mb-3">{s.title}</h3>

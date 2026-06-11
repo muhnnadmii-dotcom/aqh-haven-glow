@@ -14,7 +14,9 @@ export const Route = createFileRoute("/portfolio")({
       { name: "description", content: "مجموعة مختارة من مشاريع أكوا هيفن: أحواض منزلية ومشاريع تجارية وأحواض بحرية ونباتية." },
       { property: "og:title", content: "أعمالنا — أكوا هيفن" },
       { property: "og:description", content: "مشاريع مختارة من أحواض منزلية وتجارية وبحرية ونباتية." },
+      { property: "og:url", content: "/portfolio" },
     ],
+    links: [{ rel: "canonical", href: "/portfolio" }],
   }),
   component: PortfolioPage,
 });

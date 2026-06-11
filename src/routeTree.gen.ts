@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
@@ -16,7 +17,14 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CatalogRouteImport } from './routes/catalog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KnowledgeIndexRouteImport } from './routes/knowledge.index'
+import { Route as KnowledgeSlugRouteImport } from './routes/knowledge.$slug'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
@@ -52,24 +60,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KnowledgeIndexRoute = KnowledgeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => KnowledgeRoute,
+} as any)
+const KnowledgeSlugRoute = KnowledgeSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => KnowledgeRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/catalog': typeof CatalogRoute
   '/contact': typeof ContactRoute
-  '/knowledge': typeof KnowledgeRoute
+  '/knowledge': typeof KnowledgeRouteWithChildren
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/knowledge/$slug': typeof KnowledgeSlugRoute
+  '/knowledge/': typeof KnowledgeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/catalog': typeof CatalogRoute
   '/contact': typeof ContactRoute
-  '/knowledge': typeof KnowledgeRoute
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/knowledge/$slug': typeof KnowledgeSlugRoute
+  '/knowledge': typeof KnowledgeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,9 +100,12 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/catalog': typeof CatalogRoute
   '/contact': typeof ContactRoute
-  '/knowledge': typeof KnowledgeRoute
+  '/knowledge': typeof KnowledgeRouteWithChildren
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/knowledge/$slug': typeof KnowledgeSlugRoute
+  '/knowledge/': typeof KnowledgeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,15 +117,20 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/portfolio'
     | '/services'
+    | '/sitemap.xml'
+    | '/knowledge/$slug'
+    | '/knowledge/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/catalog'
     | '/contact'
-    | '/knowledge'
     | '/portfolio'
     | '/services'
+    | '/sitemap.xml'
+    | '/knowledge/$slug'
+    | '/knowledge'
   id:
     | '__root__'
     | '/'
@@ -109,6 +140,9 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/portfolio'
     | '/services'
+    | '/sitemap.xml'
+    | '/knowledge/$slug'
+    | '/knowledge/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -116,13 +150,21 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CatalogRoute: typeof CatalogRoute
   ContactRoute: typeof ContactRoute
-  KnowledgeRoute: typeof KnowledgeRoute
+  KnowledgeRoute: typeof KnowledgeRouteWithChildren
   PortfolioRoute: typeof PortfolioRoute
   ServicesRoute: typeof ServicesRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services': {
       id: '/services'
       path: '/services'
@@ -172,17 +214,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/knowledge/': {
+      id: '/knowledge/'
+      path: '/'
+      fullPath: '/knowledge/'
+      preLoaderRoute: typeof KnowledgeIndexRouteImport
+      parentRoute: typeof KnowledgeRoute
+    }
+    '/knowledge/$slug': {
+      id: '/knowledge/$slug'
+      path: '/$slug'
+      fullPath: '/knowledge/$slug'
+      preLoaderRoute: typeof KnowledgeSlugRouteImport
+      parentRoute: typeof KnowledgeRoute
+    }
   }
 }
+
+interface KnowledgeRouteChildren {
+  KnowledgeSlugRoute: typeof KnowledgeSlugRoute
+  KnowledgeIndexRoute: typeof KnowledgeIndexRoute
+}
+
+const KnowledgeRouteChildren: KnowledgeRouteChildren = {
+  KnowledgeSlugRoute: KnowledgeSlugRoute,
+  KnowledgeIndexRoute: KnowledgeIndexRoute,
+}
+
+const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
+  KnowledgeRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CatalogRoute: CatalogRoute,
   ContactRoute: ContactRoute,
-  KnowledgeRoute: KnowledgeRoute,
+  KnowledgeRoute: KnowledgeRouteWithChildren,
   PortfolioRoute: PortfolioRoute,
   ServicesRoute: ServicesRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

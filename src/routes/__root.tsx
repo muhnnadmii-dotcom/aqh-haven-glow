@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { WhatsAppFloating } from "../components/WhatsAppButton";
+import { ScrollProgress } from "../components/ScrollProgress";
 
 function NotFoundComponent() {
   return (
@@ -85,6 +86,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap",
       },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "أكوا هيفن",
+          alternateName: "Aqua Haven",
+          url: "/",
+          description: "تصميم وتركيب وصيانة الأحواض المائية الفاخرة في الرياض، المملكة العربية السعودية.",
+          areaServed: "SA",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "الرياض",
+            addressCountry: "SA",
+          },
+          contactPoint: {
+            "@type": "ContactPoint",
+            telephone: "+966527044200",
+            contactType: "customer service",
+            availableLanguage: ["Arabic", "English"],
+          },
+          sameAs: ["https://aqh.sa", "https://instagram.com", "https://tiktok.com"],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -111,8 +138,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ScrollProgress />
       <Navbar />
-      <main className="pt-24">
+      <main id="main" className="pt-24">
         <Outlet />
       </main>
       <Footer />
