@@ -17,6 +17,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CatalogRouteImport } from './routes/catalog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KnowledgeSlugRouteImport } from './routes/knowledge.$slug'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -58,26 +59,33 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KnowledgeSlugRoute = KnowledgeSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => KnowledgeRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/catalog': typeof CatalogRoute
   '/contact': typeof ContactRoute
-  '/knowledge': typeof KnowledgeRoute
+  '/knowledge': typeof KnowledgeRouteWithChildren
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/knowledge/$slug': typeof KnowledgeSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/catalog': typeof CatalogRoute
   '/contact': typeof ContactRoute
-  '/knowledge': typeof KnowledgeRoute
+  '/knowledge': typeof KnowledgeRouteWithChildren
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/knowledge/$slug': typeof KnowledgeSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,10 +93,11 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/catalog': typeof CatalogRoute
   '/contact': typeof ContactRoute
-  '/knowledge': typeof KnowledgeRoute
+  '/knowledge': typeof KnowledgeRouteWithChildren
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/knowledge/$slug': typeof KnowledgeSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/services'
     | '/sitemap.xml'
+    | '/knowledge/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/services'
     | '/sitemap.xml'
+    | '/knowledge/$slug'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/services'
     | '/sitemap.xml'
+    | '/knowledge/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -128,7 +140,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CatalogRoute: typeof CatalogRoute
   ContactRoute: typeof ContactRoute
-  KnowledgeRoute: typeof KnowledgeRoute
+  KnowledgeRoute: typeof KnowledgeRouteWithChildren
   PortfolioRoute: typeof PortfolioRoute
   ServicesRoute: typeof ServicesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -192,15 +204,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/knowledge/$slug': {
+      id: '/knowledge/$slug'
+      path: '/$slug'
+      fullPath: '/knowledge/$slug'
+      preLoaderRoute: typeof KnowledgeSlugRouteImport
+      parentRoute: typeof KnowledgeRoute
+    }
   }
 }
+
+interface KnowledgeRouteChildren {
+  KnowledgeSlugRoute: typeof KnowledgeSlugRoute
+}
+
+const KnowledgeRouteChildren: KnowledgeRouteChildren = {
+  KnowledgeSlugRoute: KnowledgeSlugRoute,
+}
+
+const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
+  KnowledgeRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CatalogRoute: CatalogRoute,
   ContactRoute: ContactRoute,
-  KnowledgeRoute: KnowledgeRoute,
+  KnowledgeRoute: KnowledgeRouteWithChildren,
   PortfolioRoute: PortfolioRoute,
   ServicesRoute: ServicesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
