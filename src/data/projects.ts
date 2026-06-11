@@ -10,6 +10,10 @@ import qairawan2 from "../assets/qairawan-2.png.asset.json";
 import qairawan3 from "../assets/qairawan-3.png.asset.json";
 import qairawan4 from "../assets/qairawan-4.png.asset.json";
 import qairawan5 from "../assets/qairawan-5.png.asset.json";
+import marineNew1 from "../assets/marine-new-C55A0DB5.png.asset.json";
+import marineNew2 from "../assets/marine-new-16D6673B.png.asset.json";
+import marineNew3 from "../assets/marine-new-64669583.png.asset.json";
+import marineNew4 from "../assets/marine-new-DF24E5B9.png.asset.json";
 
 export type ProjectCategory = "home" | "commercial" | "planted";
 
