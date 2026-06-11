@@ -65,7 +65,7 @@ export const projects: Project[] = [
   {
     id: 1,
     slug: "villa-qairawan",
-    title: "حوض فيلا",
+    title: "حوض بحري ",
     cat: "home",
     catLabel: "حوض منزلي",
     featured: true,
