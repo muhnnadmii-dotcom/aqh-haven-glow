@@ -6,7 +6,7 @@ import shrimp from "../assets/article-shrimp.jpg";
 import chem from "../assets/article-chemistry.jpg";
 import planted from "../assets/project-4.jpg";
 
-export const Route = createFileRoute("/knowledge")({
+export const Route = createFileRoute("/knowledge/")({
   head: () => ({
     meta: [
       { title: "مركز المعرفة — أكوا هيفن" },
