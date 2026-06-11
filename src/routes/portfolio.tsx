@@ -20,6 +20,18 @@ import {
   Calendar,
   Sparkles,
   MessageCircle,
+  Droplet,
+  Cpu,
+  Activity,
+  Bell,
+  ShieldCheck,
+  Gauge,
+  Layers,
+  Zap,
+  Wrench,
+  CalendarCheck,
+  Heart,
+  Headphones,
 } from "lucide-react";
 import { projects, formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
 
@@ -200,13 +212,31 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
             <div className="grid gap-3 sm:grid-cols-2">
               <SpecCard icon={Box} label="نوع الزجاج" value={project.specs.glassType} />
               <SpecCard icon={Waves} label="النظام" value={project.specs.systemType} />
+              {project.specs.totalSystemVolume && (
+                <SpecCard icon={Layers} label="السعة الإجمالية للنظام" value={project.specs.totalSystemVolume} />
+              )}
+              {project.specs.glassBonding && (
+                <SpecCard icon={Zap} label="نوع اللصق" value={project.specs.glassBonding} />
+              )}
+              {project.specs.parIntensity && (
+                <SpecCard icon={Gauge} label="كثافة الإضاءة (PAR)" value={project.specs.parIntensity} />
+              )}
+              {project.specs.turnover && (
+                <SpecCard icon={Activity} label="معدل التدوير" value={project.specs.turnover} />
+              )}
             </div>
           </Section>
 
           {/* Equipment */}
           <Section title="المعدات">
             <div className="grid gap-3 sm:grid-cols-2">
-              <EquipmentCard icon={Filter} label="الفلتر" value={project.equipment.filter} />
+              <EquipmentCard icon={Filter} label="الفلتر / Sump" value={project.equipment.filter} />
+              {project.equipment.skimmer && (
+                <EquipmentCard icon={Wind} label="السكيمر" value={project.equipment.skimmer} />
+              )}
+              {project.equipment.returnPump && (
+                <EquipmentCard icon={Waves} label="مضخة العودة" value={project.equipment.returnPump} />
+              )}
               <EquipmentCard icon={Sun} label="الإضاءة" value={project.equipment.lighting} />
               {project.equipment.heatingCooling && (
                 <EquipmentCard
@@ -223,6 +253,83 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
               )}
             </div>
           </Section>
+
+          {/* Water System */}
+          {project.waterSystem && (
+            <Section title="نظام المياه و RO/DI">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {project.waterSystem.roDi && (
+                  <EquipmentCard icon={Droplet} label="وحدة RO/DI" value={project.waterSystem.roDi} />
+                )}
+                {project.waterSystem.storage && (
+                  <EquipmentCard icon={Layers} label="خزانات التحضير" value={project.waterSystem.storage} />
+                )}
+                {project.waterSystem.ato && (
+                  <EquipmentCard icon={Activity} label="تعويض التبخر ATO" value={project.waterSystem.ato} />
+                )}
+                {project.waterSystem.salt && (
+                  <EquipmentCard icon={Waves} label="الملح المستخدم" value={project.waterSystem.salt} />
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* Automation */}
+          {project.automation && (
+            <Section title="الأتمتة والمراقبة">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {project.automation.controller && (
+                  <EquipmentCard icon={Cpu} label="وحدة التحكم" value={project.automation.controller} />
+                )}
+                {project.automation.sensors && (
+                  <EquipmentCard icon={Gauge} label="الحساسات" value={project.automation.sensors} />
+                )}
+                {project.automation.dosing && (
+                  <EquipmentCard icon={Droplet} label="موزع الجرعات" value={project.automation.dosing} />
+                )}
+                {project.automation.alerts && (
+                  <EquipmentCard icon={Bell} label="التنبيهات" value={project.automation.alerts} />
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* Service & Warranty */}
+          {project.serviceWarranty && (
+            <Section title="الصيانة والضمان">
+              <div className="glass-gold rounded-2xl p-6 space-y-4">
+                <div className="flex items-center gap-3 pb-3 border-b border-[color:var(--gold)]/20">
+                  <div className="h-11 w-11 grid place-items-center rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div className="text-sm font-bold">باقة الرعاية الشاملة</div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <WarrantyItem
+                    icon={CalendarCheck}
+                    label="جدول الصيانة"
+                    value={project.serviceWarranty.schedule}
+                  />
+                  <WarrantyItem
+                    icon={Wrench}
+                    label="ضمان المعدات"
+                    value={project.serviceWarranty.equipmentWarranty}
+                  />
+                  <WarrantyItem
+                    icon={Heart}
+                    label="ضمان الكائنات الحية"
+                    value={project.serviceWarranty.livestockWarranty}
+                  />
+                  <WarrantyItem
+                    icon={Headphones}
+                    label="الدعم الفني"
+                    value={project.serviceWarranty.support}
+                  />
+                </div>
+              </div>
+            </Section>
+          )}
+
 
           {/* Contents */}
           <Section title="محتويات الحوض">
@@ -306,6 +413,28 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         {title}
       </h3>
       {children}
+    </div>
+  );
+}
+
+function WarrantyItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: import("lucide-react").LucideIcon;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="h-9 w-9 grid place-items-center rounded-lg bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+        <Icon size={16} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-xs font-bold text-[color:var(--gold)] mb-1">{label}</div>
+        <p className="text-sm text-foreground/90 leading-relaxed">{value}</p>
+      </div>
     </div>
   );
 }
