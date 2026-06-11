@@ -20,6 +20,18 @@ import {
   Calendar,
   Sparkles,
   MessageCircle,
+  Droplet,
+  Cpu,
+  Activity,
+  Bell,
+  ShieldCheck,
+  Gauge,
+  Layers,
+  Zap,
+  Wrench,
+  CalendarCheck,
+  Heart,
+  Headphones,
 } from "lucide-react";
 import { projects, formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
 
