@@ -243,7 +243,7 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
               {project.equipment.heatingCooling && (
                 <EquipmentCard
                   icon={Thermometer}
-                  label="التدفئة / التبريد"
+                  label="التدفئة"
                   value={project.equipment.heatingCooling}
                 />
               )}
