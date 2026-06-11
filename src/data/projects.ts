@@ -19,8 +19,9 @@ import fahdRiver1 from "../assets/fahd-river-1.png.asset.json";
 import fahdRiver2 from "../assets/fahd-river-2.png.asset.json";
 import fahdRiver3 from "../assets/fahd-river-3.png.asset.json";
 import fahdRiver4 from "../assets/fahd-river-4.png.asset.json";
+import marineReefPurple from "../assets/marine-reef-purple.png.asset.json";
 
-export type ProjectCategory = "home" | "commercial" | "planted";
+export type ProjectCategory = "living-room" | "office" | "entrance" | "commercial";
 
 export type Project = {
   id: number;
