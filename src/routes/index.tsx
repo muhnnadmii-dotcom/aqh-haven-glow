@@ -110,16 +110,13 @@ function HomePage() {
         <Bubbles count={22} />
 
         <div className="relative mx-auto max-w-7xl px-6 py-20 text-center">
-          <Reveal>
-            <span className="inline-flex items-center gap-2 glass-gold rounded-full px-4 py-1.5 text-xs tracking-widest text-gradient-gold mb-6">
-              <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
-              AQUA HAVEN · الرياض
-            </span>
-          </Reveal>
           <Reveal delay={120}>
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold leading-[1.15] mb-6 tracking-tight">
-              عالمك المائي <br />
-              <span className="text-gradient-gold">يبدأ من هنا</span>
+            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold leading-[1.05] mb-6 tracking-tight">
+              <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
+                عالمك المائي
+              </span>
+              <br />
+              <span className="text-foreground/95">يبدأ من هنا</span>
             </h1>
           </Reveal>
           <Reveal delay={240}>
