@@ -64,13 +64,13 @@ export const projects: Project[] = [
       dimensions: "165 × 80 × 80 سم",
       volumeLiters: "1,056 لتر",
       glassType: "زجاج Optiwhite بسماكة 15 ملم",
-      systemType: "حي بحري — Reef",
+      systemType: "نظام حي بحري مرجاني (Reef) — مكثف SPS/LPS",
     },
     equipment: {
-      filter: "Sump احترافي + Protein Skimmer",
-      lighting: "إضاءة Reef LED احترافية",
-      heatingCooling: "Chiller + سخان Titanium",
-      waveMakers: "مضخات موجة ثنائية",
+      filter: "Sump زجاجي مخصص 120×50×45 سم (3 مراحل: Over-flow / Refugium / Return) + Bubble Magus Protein Skimmer G5 + مضخة تدوير Neptune COR-20",
+      lighting: "إضاءة Reef LED Aqua Illumination Hydra 64HD × 3 وحدات (Spread + Director) — طيف كامل UV+UV-V+Royal Blue+Cool White+Green+Red",
+      heatingCooling: "Chiller مائي 1/2 HP (Teco TK) + سخان Titanium 500W مع متحكم Neptune Apex",
+      waveMakers: "مضخات موجة EcoTech Marine Vortech MP40wQD × 2 (أنماط متعددة: Pulse / Lagoon / ReefCrest)",
     },
     contents: {
       fish: ["Sailfin Tang", "Clownfish", "Angelfish", "Wrasse"],
