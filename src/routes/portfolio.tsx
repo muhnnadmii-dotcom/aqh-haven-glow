@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Reveal } from "../components/Reveal";
 import { ProjectGallery } from "../components/ProjectGallery";
 import { SpecCard } from "../components/SpecCard";
+import { TankDimensions } from "../components/TankDimensions";
 import { whatsappLink } from "../components/WhatsAppButton";
 import {
   X,
@@ -188,11 +189,17 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
             <p className="text-muted-foreground mt-4 leading-relaxed">{project.description}</p>
           </div>
 
+          {/* Dimensions & Capacity */}
+          <Section title="الأبعاد والسعة">
+            <TankDimensions
+              dimensions={project.specs.dimensions}
+              volumeLiters={project.specs.volumeLiters}
+            />
+          </Section>
+
           {/* Specs */}
           <Section title="المواصفات التقنية">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <SpecCard icon={Ruler} label="الأبعاد" value={project.specs.dimensions} />
-              <SpecCard icon={Droplets} label="السعة" value={project.specs.volumeLiters} />
+            <div className="grid gap-3 sm:grid-cols-2">
               <SpecCard icon={Box} label="نوع الزجاج" value={project.specs.glassType} />
               <SpecCard icon={Waves} label="النظام" value={project.specs.systemType} />
             </div>
