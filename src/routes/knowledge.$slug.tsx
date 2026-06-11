@@ -122,7 +122,7 @@ export const Route = createFileRoute("/knowledge/$slug")({
 });
 
 function ArticlePage() {
-  const { article } = Route.useLoaderData();
+  const { article } = Route.useLoaderData() as { article: Article };
   return (
     <article className="mx-auto max-w-3xl px-6 py-12">
       <Reveal>
