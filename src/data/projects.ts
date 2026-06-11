@@ -5,6 +5,11 @@ import styledAquarium from "../assets/aqh-styled-aquarium.png.asset.json";
 import consultationTank from "../assets/aqh-consultation-tank.png.asset.json";
 import counterAquarium from "../assets/aqh-counter-aquarium.png.asset.json";
 import bannerTank from "../assets/aqh-banner-tank.png.asset.json";
+import qairawan1 from "../assets/qairawan-1.png.asset.json";
+import qairawan2 from "../assets/qairawan-2.png.asset.json";
+import qairawan3 from "../assets/qairawan-3.png.asset.json";
+import qairawan4 from "../assets/qairawan-4.png.asset.json";
+import qairawan5 from "../assets/qairawan-5.png.asset.json";
 
 export type ProjectCategory = "home" | "commercial" | "marine" | "planted";
 
@@ -17,7 +22,6 @@ export type Project = {
   featured?: boolean;
   location: string;
   year: string;
-  duration: string;
   cover: string;
   images: string[];
   description: string;
@@ -45,36 +49,35 @@ export type Project = {
 export const projects: Project[] = [
   {
     id: 1,
-    slug: "villa-riyadh",
-    title: "حوض فيلا الرياض",
-    cat: "home",
-    catLabel: "حوض منزلي",
+    slug: "villa-qairawan",
+    title: "حوض فيلا القيروان",
+    cat: "marine",
+    catLabel: "حوض بحري",
     featured: true,
-    location: "الرياض — حي الياسمين",
-    year: "2025",
-    duration: "أسبوعان",
-    cover: livingRoomTank.url,
-    images: [livingRoomTank.url, consultationTank.url, styledAquarium.url, bannerTank.url],
+    location: "الرياض — حي القيروان",
+    year: "2026",
+    cover: qairawan1.url,
+    images: [qairawan1.url, qairawan2.url, qairawan3.url, qairawan4.url, qairawan5.url],
     description:
-      "حوض جداري فاخر مدمج في صالة فيلا، يجمع بين الديكور المعاصر وحياة مائية متنوعة. صُمم خصيصاً ليكون قطعة محورية في المجلس مع إضاءة مسرحية ونظام فلترة صامت.",
+      "حوض بحري فاخر مُنفّذ داخل فيلا بحي القيروان، يجمع بين تصميم خزانة سوداء أنيقة وإضاءة ريف احترافية تُبرز جمال الصخور الحية والمرجان. تم تجهيز الحوض بنظام دعم حياة بحري متكامل (Sump + Skimmer) لضمان الاستقرار البيولوجي.",
     specs: {
-      dimensions: "240 × 80 × 70 سم",
-      volumeLiters: "1,344 لتر",
+      dimensions: "165 × 80 × 80 سم",
+      volumeLiters: "1,056 لتر",
       glassType: "زجاج Optiwhite بسماكة 15 ملم",
-      systemType: "نباتي عذب مفتوح",
+      systemType: "حي بحري — Reef",
     },
     equipment: {
-      filter: "فلتر خارجي Canister — Oase BioMaster 850",
-      lighting: "إضاءة LED احترافية Chihiros WRGB II Pro",
-      heatingCooling: "سخان Eheim 300W × 2 + مروحة تبريد",
-      co2: "نظام CO₂ مضغوط مع ساعة ليلية",
+      filter: "Sump احترافي + Protein Skimmer",
+      lighting: "إضاءة Reef LED احترافية",
+      heatingCooling: "Chiller + سخان Titanium",
+      waveMakers: "مضخات موجة ثنائية",
     },
     contents: {
-      fish: ["Discus", "Cardinal Tetra", "Corydoras", "Otocinclus", "Bristlenose Pleco"],
-      plantsOrCorals: ["Monte Carlo", "Rotala H'ra", "Bucephalandra", "Anubias Nana"],
-      decor: "صخور Seiryu وأخشاب Spider Wood",
+      fish: ["Sailfin Tang", "Clownfish", "Angelfish", "Wrasse"],
+      plantsOrCorals: ["Live Rock", "LPS Corals", "Soft Corals"],
+      decor: "صخور حية + رمل أراجونيت ناعم",
     },
-    priceRange: { min: 28000, max: 42000, currency: "SAR" },
+    priceRange: { min: 65000, max: 95000, currency: "SAR" },
   },
   {
     id: 2,
@@ -85,7 +88,6 @@ export const projects: Project[] = [
     featured: true,
     location: "الرياض — بوليفارد",
     year: "2025",
-    duration: "4 أسابيع",
     cover: saudiService.url,
     images: [saudiService.url, marineCube.url, bannerTank.url],
     description:
@@ -117,8 +119,7 @@ export const projects: Project[] = [
     catLabel: "حوض بحري",
     featured: true,
     location: "الرياض — حي السفارات",
-    year: "2024",
-    duration: "3 أسابيع",
+    year: "2025",
     cover: marineCube.url,
     images: [marineCube.url, styledAquarium.url, counterAquarium.url],
     description:
@@ -142,7 +143,6 @@ export const projects: Project[] = [
     },
     priceRange: { min: 55000, max: 85000, currency: "SAR" },
   },
-  // — هياكل جاهزة للإضافة لاحقاً —
   {
     id: 4,
     slug: "natural-planted",
@@ -150,8 +150,7 @@ export const projects: Project[] = [
     cat: "planted",
     catLabel: "حوض نباتي",
     location: "الرياض",
-    year: "2024",
-    duration: "10 أيام",
+    year: "2025",
     cover: styledAquarium.url,
     images: [styledAquarium.url, livingRoomTank.url],
     description: "تكوين Aquascape طبيعي على طراز الغابات اليابانية بإخراج بصري هادئ.",
@@ -179,8 +178,7 @@ export const projects: Project[] = [
     cat: "home",
     catLabel: "حوض منزلي",
     location: "الرياض",
-    year: "2024",
-    duration: "أسبوعان",
+    year: "2025",
     cover: consultationTank.url,
     images: [consultationTank.url, livingRoomTank.url],
     description: "حوض زجاجي بإطار خفي ينسجم مع بيئات العمل والضيافة الراقية.",
@@ -207,8 +205,7 @@ export const projects: Project[] = [
     cat: "commercial",
     catLabel: "مشروع تجاري",
     location: "الرياض",
-    year: "2024",
-    duration: "أسبوع",
+    year: "2025",
     cover: counterAquarium.url,
     images: [counterAquarium.url, bannerTank.url],
     description: "تصميم مناسب لأسطح العرض والكونترات مع حضور بصري قوي ومساحة مدمجة.",
