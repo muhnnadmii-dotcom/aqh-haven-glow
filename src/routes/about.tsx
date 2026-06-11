@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Reveal } from "../components/Reveal";
 import { Bubbles } from "../components/Bubbles";
 import { Award, Eye, Heart, Sparkles } from "lucide-react";
-import hero from "../assets/hero-aquarium.jpg";
+import consultationTankAsset from "../assets/aqh-consultation-tank.png.asset.json";
+
+const hero = consultationTankAsset.url;
 
 export const Route = createFileRoute("/about")({
   head: () => ({

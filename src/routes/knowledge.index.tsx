@@ -1,10 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Reveal } from "../components/Reveal";
 import { ArrowLeft, Clock } from "lucide-react";
-import betta from "../assets/article-betta.jpg";
-import shrimp from "../assets/article-shrimp.jpg";
-import chem from "../assets/article-chemistry.jpg";
-import planted from "../assets/project-4.jpg";
+import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
+import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
+import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
+import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
+
+const styledAquarium = styledAquariumAsset.url;
+const counterAquarium = counterAquariumAsset.url;
+const canisterFilter = canisterFilterAsset.url;
+const livingRoomTank = livingRoomTankAsset.url;
 
 export const Route = createFileRoute("/knowledge/")({
   head: () => ({
@@ -21,12 +26,12 @@ export const Route = createFileRoute("/knowledge/")({
 });
 
 const articles = [
-  { slug: "betta-care", img: betta, title: "العناية بسمك البيتا", excerpt: "كل ما تحتاج معرفته لتربية البيتا في بيئة مناسبة وصحية.", time: "6 دقائق", tag: "العناية بالأسماك" },
-  { slug: "planted-tank", img: planted, title: "تأسيس حوض نباتي", excerpt: "خطوات تأسيس حوض نباتي ناجح من الصفر.", time: "10 دقائق", tag: "الأحواض النباتية" },
-  { slug: "shrimp-breeding", img: shrimp, title: "تربية الروبيان", excerpt: "دليلك المبسط لتربية روبيان النيوكاريدينا والكرستال.", time: "8 دقائق", tag: "اللافقاريات" },
-  { slug: "water-chemistry", img: chem, title: "كيمياء المياه", excerpt: "فهم pH والأمونيا والنتريت لحوض صحي ومستقر.", time: "12 دقيقة", tag: "أساسيات" },
-  { slug: "choosing-plants", img: planted, title: "اختيار النباتات المناسبة", excerpt: "كيف تختار نباتات تتناسب مع إضاءتك وحوضك.", time: "7 دقائق", tag: "الأحواض النباتية" },
-  { slug: "shrimp-breeding-advanced", img: shrimp, title: "تكاثر الروبيان", excerpt: "متطلبات نجاح تكاثر الروبيان في المنزل.", time: "9 دقائق", tag: "اللافقاريات" },
+  { slug: "betta-care", img: styledAquarium, title: "العناية بسمك البيتا", excerpt: "كل ما تحتاج معرفته لتربية البيتا في بيئة مناسبة وصحية.", time: "6 دقائق", tag: "العناية بالأسماك" },
+  { slug: "planted-tank", img: livingRoomTank, title: "تأسيس حوض نباتي", excerpt: "خطوات تأسيس حوض نباتي ناجح من الصفر.", time: "10 دقائق", tag: "الأحواض النباتية" },
+  { slug: "shrimp-breeding", img: counterAquarium, title: "تربية الروبيان", excerpt: "دليلك المبسط لتربية روبيان النيوكاريدينا والكرستال.", time: "8 دقائق", tag: "اللافقاريات" },
+  { slug: "water-chemistry", img: canisterFilter, title: "كيمياء المياه", excerpt: "فهم pH والأمونيا والنتريت لحوض صحي ومستقر.", time: "12 دقيقة", tag: "أساسيات" },
+  { slug: "choosing-plants", img: livingRoomTank, title: "اختيار النباتات المناسبة", excerpt: "كيف تختار نباتات تتناسب مع إضاءتك وحوضك.", time: "7 دقائق", tag: "الأحواض النباتية" },
+  { slug: "shrimp-breeding-advanced", img: counterAquarium, title: "تكاثر الروبيان", excerpt: "متطلبات نجاح تكاثر الروبيان في المنزل.", time: "9 دقائق", tag: "اللافقاريات" },
 ];
 
 function KnowledgePage() {
