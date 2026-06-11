@@ -48,9 +48,8 @@ type Cat = "all" | Project["cat"];
 
 const tabs: { id: Cat; label: string }[] = [
   { id: "all", label: "الكل" },
-  { id: "home", label: "أحواض منزلية" },
+  { id: "home", label: "الأحواض المنزلية" },
   { id: "commercial", label: "مشاريع تجارية" },
-  { id: "marine", label: "أحواض بحرية" },
   { id: "planted", label: "أحواض نباتية" },
 ];
 
