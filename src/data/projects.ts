@@ -70,10 +70,10 @@ export const projects: Project[] = [
     cat: "home",
     catLabel: "حوض منزلي",
     featured: true,
-    location: "الرياض",
-    year: "2026",
+    location: "الرياض — حي العارض",
+    year: "2025",
     cover: marineNew1.url,
-    images: [marineNew1.url, marineNew2.url, marineNew3.url, marineNew4.url],
+    images: [marineNew1.url, marineNew2.url, marineNew3.url, marineNew4.url, aridReefExtra.url],
     description:
       "حوض بحري مرجاني متكامل بتصميم Aquascape احترافي يجمع بين المرجان السوفتي والأسماك البحرية والكائنات اللافقارية، مع نظام دعم حياة بحري كامل لضمان استقرار بيولوجي طويل المدى.",
     specs: {
