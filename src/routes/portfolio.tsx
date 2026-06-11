@@ -4,6 +4,7 @@ import { Reveal } from "../components/Reveal";
 import { ProjectGallery } from "../components/ProjectGallery";
 import { SpecCard } from "../components/SpecCard";
 import { TankDimensions } from "../components/TankDimensions";
+import { EquipmentCard } from "../components/EquipmentCard";
 import { whatsappLink } from "../components/WhatsAppButton";
 import {
   X,
@@ -205,20 +206,20 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
           {/* Equipment */}
           <Section title="المعدات">
             <div className="grid gap-3 sm:grid-cols-2">
-              <SpecCard icon={Filter} label="الفلتر" value={project.equipment.filter} />
-              <SpecCard icon={Sun} label="الإضاءة" value={project.equipment.lighting} />
+              <EquipmentCard icon={Filter} label="الفلتر" value={project.equipment.filter} />
+              <EquipmentCard icon={Sun} label="الإضاءة" value={project.equipment.lighting} />
               {project.equipment.heatingCooling && (
-                <SpecCard
+                <EquipmentCard
                   icon={Thermometer}
                   label="التدفئة / التبريد"
                   value={project.equipment.heatingCooling}
                 />
               )}
               {project.equipment.waveMakers && (
-                <SpecCard icon={Wind} label="مضخات الموجة" value={project.equipment.waveMakers} />
+                <EquipmentCard icon={Wind} label="مضخات الموجة" value={project.equipment.waveMakers} />
               )}
               {project.equipment.co2 && (
-                <SpecCard icon={Leaf} label="نظام CO₂" value={project.equipment.co2} />
+                <EquipmentCard icon={Leaf} label="نظام CO₂" value={project.equipment.co2} />
               )}
             </div>
           </Section>
