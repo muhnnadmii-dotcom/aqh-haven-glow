@@ -15,7 +15,9 @@ export const Route = createFileRoute("/catalog")({
       { name: "description", content: "تصفح كاتلوج أكوا هيفن من أحواض وأسماك وروبيان ونباتات ومعدات." },
       { property: "og:title", content: "الكاتلوج — أكوا هيفن" },
       { property: "og:description", content: "كاتلوج المنتجات: أحواض، أسماك، روبيان، نباتات، معدات." },
+      { property: "og:url", content: "/catalog" },
     ],
+    links: [{ rel: "canonical", href: "/catalog" }],
   }),
   component: CatalogPage,
 });
