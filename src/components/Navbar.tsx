@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import aqhLogo from "@/assets/aqh-logo.png.asset.json";
 
 const links = [
   { to: "/", label: "الرئيسية" },
@@ -40,13 +41,7 @@ export function Navbar() {
           }`}
         >
           <Link to="/" className="flex items-center gap-2">
-            <div className="grid h-10 w-10 place-items-center rounded-xl glass-gold">
-              <span className="text-gradient-gold text-sm font-extrabold tracking-wider">AQH</span>
-            </div>
-            <div className="hidden sm:block leading-tight">
-              <div className="text-sm font-bold">أكوا هيفن</div>
-              <div className="text-[10px] text-muted-foreground tracking-widest">AQUA HAVEN</div>
-            </div>
+            <img src={aqhLogo.url} alt="أكوا هيفن" className="h-10 w-auto" width={120} height={40} />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">

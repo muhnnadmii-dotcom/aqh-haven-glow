@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, MapPin, Phone } from "lucide-react";
+import aqhLogo from "@/assets/aqh-logo.png.asset.json";
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
   return (
@@ -15,14 +16,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid gap-10 md:grid-cols-4">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="grid h-10 w-10 place-items-center rounded-xl glass-gold">
-                <span className="text-gradient-gold text-sm font-extrabold">AQH</span>
-              </div>
-              <div className="leading-tight">
-                <div className="text-sm font-bold">أكوا هيفن</div>
-                <div className="text-[10px] text-muted-foreground tracking-widest">AQUA HAVEN</div>
-              </div>
+            <div className="mb-4">
+              <img src={aqhLogo.url} alt="أكوا هيفن" className="h-12 w-auto" width={144} height={48} />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               عالمك المائي يبدأ من هنا. تصميم وتركيب وصيانة الأحواض المخصصة في المملكة العربية السعودية.
