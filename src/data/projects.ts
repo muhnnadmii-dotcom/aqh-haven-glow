@@ -82,7 +82,7 @@ export const projects: Project[] = [
     equipment: {
       filter:
         "مرحلة تهدئة (Bubble Trap) + حجرة Filter Socks (4 جرابات) + حجرة الميديا الفلترية + حجرة بروتين سكيمر + حجرة مضخة العودة",
-      skimmer: "Protein Skimmer داخلي بالسمب بمقاس مناسب لسعة الحوض",
+      skimmer: "BUBBLE-MAGUS Protein Skimmer Curve-9+",
       returnPump:
         "Jebao MDP DCS-20000 L/H DC Pump مع تحكم WiFi + أنبوب تصريف أساسي (Drain) + أنبوب رجوع احتياطي (Emergency Overflow)",
       lighting: "A8PRO II MAX × 2 + جدولة شروق وغروب",
