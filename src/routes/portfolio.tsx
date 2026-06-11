@@ -315,7 +315,7 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
                     </div>
                     <div className="flex-1">
                       <div className="text-xs font-bold text-[color:var(--gold)] mb-1">
-                        ضمان الكائنات الحية (مشمول)
+                        ضمان المعدات (مشمول)
                       </div>
                       <div className="text-sm text-foreground/90 leading-relaxed">
                         {project.livestockWarranty}
