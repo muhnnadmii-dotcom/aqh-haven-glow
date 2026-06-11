@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, MapPin, Phone } from "lucide-react";
+import aqhLogo from "@/assets/aqh-logo.png.asset.json";
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
   return (
