@@ -83,7 +83,7 @@ function AboutPage() {
             <Reveal key={v.title} delay={i * 100}>
               <div className="glass rounded-2xl p-6 text-center h-full">
                 <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl glass-gold mb-4">
-                  <v.icon className="text-gradient-gold" size={24} />
+                  <v.icon className="text-gold" size={24} />
                 </div>
                 <h3 className="font-bold mb-2">{v.title}</h3>
                 <p className="text-sm text-muted-foreground">{v.desc}</p>

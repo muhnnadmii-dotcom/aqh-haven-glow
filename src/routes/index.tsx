@@ -172,7 +172,7 @@ function HomePage() {
               <Reveal key={s.title} delay={i * 100}>
                 <div className="gradient-border rounded-2xl p-6 h-full hover:-translate-y-1 transition-transform duration-500">
                   <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4">
-                    <s.icon className="text-gradient-gold" size={22} aria-hidden />
+                    <s.icon className="text-gold" size={22} aria-hidden />
                   </div>
                   <h3 className="text-lg font-bold mb-2">{s.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
@@ -204,7 +204,7 @@ function HomePage() {
                 <Reveal key={w.title} delay={i * 100}>
                   <div className="glass rounded-2xl p-5 hover:glass-gold transition">
                     <div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
-                      <w.icon className="text-gradient-gold" size={20} aria-hidden />
+                      <w.icon className="text-gold" size={20} aria-hidden />
                     </div>
                     <h3 className="font-bold mb-1.5">{w.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{w.desc}</p>
@@ -232,7 +232,7 @@ function HomePage() {
                 <div className="glass rounded-2xl p-6 h-full relative overflow-hidden group">
                   <div className="absolute -top-2 -left-2 text-7xl font-black text-gradient-gold opacity-20 group-hover:opacity-40 transition">{s.n}</div>
                   <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4 relative">
-                    <s.icon className="text-gradient-gold" size={22} aria-hidden />
+                    <s.icon className="text-gold" size={22} aria-hidden />
                   </div>
                   <h3 className="text-lg font-bold mb-2 relative">{s.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed relative">{s.desc}</p>
@@ -290,7 +290,7 @@ function HomePage() {
             {testimonials.map((t, i) => (
               <Reveal key={t.name} delay={i * 120}>
                 <div className="glass rounded-2xl p-7 h-full relative">
-                  <Quote className="absolute top-5 left-5 text-gradient-gold opacity-40" size={28} aria-hidden />
+                  <Quote className="absolute top-5 left-5 text-gold opacity-40" size={28} aria-hidden />
                   <div className="flex gap-1 mb-4">
                     {Array.from({ length: t.rating }).map((_, k) => (
                       <Star key={k} size={14} className="fill-gold text-gold" aria-hidden />
