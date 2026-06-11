@@ -15,6 +15,10 @@ import marineNew2 from "../assets/marine-new-16D6673B.png.asset.json";
 import marineNew3 from "../assets/marine-new-64669583.png.asset.json";
 import marineNew4 from "../assets/marine-new-DF24E5B9.png.asset.json";
 import aridReefExtra from "../assets/arid-reef-extra.png.asset.json";
+import fahdRiver1 from "../assets/fahd-river-1.png.asset.json";
+import fahdRiver2 from "../assets/fahd-river-2.png.asset.json";
+import fahdRiver3 from "../assets/fahd-river-3.png.asset.json";
+import fahdRiver4 from "../assets/fahd-river-4.png.asset.json";
 
 export type ProjectCategory = "home" | "commercial" | "planted";
 
@@ -63,6 +67,69 @@ export type Project = {
 };
 
 export const projects: Project[] = [
+  {
+    id: 9,
+    slug: "fahd-river-tank",
+    title: "حوض نهري طبيعي",
+    cat: "planted",
+    catLabel: "حوض نباتي",
+    featured: true,
+    location: "الرياض — حي الملك فهد",
+    year: "2026",
+    cover: fahdRiver2.url,
+    images: [fahdRiver2.url, fahdRiver3.url, fahdRiver4.url, fahdRiver1.url],
+    description:
+      "حوض نهري طبيعي (Biotope) بتصميم Aquascape مستوحى من ضفاف الأنهار، يجمع بين خشب الموبني المتفرع والصخور الطبيعية والنباتات الحية، مع لمسة من المعابد الكلاسيكية. نظام عذب مزروع متكامل بإضاءة احترافية ونباتات حقيقية تخلق توازنًا بيولوجيًا هادئًا.",
+    specs: {
+      dimensions: "100 × 50 × 60 سم",
+      volumeLiters: "300 لتر",
+      glassType: "زجاج Optiwhite شفاف",
+      systemType: "نهري عذب مزروع (Planted Biotope)",
+    },
+    equipment: {
+      filter: "فلتر خارجي Canister متعدد المراحل + إسفنج + ميديا بيولوجية + كربون نشط",
+      lighting: "إضاءة LED نباتية كاملة الطيف بجدولة شروق وغروب",
+      heatingCooling: "سخان حراري مع ثرموستات",
+      co2: "نظام CO₂ مضغوط مع موزع داخلي ومؤقت آلي",
+    },
+    waterSystem: [
+      "وحدة RO/DI لتنقية المياه",
+      "اختبارات دورية لـ pH / KH / NO₃",
+      "نظام تسميد سائل للنباتات (Macro + Micro)",
+    ],
+    addOns: [
+      "خشب موبني طبيعي بتصميم Aquascape",
+      "صخور دراغون وسيريو",
+      "رمل نهري ناعم + حصى ملونة",
+      "ديكور معابد كلاسيكية + تمثال محارب",
+      "موزع هواء (Air Stone) للأكسجين والمظهر البصري",
+      "خلفية سوداء غير لامعة",
+    ],
+    servicePackages: [
+      "باقة صيانة شهرية (تقليم نباتات + تبديل 25% ماء + تنظيف زجاج) — اختيارية",
+      "دعم فني واتساب + زيارات ميدانية عند الحاجة — اختيارية",
+    ],
+    livestockWarranty: "ضمان شامل على المعدات لمدة 12 شهرًا",
+    contents: {
+      fish: [
+        "سمك الملاك (Angelfish)",
+        "نيون تترا (Neon Tetra)",
+        "كاردينال تترا (Cardinal Tetra)",
+        "كوريدوراس (Corydoras)",
+        "أوتوسينكلوس (Otocinclus)",
+      ],
+      plantsOrCorals: [
+        "أنوبياس (Anubias)",
+        "أمازون سورد (Amazon Sword)",
+        "فالسنيريا (Vallisneria)",
+        "روتالا (Rotala)",
+        "لودفيجيا (Ludwigia)",
+        "موس جافا (Java Moss)",
+      ],
+      decor: "خشب موبني + صخور طبيعية + رمل نهري + ديكور معابد كلاسيكية",
+    },
+    priceRange: { min: 18000, max: 28000, currency: "SAR" },
+  },
   {
     id: 7,
     slug: "marine-reef-showcase",
