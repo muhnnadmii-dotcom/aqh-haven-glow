@@ -20,6 +20,10 @@ import fahdRiver2 from "../assets/fahd-river-2.png.asset.json";
 import fahdRiver3 from "../assets/fahd-river-3.png.asset.json";
 import fahdRiver4 from "../assets/fahd-river-4.png.asset.json";
 import marineReefPurple from "../assets/marine-reef-purple.png.asset.json";
+import plantedLarge1 from "../assets/planted-large-1.jpeg.asset.json";
+import plantedLarge2 from "../assets/planted-large-2.jpeg.asset.json";
+import plantedLarge3 from "../assets/planted-large-3.png.asset.json";
+import plantedLarge4 from "../assets/planted-large-4.jpeg.asset.json";
 
 export type ProjectCategory = "living-room" | "office" | "entrance" | "commercial";
 
