@@ -151,14 +151,15 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-background/85 backdrop-blur-md grid place-items-start sm:place-items-center p-3 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-background/85 backdrop-blur-md overflow-y-auto overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-label={project.title}
     >
+      <div className="min-h-full w-full flex justify-center items-start p-3 sm:p-6">
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass rounded-3xl max-w-5xl w-full overflow-hidden relative my-6"
+        className="glass rounded-3xl max-w-5xl w-full overflow-hidden relative"
       >
         <button
           onClick={onClose}
@@ -292,6 +293,7 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
