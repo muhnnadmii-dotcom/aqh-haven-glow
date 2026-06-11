@@ -80,12 +80,11 @@ export const projects: Project[] = [
       turnover: "~25× في الساعة",
     },
     equipment: {
-      filter:
-        "Sump مخصص بأربع مراحل متتابعة: مرحلة Filter Socks (4 حبات 200µm) + مرحلة الميديا والفحم الكربوني + حجرة السكيمر + حجرة مضخة العودة",
+      filter: "مرحلة Filter Socks",
       skimmer: "Protein Skimmer داخلي بالسمب بمقاس مناسب لسعة الحوض",
       returnPump: "Jebao MDP DCS-20000 L/H DC Pump مع تحكم WiFi",
       lighting: "A8PRO II MAX × 2 + جدولة شروق وغروب",
-      heatingCooling: "سخانات احتياطية للحفاظ على ثبات درجة الحرارة",
+      heatingCooling: "التدفئة",
       waveMakers: "Jebao DMP-40M Cordless WiFi / Bluetooth",
       dosing: "موزع جرعات لإضافة Calcium / Alkalinity / Magnesium بنظام Balling",
     },
