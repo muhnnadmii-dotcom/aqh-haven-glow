@@ -30,6 +30,10 @@ export type Project = {
     volumeLiters: string;
     glassType: string;
     systemType: string;
+    totalSystemVolume?: string;
+    glassBonding?: string;
+    parIntensity?: string;
+    turnover?: string;
   };
   equipment: {
     filter: string;
@@ -37,6 +41,26 @@ export type Project = {
     heatingCooling?: string;
     waveMakers?: string;
     co2?: string;
+    skimmer?: string;
+    returnPump?: string;
+  };
+  waterSystem?: {
+    roDi?: string;
+    storage?: string;
+    ato?: string;
+    salt?: string;
+  };
+  automation?: {
+    controller?: string;
+    sensors?: string;
+    dosing?: string;
+    alerts?: string;
+  };
+  serviceWarranty?: {
+    schedule: string;
+    equipmentWarranty: string;
+    livestockWarranty: string;
+    support: string;
   };
   contents: {
     fish: string[];
