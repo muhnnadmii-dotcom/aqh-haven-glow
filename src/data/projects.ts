@@ -56,7 +56,7 @@ export const projects: Project[] = [
     featured: true,
     location: "الرياض — حي القيروان",
     year: "2026",
-    cover: qairawan1.url,
+    cover: qairawan3.url,
     images: [qairawan1.url, qairawan2.url, qairawan3.url, qairawan4.url, qairawan5.url],
     description:
       "حوض بحري فاخر مُنفّذ داخل فيلا بحي القيروان، يجمع بين تصميم خزانة سوداء أنيقة وإضاءة ريف احترافية تُبرز جمال الصخور الحية والمرجان. تم تجهيز الحوض بنظام دعم حياة بحري متكامل (Sump + Skimmer) لضمان الاستقرار البيولوجي.",
