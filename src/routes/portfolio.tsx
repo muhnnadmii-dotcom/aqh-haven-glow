@@ -229,42 +229,50 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
             </div>
           </Section>
 
-          {/* Equipment */}
-          <Section title="المعدات">
-            <div dir="rtl" className="grid gap-3 sm:grid-cols-2">
-              {/* 1) الفلترة الأساسية */}
-              <EquipmentCard icon={Filter} label="الفلتر / Sump" value={project.equipment.filter} />
-              {project.equipment.skimmer && (
-                <EquipmentCard icon={Wind} label="بروتين سكيمر" value={project.equipment.skimmer} />
-              )}
+          {/* Filtration — standalone box */}
+          <Section title="الفلترة">
+            <div dir="rtl" className="glass-gold rounded-2xl p-6">
+              <ul className="space-y-3">
+                {project.equipment.filter
+                  .split(/\s*\+\s*/)
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                  .map((stage, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm leading-relaxed">
+                      <div className="h-8 w-8 grid place-items-center rounded-lg bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+                        <Filter size={14} />
+                      </div>
+                      <span className="text-foreground/90 pt-1.5">{stage}</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </Section>
 
-              {/* 2) التدوير والتدفق */}
-              {project.equipment.returnPump && (
-                <EquipmentCard icon={Waves} label="مضخة العودة" value={project.equipment.returnPump} />
-              )}
-              {project.equipment.waveMakers && (
-                <EquipmentCard icon={Wind} label="مضخات الموجة (Wave Makers)" value={project.equipment.waveMakers} />
-              )}
-
-              {/* 3) الإضاءة */}
-              <EquipmentCard icon={Sun} label="الإضاءة" value={project.equipment.lighting} />
-
-              {/* 4) التحكم بالحرارة */}
-              {project.equipment.heatingCooling && (
-                <EquipmentCard
-                  icon={Thermometer}
-                  label="التدفئة"
-                  value={project.equipment.heatingCooling}
-                />
-              )}
-
-              {/* 5) كيمياء الماء */}
-              {project.equipment.dosing && (
-                <EquipmentCard icon={Droplet} label="موزع الجرعات (Dosing)" value={project.equipment.dosing} />
-              )}
-              {project.equipment.co2 && (
-                <EquipmentCard icon={Leaf} label="نظام CO₂" value={project.equipment.co2} />
-              )}
+          {/* Devices — standalone box */}
+          <Section title="الأجهزة">
+            <div dir="rtl" className="glass-gold rounded-2xl p-6">
+              <ul className="space-y-3">
+                {([
+                  project.equipment.skimmer && { icon: Wind, label: "بروتين سكيمر", value: project.equipment.skimmer },
+                  project.equipment.returnPump && { icon: Waves, label: "مضخة العودة", value: project.equipment.returnPump },
+                  project.equipment.waveMakers && { icon: Wind, label: "مضخات الموجة (Wave Makers)", value: project.equipment.waveMakers },
+                  { icon: Sun, label: "الإضاءة", value: project.equipment.lighting },
+                  project.equipment.heatingCooling && { icon: Thermometer, label: "التدفئة", value: project.equipment.heatingCooling },
+                  project.equipment.dosing && { icon: Droplet, label: "موزع الجرعات (Dosing)", value: project.equipment.dosing },
+                  project.equipment.co2 && { icon: Leaf, label: "نظام CO₂", value: project.equipment.co2 },
+                ].filter(Boolean) as { icon: typeof Filter; label: string; value: string }[]).map((d, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm leading-relaxed">
+                    <div className="h-8 w-8 grid place-items-center rounded-lg bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+                      <d.icon size={14} />
+                    </div>
+                    <div className="flex-1 pt-0.5">
+                      <div className="text-xs font-bold text-[color:var(--gold)] mb-0.5">{d.label}</div>
+                      <div className="text-foreground/90">{d.value}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           </Section>
 
