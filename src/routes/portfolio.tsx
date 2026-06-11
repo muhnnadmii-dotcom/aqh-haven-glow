@@ -184,9 +184,6 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
               <span className="glass-gold px-3 py-1.5 rounded-full inline-flex items-center gap-1.5">
                 <Calendar size={12} /> {project.year}
               </span>
-              <span className="glass-gold px-3 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                <Clock size={12} /> {project.duration}
-              </span>
             </div>
             <p className="text-muted-foreground mt-4 leading-relaxed">{project.description}</p>
           </div>
