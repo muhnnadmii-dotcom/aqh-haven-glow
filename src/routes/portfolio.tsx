@@ -7,8 +7,6 @@ import { TankDimensions } from "../components/TankDimensions";
 import { whatsappLink } from "../components/WhatsAppButton";
 import {
   X,
-  Ruler,
-  Droplets,
   Box,
   Waves,
   Filter,
@@ -19,7 +17,6 @@ import {
   Leaf,
   MapPin,
   Calendar,
-  
   Sparkles,
   MessageCircle,
 } from "lucide-react";
