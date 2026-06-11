@@ -14,6 +14,7 @@ import marineNew1 from "../assets/marine-new-C55A0DB5.png.asset.json";
 import marineNew2 from "../assets/marine-new-16D6673B.png.asset.json";
 import marineNew3 from "../assets/marine-new-64669583.png.asset.json";
 import marineNew4 from "../assets/marine-new-DF24E5B9.png.asset.json";
+import aridReef1 from "../assets/arid-reef-1.png.asset.json";
 
 export type ProjectCategory = "home" | "commercial" | "planted";
 
