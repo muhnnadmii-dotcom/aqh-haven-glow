@@ -315,7 +315,7 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
                     </div>
                     <div className="flex-1">
                       <div className="text-xs font-bold text-[color:var(--gold)] mb-1">
-                        ضمان الكائنات الحية (مشمول)
+                        ضمان المعدات (مشمول)
                       </div>
                       <div className="text-sm text-foreground/90 leading-relaxed">
                         {project.livestockWarranty}
@@ -349,48 +349,48 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
 
 
           {/* Contents */}
-          <Section title="محتويات الحوض">
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-semibold mb-2">
-                  <Fish size={16} className="text-[color:var(--gold)]" /> الأسماك
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {project.contents.fish.map((f) => (
-                    <span
-                      key={f}
-                      className="glass px-3 py-1.5 rounded-full text-xs border border-white/10"
-                    >
-                      {f}
-                    </span>
-                  ))}
-                </div>
+          {(project.contents.fish.length > 0 ||
+            (project.contents.plantsOrCorals && project.contents.plantsOrCorals.length > 0) ||
+            project.contents.decor) && (
+            <Section title="محتويات الحوض">
+              <div className="space-y-4">
+                {project.contents.fish.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 text-sm font-semibold mb-2">
+                      <Fish size={16} className="text-[color:var(--gold)]" /> الأسماك
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {project.contents.fish.map((f) => (
+                        <span key={f} className="glass px-3 py-1.5 rounded-full text-xs border border-white/10">
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {project.contents.plantsOrCorals && project.contents.plantsOrCorals.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 text-sm font-semibold mb-2">
+                      <Leaf size={16} className="text-[color:var(--gold)]" /> النباتات / المرجان
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {project.contents.plantsOrCorals.map((p) => (
+                        <span key={p} className="glass px-3 py-1.5 rounded-full text-xs border border-white/10">
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {project.contents.decor && (
+                  <div>
+                    <div className="text-sm font-semibold mb-1">الديكور والركيزة</div>
+                    <p className="text-sm text-muted-foreground">{project.contents.decor}</p>
+                  </div>
+                )}
               </div>
-              {project.contents.plantsOrCorals && project.contents.plantsOrCorals.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-semibold mb-2">
-                    <Leaf size={16} className="text-[color:var(--gold)]" /> النباتات / المرجان
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {project.contents.plantsOrCorals.map((p) => (
-                      <span
-                        key={p}
-                        className="glass px-3 py-1.5 rounded-full text-xs border border-white/10"
-                      >
-                        {p}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {project.contents.decor && (
-                <div>
-                  <div className="text-sm font-semibold mb-1">الديكور والركيزة</div>
-                  <p className="text-sm text-muted-foreground">{project.contents.decor}</p>
-                </div>
-              )}
-            </div>
-          </Section>
+            </Section>
+          )}
 
           {/* Price */}
           <div className="relative overflow-hidden rounded-2xl glass-gold p-6">
