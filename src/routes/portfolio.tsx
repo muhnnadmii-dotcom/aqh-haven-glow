@@ -30,12 +30,12 @@ export const Route = createFileRoute("/portfolio")({
       {
         name: "description",
         content:
-          "مجموعة مختارة من مشاريع أكوا هيفن: أحواض منزلية ومشاريع تجارية وأحواض بحرية ونباتية بمواصفات ومعدات وأسعار تفصيلية.",
+          "مجموعة مختارة من مشاريع أكوا هيفن: أحواض منزلية ومشاريع تجارية وأحواض نباتية بمواصفات ومعدات وأسعار تفصيلية.",
       },
       { property: "og:title", content: "أعمالنا — أكوا هيفن" },
       {
         property: "og:description",
-        content: "مشاريع مختارة من أحواض منزلية وتجارية وبحرية ونباتية.",
+        content: "مشاريع مختارة من أحواض منزلية وتجارية ونباتية.",
       },
       { property: "og:url", content: "/portfolio" },
     ],
@@ -48,9 +48,8 @@ type Cat = "all" | Project["cat"];
 
 const tabs: { id: Cat; label: string }[] = [
   { id: "all", label: "الكل" },
-  { id: "home", label: "أحواض منزلية" },
+  { id: "home", label: "الأحواض المنزلية" },
   { id: "commercial", label: "مشاريع تجارية" },
-  { id: "marine", label: "أحواض بحرية" },
   { id: "planted", label: "أحواض نباتية" },
 ];
 

@@ -11,7 +11,7 @@ import qairawan3 from "../assets/qairawan-3.png.asset.json";
 import qairawan4 from "../assets/qairawan-4.png.asset.json";
 import qairawan5 from "../assets/qairawan-5.png.asset.json";
 
-export type ProjectCategory = "home" | "commercial" | "marine" | "planted";
+export type ProjectCategory = "home" | "commercial" | "planted";
 
 export type Project = {
   id: number;
@@ -51,8 +51,8 @@ export const projects: Project[] = [
     id: 1,
     slug: "villa-qairawan",
     title: "حوض فيلا القيروان",
-    cat: "marine",
-    catLabel: "حوض بحري",
+    cat: "home",
+    catLabel: "حوض منزلي",
     featured: true,
     location: "الرياض — حي القيروان",
     year: "2026",
@@ -115,8 +115,8 @@ export const projects: Project[] = [
     id: 3,
     slug: "private-reef-cube",
     title: "حوض مرجاني خاص",
-    cat: "marine",
-    catLabel: "حوض بحري",
+    cat: "home",
+    catLabel: "حوض منزلي",
     featured: true,
     location: "الرياض — حي السفارات",
     year: "2025",
