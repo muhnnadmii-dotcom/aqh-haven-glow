@@ -416,3 +416,25 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     </div>
   );
 }
+
+function WarrantyItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: import("lucide-react").LucideIcon;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="h-9 w-9 grid place-items-center rounded-lg bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+        <Icon size={16} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-xs font-bold text-[color:var(--gold)] mb-1">{label}</div>
+        <p className="text-sm text-foreground/90 leading-relaxed">{value}</p>
+      </div>
+    </div>
+  );
+}
