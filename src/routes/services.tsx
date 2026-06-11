@@ -10,7 +10,9 @@ export const Route = createFileRoute("/services")({
       { name: "description", content: "تصميم أحواض مخصصة، أنظمة مأكولات بحرية حية للمطاعم، صيانة دورية، واستشارات احترافية." },
       { property: "og:title", content: "خدماتنا — أكوا هيفن" },
       { property: "og:description", content: "خدمات متكاملة لعالمك المائي من التصميم حتى الصيانة." },
+      { property: "og:url", content: "/services" },
     ],
+    links: [{ rel: "canonical", href: "/services" }],
   }),
   component: ServicesPage,
 });
