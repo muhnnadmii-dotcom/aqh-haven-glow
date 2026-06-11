@@ -73,6 +73,66 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    id: 10,
+    slug: "planted-large-yasmin",
+    title: "حوض نباتي طبيعي كبير",
+    cat: "living-room",
+    catLabel: "غرفة المعيشة",
+    featured: true,
+    location: "الرياض — حي الياسمين",
+    year: "2026",
+    cover: plantedLarge1.url,
+    images: [plantedLarge1.url, plantedLarge2.url, plantedLarge3.url, plantedLarge4.url],
+    description:
+      "حوض نباتي طبيعي كبير بتصميم Aquascape هادئ، يجمع بين خشب الموبني المتفرع والصخور الطبيعية ومجموعة نباتات حية تخلق غابة مائية متوازنة. مدمج داخل خزانة خشبية فاخرة بإضاءة LED كاملة الطيف تُبرز الألوان الطبيعية للأسماك والنباتات.",
+    specs: {
+      dimensions: "180 × 60 × 60 سم",
+      volumeLiters: "650 لتر",
+      glassType: "زجاج Optiwhite شفاف 12 ملم",
+      systemType: "عذب مزروع (Planted Aquascape)",
+    },
+    equipment: {
+      filter: "فلتر خارجي Canister متعدد المراحل + ميديا بيولوجية + كربون نشط",
+      lighting: "إضاءة LED احترافية كاملة الطيف بجدولة شروق وغروب",
+      heatingCooling: "سخان حراري مع ثرموستات",
+      co2: "نظام CO₂ مضغوط مع موزع داخلي ومؤقت آلي (اختياري)",
+    },
+    waterSystem: [
+      "وحدة RO/DI لتنقية المياه",
+      "اختبارات دورية لـ pH / KH / NO₃",
+      "نظام تسميد سائل للنباتات (Macro + Micro)",
+    ],
+    addOns: [
+      "خشب موبني طبيعي بتصميم Aquascape",
+      "صخور دراغون وسيريو",
+      "رمل نهري ناعم أبيض",
+      "خزانة خشبية فاخرة مدمجة",
+    ],
+    servicePackages: [
+      "باقة صيانة شهرية (تقليم نباتات + تبديل 25% ماء + تنظيف زجاج) — اختيارية",
+      "دعم فني واتساب + زيارات ميدانية عند الحاجة — اختيارية",
+    ],
+    livestockWarranty: "ضمان شامل على المعدات لمدة 12 شهرًا",
+    contents: {
+      fish: [
+        "سمك الملاك (Angelfish)",
+        "نيون تترا (Neon Tetra)",
+        "كاردينال تترا (Cardinal Tetra)",
+        "رامي (Ram Cichlid)",
+        "كوريدوراس (Corydoras)",
+      ],
+      plantsOrCorals: [
+        "أمازون سورد (Amazon Sword)",
+        "أنوبياس (Anubias)",
+        "فالسنيريا (Vallisneria)",
+        "كريبتوكورين (Cryptocoryne)",
+        "موس جافا (Java Moss)",
+      ],
+      decor: "خشب موبني + صخور طبيعية + رمل نهري أبيض",
+    },
+    priceRange: { min: 15000, max: 25000, currency: "SAR" },
+  },
+  {
     id: 9,
     slug: "fahd-river-tank",
     title: "حوض نهري طبيعي",
