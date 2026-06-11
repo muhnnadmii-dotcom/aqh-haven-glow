@@ -60,9 +60,10 @@ type Cat = "all" | Project["cat"];
 
 const tabs: { id: Cat; label: string }[] = [
   { id: "all", label: "الكل" },
-  { id: "home", label: "الأحواض المنزلية" },
+  { id: "living-room", label: "غرفة المعيشة" },
+  { id: "office", label: "مكتب" },
+  { id: "entrance", label: "مدخل" },
   { id: "commercial", label: "مشاريع تجارية" },
-  { id: "planted", label: "أحواض نباتية" },
 ];
 
 function PortfolioPage() {

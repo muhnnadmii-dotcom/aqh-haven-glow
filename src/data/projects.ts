@@ -19,8 +19,9 @@ import fahdRiver1 from "../assets/fahd-river-1.png.asset.json";
 import fahdRiver2 from "../assets/fahd-river-2.png.asset.json";
 import fahdRiver3 from "../assets/fahd-river-3.png.asset.json";
 import fahdRiver4 from "../assets/fahd-river-4.png.asset.json";
+import marineReefPurple from "../assets/marine-reef-purple.png.asset.json";
 
-export type ProjectCategory = "home" | "commercial" | "planted";
+export type ProjectCategory = "living-room" | "office" | "entrance" | "commercial";
 
 export type Project = {
   id: number;
@@ -71,8 +72,8 @@ export const projects: Project[] = [
     id: 9,
     slug: "fahd-river-tank",
     title: "حوض نهري طبيعي",
-    cat: "planted",
-    catLabel: "حوض نباتي",
+    cat: "living-room",
+    catLabel: "غرفة المعيشة",
     featured: true,
     location: "الرياض — حي الملك فهد",
     year: "2026",
@@ -134,13 +135,13 @@ export const projects: Project[] = [
     id: 7,
     slug: "marine-reef-showcase",
     title: "حوض بحري مرجاني",
-    cat: "home",
-    catLabel: "حوض منزلي",
+    cat: "living-room",
+    catLabel: "غرفة المعيشة",
     featured: true,
     location: "الرياض — حي العارض",
     year: "2025",
     cover: marineNew1.url,
-    images: [marineNew1.url, marineNew2.url, marineNew3.url, marineNew4.url, aridReefExtra.url],
+    images: [marineNew1.url, marineNew2.url, marineNew3.url, marineNew4.url, aridReefExtra.url, marineReefPurple.url],
     description:
       "حوض بحري مرجاني متكامل بتصميم Aquascape احترافي يجمع بين المرجان السوفتي والأسماك البحرية والكائنات اللافقارية، مع نظام دعم حياة بحري كامل لضمان استقرار بيولوجي طويل المدى.",
     specs: {
@@ -202,8 +203,8 @@ export const projects: Project[] = [
     id: 1,
     slug: "villa-qairawan",
     title: "حوض بحري ",
-    cat: "home",
-    catLabel: "حوض منزلي",
+    cat: "living-room",
+    catLabel: "غرفة المعيشة",
     featured: true,
     location: "الرياض — حي القيروان",
     year: "2026",
@@ -289,8 +290,8 @@ export const projects: Project[] = [
     id: 3,
     slug: "private-reef-cube",
     title: "حوض مرجاني خاص",
-    cat: "home",
-    catLabel: "حوض منزلي",
+    cat: "living-room",
+    catLabel: "غرفة المعيشة",
     featured: true,
     location: "الرياض — حي السفارات",
     year: "2025",
@@ -321,8 +322,8 @@ export const projects: Project[] = [
     id: 4,
     slug: "natural-planted",
     title: "حوض نباتي طبيعي",
-    cat: "planted",
-    catLabel: "حوض نباتي",
+    cat: "living-room",
+    catLabel: "غرفة المعيشة",
     location: "الرياض",
     year: "2025",
     cover: styledAquarium.url,
@@ -349,8 +350,8 @@ export const projects: Project[] = [
     id: 5,
     slug: "executive-office",
     title: "مكتب تنفيذي - حي السفارات",
-    cat: "home",
-    catLabel: "حوض منزلي",
+    cat: "office",
+    catLabel: "مكتب",
     location: "الرياض",
     year: "2025",
     cover: consultationTank.url,
