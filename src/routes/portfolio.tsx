@@ -231,15 +231,25 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
 
           {/* Equipment */}
           <Section title="المعدات">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div dir="rtl" className="grid gap-3 sm:grid-cols-2">
+              {/* 1) الفلترة الأساسية */}
               <EquipmentCard icon={Filter} label="الفلتر / Sump" value={project.equipment.filter} />
               {project.equipment.skimmer && (
-                <EquipmentCard icon={Wind} label="السكيمر" value={project.equipment.skimmer} />
+                <EquipmentCard icon={Wind} label="بروتين سكيمر" value={project.equipment.skimmer} />
               )}
+
+              {/* 2) التدوير والتدفق */}
               {project.equipment.returnPump && (
                 <EquipmentCard icon={Waves} label="مضخة العودة" value={project.equipment.returnPump} />
               )}
+              {project.equipment.waveMakers && (
+                <EquipmentCard icon={Wind} label="مضخات الموجة (Wave Makers)" value={project.equipment.waveMakers} />
+              )}
+
+              {/* 3) الإضاءة */}
               <EquipmentCard icon={Sun} label="الإضاءة" value={project.equipment.lighting} />
+
+              {/* 4) التحكم بالحرارة */}
               {project.equipment.heatingCooling && (
                 <EquipmentCard
                   icon={Thermometer}
@@ -247,9 +257,8 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
                   value={project.equipment.heatingCooling}
                 />
               )}
-              {project.equipment.waveMakers && (
-                <EquipmentCard icon={Wind} label="مضخات الموجة" value={project.equipment.waveMakers} />
-              )}
+
+              {/* 5) كيمياء الماء */}
               {project.equipment.dosing && (
                 <EquipmentCard icon={Droplet} label="موزع الجرعات (Dosing)" value={project.equipment.dosing} />
               )}
@@ -258,6 +267,7 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
               )}
             </div>
           </Section>
+
 
           {/* Water System — bullets */}
           {project.waterSystem && project.waterSystem.length > 0 && (
