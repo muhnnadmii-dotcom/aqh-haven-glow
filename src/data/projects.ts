@@ -64,6 +64,70 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    id: 8,
+    slug: "arid-reef-villa",
+    title: "حوض بحري — حي العارض",
+    cat: "home",
+    catLabel: "حوض منزلي",
+    featured: true,
+    location: "الرياض — حي العارض",
+    year: "2026",
+    cover: aridReef1.url,
+    images: [aridReef1.url],
+    description:
+      "حوض بحري مرجاني بإضاءة زرقاء عميقة تُبرز ألوان المرجان السوفتي وشقائق النعمان الفلورية، مع تصميم Aquascape متدرّج ونظام دعم حياة بحري متكامل لاستقرار بيولوجي طويل المدى.",
+    specs: {
+      dimensions: "—",
+      volumeLiters: "—",
+      systemType: "Mixed Reef بحري (Soft Corals)",
+    },
+    equipment: {
+      filter:
+        "مرحلة تهدئة (Bubble Trap) + حجرة Filter Socks (4 جرابات) + حجرة الميديا الفلترية + حجرة بروتين سكيمر + حجرة مضخة العودة",
+      skimmer: "بروتين سكيمر داخلي بالسمب",
+      returnPump:
+        "مضخة رجوع DC بتحكم WiFi + أنبوب تصريف أساسي (Drain) + أنبوب رجوع احتياطي (Emergency Overflow)",
+      lighting: "إضاءة Reef LED احترافية مع جدولة شروق وغروب",
+      heatingCooling: "سخانات حرارية مع ثرموستات",
+      waveMakers: "مضخات موجة لاسلكية بتحكم WiFi / Bluetooth",
+      dosing: "موزع جرعات لإضافة Calcium / Alkalinity / Magnesium بنظام Balling",
+    },
+    waterSystem: [
+      "وحدة RO/DI لتنقية المياه",
+      "جهاز قياس (TDS / كثافة الملوحة)",
+      "خزانات تحضير وخلط للمياه العذبة والمالحة",
+    ],
+    addOns: [
+      "تعويض التبخر التلقائي (ATO)",
+      "خزان سفلي إضافي",
+      "ميديا فلترة + فحم كربوني",
+      "وحدة تعقيم UV",
+      "25 كجم ملح بحري إضافي",
+      "صخور حية بتصميم Aquascape وتثبيت احترافي",
+      "رمل بحري خاص (Aragonite)",
+      "معدات صيانة وعناية يومية",
+    ],
+    servicePackages: [
+      "باقة صيانة دورية كل أسبوعين (اختبارات كاملة + تنظيف + تبديل 10% ماء) — اختيارية",
+      "باقة دعم فني واتساب على مدار الساعة + استجابة ميدانية خلال 24 ساعة — اختيارية",
+    ],
+    livestockWarranty: "ضمان شامل على المعدات لمدة 12 شهرًا",
+    contents: {
+      fish: [
+        "سمك المهرج (Clownfish)",
+        "أنثياس (Anthias)",
+      ],
+      plantsOrCorals: [
+        "مرجان سوفتي متنوع",
+        "شقائق النعمان (Anemones)",
+        "زوانثيدز (Zoanthids)",
+        "ماشروم كورال (Mushroom Corals)",
+        "يوفيليا (Euphyllia)",
+      ],
+    },
+    priceRange: { min: 45000, max: 65000, currency: "SAR" },
+  },
+  {
     id: 1,
     slug: "villa-qairawan",
     title: "حوض بحري ",
