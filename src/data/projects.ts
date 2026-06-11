@@ -28,8 +28,8 @@ export type Project = {
   specs: {
     dimensions: string;
     volumeLiters: string;
-    glassType: string;
     systemType: string;
+    glassType?: string;
     totalSystemVolume?: string;
     glassBonding?: string;
     parIntensity?: string;
@@ -43,25 +43,12 @@ export type Project = {
     co2?: string;
     skimmer?: string;
     returnPump?: string;
-  };
-  waterSystem?: {
-    roDi?: string;
-    storage?: string;
-    ato?: string;
-    salt?: string;
-  };
-  automation?: {
-    controller?: string;
-    sensors?: string;
     dosing?: string;
-    alerts?: string;
   };
-  serviceWarranty?: {
-    schedule: string;
-    equipmentWarranty: string;
-    livestockWarranty: string;
-    support: string;
-  };
+  waterSystem?: string[];
+  addOns?: string[];
+  servicePackages?: string[];
+  livestockWarranty?: string;
   contents: {
     fish: string[];
     plantsOrCorals?: string[];
@@ -83,47 +70,67 @@ export const projects: Project[] = [
     cover: qairawan3.url,
     images: [qairawan1.url, qairawan2.url, qairawan3.url, qairawan4.url, qairawan5.url],
     description:
-      "حوض بحري فاخر مُنفّذ داخل فيلا بحي القيروان، يجمع بين تصميم خزانة سوداء أنيقة وإضاءة ريف احترافية تُبرز جمال الصخور الحية والمرجان. تم تجهيز الحوض بنظام دعم حياة بحري متكامل (Sump + Skimmer) لضمان الاستقرار البيولوجي.",
+      "حوض بحري فاخر مُنفّذ داخل فيلا بحي القيروان، يجمع بين خزانة سوداء أنيقة وإضاءة ريف احترافية تُبرز جمال الصخور الحية والمرجان. تم تجهيز الحوض بنظام دعم حياة بحري متكامل لضمان الاستقرار البيولوجي على المدى الطويل.",
     specs: {
       dimensions: "165 × 80 × 80 سم",
       volumeLiters: "1,056 لتر",
-      glassType: "زجاج Optiwhite منخفض الحديد بسماكة 15 ملم",
-      systemType: "Mixed Reef بحري — SPS / LPS / Softies",
+      systemType: "Mixed Reef بحري",
       totalSystemVolume: "1,276 لتر (حوض 1,056 + Sump 220)",
-      glassBonding: "لصق ألماني Wacker SN السيليكون البحري",
-      parIntensity: "~180 PAR على عمق 40 سم (مناسب لـ SPS)",
-      turnover: "~25× في الساعة عبر مضخة العودة والموجات",
+      parIntensity: "~180 PAR على عمق 40 سم",
+      turnover: "~25× في الساعة",
     },
     equipment: {
-      filter: "Sump زجاجي مخصص 120×50×45 سم — 3 مراحل + Filter Socks 200µm + Refugium بنبات Chaeto مع إضاءة Kessil H80 + قسم العودة",
-      skimmer: "Bubble Magus Curve G5 Protein Skimmer — تصريف ~400 مل/يوم + مضخة Sicce",
-      returnPump: "مضخة عودة Neptune COR-20 DC قابلة للتحكم (2,000 GPH) + خرطوم Loc-Line مزدوج",
-      lighting: "3 × AI Hydra 64HD (Spread + Director) — طيف كامل UV + UV-V + Royal Blue + Cool White + Green + Red + جدولة شروق/غروب 12 ساعة + ذراع تعليق RMS",
-      heatingCooling: "Chiller Teco TK-500 (½ HP) مع تحكم Apex + سخان Eheim Jäger Titanium 500W احتياطي",
-      waveMakers: "2 × EcoTech Marine VorTech MP40wQD + وحدة ReefLink + أنماط (Pulse / Lagoon / ReefCrest / Nutrient Transport)",
+      filter:
+        "Sump مخصص بأربع مراحل متتابعة: مرحلة Filter Socks (4 حبات 200µm) + مرحلة الميديا والفحم الكربوني + حجرة السكيمر + حجرة مضخة العودة",
+      skimmer: "Protein Skimmer داخلي بالسمب بمقاس مناسب لسعة الحوض",
+      returnPump: "Jebao MDP DCS-20000 L/H DC Pump مع تحكم WiFi",
+      lighting: "A8PRO II MAX × 2 + جدولة شروق وغروب",
+      heatingCooling: "سخانات احتياطية للحفاظ على ثبات درجة الحرارة",
+      waveMakers: "Jebao DMP-40M Cordless WiFi / Bluetooth",
+      dosing: "موزع جرعات لإضافة Calcium / Alkalinity / Magnesium بنظام Balling",
     },
-    waterSystem: {
-      roDi: "Spectrapure MaxCap 90 GPD — 5 مراحل (Sediment → Carbon Block → RO Membrane → DI → Refill) + قياس TDS 0 ppm",
-      storage: "خزان مياه عذبة 200 لتر + خزان مياه مالحة 200 لتر مع مضخة خلط Sicce Syncra 3.0",
-      ato: "نظام ATO تلقائي Tunze Osmolator 3155 + حساس بصري احتياطي مزدوج",
-      salt: "ملح Tropic Marin Pro Reef — كثافة تشغيل 1.025 SG",
-    },
-    automation: {
-      controller: "Neptune Apex Classic Controller مع وحدة EnergyBar 832 للتحكم بالكهرباء",
-      sensors: "حساسات: درجة الحرارة + pH + ORP + Conductivity (الملوحة) + Leak Detect (كشف التسرب)",
-      dosing: "Apex DOS موزع جرعات مزدوج — إضافة Calcium / Alkalinity / Magnesium آليًا بنظام Balling",
-      alerts: "تنبيهات Apex Fusion عبر الجوال — انقطاع التيار، ارتفاع الحرارة، التسرب، انخفاض المياه",
-    },
-    serviceWarranty: {
-      schedule: "زيارة دورية كل أسبوعين تشمل اختبارات كاملة (Ca/Alk/Mg/NO₃/PO₄)، تنظيف الزجاج والـ Sump، تبديل 10% من المياه",
-      equipmentWarranty: "ضمان شامل على كافة المعدات لمدة 12 شهرًا من تاريخ التشغيل",
-      livestockWarranty: "ضمان إنضاج بيولوجي وكفالة على المرجان لمدة 90 يومًا",
-      support: "خط دعم واتساب على مدار الساعة لحالات الطوارئ + استجابة ميدانية خلال 24 ساعة",
-    },
+    waterSystem: [
+      "وحدة RO/DI لتنقية المياه",
+      "جهاز قياس (TDS / كثافة الملوحة)",
+      "خزانات تحضير وخلط للمياه العذبة والمالحة",
+    ],
+    addOns: [
+      "تعويض التبخر التلقائي (ATO)",
+      "خزان سفلي إضافي",
+      "ميديا فلترة + فحم كربوني",
+      "وحدة تعقيم UV",
+      "صخور حية بتصميم Aquascape احترافي مع تثبيت",
+      "رمل بحري خاص",
+      "25 كجم ملح بحري إضافي",
+      "معدات صيانة وعناية يومية",
+    ],
+    servicePackages: [
+      "باقة صيانة دورية كل أسبوعين (اختبارات كاملة + تنظيف + تبديل 10% ماء)",
+      "باقة ضمان شامل على المعدات لمدة 12 شهرًا",
+      "باقة دعم فني واتساب على مدار الساعة + استجابة ميدانية خلال 24 ساعة",
+    ],
+    livestockWarranty: "ضمان إنضاج بيولوجي وكفالة على الكائنات الحية لمدة 90 يومًا",
     contents: {
-      fish: ["Sailfin Tang", "Clownfish", "Angelfish", "Wrasse"],
-      plantsOrCorals: ["Live Rock", "LPS Corals", "Soft Corals"],
-      decor: "صخور حية + رمل أراجونيت ناعم",
+      fish: [
+        "Clownfish",
+        "Sailfin Tang",
+        "Yellow Tang",
+        "Royal Gramma",
+        "Firefish",
+        "Six Line Wrasse",
+        "Anthias",
+        "Chromis",
+        "Goby",
+      ],
+      plantsOrCorals: [
+        "شقائق النعمان (Anemones)",
+        "مرجان سوفتي (Soft Corals)",
+        "حلزونات تنظيف (Nassarius / Trochus)",
+        "Cleaner Shrimp",
+        "Hermit Crabs",
+        "نجم البحر العاشب",
+      ],
+      decor: "صخور حية بتصميم Aquascape مفتوح وتثبيت احترافي + رمل أراجونيت ناعم",
     },
     priceRange: { min: 65000, max: 95000, currency: "SAR" },
   },
