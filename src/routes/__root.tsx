@@ -74,8 +74,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "أكوا هيفن" },
       { property: "og:type", content: "website" },
       { property: "og:title", content: "أكوا هيفن — عالمك المائي يبدأ من هنا" },
-      { property: "og:description", content: "تصميم وتركيب وصيانة الأحواض المائية الفاخرة في المملكة العربية السعودية." },
+      { property: "og:description", content: "أكوا هيفن (AQH) — تصميم وتركيب وصيانة الأحواض المائية الفاخرة في الرياض، المملكة العربية السعودية." },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "أكوا هيفن — عالمك المائي يبدأ من هنا" },
+      { name: "twitter:description", content: "أكوا هيفن (AQH) — تصميم وتركيب وصيانة الأحواض المائية الفاخرة في الرياض، المملكة العربية السعودية." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a58ad551-9107-4164-bf1e-d5e154d0dc23/id-preview-b116cd68--f61ac6c0-5ccb-4f0b-8716-3ff74e1e03a4.lovable.app-1781220116108.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a58ad551-9107-4164-bf1e-d5e154d0dc23/id-preview-b116cd68--f61ac6c0-5ccb-4f0b-8716-3ff74e1e03a4.lovable.app-1781220116108.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
