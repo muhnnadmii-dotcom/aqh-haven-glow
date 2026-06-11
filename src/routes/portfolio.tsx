@@ -18,7 +18,7 @@ import {
   Leaf,
   MapPin,
   Calendar,
-  Clock,
+  
   Sparkles,
   MessageCircle,
 } from "lucide-react";
