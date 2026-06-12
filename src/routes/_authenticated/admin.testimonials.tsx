@@ -65,7 +65,8 @@ function TestimonialsAdmin() {
 
   const toggle = async (t: T, field: "visible" | "featured") => {
     if (!t.id) return;
-    const { error } = await supabase.from("testimonials").update({ [field]: !t[field] }).eq("id", t.id);
+    const patch: Partial<T> = { [field]: !t[field] };
+    const { error } = await supabase.from("testimonials").update(patch).eq("id", t.id);
     if (error) { toast.error(error.message); return; }
     load();
   };
