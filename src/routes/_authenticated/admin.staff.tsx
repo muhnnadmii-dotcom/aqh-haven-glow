@@ -29,7 +29,7 @@ function StaffAdmin() {
 
   const remove = async (user_id: string, role: string) => {
     if (!confirm(`إزالة دور ${role}؟`)) return;
-    const { error } = await supabase.from("user_roles").delete().eq("user_id", user_id).eq("role", role);
+    const { error } = await supabase.from("user_roles").delete().eq("user_id", user_id).eq("role", role as "admin" | "staff" | "customer");
     if (error) toast.error(error.message); else { toast.success("تمت الإزالة"); load(); }
   };
 

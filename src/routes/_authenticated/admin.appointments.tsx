@@ -28,7 +28,7 @@ function AppointmentsAdmin() {
   };
   useEffect(() => { load(); }, []);
 
-  const update = async (id: string, patch: Partial<Row>) => {
+  const update = async (id: string, patch: { status?: string; admin_notes?: string | null }) => {
     const { error } = await supabase.from("appointments").update(patch).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("تم"); load(); }
   };
