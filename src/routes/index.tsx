@@ -5,8 +5,7 @@ import { Reveal } from "../components/Reveal";
 import { Counter } from "../components/Counter";
 import {
   ArrowLeft,
-  Sparkles, BadgeCheck,
-  Search, PenTool, Hammer, LifeBuoy, Plus, Minus, Star, Quote,
+  Plus, Minus, Star, Quote,
 } from "lucide-react";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
 import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
@@ -15,12 +14,14 @@ import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json"
 import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
-import { ICONS, type HeroContent, type ExploreContent, type ServicesContent } from "@/lib/home-sections";
+import {
+  ICONS,
+  type HeroContent, type ExploreContent, type ServicesContent,
+  type WhyUsContent, type ProcessContent, type FaqContent, type CtaContent, type SectionHeader,
+} from "@/lib/home-sections";
 
 const heroFallback = livingRoomTankAsset.url;
 const styledAquarium = styledAquariumAsset.url;
-const counterAquarium = counterAquariumAsset.url;
-const canisterFilter = canisterFilterAsset.url;
 const serviceFallbacks = [marineCubeAsset.url, counterAquariumAsset.url, canisterFilterAsset.url, styledAquariumAsset.url];
 
 export const Route = createFileRoute("/")({
@@ -37,20 +38,6 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const whyUs = [
-  { icon: Sparkles, title: "تصميم فاخر", desc: "تصاميم استوديو خاصة تليق بالمساحات الراقية." },
-  { icon: BadgeCheck, title: "فريق احترافي", desc: "فريق ذو خبرة طويلة في المجال يتولى مشروعك من الألف للياء." },
-  { icon: PenTool, title: "تصميم واضح", desc: "خبرة في تنفيذ أشكال وأنماط مختلفة حسب طلبك وذوقك." },
-  { icon: LifeBuoy, title: "متابعة مستمرة", desc: "ندعمك بعد التسليم لضمان استقرار الحوض وصحته." },
-];
-
-const process = [
-  { icon: Search, n: "01", title: "الاستكشاف", desc: "نزور موقعك ونفهم رؤيتك واحتياجاتك بدقة." },
-  { icon: PenTool, n: "02", title: "التصميم", desc: "نقدّم تصوراً واضحاً للحوض بكل تفاصيله التقنية والجمالية." },
-  { icon: Hammer, n: "03", title: "التنفيذ", desc: "تركيب احترافي يضمن الجودة والمتانة والجمال." },
-  { icon: LifeBuoy, n: "04", title: "العناية", desc: "متابعة وصيانة دورية لاستدامة حوضك بأفضل حالة." },
-];
-
 const stats = [
   { num: 9, suffix: "+", label: "سنوات خبرة" },
   { num: 320, suffix: "+", label: "مشروع منجز" },
@@ -59,51 +46,42 @@ const stats = [
 
 const partners = ["EHEIM", "JBL", "FLUVAL", "RED SEA", "ADA", "SEACHEM", "TUNZE", "CHIHIROS"];
 
-type Testimonial = {
-  id: string;
-  name: string;
-  role: string | null;
-  rating: number;
-  body: string;
-  image_path: string | null;
-};
-
-type FeaturedArticle = {
-  slug: string;
-  title: string;
-  excerpt: string | null;
-  cover_path: string | null;
-};
-
-
-const faqs = [
-  { q: "هل تقدمون خدماتكم خارج الرياض؟", a: "خدماتنا الأساسية داخل الرياض، أما المشاريع الكبيرة (تجارية أو فلل خاصة) فنلتزم بتنفيذها في باقي مناطق المملكة بعد اتفاق مسبق." },
-  { q: "كم يستغرق تنفيذ حوض مخصص؟", a: "يعتمد على حجم المشروع وتعقيده، عادة من 2 إلى 6 أسابيع تشمل التصميم والتنفيذ والتأسيس البيئي." },
-  { q: "ما الذي تشمله خطة الصيانة الدورية؟", a: "تشمل فحص المياه، تنظيف الفلاتر، تغيير جزئي للمياه، فحص المعدات، وتقرير دوري بحالة الحوض." },
-  { q: "هل تقدمون أنظمة لمطاعم وكافيهات؟", a: "نعم، لدينا قسم متخصص في الحلول التجارية للكافيهات والمطاعم والفعاليات وأنظمة المأكولات البحرية الحية." },
-  { q: "هل الحوض يصدر رائحة؟", a: "الحوض المتوازن بيئياً وبفلترة سليمة لا تصدر منه أي رائحة. أنظمتنا مصممة لضمان مياه نقية وهواء نظيف حول الحوض." },
-  { q: "كيف أطلب مشروعاً جديداً؟", a: "تواصل معنا عبر نموذج التواصل أو واتساب، وسيقوم فريقنا بترتيب زيارة استكشافية مجانية داخل الرياض." },
-];
+type Testimonial = { id: string; name: string; role: string | null; rating: number; body: string; image_path: string | null };
+type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
 
 type Sections = {
   hero: { enabled: boolean; content: HeroContent } | null;
   explore: { enabled: boolean; content: ExploreContent } | null;
   services: { enabled: boolean; content: ServicesContent } | null;
+  why_us: { enabled: boolean; content: WhyUsContent } | null;
+  process: { enabled: boolean; content: ProcessContent } | null;
+  faq: { enabled: boolean; content: FaqContent } | null;
+  cta: { enabled: boolean; content: CtaContent } | null;
+  testimonials_header: { enabled: boolean; content: SectionHeader } | null;
+  knowledge_header: { enabled: boolean; content: SectionHeader } | null;
 };
+
+const EMPTY_SECTIONS: Sections = {
+  hero: null, explore: null, services: null,
+  why_us: null, process: null, faq: null, cta: null,
+  testimonials_header: null, knowledge_header: null,
+};
+
+const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "testimonials_header", "knowledge_header"];
 
 function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [sections, setSections] = useState<Sections>({ hero: null, explore: null, services: null });
+  const [sections, setSections] = useState<Sections>(EMPTY_SECTIONS);
   const [articles, setArticles] = useState<FeaturedArticle[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
   useEffect(() => {
     let alive = true;
     supabase.from("home_sections").select("section_key, enabled, content")
-      .in("section_key", ["hero", "explore", "services"])
+      .in("section_key", SECTION_KEYS)
       .then(({ data }) => {
         if (!alive) return;
-        const m: any = { hero: null, explore: null, services: null };
+        const m: any = { ...EMPTY_SECTIONS };
         (data ?? []).forEach((r: any) => { m[r.section_key] = { enabled: r.enabled, content: r.content }; });
         setSections(m);
       });
@@ -117,6 +95,8 @@ function HomePage() {
       .then(({ data }) => { if (alive) setTestimonials((data ?? []) as unknown as Testimonial[]); });
     return () => { alive = false; };
   }, []);
+
+
 
 
   const hero = sections.hero?.content;
