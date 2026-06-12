@@ -44,6 +44,12 @@ function TankDetail() {
           <div className="text-sm text-muted-foreground mt-1">{tank.tank_type ?? ""} · {tank.dimensions ?? ""} · {tank.volume_liters ? `${tank.volume_liters}L` : ""}</div>
           {tank.livestock && <div className="text-sm mt-2"><b>المحتويات:</b> {tank.livestock}</div>}
           {tank.notes && <div className="text-sm mt-1 text-muted-foreground">{tank.notes}</div>}
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Link to="/account/requests/new" search={{ type: "consultation", tank: tank.id }}
+              className="btn-gold rounded-xl px-3 py-1.5 text-xs">طلب استشارة لهذا الحوض</Link>
+            <Link to="/account/requests/new" search={{ type: "maintenance", tank: tank.id }}
+              className="glass rounded-xl px-3 py-1.5 text-xs hover:bg-white/10">طلب صيانة لهذا الحوض</Link>
+          </div>
         </div>
       </div>
 
