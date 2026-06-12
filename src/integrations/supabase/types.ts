@@ -365,8 +365,11 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          duration: string | null
           equipment: Json
           featured: boolean
+          featured_on_home: boolean
+          home_order: number
           id: string
           image_paths: string[]
           images: string[]
@@ -394,8 +397,11 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          duration?: string | null
           equipment?: Json
           featured?: boolean
+          featured_on_home?: boolean
+          home_order?: number
           id?: string
           image_paths?: string[]
           images?: string[]
@@ -423,8 +429,11 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          duration?: string | null
           equipment?: Json
           featured?: boolean
+          featured_on_home?: boolean
+          home_order?: number
           id?: string
           image_paths?: string[]
           images?: string[]
@@ -516,30 +525,39 @@ export type Database = {
           created_at: string
           featured: boolean
           id: string
+          image_path: string | null
           name: string
           rating: number
+          role: string | null
           sort_order: number
           updated_at: string
+          visible: boolean
         }
         Insert: {
           body: string
           created_at?: string
           featured?: boolean
           id?: string
+          image_path?: string | null
           name: string
           rating?: number
+          role?: string | null
           sort_order?: number
           updated_at?: string
+          visible?: boolean
         }
         Update: {
           body?: string
           created_at?: string
           featured?: boolean
           id?: string
+          image_path?: string | null
           name?: string
           rating?: number
+          role?: string | null
           sort_order?: number
           updated_at?: string
+          visible?: boolean
         }
         Relationships: []
       }
