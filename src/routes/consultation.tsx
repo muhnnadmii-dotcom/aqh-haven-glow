@@ -31,8 +31,14 @@ function ConsultationPage() {
   const [size, setSize] = useState("");
   const [details, setDetails] = useState("");
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase.from("consultation_requests").insert({
+      name, phone, tank_type: tankType, goal, size, details, user_id: u.user?.id ?? null,
+    });
+    if (error) { toast.error("تعذر إرسال الاستشارة"); return; }
+    toast.success("تم استلام استشارتك، سنتواصل معك قريباً");
     const text =
       `السلام عليكم، أرغب بحجز استشارة.\n` +
       `الاسم: ${name}\n` +
