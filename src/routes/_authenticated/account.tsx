@@ -52,10 +52,10 @@ function AccountLayout() {
             <div className="text-[10px] uppercase text-muted-foreground px-2 mb-2 tracking-widest">طلبات سريعة</div>
             <div className="flex flex-col gap-1.5">
               {quickRequests.map((q) => (
-                <button key={q.kind} onClick={() => quickRequest(q.kind, q.label)}
+                <Link key={q.kind} to="/account/requests/new" search={{ type: q.kind, tank: "" }}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs bg-gold/10 text-gold hover:bg-gold/20">
                   <q.icon size={14} /> {q.label}
-                </button>
+                </Link>
               ))}
             </div>
           </div>
