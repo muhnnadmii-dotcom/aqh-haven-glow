@@ -32,7 +32,53 @@ import nanoRiver1 from "../assets/nano-river-1.jpeg.asset.json";
 import nanoRiver2 from "../assets/nano-river-2.png.asset.json";
 import nanoRiver3 from "../assets/nano-river-3.png.asset.json";
 import nanoRiver4 from "../assets/nano-river-4.png.asset.json";
-...
+
+export type ProjectCategory = "living-room" | "office" | "entrance" | "commercial";
+
+export type Project = {
+  id: number;
+  slug: string;
+  title: string;
+  cat: ProjectCategory;
+  catLabel: string;
+  featured?: boolean;
+  location: string;
+  year: string;
+  cover: string;
+  images: string[];
+  description: string;
+  specs: {
+    dimensions: string;
+    volumeLiters: string;
+    systemType: string;
+    glassType?: string;
+    totalSystemVolume?: string;
+    glassBonding?: string;
+    parIntensity?: string;
+    turnover?: string;
+  };
+  equipment: {
+    filter: string;
+    lighting: string;
+    heatingCooling?: string;
+    waveMakers?: string;
+    co2?: string;
+    skimmer?: string;
+    returnPump?: string;
+    dosing?: string;
+  };
+  waterSystem?: string[];
+  addOns?: string[];
+  servicePackages?: string[];
+  livestockWarranty?: string;
+  contents: {
+    fish: string[];
+    plantsOrCorals?: string[];
+    decor?: string;
+  };
+  priceRange: { min: number; max: number; currency: "SAR" };
+};
+
 export const projects: Project[] = [
   {
     id: 12,
