@@ -188,11 +188,11 @@ function MarineCard({ tank }: { tank: TankRef }) {
   const csl = tank.coral_safe_light;
   if (csl) add("مناسبة للمرجان", csl === "yes" ? "نعم" : csl === "no" ? "لا" : "لا أعلم");
   // Tests
-  const tests: [string, any][] = [
+  const tests: [string, any][] = ([
     ["Salinity", tank.test_salinity], ["pH", tank.test_ph], ["KH", tank.test_kh],
     ["Ca", tank.test_calcium], ["Mg", tank.test_magnesium], ["NO3", tank.test_nitrate],
     ["PO4", tank.test_phosphate], ["NH3", tank.test_ammonia], ["NO2", tank.test_nitrite],
-  ].filter(([, v]) => v !== null && v !== undefined && v !== "");
+  ] as [string, any][]).filter(([, v]) => v !== null && v !== undefined && v !== "");
 
   const corals = Array.isArray(tank.corals) ? tank.corals : [];
 
