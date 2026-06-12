@@ -162,3 +162,72 @@ function AdminRequestsPage() {
 }
 
 const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm focus:outline-none focus:border-gold/60";
+
+function MarineCard({ tank }: { tank: TankRef }) {
+  const rows: [string, any][] = [];
+  const add = (label: string, val: any, suffix = "") => {
+    if (val === null || val === undefined || val === "" || val === false) return;
+    rows.push([label, typeof val === "boolean" ? "نعم" : `${val}${suffix}`]);
+  };
+  // Equipment
+  add("بروتين سكيمر", tank.has_protein_skimmer);
+  add("موديل السكيمر", tank.protein_skimmer_model);
+  add("ويف ميكر", tank.has_wave_maker);
+  add("موديل الويف ميكر", tank.wave_maker_model);
+  add("سامب", tank.has_sump);
+  add("ATO", tank.has_ato);
+  add("نوع الملح", tank.salt_brand);
+  add("الملوحة", tank.salinity);
+  add("الحرارة", tank.marine_temperature, "°C");
+  add("آخر تغيير ماء", tank.last_water_change);
+  add("نسبة تغيير الماء", tank.water_change_percent, "%");
+  // Lighting
+  add("نوع الإضاءة", tank.marine_light_type);
+  add("ساعات الأبيض", tank.white_light_hours);
+  add("ساعات الأزرق", tank.blue_light_hours);
+  const csl = tank.coral_safe_light;
+  if (csl) add("مناسبة للمرجان", csl === "yes" ? "نعم" : csl === "no" ? "لا" : "لا أعلم");
+  // Tests
+  const tests: [string, any][] = [
+    ["Salinity", tank.test_salinity], ["pH", tank.test_ph], ["KH", tank.test_kh],
+    ["Ca", tank.test_calcium], ["Mg", tank.test_magnesium], ["NO3", tank.test_nitrate],
+    ["PO4", tank.test_phosphate], ["NH3", tank.test_ammonia], ["NO2", tank.test_nitrite],
+  ].filter(([, v]) => v !== null && v !== undefined && v !== "");
+
+  const corals = Array.isArray(tank.corals) ? tank.corals : [];
+
+  if (!rows.length && !tests.length && !tank.has_coral && !corals.length) return null;
+
+  return (
+    <div className="text-xs bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3 space-y-2">
+      <div className="font-bold text-cyan-300">بيانات الحوض البحري</div>
+      {rows.length > 0 && (
+        <div className="grid sm:grid-cols-3 gap-1">
+          {rows.map(([k, v]) => (
+            <div key={k}><b className="text-muted-foreground">{k}:</b> {v}</div>
+          ))}
+        </div>
+      )}
+      {tank.has_coral && corals.length > 0 && (
+        <div>
+          <div className="font-semibold mb-1">المرجان:</div>
+          <ul className="list-disc pr-5 space-y-0.5">
+            {corals.map((c: any, i: number) => (
+              <li key={i}>{c.type || "—"} {c.count && `× ${c.count}`} {c.notes && `— ${c.notes}`}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {tests.length > 0 && (
+        <div>
+          <div className="font-semibold mb-1">الفحوصات:</div>
+          <div className="grid sm:grid-cols-3 gap-1">
+            {tests.map(([k, v]) => (
+              <div key={k}><b className="text-muted-foreground">{k}:</b> {v}</div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
