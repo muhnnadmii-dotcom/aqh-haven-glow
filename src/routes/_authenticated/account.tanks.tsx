@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/account/tanks")({
 
 type LivestockItem = { species: string; count: string };
 type PlantItem = { name: string; count: string };
+type CoralItem = { type: string; count: string; notes: string };
 
 type Tank = {
   id?: string;
@@ -41,6 +42,36 @@ type Tank = {
   plants: PlantItem[];
   image_paths: string[];
   primary_image: string | null;
+  // Marine equipment
+  has_protein_skimmer: boolean;
+  protein_skimmer_model: string;
+  has_wave_maker: boolean;
+  wave_maker_model: string;
+  has_sump: boolean;
+  has_ato: boolean;
+  salt_brand: string;
+  salinity: string;
+  marine_temperature: string;
+  last_water_change: string | null;
+  water_change_percent: string;
+  // Marine lighting
+  marine_light_type: string;
+  white_light_hours: string;
+  blue_light_hours: string;
+  coral_safe_light: string; // yes | no | unknown
+  // Coral
+  has_coral: boolean;
+  corals: CoralItem[];
+  // Tests
+  test_salinity: string;
+  test_ph: string;
+  test_kh: string;
+  test_calcium: string;
+  test_magnesium: string;
+  test_nitrate: string;
+  test_phosphate: string;
+  test_ammonia: string;
+  test_nitrite: string;
 };
 
 const blank: Tank = {
@@ -52,6 +83,15 @@ const blank: Tank = {
   has_co2: false, co2_type: "", co2_hours: "",
   livestock_items: [], has_plants: false, plants: [],
   image_paths: [], primary_image: null,
+  has_protein_skimmer: false, protein_skimmer_model: "",
+  has_wave_maker: false, wave_maker_model: "",
+  has_sump: false, has_ato: false,
+  salt_brand: "", salinity: "", marine_temperature: "",
+  last_water_change: null, water_change_percent: "",
+  marine_light_type: "", white_light_hours: "", blue_light_hours: "", coral_safe_light: "",
+  has_coral: false, corals: [],
+  test_salinity: "", test_ph: "", test_kh: "", test_calcium: "", test_magnesium: "",
+  test_nitrate: "", test_phosphate: "", test_ammonia: "", test_nitrite: "",
 };
 
 const TANK_TYPES = [
