@@ -166,9 +166,21 @@ function PortfolioPage() {
         ))}
       </div>
 
+      {loading && (
+        <div className="text-center text-muted-foreground py-12">جاري تحميل المشاريع...</div>
+      )}
+      {error && (
+        <div className="text-center text-red-400 py-12">تعذر تحميل المشاريع: {error}</div>
+      )}
+      {!loading && !error && filtered.length === 0 && (
+        <div className="glass rounded-2xl p-10 text-center text-muted-foreground">
+          لا توجد أعمال {cat !== "all" ? "في هذا التصنيف" : "حالياً"}.
+        </div>
+      )}
+
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((p, i) => (
-          <Reveal key={p.id} delay={i * 80}>
+          <Reveal key={p.slug} delay={i * 80}>
             <button onClick={() => setOpen(p)} className="group block w-full text-right">
               <div className="relative overflow-hidden rounded-2xl glass">
                 <img
@@ -186,16 +198,20 @@ function PortfolioPage() {
                     <Sparkles size={12} /> مميّز
                   </div>
                 )}
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-background/70 backdrop-blur">
-                  {formatPriceFrom(p.priceRange)}
-                </div>
+                {(p.priceRange?.min || p.priceRange?.max) ? (
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-background/70 backdrop-blur">
+                    {formatPriceFrom(p.priceRange)}
+                  </div>
+                ) : null}
 
                 <div className="absolute bottom-0 right-0 left-0 p-5">
                   <div className="text-xs text-gradient-gold mb-1">{p.catLabel}</div>
                   <div className="text-lg font-bold mb-1">{p.title}</div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin size={12} /> {p.location}
-                  </div>
+                  {p.location && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin size={12} /> {p.location}
+                    </div>
+                  )}
                   <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-[color:var(--gold)]">
                     شاهد التفاصيل ←
                   </div>
