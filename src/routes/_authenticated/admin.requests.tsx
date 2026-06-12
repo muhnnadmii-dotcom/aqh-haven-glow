@@ -19,7 +19,7 @@ type Req = {
   preferred_times: string | null; attachments: string[]; tank_id: string | null;
   created_at: string;
 };
-type TankRef = { id: string; name: string; tank_type: string | null; volume_liters: number | null; dimensions: string | null };
+type TankRef = { id: string; name: string; tank_type: string | null; volume_liters: number | null; dimensions: string | null; [k: string]: any };
 
 function AdminRequestsPage() {
   const [list, setList] = useState<Req[]>([]);
