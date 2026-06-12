@@ -16,12 +16,12 @@ const navItems = [
   { to: "/account/profile", label: "ملفي الشخصي", icon: User, exact: false },
 ] as const;
 
-const quickRequests = [
+const quickRequests: { kind: RequestType; label: string; icon: any }[] = [
   { kind: "consultation", label: "اطلب استشارة", icon: Sparkles },
   { kind: "visit", label: "اطلب معاينة", icon: Calendar },
   { kind: "design", label: "اطلب تصميم", icon: Fish },
   { kind: "maintenance", label: "اطلب صيانة", icon: Wrench },
-] as const;
+];
 
 function AccountLayout() {
   const navigate = useNavigate();
@@ -30,14 +30,6 @@ function AccountLayout() {
   const logout = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/" });
-  };
-
-  const quickRequest = async (kind: string, label: string) => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase.from("appointments").insert({ user_id: u.user.id, kind, notes: `طلب ${label} من الداش بورد` });
-    if (error) toast.error(error.message);
-    else { toast.success("تم إرسال الطلب — سنتواصل معك"); navigate({ to: "/account/appointments" }); }
   };
 
   return (
