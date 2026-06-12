@@ -28,54 +28,58 @@ import urayjaNano1 from "../assets/urayja-nano-1.jpeg.asset.json";
 import urayjaNano2 from "../assets/urayja-nano-2.png.asset.json";
 import urayjaNano3 from "../assets/urayja-nano-3.png.asset.json";
 import urayjaNano4 from "../assets/urayja-nano-4.jpeg.asset.json";
-
-export type ProjectCategory = "living-room" | "office" | "entrance" | "commercial";
-
-export type Project = {
-  id: number;
-  slug: string;
-  title: string;
-  cat: ProjectCategory;
-  catLabel: string;
-  featured?: boolean;
-  location: string;
-  year: string;
-  cover: string;
-  images: string[];
-  description: string;
-  specs: {
-    dimensions: string;
-    volumeLiters: string;
-    systemType: string;
-    glassType?: string;
-    totalSystemVolume?: string;
-    glassBonding?: string;
-    parIntensity?: string;
-    turnover?: string;
-  };
-  equipment: {
-    filter: string;
-    lighting: string;
-    heatingCooling?: string;
-    waveMakers?: string;
-    co2?: string;
-    skimmer?: string;
-    returnPump?: string;
-    dosing?: string;
-  };
-  waterSystem?: string[];
-  addOns?: string[];
-  servicePackages?: string[];
-  livestockWarranty?: string;
-  contents: {
-    fish: string[];
-    plantsOrCorals?: string[];
-    decor?: string;
-  };
-  priceRange: { min: number; max: number; currency: "SAR" };
-};
-
+import nanoRiver1 from "../assets/nano-river-1.jpeg.asset.json";
+import nanoRiver2 from "../assets/nano-river-2.png.asset.json";
+import nanoRiver3 from "../assets/nano-river-3.png.asset.json";
+import nanoRiver4 from "../assets/nano-river-4.png.asset.json";
+...
 export const projects: Project[] = [
+  {
+    id: 12,
+    slug: "nano-river-ready-kit",
+    title: "حوض نانو طبيعي جاهز للتشغيل",
+    cat: "living-room",
+    catLabel: "غرفة المعيشة",
+    featured: true,
+    location: "الرياض — حي الندى",
+    year: "2026",
+    cover: nanoRiver1.url,
+    images: [nanoRiver1.url, nanoRiver2.url, nanoRiver3.url, nanoRiver4.url],
+    description:
+      "⏳ انتهى زمن الانتظار – حوض يشتغل من أول يوم. حوض نانو متكامل وجاهز للتشغيل؛ تعبّيه ماء وتشغّله مباشرة، مع تكوين طبيعي أنيق يناسب الطاولات الجانبية والمساحات الهادئة داخل المنزل.",
+    specs: {
+      dimensions: "35 × 35 × 35 سم",
+      volumeLiters: "~42 لتر",
+      systemType: "نهري عذب — جاهز للتشغيل",
+    },
+    equipment: {
+      filter:
+        "فلتر شلال Dophin H100 — فلترة ميكانيكية وبيولوجية خفيفة تساعد على صفاء الماء وتحريك السطح ورفع التهوية بشكل مستمر",
+      lighting:
+        "إضاءة مائية احترافية — تبرز تفاصيل الصخور والنباتات وتمنح الحوض مظهراً واضحاً ومتوازناً طوال اليوم",
+    },
+    addOns: [
+      "ممسحة مغناطيسية لتنظيف الزجاج من الداخل والخارج",
+      "أنبوب سحب لتغيير الماء وتنظيف الأرضية",
+      "طعام الأسماك",
+      "بروشور توضيحي يشمل خطوات التركيب وطريقة التشغيل والعناية اليومية",
+      "دعم مستمر لخدمة العملاء للمساعدة في تشغيل الحوض والمحافظة عليه",
+      "طاولة مستقلة بأبعاد 95 × 35 × 35 سم",
+    ],
+    contents: {
+      fish: [
+        "نيون تيترا (Neon Tetra) × 10",
+        "رامشورن سنيل (Ramshorn Snail)",
+        "حلزون زيبرا (Zebra Snail)",
+      ],
+      plantsOrCorals: [
+        "نباتات مائية طبيعية",
+        "أغصان وخشب طبيعي",
+      ],
+      decor: "أحجار نهرية ناعمة + رمل طبيعي + أخشاب ونباتات مائية",
+    },
+    priceRange: { min: 1899, max: 1899, currency: "SAR" },
+  },
   {
     id: 11,
     slug: "urayja-bedroom-nano-reef",
