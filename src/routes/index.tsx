@@ -340,41 +340,45 @@ function HomePage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <Reveal>
-            <div className="text-center mb-14">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">TESTIMONIALS</div>
-              <h2 className="text-3xl sm:text-4xl font-bold">آراء حقيقية من عملائنا</h2>
-              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">تقييمات منشورة من عملاء أكوا هيفن.</p>
+      {testimonials.length > 0 && (
+        <section className="relative py-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <Reveal>
+              <div className="text-center mb-14">
+                <div className="text-xs tracking-widest text-gradient-gold mb-3">TESTIMONIALS</div>
+                <h2 className="text-3xl sm:text-4xl font-bold">آراء حقيقية من عملائنا</h2>
+                <p className="text-muted-foreground mt-3 max-w-xl mx-auto">تقييمات منشورة من عملاء أكوا هيفن.</p>
+              </div>
+            </Reveal>
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((t, i) => (
+                <Reveal key={t.id} delay={i * 60}>
+                  <div className="glass rounded-2xl p-6 h-full relative">
+                    <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
+                    <div className="flex gap-1 mb-3">
+                      {Array.from({ length: t.rating || 5 }).map((_, k) => (
+                        <Star key={k} size={13} className="fill-gold text-gold" aria-hidden />
+                      ))}
+                    </div>
+                    <p className="text-sm leading-relaxed text-foreground/90 mb-5">{t.body}</p>
+                    <div className="border-t border-white/5 pt-3 flex items-center gap-3">
+                      {t.image_path ? (
+                        <img src={publicUrl(t.image_path)} alt={t.name} className="h-10 w-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full glass-gold grid place-items-center text-gold text-sm">{t.name.charAt(0)}</div>
+                      )}
+                      <div>
+                        <div className="font-bold text-sm">{t.name}</div>
+                        {t.role && <div className="text-xs text-muted-foreground mt-0.5">{t.role}</div>}
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
             </div>
-          </Reveal>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((t, i) => (
-              <Reveal key={t.name} delay={i * 60}>
-                <div className="glass rounded-2xl p-6 h-full relative">
-                  <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
-                  <div className="flex gap-1 mb-3">
-                    {Array.from({ length: 5 }).map((_, k) => (
-                      <Star key={k} size={13} className="fill-gold text-gold" aria-hidden />
-                    ))}
-                  </div>
-                  <p className="text-sm leading-relaxed text-foreground/90 mb-5">{t.quote}</p>
-                  <div className="border-t border-white/5 pt-3">
-                    <div className="font-bold text-sm">{t.name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{t.role}</div>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
           </div>
-          <div className="text-center mt-10">
-            <a href="https://aqh.sa/ar/testimonials" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-              عرض كل التقييمات <ArrowLeft size={14} aria-hidden />
-            </a>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* KNOWLEDGE */}
       <section className="relative py-24">
