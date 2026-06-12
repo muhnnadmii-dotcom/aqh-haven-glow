@@ -219,18 +219,28 @@ function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; on
       </div>
 
       <Section title="الأساسيات">
-        <Field label="العنوان"><input className={inp} value={v.title} onChange={(e) => set("title", e.target.value)} /></Field>
-        <Field label="Slug (بالإنجليزي، فريد)"><input dir="ltr" className={inp} value={v.slug} onChange={(e) => set("slug", e.target.value)} /></Field>
-        <Field label="الفئة"><input className={inp} value={v.category} onChange={(e) => set("category", e.target.value)} /></Field>
-        <Field label="اسم الفئة"><input className={inp} value={v.category_label ?? ""} onChange={(e) => set("category_label", e.target.value)} /></Field>
-        <Field label="الموقع"><input className={inp} value={v.location ?? ""} onChange={(e) => set("location", e.target.value)} /></Field>
+        <Field label="العنوان *"><input className={inp} value={v.title} onChange={(e) => set("title", e.target.value)} /></Field>
+        <Field label="Slug (بالإنجليزي، فريد) *"><input dir="ltr" className={inp} value={v.slug} onChange={(e) => set("slug", e.target.value)} /></Field>
+        <Field label="التصنيف">
+          <select className={inp} value={v.category} onChange={(e) => {
+            const nv = e.target.value;
+            onChange({ ...v, category: nv, category_label: catLabel(nv) });
+          }}>
+            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </Field>
+        <Field label="اسم التصنيف (للعرض)"><input className={inp} value={v.category_label ?? ""} onChange={(e) => set("category_label", e.target.value)} /></Field>
+        <Field label="المدينة / الموقع"><input className={inp} value={v.location ?? ""} onChange={(e) => set("location", e.target.value)} /></Field>
         <Field label="السنة"><input className={inp} value={v.year ?? ""} onChange={(e) => set("year", e.target.value)} /></Field>
-        <Field label="الوصف" full><textarea className={ta} rows={3} value={v.description ?? ""} onChange={(e) => set("description", e.target.value)} /></Field>
-        <Field label="الترتيب"><input type="number" className={inp} value={v.sort_order} onChange={(e) => set("sort_order", Number(e.target.value))} /></Field>
-        <Field label="خيارات">
-          <div className="flex items-center gap-4">
+        <Field label="مدة التنفيذ"><input className={inp} value={v.duration ?? ""} placeholder="مثلاً: أسبوعان" onChange={(e) => set("duration", e.target.value)} /></Field>
+        <Field label="الوصف المختصر / التفصيلي" full><textarea className={ta} rows={3} value={v.description ?? ""} onChange={(e) => set("description", e.target.value)} /></Field>
+        <Field label="ترتيب القائمة"><input type="number" className={inp} value={v.sort_order} onChange={(e) => set("sort_order", Number(e.target.value))} /></Field>
+        <Field label="ترتيب الصفحة الرئيسية"><input type="number" className={inp} value={v.home_order} onChange={(e) => set("home_order", Number(e.target.value))} /></Field>
+        <Field label="خيارات" full>
+          <div className="flex items-center gap-4 flex-wrap">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.published} onChange={(e) => set("published", e.target.checked)} /> منشور</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.featured} onChange={(e) => set("featured", e.target.checked)} /> مميز</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.featured_on_home} onChange={(e) => set("featured_on_home", e.target.checked)} /> يظهر في الصفحة الرئيسية</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.featured} onChange={(e) => set("featured", e.target.checked)} /> مميز (شارة)</label>
           </div>
         </Field>
       </Section>
