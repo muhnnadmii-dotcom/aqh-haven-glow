@@ -1,25 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bubbles } from "../components/Bubbles";
 import { Reveal } from "../components/Reveal";
 import { Counter } from "../components/Counter";
 import {
-  Fish, Building2, Wrench, MessagesSquare, ArrowLeft,
+  Wrench, ArrowLeft,
   Sparkles, BadgeCheck,
   Search, PenTool, Hammer, LifeBuoy, Plus, Minus, Star, Quote,
-  Briefcase, BookOpen, Phone, Users,
 } from "lucide-react";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
 import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
 import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
 import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
+import { supabase } from "@/integrations/supabase/client";
+import { publicUrl } from "@/lib/storage";
+import { ICONS, type HeroContent, type ExploreContent, type ServicesContent } from "@/lib/home-sections";
 
-const hero = livingRoomTankAsset.url;
-const marineCube = marineCubeAsset.url;
+const heroFallback = livingRoomTankAsset.url;
 const styledAquarium = styledAquariumAsset.url;
 const counterAquarium = counterAquariumAsset.url;
 const canisterFilter = canisterFilterAsset.url;
+const serviceFallbacks = [marineCubeAsset.url, counterAquariumAsset.url, canisterFilterAsset.url, styledAquariumAsset.url];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,47 +36,6 @@ export const Route = createFileRoute("/")({
   }),
   component: HomePage,
 });
-
-const navCubes = [
-  { to: "/portfolio", label: "أعمالنا", icon: Briefcase, desc: "مشاريع مختارة" },
-  { to: "/services", label: "خدماتنا", icon: Sparkles, desc: "حلول متكاملة" },
-  { to: "/maintenance", label: "الصيانة", icon: Wrench, desc: "باقات شهرية" },
-  { to: "/consultation", label: "استشارات", icon: MessagesSquare, desc: "خبرة موثوقة" },
-  { to: "/knowledge", label: "مركز المعرفة", icon: BookOpen, desc: "مقالات ودلائل" },
-  { to: "/about", label: "من نحن", icon: Users, desc: "قصتنا ورؤيتنا" },
-  { to: "/contact", label: "تواصل معنا", icon: Phone, desc: "نحن قريبون" },
-] as const;
-
-const services = [
-  {
-    icon: Fish,
-    title: "أحواض مخصصة",
-    desc: "تصميم وتنفيذ أحواض مائية تحاكي رؤيتك بدقة هندسية وجمالية.",
-    img: marineCube,
-    to: "/portfolio" as const,
-  },
-  {
-    icon: Building2,
-    title: "أنظمة تجارية",
-    desc: "حلول للمطاعم والكافيهات والفعاليات وأنظمة المأكولات البحرية الحية.",
-    img: counterAquarium,
-    to: "/portfolio" as const,
-  },
-  {
-    icon: Wrench,
-    title: "صيانة دورية",
-    desc: "باقات شهرية مرنة تضمن استدامة جمال أحواضك وصحة سكانها.",
-    img: canisterFilter,
-    to: "/maintenance" as const,
-  },
-  {
-    icon: MessagesSquare,
-    title: "استشارات",
-    desc: "أرسل تفاصيل حوضك واحصل على توصية متخصصة من فريقنا.",
-    img: styledAquarium,
-    to: "/consultation" as const,
-  },
-];
 
 const whyUs = [
   { icon: Sparkles, title: "تصميم فاخر", desc: "تصاميم استوديو خاصة تليق بالمساحات الراقية." },
@@ -96,9 +57,7 @@ const stats = [
   { num: 1915, suffix: "+", label: "عميل سعيد" },
 ];
 
-const partners = [
-  "EHEIM", "JBL", "FLUVAL", "RED SEA", "ADA", "SEACHEM", "TUNZE", "CHIHIROS",
-];
+const partners = ["EHEIM", "JBL", "FLUVAL", "RED SEA", "ADA", "SEACHEM", "TUNZE", "CHIHIROS"];
 
 const testimonials = [
   { name: "محمد علاء", role: "عميل", quote: "تعامل راقي، منتجات رائعة، توصيل سريع وتغليف ممتاز. أفضل موقع لأسماك الزينة ومنتجاتها." },
@@ -128,98 +87,135 @@ const faqs = [
   { q: "كيف أطلب مشروعاً جديداً؟", a: "تواصل معنا عبر نموذج التواصل أو واتساب، وسيقوم فريقنا بترتيب زيارة استكشافية مجانية داخل الرياض." },
 ];
 
+type Sections = {
+  hero: { enabled: boolean; content: HeroContent } | null;
+  explore: { enabled: boolean; content: ExploreContent } | null;
+  services: { enabled: boolean; content: ServicesContent } | null;
+};
+
 function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [sections, setSections] = useState<Sections>({ hero: null, explore: null, services: null });
+
+  useEffect(() => {
+    let alive = true;
+    supabase.from("home_sections").select("section_key, enabled, content")
+      .in("section_key", ["hero", "explore", "services"])
+      .then(({ data }) => {
+        if (!alive) return;
+        const m: any = { hero: null, explore: null, services: null };
+        (data ?? []).forEach((r: any) => { m[r.section_key] = { enabled: r.enabled, content: r.content }; });
+        setSections(m);
+      });
+    return () => { alive = false; };
+  }, []);
+
+  const hero = sections.hero?.content;
+  const heroEnabled = sections.hero?.enabled ?? true;
+  const heroImg = hero?.image_path ? publicUrl(hero.image_path) : heroFallback;
+  const overlayOn = hero?.overlay_enabled ?? true;
+  const overlayOpacity = hero?.overlay_opacity ?? 0.6;
+
+  const explore = sections.explore?.content;
+  const exploreEnabled = sections.explore?.enabled ?? true;
+  const exploreItems = (explore?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+  const services = sections.services?.content;
+  const servicesEnabled = sections.services?.enabled ?? true;
+  const serviceItems = (services?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
 
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-[92dvh] overflow-hidden -mt-24 pt-24 flex items-center">
-        <div className="absolute inset-0">
-          <img src={hero} alt="حوض نباتي فاخر داخل مساحة معيشة عصرية من أعمال أكوا هيفن" className="h-full w-full object-cover opacity-40" width={1920} height={1080} />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/40 to-background" />
-        </div>
-        <div className="light-rays" aria-hidden />
-        <Bubbles count={22} />
-
-        <div className="relative mx-auto max-w-7xl px-6 py-20 text-center">
-          <Reveal delay={120}>
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold leading-[1.05] mb-6 tracking-tight">
-              <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
-                عالمك المائي
-              </span>
-              <br />
-              <span className="text-foreground/95">يبدأ من هنا</span>
-            </h1>
-          </Reveal>
-          <Reveal delay={240}>
-            <p className="mx-auto max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed mb-10">
-              نصمم ونبني أنظمة بيئية مائية فاخرة — أحواض مخصصة، تركيبات تجارية، وعناية متواصلة بأعلى المعايير العالمية.
-            </p>
-          </Reveal>
-          <Reveal delay={360}>
-            <div className="flex flex-wrap justify-center gap-3 mb-12">
-              <a href="https://aqh.sa" target="_blank" rel="noopener noreferrer"
-                className="btn-gold inline-flex items-center rounded-xl px-7 py-3.5 text-sm">
-                تسوق الآن
-              </a>
-              <Link to="/contact"
-                className="btn-outline-gold inline-flex items-center rounded-xl px-7 py-3.5 text-sm">
-                اطلب مشروعك
-              </Link>
-            </div>
-          </Reveal>
-          <Reveal delay={480}>
-            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
-              {stats.map((s) => (
-                <div key={s.label} className="glass rounded-2xl p-4">
-                  <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
-                    <Counter to={s.num} suffix={s.suffix} />
-                  </div>
-                  <div className="text-[11px] md:text-xs text-muted-foreground mt-1">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* NAV CUBES */}
-      <section className="relative py-16">
-        <div className="mx-auto max-w-7xl px-6">
-          <Reveal>
-            <div className="text-center mb-10">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">EXPLORE</div>
-              <h2 className="text-3xl sm:text-4xl font-bold">استكشف أكوا هيفن</h2>
-              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">انتقل مباشرة لما يهمك من خلال المكعبات أدناه.</p>
-            </div>
-          </Reveal>
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-            {navCubes.map((c, i) => (
-              <Reveal key={c.to} delay={i * 60}>
-                <Link
-                  to={c.to}
-                  className="group relative block aspect-square rounded-2xl glass hover:glass-gold transition-all p-5 overflow-hidden hover:-translate-y-1 duration-500"
-                >
-                  <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-[color:var(--gold)]/10 blur-2xl group-hover:bg-[color:var(--gold)]/25 transition" />
-                  <div className="relative h-full flex flex-col items-start justify-between">
-                    <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold">
-                      <c.icon className="text-gold" size={22} aria-hidden />
-                    </div>
-                    <div>
-                      <div className="text-lg sm:text-xl font-bold mb-1">{c.label}</div>
-                      <div className="text-xs text-muted-foreground">{c.desc}</div>
-                      <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold opacity-0 group-hover:opacity-100 transition">
-                        ادخل <ArrowLeft size={12} aria-hidden />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
+      {heroEnabled && (
+        <section className="relative min-h-[92dvh] overflow-hidden -mt-24 pt-24 flex items-center">
+          <div className="absolute inset-0">
+            <img src={heroImg} alt={hero?.title ?? "أكوا هيفن"} className="h-full w-full object-cover" style={{ opacity: overlayOn ? 1 - overlayOpacity * 0.4 : 1 }} width={1920} height={1080} />
+            {overlayOn && (
+              <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, oklch(0.10 0.05 245 / ${overlayOpacity}), oklch(0.10 0.05 245 / ${overlayOpacity * 0.6}), var(--background))` }} />
+            )}
           </div>
-        </div>
-      </section>
+          <div className="light-rays" aria-hidden />
+          <Bubbles count={22} />
+
+          <div className="relative mx-auto max-w-7xl px-6 py-20 text-center">
+            <Reveal delay={120}>
+              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold leading-[1.05] mb-6 tracking-tight">
+                <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
+                  {hero?.title ?? "عالمك المائي"}
+                </span>
+                {hero?.subtitle && (<><br /><span className="text-foreground/95">{hero.subtitle}</span></>)}
+              </h1>
+            </Reveal>
+            {hero?.description && (
+              <Reveal delay={240}>
+                <p className="mx-auto max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed mb-10">{hero.description}</p>
+              </Reveal>
+            )}
+            <Reveal delay={360}>
+              <div className="flex flex-wrap justify-center gap-3 mb-12">
+                {hero?.primary_cta_label && (
+                  <CTAButton href={hero.primary_cta_href} variant="gold">{hero.primary_cta_label}</CTAButton>
+                )}
+                {hero?.secondary_cta_label && (
+                  <CTAButton href={hero.secondary_cta_href} variant="outline">{hero.secondary_cta_label}</CTAButton>
+                )}
+              </div>
+            </Reveal>
+            <Reveal delay={480}>
+              <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                {stats.map((s) => (
+                  <div key={s.label} className="glass rounded-2xl p-4">
+                    <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
+                      <Counter to={s.num} suffix={s.suffix} />
+                    </div>
+                    <div className="text-[11px] md:text-xs text-muted-foreground mt-1">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+      )}
+
+      {/* EXPLORE CUBES */}
+      {exploreEnabled && exploreItems.length > 0 && (
+        <section className="relative py-16">
+          <div className="mx-auto max-w-7xl px-6">
+            <Reveal>
+              <div className="text-center mb-10">
+                {explore?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{explore.kicker}</div>}
+                <h2 className="text-3xl sm:text-4xl font-bold">{explore?.heading ?? "استكشف أكوا هيفن"}</h2>
+                {explore?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{explore.subtitle}</p>}
+              </div>
+            </Reveal>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+              {exploreItems.map((c, i) => {
+                const Icon = c.icon ? ICONS[c.icon] : null;
+                return (
+                  <Reveal key={c.id} delay={i * 60}>
+                    <SmartLink to={c.href} className="group relative block aspect-square rounded-2xl glass hover:glass-gold transition-all p-5 overflow-hidden hover:-translate-y-1 duration-500">
+                      <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-[color:var(--gold)]/10 blur-2xl group-hover:bg-[color:var(--gold)]/25 transition" />
+                      <div className="relative h-full flex flex-col items-start justify-between">
+                        <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold">
+                          {Icon ? <Icon className="text-gold" size={22} aria-hidden /> : c.emoji ? <span className="text-2xl">{c.emoji}</span> : null}
+                        </div>
+                        <div>
+                          <div className="text-lg sm:text-xl font-bold mb-1">{c.label}</div>
+                          {c.desc && <div className="text-xs text-muted-foreground">{c.desc}</div>}
+                          <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold opacity-0 group-hover:opacity-100 transition">
+                            ادخل <ArrowLeft size={12} aria-hidden />
+                          </div>
+                        </div>
+                      </div>
+                    </SmartLink>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* PARTNERS MARQUEE */}
       <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
@@ -231,50 +227,48 @@ function HomePage() {
         </div>
       </section>
 
-      {/* SERVICES — each separate with image, click navigates */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <Reveal>
-            <div className="text-center mb-14">
-              <div className="text-xs text-gradient-gold mb-3" style={{ letterSpacing: "0.3em" }}>SERVICES</div>
-              <h2 className="text-3xl sm:text-4xl font-bold">ماذا نقدم</h2>
-              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">حلول متكاملة لكل من يطمح لعالم مائي استثنائي.</p>
+      {/* SERVICES */}
+      {servicesEnabled && serviceItems.length > 0 && (
+        <section className="relative py-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <Reveal>
+              <div className="text-center mb-14">
+                {services?.kicker && <div className="text-xs text-gradient-gold mb-3" style={{ letterSpacing: "0.3em" }}>{services.kicker}</div>}
+                <h2 className="text-3xl sm:text-4xl font-bold">{services?.heading ?? "ماذا نقدم"}</h2>
+                {services?.description && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{services.description}</p>}
+              </div>
+            </Reveal>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {serviceItems.map((s, i) => {
+                const Icon = s.icon ? ICONS[s.icon] : null;
+                const img = s.image_path ? publicUrl(s.image_path) : serviceFallbacks[i % serviceFallbacks.length];
+                return (
+                  <Reveal key={s.id} delay={i * 100}>
+                    <SmartLink to={s.href} className="group block h-full rounded-2xl glass overflow-hidden hover:-translate-y-1 transition-transform duration-500">
+                      <div className="relative h-44 overflow-hidden">
+                        <img src={img} alt={s.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" width={800} height={600} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                        {Icon && (
+                          <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
+                            <Icon className="text-gold" size={18} aria-hidden />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-5">
+                        <h3 className="text-lg font-bold mb-2">{s.title}</h3>
+                        {s.desc && <p className="text-sm text-muted-foreground leading-relaxed mb-3">{s.desc}</p>}
+                        <span className="inline-flex items-center gap-1 text-xs text-gradient-gold">
+                          اكتشف المزيد <ArrowLeft size={12} aria-hidden />
+                        </span>
+                      </div>
+                    </SmartLink>
+                  </Reveal>
+                );
+              })}
             </div>
-          </Reveal>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {services.map((s, i) => (
-              <Reveal key={s.title} delay={i * 100}>
-                <Link
-                  to={s.to}
-                  className="group block h-full rounded-2xl glass overflow-hidden hover:-translate-y-1 transition-transform duration-500"
-                >
-                  <div className="relative h-44 overflow-hidden">
-                    <img
-                      src={s.img}
-                      alt={s.title}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      loading="lazy"
-                      width={800}
-                      height={600}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-                    <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
-                      <s.icon className="text-gold" size={18} aria-hidden />
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-bold mb-2">{s.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">{s.desc}</p>
-                    <span className="inline-flex items-center gap-1 text-xs text-gradient-gold">
-                      اكتشف المزيد <ArrowLeft size={12} aria-hidden />
-                    </span>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* WHY US */}
       <section className="relative py-20">
@@ -336,7 +330,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS — real reviews */}
+      {/* TESTIMONIALS */}
       <section className="relative py-24">
         <div className="mx-auto max-w-7xl px-6">
           <Reveal>
@@ -366,12 +360,7 @@ function HomePage() {
             ))}
           </div>
           <div className="text-center mt-10">
-            <a
-              href="https://aqh.sa/ar/testimonials"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-gradient-gold"
-            >
+            <a href="https://aqh.sa/ar/testimonials" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
               عرض كل التقييمات <ArrowLeft size={14} aria-hidden />
             </a>
           </div>
@@ -398,8 +387,7 @@ function HomePage() {
                 <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
                   <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
                     <div className="overflow-hidden">
-                      <img src={a.img} alt={a.title} width={1024} height={768} loading="lazy"
-                        className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <img src={a.img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     </div>
                     <div className="p-6">
                       <h3 className="text-lg font-bold mb-2">{a.title}</h3>
@@ -426,20 +414,13 @@ function HomePage() {
             {faqs.map((f, i) => (
               <Reveal key={f.q} delay={i * 60}>
                 <div className="glass rounded-2xl overflow-hidden">
-                  <button
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between gap-4 p-5 text-right"
-                    aria-expanded={openFaq === i}
-                  >
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between gap-4 p-5 text-right" aria-expanded={openFaq === i}>
                     <span className="font-bold text-sm md:text-base">{f.q}</span>
                     <span className="grid place-items-center h-8 w-8 rounded-lg glass-gold flex-shrink-0" aria-hidden>
                       {openFaq === i ? <Minus size={14} /> : <Plus size={14} />}
                     </span>
                   </button>
-                  <div
-                    className="grid transition-all duration-300 ease-out"
-                    style={{ gridTemplateRows: openFaq === i ? "1fr" : "0fr" }}
-                  >
+                  <div className="grid transition-all duration-300 ease-out" style={{ gridTemplateRows: openFaq === i ? "1fr" : "0fr" }}>
                     <div className="overflow-hidden">
                       <p className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
                     </div>
@@ -459,13 +440,10 @@ function HomePage() {
               <div className="light-rays" aria-hidden />
               <div className="relative">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">جاهز لتأسيس عالمك المائي؟</h2>
-                <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-                  تواصل معنا اليوم ودعنا نحول رؤيتك إلى تحفة مائية فاخرة.
-                </p>
+                <p className="text-muted-foreground mb-8 max-w-xl mx-auto">تواصل معنا اليوم ودعنا نحول رؤيتك إلى تحفة مائية فاخرة.</p>
                 <div className="flex flex-wrap justify-center gap-3">
                   <Link to="/contact" className="btn-gold rounded-xl px-7 py-3.5 text-sm">ابدأ مشروعك</Link>
-                  <a href="https://aqh.sa" target="_blank" rel="noopener noreferrer"
-                    className="btn-outline-gold rounded-xl px-7 py-3.5 text-sm">زيارة المتجر</a>
+                  <a href="https://aqh.sa" target="_blank" rel="noopener noreferrer" className="btn-outline-gold rounded-xl px-7 py-3.5 text-sm">زيارة المتجر</a>
                 </div>
               </div>
             </div>
@@ -473,6 +451,30 @@ function HomePage() {
         </div>
       </section>
 
+      {/* dev-only: subtle hint for admin to edit */}
+      <Wrench className="hidden" />
     </>
   );
+}
+
+function isExternal(href: string) {
+  return /^https?:\/\//i.test(href) || href.startsWith("mailto:") || href.startsWith("tel:");
+}
+
+function CTAButton({ href, variant, children }: { href: string; variant: "gold" | "outline"; children: React.ReactNode }) {
+  const cls = variant === "gold"
+    ? "btn-gold inline-flex items-center rounded-xl px-7 py-3.5 text-sm"
+    : "btn-outline-gold inline-flex items-center rounded-xl px-7 py-3.5 text-sm";
+  if (isExternal(href)) {
+    return <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>{children}</a>;
+  }
+  return <a href={href || "#"} className={cls}>{children}</a>;
+}
+
+function SmartLink({ to, className, children }: { to: string; className?: string; children: React.ReactNode }) {
+  if (!to) return <div className={className}>{children}</div>;
+  if (isExternal(to)) {
+    return <a href={to} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>;
+  }
+  return <a href={to} className={className}>{children}</a>;
 }
