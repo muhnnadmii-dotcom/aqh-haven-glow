@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Trash2, Save } from "lucide-react";
+import { MultiImageUploader } from "@/components/ImageUploader";
+import { publicUrl } from "@/lib/storage";
 
 export const Route = createFileRoute("/_authenticated/admin/projects")({
   component: ProjectsAdmin,
@@ -21,6 +23,8 @@ type Project = {
   description: string | null;
   cover: string | null;
   images: string[];
+  image_paths: string[];
+  cover_path: string | null;
   specs: Record<string, string>;
   equipment: Record<string, string>;
   water_system: string[] | null;
@@ -35,7 +39,7 @@ type Project = {
 
 const blank: Project = {
   slug: "", title: "", category: "living-room", category_label: "غرفة المعيشة", featured: false, published: true,
-  location: "", year: "", description: "", cover: "", images: [],
+  location: "", year: "", description: "", cover: "", images: [], image_paths: [], cover_path: null,
   specs: { dimensions: "", volumeLiters: "", systemType: "" }, equipment: { filter: "", lighting: "" },
   water_system: [], add_ons: [], service_packages: [], livestock_warranty: "",
   contents: { fish: [], plantsOrCorals: [], decor: "" },
@@ -83,7 +87,7 @@ function ProjectsAdmin() {
         {list.length === 0 && <p className="text-muted-foreground text-sm">لا توجد أحواض بعد. أضف واحد.</p>}
         {list.map((p) => (
           <div key={p.id} className="glass rounded-2xl p-4 flex items-center gap-4">
-            {p.cover && <img src={p.cover} alt="" className="h-16 w-16 rounded-xl object-cover" />}
+            {(p.cover_path || p.cover) && <img src={publicUrl(p.cover_path) || p.cover || ""} alt="" className="h-16 w-16 rounded-xl object-cover" />}
             <div className="flex-1 min-w-0">
               <div className="font-bold truncate">{p.title}</div>
               <div className="text-xs text-muted-foreground">{p.location} · {p.year} · {p.published ? "منشور" : "مسودة"} {p.featured && "· مميز"}</div>
@@ -133,10 +137,15 @@ function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; on
       </Section>
 
       <Section title="الصور">
-        <Field label="رابط صورة الغلاف"><input dir="ltr" className={inp} value={v.cover ?? ""} onChange={(e) => set("cover", e.target.value)} /></Field>
-        <Field label="روابط الصور (كل سطر رابط)" full>
-          <textarea dir="ltr" rows={4} className={ta} value={v.images.join("\n")} onChange={(e) => set("images", list(e.target.value))} />
-        </Field>
+        <div className="sm:col-span-2">
+          <MultiImageUploader
+            values={v.image_paths ?? []}
+            cover={v.cover_path}
+            onChange={(values, cover) => onChange({ ...v, image_paths: values, cover_path: cover })}
+            folder={`projects/${v.slug || "new"}`}
+          />
+        </div>
+        <Field label="رابط صورة خارجي (اختياري)"><input dir="ltr" className={inp} value={v.cover ?? ""} onChange={(e) => set("cover", e.target.value)} placeholder="https://..." /></Field>
       </Section>
 
       <Section title="المواصفات">
