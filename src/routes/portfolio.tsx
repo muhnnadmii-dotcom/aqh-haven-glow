@@ -357,49 +357,47 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
           )}
 
 
-          {/* Contents */}
-          {(project.contents.fish.length > 0 ||
-            (project.contents.plantsOrCorals && project.contents.plantsOrCorals.length > 0) ||
-            project.contents.decor) && (
-            <Section title="محتويات الحوض">
-              <div className="space-y-4">
-                {project.contents.fish.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 text-sm font-semibold mb-2">
-                      <Fish size={16} className="text-[color:var(--gold)]" /> الأسماك
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {project.contents.fish.map((f) => (
-                        <span key={f} className="glass px-3 py-1.5 rounded-full text-xs border border-white/10">
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {project.contents.plantsOrCorals && project.contents.plantsOrCorals.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 text-sm font-semibold mb-2">
-                      <Leaf size={16} className="text-[color:var(--gold)]" /> النباتات / المرجان
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {project.contents.plantsOrCorals.map((p) => (
-                        <span key={p} className="glass px-3 py-1.5 rounded-full text-xs border border-white/10">
-                          {p}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {project.contents.decor && (
-                  <div>
-                    <div className="text-sm font-semibold mb-1">الديكور والركيزة</div>
-                    <p className="text-sm text-muted-foreground">{project.contents.decor}</p>
-                  </div>
-                )}
+          {/* Suggested Fish */}
+          {project.contents.fish.length > 0 && (
+            <Section title="الأسماك المقترحة">
+              <div className="flex flex-wrap gap-2">
+                {project.contents.fish.map((f) => (
+                  <span key={f} className="glass px-3 py-1.5 rounded-full text-xs border border-white/10 inline-flex items-center gap-1.5">
+                    <Fish size={12} className="text-[color:var(--gold)]" /> {f}
+                  </span>
+                ))}
               </div>
             </Section>
           )}
+
+          {/* Plants or Corals — dynamic label */}
+          {project.contents.plantsOrCorals && project.contents.plantsOrCorals.length > 0 && (
+            <Section
+              title={
+                /بحري|Reef|مرجاني/i.test(project.specs.systemType)
+                  ? "المرجان والشقائق المقترحة"
+                  : "النباتات المقترحة"
+              }
+            >
+              <div className="flex flex-wrap gap-2">
+                {project.contents.plantsOrCorals.map((p) => (
+                  <span key={p} className="glass px-3 py-1.5 rounded-full text-xs border border-white/10 inline-flex items-center gap-1.5">
+                    <Leaf size={12} className="text-[color:var(--gold)]" /> {p}
+                  </span>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* Decor */}
+          {project.contents.decor && (
+            <Section title="الديكور والركيزة">
+              <p className="text-sm text-muted-foreground leading-relaxed glass rounded-xl px-4 py-3 border border-white/10">
+                {project.contents.decor}
+              </p>
+            </Section>
+          )}
+
 
           {/* Price */}
           <div className="relative overflow-hidden rounded-2xl glass-gold p-6">
