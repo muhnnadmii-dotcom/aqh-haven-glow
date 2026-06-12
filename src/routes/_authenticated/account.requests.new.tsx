@@ -25,7 +25,9 @@ const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 tex
 type TankLite = { id: string; name: string; tank_type: string | null; volume_liters: number | null };
 
 function NewRequestPage() {
-  const { type, tank: tankFromUrl } = Route.useSearch();
+  const search = Route.useSearch();
+  const type = search.type as RequestType;
+  const tankFromUrl = search.tank as string;
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ name: string; phone: string; city: string }>({ name: "", phone: "", city: "" });
   const [tanks, setTanks] = useState<TankLite[]>([]);
