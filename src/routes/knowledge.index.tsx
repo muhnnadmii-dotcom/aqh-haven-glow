@@ -32,6 +32,12 @@ const articles = [
   { slug: "water-chemistry", img: canisterFilter, title: "كيمياء المياه", excerpt: "فهم pH والأمونيا والنتريت لحوض صحي ومستقر.", time: "12 دقيقة", tag: "أساسيات" },
   { slug: "choosing-plants", img: livingRoomTank, title: "اختيار النباتات المناسبة", excerpt: "كيف تختار نباتات تتناسب مع إضاءتك وحوضك.", time: "7 دقائق", tag: "الأحواض النباتية" },
   { slug: "shrimp-breeding-advanced", img: counterAquarium, title: "تكاثر الروبيان", excerpt: "متطلبات نجاح تكاثر الروبيان في المنزل.", time: "9 دقائق", tag: "اللافقاريات" },
+  { slug: "reef-basics", img: styledAquarium, title: "أساسيات الحوض البحري المرجاني", excerpt: "كل ما يحتاجه المبتدئ لبدء حوض ريف ناجح.", time: "14 دقيقة", tag: "الأحواض البحرية" },
+  { slug: "marine-cycling", img: canisterFilter, title: "دورة الحوض البحري", excerpt: "كيف تؤسس الدورة البيولوجية في حوض بحري جديد.", time: "11 دقيقة", tag: "الأحواض البحرية" },
+  { slug: "lighting-guide", img: livingRoomTank, title: "دليل الإضاءة الكامل", excerpt: "اختيار الإضاءة المناسبة بين الأحواض النهرية والبحرية.", time: "9 دقائق", tag: "أساسيات" },
+  { slug: "fighting-algae", img: counterAquarium, title: "محاربة الطحالب", excerpt: "أسباب ظهور الطحالب وأفضل الطرق للتعامل معها.", time: "8 دقائق", tag: "أساسيات" },
+  { slug: "feeding-schedule", img: styledAquarium, title: "جدول التغذية المثالي", excerpt: "كم مرة وكم كمية يجب أن تطعم أسماكك.", time: "5 دقائق", tag: "العناية بالأسماك" },
+  { slug: "co2-system", img: canisterFilter, title: "نظام ثاني أكسيد الكربون", excerpt: "متى تحتاج CO₂ وكيف تختار النظام المناسب.", time: "10 دقائق", tag: "الأحواض النباتية" },
 ];
 
 function KnowledgePage() {
