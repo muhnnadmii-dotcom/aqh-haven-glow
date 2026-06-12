@@ -59,18 +59,14 @@ const stats = [
 
 const partners = ["EHEIM", "JBL", "FLUVAL", "RED SEA", "ADA", "SEACHEM", "TUNZE", "CHIHIROS"];
 
-const testimonials = [
-  { name: "محمد علاء", role: "عميل", quote: "تعامل راقي، منتجات رائعة، توصيل سريع وتغليف ممتاز. أفضل موقع لأسماك الزينة ومنتجاتها." },
-  { name: "Lama Rana", role: "عميلة", quote: "جودة منتجات واحترافية في التعامل مع الزبائن وتوصيل سريع. الله يوفقكم 🤍" },
-  { name: "Mohammed Alnaji", role: "عميل بحري", quote: "تعامل راقي وأسماك بحرية ممتازة، أعطى حوضي نقلة نوعية من حوض عادي لحوض بحري بامتياز." },
-  { name: "Mohammed Dosary", role: "هاوي مبتدئ", quote: "طلبت حوض ٣١ لتر وأول تجربة لي. سهل بالتركيب وأغلب الأشياء وصلتني جاهزة والدعم عبر واتساب ما قصّروا." },
-  { name: "نورة النفيجان", role: "تنظيم فعالية أطفال", quote: "فريق رائع ومتعاون وأسلوبهم راقي جداً. سوّينا فعالية للأطفال، الشغل جميل والتنظيم أكثر من رائع." },
-  { name: "أنس", role: "عميل تنفيذ حوض", quote: "أُبهرت بأكوا هيفن 🤍 الحوض سرق قلبي بجماله وتفاصيله، تحفة استثنائية تنطق بالجمال والإبداع." },
-  { name: "Hussein Ali", role: "عميل متكرر", quote: "هذي التجربة الثانية لي معهم وكل تجربة أفضل من الثانية. التعامل توب وتوصيل سريع وصحة الحوض والكائنات ممتازة 💯" },
-  { name: "شوق العازمي", role: "مبتدئة في الهواية", quote: "كنت أظن التجربة صعبة، لكن أخذت منهم بكج الأساسيات اللي اختصر عليّ الكثير. صبر ولطف واهتمام صادق بالعميل." },
-  { name: "طارق بايزيد", role: "عميل دائم", quote: "المتجر الأفضل على الإطلاق من ناحية الجودة والاهتمام. تجربة رائعة ومميزة من كل النواحي." },
-  { name: "Danah Adam", role: "عميلة", quote: "أكثر شي حبيته البكج اللي يجي فيه كل شي. المتجر متعاون ويردون بسرعة 🤍🐠" },
-];
+type Testimonial = {
+  id: string;
+  name: string;
+  role: string | null;
+  rating: number;
+  body: string;
+  image_path: string | null;
+};
 
 type FeaturedArticle = {
   slug: string;
@@ -99,6 +95,7 @@ function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [sections, setSections] = useState<Sections>({ hero: null, explore: null, services: null });
   const [articles, setArticles] = useState<FeaturedArticle[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -114,6 +111,10 @@ function HomePage() {
       .eq("published", true).eq("visible", true).eq("featured_on_home", true)
       .order("home_order", { ascending: true }).limit(3)
       .then(({ data }) => { if (alive) setArticles((data ?? []) as unknown as FeaturedArticle[]); });
+    supabase.from("testimonials").select("id, name, role, rating, body, image_path")
+      .eq("visible", true).eq("featured", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => { if (alive) setTestimonials((data ?? []) as unknown as Testimonial[]); });
     return () => { alive = false; };
   }, []);
 
@@ -339,41 +340,45 @@ function HomePage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <Reveal>
-            <div className="text-center mb-14">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">TESTIMONIALS</div>
-              <h2 className="text-3xl sm:text-4xl font-bold">آراء حقيقية من عملائنا</h2>
-              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">تقييمات منشورة من عملاء أكوا هيفن.</p>
+      {testimonials.length > 0 && (
+        <section className="relative py-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <Reveal>
+              <div className="text-center mb-14">
+                <div className="text-xs tracking-widest text-gradient-gold mb-3">TESTIMONIALS</div>
+                <h2 className="text-3xl sm:text-4xl font-bold">آراء حقيقية من عملائنا</h2>
+                <p className="text-muted-foreground mt-3 max-w-xl mx-auto">تقييمات منشورة من عملاء أكوا هيفن.</p>
+              </div>
+            </Reveal>
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((t, i) => (
+                <Reveal key={t.id} delay={i * 60}>
+                  <div className="glass rounded-2xl p-6 h-full relative">
+                    <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
+                    <div className="flex gap-1 mb-3">
+                      {Array.from({ length: t.rating || 5 }).map((_, k) => (
+                        <Star key={k} size={13} className="fill-gold text-gold" aria-hidden />
+                      ))}
+                    </div>
+                    <p className="text-sm leading-relaxed text-foreground/90 mb-5">{t.body}</p>
+                    <div className="border-t border-white/5 pt-3 flex items-center gap-3">
+                      {t.image_path ? (
+                        <img src={publicUrl(t.image_path)} alt={t.name} className="h-10 w-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full glass-gold grid place-items-center text-gold text-sm">{t.name.charAt(0)}</div>
+                      )}
+                      <div>
+                        <div className="font-bold text-sm">{t.name}</div>
+                        {t.role && <div className="text-xs text-muted-foreground mt-0.5">{t.role}</div>}
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
             </div>
-          </Reveal>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((t, i) => (
-              <Reveal key={t.name} delay={i * 60}>
-                <div className="glass rounded-2xl p-6 h-full relative">
-                  <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
-                  <div className="flex gap-1 mb-3">
-                    {Array.from({ length: 5 }).map((_, k) => (
-                      <Star key={k} size={13} className="fill-gold text-gold" aria-hidden />
-                    ))}
-                  </div>
-                  <p className="text-sm leading-relaxed text-foreground/90 mb-5">{t.quote}</p>
-                  <div className="border-t border-white/5 pt-3">
-                    <div className="font-bold text-sm">{t.name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{t.role}</div>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
           </div>
-          <div className="text-center mt-10">
-            <a href="https://aqh.sa/ar/testimonials" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-              عرض كل التقييمات <ArrowLeft size={14} aria-hidden />
-            </a>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* KNOWLEDGE */}
       <section className="relative py-24">

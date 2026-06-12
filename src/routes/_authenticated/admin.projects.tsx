@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, Search, Eye, EyeOff, Home as HomeIcon } from "lucide-react";
 import { MultiImageUploader } from "@/components/ImageUploader";
 import { publicUrl } from "@/lib/storage";
 
@@ -17,9 +17,12 @@ type Project = {
   category: string;
   category_label: string | null;
   featured: boolean;
+  featured_on_home: boolean;
+  home_order: number;
   published: boolean;
   location: string | null;
   year: string | null;
+  duration: string | null;
   description: string | null;
   cover: string | null;
   images: string[];
@@ -37,9 +40,25 @@ type Project = {
   sort_order: number;
 };
 
+const CATEGORIES: { value: string; label: string }[] = [
+  { value: "planted", label: "نباتي" },
+  { value: "marine", label: "بحري" },
+  { value: "betta", label: "فايتر" },
+  { value: "shrimp", label: "جمبري" },
+  { value: "custom", label: "مخصص" },
+  { value: "other", label: "آخر" },
+  { value: "living-room", label: "غرفة المعيشة" },
+  { value: "office", label: "مكتب" },
+  { value: "entrance", label: "مدخل" },
+  { value: "commercial", label: "تجاري" },
+];
+const catLabel = (v: string) => CATEGORIES.find((c) => c.value === v)?.label ?? v;
+
 const blank: Project = {
-  slug: "", title: "", category: "living-room", category_label: "غرفة المعيشة", featured: false, published: true,
-  location: "", year: "", description: "", cover: "", images: [], image_paths: [], cover_path: null,
+  slug: "", title: "", category: "planted", category_label: "نباتي",
+  featured: false, featured_on_home: false, home_order: 0,
+  published: true, location: "", year: "", duration: "", description: "", cover: "",
+  images: [], image_paths: [], cover_path: null,
   specs: { dimensions: "", volumeLiters: "", systemType: "" }, equipment: { filter: "", lighting: "" },
   water_system: [], add_ons: [], service_packages: [], livestock_warranty: "",
   contents: { fish: [], plantsOrCorals: [], decor: "" },
@@ -49,16 +68,28 @@ const blank: Project = {
 function ProjectsAdmin() {
   const [list, setList] = useState<Project[]>([]);
   const [editing, setEditing] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [filterCat, setFilterCat] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "published" | "draft">("all");
 
   const load = async () => {
-    const { data } = await supabase.from("projects").select("*").order("sort_order").order("created_at", { ascending: false });
+    setLoading(true); setError(null);
+    const { data, error } = await supabase.from("projects").select("*")
+      .order("sort_order").order("created_at", { ascending: false });
+    if (error) setError(error.message);
     setList((data ?? []) as unknown as Project[]);
+    setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
   const save = async () => {
     if (!editing) return;
-    const payload = { ...editing };
+    if (!editing.title.trim() || !editing.slug.trim()) {
+      toast.error("العنوان والـ slug مطلوبان"); return;
+    }
+    const payload = { ...editing, category_label: editing.category_label || catLabel(editing.category) };
     const { error } = editing.id
       ? await supabase.from("projects").update(payload).eq("id", editing.id)
       : await supabase.from("projects").insert(payload);
@@ -68,8 +99,31 @@ function ProjectsAdmin() {
 
   const remove = async (id: string) => {
     if (!confirm("حذف الحوض؟")) return;
-    await supabase.from("projects").delete().eq("id", id); load();
+    const { error } = await supabase.from("projects").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم الحذف"); load();
   };
+
+  const toggle = async (p: Project, field: "published" | "featured_on_home") => {
+    if (!p.id) return;
+    const patch: Partial<Project> = { [field]: !p[field] };
+    const { error } = await supabase.from("projects").update(patch).eq("id", p.id);
+    if (error) { toast.error(error.message); return; }
+    load();
+  };
+
+  const filtered = useMemo(() => {
+    return list.filter((p) => {
+      if (filterCat !== "all" && p.category !== filterCat) return false;
+      if (filterStatus === "published" && !p.published) return false;
+      if (filterStatus === "draft" && p.published) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (!p.title.toLowerCase().includes(q) && !(p.category_label ?? "").toLowerCase().includes(q) && !(p.slug ?? "").toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+  }, [list, search, filterCat, filterStatus]);
 
   if (editing) {
     return <ProjectForm value={editing} onChange={setEditing} onSave={save} onCancel={() => setEditing(null)} />;
@@ -77,23 +131,68 @@ function ProjectsAdmin() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">الأحواض</h1>
-        <button onClick={() => setEditing({ ...blank })} className="btn-gold rounded-xl px-4 py-2 text-sm flex items-center gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-3xl font-bold">الأحواض / أعمالنا</h1>
+        <button onClick={() => setEditing({ ...blank, sort_order: list.length })}
+          className="btn-gold rounded-xl px-4 py-2 text-sm flex items-center gap-2">
           <Plus size={16} /> حوض جديد
         </button>
       </div>
+
+      <div className="glass rounded-2xl p-3 flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search size={14} className="absolute top-1/2 -translate-y-1/2 right-3 text-muted-foreground" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث بالعنوان أو النوع..."
+            className={`${inp} pr-9`} />
+        </div>
+        <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className={inp + " w-auto"}>
+          <option value="all">كل التصنيفات</option>
+          {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as any)} className={inp + " w-auto"}>
+          <option value="all">كل الحالات</option>
+          <option value="published">منشور</option>
+          <option value="draft">مخفي</option>
+        </select>
+      </div>
+
+      {loading && <p className="text-muted-foreground text-sm">جاري التحميل...</p>}
+      {error && <p className="text-red-400 text-sm">خطأ: {error}</p>}
+      {!loading && !error && filtered.length === 0 && (
+        <div className="glass rounded-2xl p-8 text-center text-muted-foreground text-sm">
+          {list.length === 0 ? "لا توجد أعمال بعد. أضف أول حوض." : "لا توجد نتائج مطابقة."}
+        </div>
+      )}
+
       <div className="grid gap-3">
-        {list.length === 0 && <p className="text-muted-foreground text-sm">لا توجد أحواض بعد. أضف واحد.</p>}
-        {list.map((p) => (
-          <div key={p.id} className="glass rounded-2xl p-4 flex items-center gap-4">
-            {(p.cover_path || p.cover) && <img src={publicUrl(p.cover_path) || p.cover || ""} alt="" className="h-16 w-16 rounded-xl object-cover" />}
+        {filtered.map((p) => (
+          <div key={p.id} className={`glass rounded-2xl p-4 flex items-center gap-4 ${!p.published ? "opacity-60" : ""}`}>
+            {(p.cover_path || p.cover) ? (
+              <img src={publicUrl(p.cover_path) || p.cover || ""} alt="" className="h-16 w-16 rounded-xl object-cover shrink-0" />
+            ) : (
+              <div className="h-16 w-16 rounded-xl glass-gold shrink-0" />
+            )}
             <div className="flex-1 min-w-0">
-              <div className="font-bold truncate">{p.title}</div>
-              <div className="text-xs text-muted-foreground">{p.location} · {p.year} · {p.published ? "منشور" : "مسودة"} {p.featured && "· مميز"}</div>
+              <div className="font-bold truncate flex items-center gap-2 flex-wrap">
+                {p.title}
+                <span className="text-[10px] glass-gold px-2 py-0.5 rounded-full">{catLabel(p.category)}</span>
+                {p.featured_on_home && <span className="text-[10px] glass-gold px-2 py-0.5 rounded-full">رئيسية</span>}
+                {!p.published && <span className="text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">مخفي</span>}
+              </div>
+              <div className="text-xs text-muted-foreground truncate">
+                {[p.location, p.year, p.duration, p.specs?.volumeLiters ? `${p.specs.volumeLiters} لتر` : null].filter(Boolean).join(" · ")}
+              </div>
             </div>
-            <button onClick={() => setEditing(p)} className="text-sm text-gold hover:underline">تعديل</button>
-            <button onClick={() => remove(p.id!)} className="text-red-400"><Trash2 size={16} /></button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button title={p.published ? "إخفاء" : "نشر"} onClick={() => toggle(p, "published")} className="text-muted-foreground hover:text-foreground">
+                {p.published ? <Eye size={16} /> : <EyeOff size={16} />}
+              </button>
+              <button title="إظهار في الرئيسية" onClick={() => toggle(p, "featured_on_home")} className={p.featured_on_home ? "text-gold" : "text-muted-foreground hover:text-gold"}>
+                <HomeIcon size={16} />
+              </button>
+              <button onClick={() => setEditing(p)} className="text-sm text-gold hover:underline">تعديل</button>
+              <button onClick={() => remove(p.id!)} className="text-red-400"><Trash2 size={16} /></button>
+            </div>
           </div>
         ))}
       </div>
@@ -120,18 +219,28 @@ function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; on
       </div>
 
       <Section title="الأساسيات">
-        <Field label="العنوان"><input className={inp} value={v.title} onChange={(e) => set("title", e.target.value)} /></Field>
-        <Field label="Slug (بالإنجليزي، فريد)"><input dir="ltr" className={inp} value={v.slug} onChange={(e) => set("slug", e.target.value)} /></Field>
-        <Field label="الفئة"><input className={inp} value={v.category} onChange={(e) => set("category", e.target.value)} /></Field>
-        <Field label="اسم الفئة"><input className={inp} value={v.category_label ?? ""} onChange={(e) => set("category_label", e.target.value)} /></Field>
-        <Field label="الموقع"><input className={inp} value={v.location ?? ""} onChange={(e) => set("location", e.target.value)} /></Field>
+        <Field label="العنوان *"><input className={inp} value={v.title} onChange={(e) => set("title", e.target.value)} /></Field>
+        <Field label="Slug (بالإنجليزي، فريد) *"><input dir="ltr" className={inp} value={v.slug} onChange={(e) => set("slug", e.target.value)} /></Field>
+        <Field label="التصنيف">
+          <select className={inp} value={v.category} onChange={(e) => {
+            const nv = e.target.value;
+            onChange({ ...v, category: nv, category_label: catLabel(nv) });
+          }}>
+            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </Field>
+        <Field label="اسم التصنيف (للعرض)"><input className={inp} value={v.category_label ?? ""} onChange={(e) => set("category_label", e.target.value)} /></Field>
+        <Field label="المدينة / الموقع"><input className={inp} value={v.location ?? ""} onChange={(e) => set("location", e.target.value)} /></Field>
         <Field label="السنة"><input className={inp} value={v.year ?? ""} onChange={(e) => set("year", e.target.value)} /></Field>
-        <Field label="الوصف" full><textarea className={ta} rows={3} value={v.description ?? ""} onChange={(e) => set("description", e.target.value)} /></Field>
-        <Field label="الترتيب"><input type="number" className={inp} value={v.sort_order} onChange={(e) => set("sort_order", Number(e.target.value))} /></Field>
-        <Field label="خيارات">
-          <div className="flex items-center gap-4">
+        <Field label="مدة التنفيذ"><input className={inp} value={v.duration ?? ""} placeholder="مثلاً: أسبوعان" onChange={(e) => set("duration", e.target.value)} /></Field>
+        <Field label="الوصف المختصر / التفصيلي" full><textarea className={ta} rows={3} value={v.description ?? ""} onChange={(e) => set("description", e.target.value)} /></Field>
+        <Field label="ترتيب القائمة"><input type="number" className={inp} value={v.sort_order} onChange={(e) => set("sort_order", Number(e.target.value))} /></Field>
+        <Field label="ترتيب الصفحة الرئيسية"><input type="number" className={inp} value={v.home_order} onChange={(e) => set("home_order", Number(e.target.value))} /></Field>
+        <Field label="خيارات" full>
+          <div className="flex items-center gap-4 flex-wrap">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.published} onChange={(e) => set("published", e.target.checked)} /> منشور</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.featured} onChange={(e) => set("featured", e.target.checked)} /> مميز</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.featured_on_home} onChange={(e) => set("featured_on_home", e.target.checked)} /> يظهر في الصفحة الرئيسية</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.featured} onChange={(e) => set("featured", e.target.checked)} /> مميز (شارة)</label>
           </div>
         </Field>
       </Section>
