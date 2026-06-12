@@ -9,9 +9,13 @@ export function publicUrl(path: string | null | undefined): string {
 }
 
 export async function uploadMedia(file: File, folder = "uploads"): Promise<string> {
+  const { data: u } = await supabase.auth.getUser();
+  const uid = u.user?.id;
+  if (!uid) throw new Error("يجب تسجيل الدخول لرفع الملفات");
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const path = `${folder}/${name}`;
+  // RLS requires path to start with the user's uid (unless admin/staff, which still passes).
+  const path = `${uid}/${folder}/${name}`;
   const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
     cacheControl: "31536000",
     upsert: false,
