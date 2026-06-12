@@ -5,19 +5,17 @@ import { Reveal } from "../components/Reveal";
 import { Counter } from "../components/Counter";
 import {
   Fish, Building2, Wrench, MessagesSquare, ArrowLeft,
-  ShieldCheck, Sparkles, Clock, BadgeCheck,
+  Sparkles, BadgeCheck,
   Search, PenTool, Hammer, LifeBuoy, Plus, Minus, Star, Quote,
+  Briefcase, BookOpen, Phone, Users,
 } from "lucide-react";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
-import saudiServiceAsset from "../assets/aqh-saudi-service.png.asset.json";
 import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
 import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
 import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
 
 const hero = livingRoomTankAsset.url;
-const livingRoomTank = livingRoomTankAsset.url;
-const saudiService = saudiServiceAsset.url;
 const marineCube = marineCubeAsset.url;
 const styledAquarium = styledAquariumAsset.url;
 const counterAquarium = counterAquariumAsset.url;
@@ -27,7 +25,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "أكوا هيفن — عالمك المائي يبدأ من هنا" },
-      { name: "description", content: "تصميم وتركيب وصيانة الأحواض المائية الفاخرة والأنظمة التجارية في المملكة العربية السعودية. خبرة تتجاوز 12 عاماً." },
+      { name: "description", content: "تصميم وتركيب وصيانة الأحواض المائية الفاخرة والأنظمة التجارية في الرياض. خبرة 9 سنوات." },
       { property: "og:title", content: "أكوا هيفن — عالمك المائي يبدأ من هنا" },
       { property: "og:description", content: "تصميم وتركيب وصيانة الأحواض المائية الفاخرة في الرياض." },
       { property: "og:url", content: "/" },
@@ -37,38 +35,65 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+const navCubes = [
+  { to: "/portfolio", label: "أعمالنا", icon: Briefcase, desc: "مشاريع مختارة" },
+  { to: "/services", label: "خدماتنا", icon: Sparkles, desc: "حلول متكاملة" },
+  { to: "/maintenance", label: "الصيانة", icon: Wrench, desc: "باقات شهرية" },
+  { to: "/consultation", label: "استشارات", icon: MessagesSquare, desc: "خبرة موثوقة" },
+  { to: "/knowledge", label: "مركز المعرفة", icon: BookOpen, desc: "مقالات ودلائل" },
+  { to: "/about", label: "من نحن", icon: Users, desc: "قصتنا ورؤيتنا" },
+  { to: "/contact", label: "تواصل معنا", icon: Phone, desc: "نحن قريبون" },
+] as const;
+
 const services = [
-  { icon: Fish, title: "أحواض مخصصة", desc: "تصميم وتنفيذ أحواض مائية تحاكي رؤيتك بدقة هندسية وجمالية." },
-  { icon: Building2, title: "أنظمة تجارية", desc: "أنظمة المأكولات البحرية الحية للمطاعم والفنادق الراقية." },
-  { icon: Wrench, title: "صيانة دورية", desc: "خطط صيانة مجدولة تضمن استدامة جمال أحواضك وصحة سكانها." },
-  { icon: MessagesSquare, title: "استشارات", desc: "استشارات متخصصة في تأسيس وتطوير عالمك المائي." },
+  {
+    icon: Fish,
+    title: "أحواض مخصصة",
+    desc: "تصميم وتنفيذ أحواض مائية تحاكي رؤيتك بدقة هندسية وجمالية.",
+    img: marineCube,
+    to: "/portfolio" as const,
+  },
+  {
+    icon: Building2,
+    title: "أنظمة تجارية",
+    desc: "حلول للمطاعم والكافيهات والفعاليات وأنظمة المأكولات البحرية الحية.",
+    img: counterAquarium,
+    to: "/portfolio" as const,
+  },
+  {
+    icon: Wrench,
+    title: "صيانة دورية",
+    desc: "باقات شهرية مرنة تضمن استدامة جمال أحواضك وصحة سكانها.",
+    img: canisterFilter,
+    to: "/maintenance" as const,
+  },
+  {
+    icon: MessagesSquare,
+    title: "استشارات",
+    desc: "أرسل تفاصيل حوضك واحصل على توصية متخصصة من فريقنا.",
+    img: styledAquarium,
+    to: "/consultation" as const,
+  },
 ];
 
 const whyUs = [
-  { icon: ShieldCheck, title: "ضمان فعلي", desc: "ضمان على التنفيذ يمتد حتى 24 شهراً مع متابعة دورية." },
   { icon: Sparkles, title: "تصميم فاخر", desc: "تصاميم استوديو خاصة تليق بالمساحات الراقية." },
-  { icon: BadgeCheck, title: "كادر معتمد", desc: "فريق فني محترف مدرّب على أحدث الأنظمة العالمية." },
-  { icon: Clock, title: "تسليم في الموعد", desc: "جدول زمني واضح، تسليم منضبط، وشفافية في كل مرحلة." },
+  { icon: BadgeCheck, title: "فريق احترافي", desc: "فريق ذو خبرة طويلة في المجال يتولى مشروعك من الألف للياء." },
+  { icon: PenTool, title: "تصميم واضح", desc: "خبرة في تنفيذ أشكال وأنماط مختلفة حسب طلبك وذوقك." },
+  { icon: LifeBuoy, title: "متابعة مستمرة", desc: "ندعمك بعد التسليم لضمان استقرار الحوض وصحته." },
 ];
 
 const process = [
   { icon: Search, n: "01", title: "الاستكشاف", desc: "نزور موقعك ونفهم رؤيتك واحتياجاتك بدقة." },
-  { icon: PenTool, n: "02", title: "التصميم", desc: "نقدم تصميماً ثلاثي الأبعاد مع كل التفاصيل التقنية." },
+  { icon: PenTool, n: "02", title: "التصميم", desc: "نقدّم تصوراً واضحاً للحوض بكل تفاصيله التقنية والجمالية." },
   { icon: Hammer, n: "03", title: "التنفيذ", desc: "تركيب احترافي يضمن الجودة والمتانة والجمال." },
   { icon: LifeBuoy, n: "04", title: "العناية", desc: "متابعة وصيانة دورية لاستدامة حوضك بأفضل حالة." },
 ];
 
-const featured = [
-  { img: livingRoomTank, title: "حوض فيلا الرياض", cat: "حوض منزلي" },
-  { img: saudiService, title: "تنفيذ احترافي داخل الموقع", cat: "خدمة ميدانية" },
-  { img: marineCube, title: "حوض بحري خاص", cat: "حوض بحري" },
-];
-
 const stats = [
-  { num: 12, suffix: "+", label: "سنوات خبرة" },
+  { num: 9, suffix: "+", label: "سنوات خبرة" },
   { num: 320, suffix: "+", label: "مشروع منجز" },
-  { num: 850, suffix: "+", label: "عميل سعيد" },
-  { num: 100, suffix: "٪", label: "التزام بالموعد" },
+  { num: 1915, suffix: "+", label: "عميل سعيد" },
 ];
 
 const partners = [
@@ -76,23 +101,31 @@ const partners = [
 ];
 
 const testimonials = [
-  { name: "م. عبدالله الحربي", role: "صاحب فيلا - الرياض", quote: "تجربة فاخرة من البداية للنهاية. الحوض أصبح قطعة الديكور الأهم في المنزل.", rating: 5 },
-  { name: "شيف خالد", role: "مدير مطعم بحري", quote: "نظام المأكولات البحرية يعمل بكفاءة منذ سنتين بلا أي مشاكل. فريق محترف.", rating: 5 },
-  { name: "نورة العنزي", role: "هاوية أحواض نباتية", quote: "أفضل استشارة حصلت عليها. ساعدوني خطوة بخطوة وما زالوا يدعموني.", rating: 5 },
+  { name: "محمد علاء", role: "عميل", quote: "تعامل راقي، منتجات رائعة، توصيل سريع وتغليف ممتاز. أفضل موقع لأسماك الزينة ومنتجاتها." },
+  { name: "Lama Rana", role: "عميلة", quote: "جودة منتجات واحترافية في التعامل مع الزبائن وتوصيل سريع. الله يوفقكم 🤍" },
+  { name: "Mohammed Alnaji", role: "عميل بحري", quote: "تعامل راقي وأسماك بحرية ممتازة، أعطى حوضي نقلة نوعية من حوض عادي لحوض بحري بامتياز." },
+  { name: "Mohammed Dosary", role: "هاوي مبتدئ", quote: "طلبت حوض ٣١ لتر وأول تجربة لي. سهل بالتركيب وأغلب الأشياء وصلتني جاهزة والدعم عبر واتساب ما قصّروا." },
+  { name: "نورة النفيجان", role: "تنظيم فعالية أطفال", quote: "فريق رائع ومتعاون وأسلوبهم راقي جداً. سوّينا فعالية للأطفال، الشغل جميل والتنظيم أكثر من رائع." },
+  { name: "أنس", role: "عميل تنفيذ حوض", quote: "أُبهرت بأكوا هيفن 🤍 الحوض سرق قلبي بجماله وتفاصيله، تحفة استثنائية تنطق بالجمال والإبداع." },
+  { name: "Hussein Ali", role: "عميل متكرر", quote: "هذي التجربة الثانية لي معهم وكل تجربة أفضل من الثانية. التعامل توب وتوصيل سريع وصحة الحوض والكائنات ممتازة 💯" },
+  { name: "شوق العازمي", role: "مبتدئة في الهواية", quote: "كنت أظن التجربة صعبة، لكن أخذت منهم بكج الأساسيات اللي اختصر عليّ الكثير. صبر ولطف واهتمام صادق بالعميل." },
+  { name: "طارق بايزيد", role: "عميل دائم", quote: "المتجر الأفضل على الإطلاق من ناحية الجودة والاهتمام. تجربة رائعة ومميزة من كل النواحي." },
+  { name: "Danah Adam", role: "عميلة", quote: "أكثر شي حبيته البكج اللي يجي فيه كل شي. المتجر متعاون ويردون بسرعة 🤍🐠" },
 ];
 
 const articles = [
-  { slug: "betta-care", img: styledAquarium, title: "العناية بسمك البيتا", excerpt: "دليلك الشامل لتربية سمكة البيتا في بيئة مثالية." },
+  { slug: "betta-care", img: styledAquarium, title: "العناية بسمك البيتا", excerpt: "دليلك الشامل لتربية البيتا في بيئة مثالية." },
   { slug: "shrimp-breeding", img: counterAquarium, title: "تربية الروبيان", excerpt: "كل ما تحتاج معرفته عن تربية روبيان النيوكاريدينا." },
   { slug: "water-chemistry", img: canisterFilter, title: "كيمياء المياه", excerpt: "أساسيات pH والقساوة وتوازن الأمونيا في حوضك." },
 ];
 
 const faqs = [
+  { q: "هل تقدمون خدماتكم خارج الرياض؟", a: "خدماتنا الأساسية داخل الرياض، أما المشاريع الكبيرة (تجارية أو فلل خاصة) فنلتزم بتنفيذها في باقي مناطق المملكة بعد اتفاق مسبق." },
   { q: "كم يستغرق تنفيذ حوض مخصص؟", a: "يعتمد على حجم المشروع وتعقيده، عادة من 2 إلى 6 أسابيع تشمل التصميم والتنفيذ والتأسيس البيئي." },
-  { q: "هل تقدمون خدماتكم خارج الرياض؟", a: "نعم، نخدم جميع مناطق المملكة. قد تختلف رسوم النقل والتركيب حسب الموقع." },
   { q: "ما الذي تشمله خطة الصيانة الدورية؟", a: "تشمل فحص المياه، تنظيف الفلاتر، تغيير جزئي للمياه، فحص المعدات، وتقرير دوري بحالة الحوض." },
-  { q: "هل توفرون ضماناً على التنفيذ؟", a: "نعم، نقدم ضماناً على التنفيذ والمعدات يصل إلى 24 شهراً حسب المشروع." },
-  { q: "كيف أطلب مشروعاً جديداً؟", a: "تواصل معنا عبر نموذج التواصل أو واتساب، وسيقوم فريقنا بترتيب زيارة استكشافية مجانية." },
+  { q: "هل تقدمون أنظمة لمطاعم وكافيهات؟", a: "نعم، لدينا قسم متخصص في الحلول التجارية للكافيهات والمطاعم والفعاليات وأنظمة المأكولات البحرية الحية." },
+  { q: "هل الحوض يصدر رائحة؟", a: "الحوض المتوازن بيئياً وبفلترة سليمة لا تصدر منه أي رائحة. أنظمتنا مصممة لضمان مياه نقية وهواء نظيف حول الحوض." },
+  { q: "كيف أطلب مشروعاً جديداً؟", a: "تواصل معنا عبر نموذج التواصل أو واتساب، وسيقوم فريقنا بترتيب زيارة استكشافية مجانية داخل الرياض." },
 ];
 
 function HomePage() {
@@ -137,7 +170,7 @@ function HomePage() {
             </div>
           </Reveal>
           <Reveal delay={480}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
               {stats.map((s) => (
                 <div key={s.label} className="glass rounded-2xl p-4">
                   <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
@@ -151,9 +184,46 @@ function HomePage() {
         </div>
       </section>
 
+      {/* NAV CUBES */}
+      <section className="relative py-16">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal>
+            <div className="text-center mb-10">
+              <div className="text-xs tracking-widest text-gradient-gold mb-3">EXPLORE</div>
+              <h2 className="text-3xl sm:text-4xl font-bold">استكشف أكوا هيفن</h2>
+              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">انتقل مباشرة لما يهمك من خلال المكعبات أدناه.</p>
+            </div>
+          </Reveal>
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+            {navCubes.map((c, i) => (
+              <Reveal key={c.to} delay={i * 60}>
+                <Link
+                  to={c.to}
+                  className="group relative block aspect-square rounded-2xl glass hover:glass-gold transition-all p-5 overflow-hidden hover:-translate-y-1 duration-500"
+                >
+                  <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-[color:var(--gold)]/10 blur-2xl group-hover:bg-[color:var(--gold)]/25 transition" />
+                  <div className="relative h-full flex flex-col items-start justify-between">
+                    <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold">
+                      <c.icon className="text-gold" size={22} aria-hidden />
+                    </div>
+                    <div>
+                      <div className="text-lg sm:text-xl font-bold mb-1">{c.label}</div>
+                      <div className="text-xs text-muted-foreground">{c.desc}</div>
+                      <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold opacity-0 group-hover:opacity-100 transition">
+                        ادخل <ArrowLeft size={12} aria-hidden />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* PARTNERS MARQUEE */}
       <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
-        <div className="text-center text-xs tracking-[0.3em] text-muted-foreground mb-6">العلامات التي نثق بها</div>
+        <div className="text-center text-sm text-muted-foreground mb-6 leading-loose">العلامات التي نثق بها</div>
         <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none">
           {[...partners, ...partners].map((p, i) => (
             <span key={i} className="whitespace-nowrap" dir="ltr">{p}</span>
@@ -161,26 +231,45 @@ function HomePage() {
         </div>
       </section>
 
-      {/* SERVICES */}
+      {/* SERVICES — each separate with image, click navigates */}
       <section className="relative py-24">
         <div className="mx-auto max-w-7xl px-6">
           <Reveal>
             <div className="text-center mb-14">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">SERVICES</div>
+              <div className="text-xs text-gradient-gold mb-3" style={{ letterSpacing: "0.3em" }}>SERVICES</div>
               <h2 className="text-3xl sm:text-4xl font-bold">ماذا نقدم</h2>
               <p className="text-muted-foreground mt-3 max-w-xl mx-auto">حلول متكاملة لكل من يطمح لعالم مائي استثنائي.</p>
             </div>
           </Reveal>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {services.map((s, i) => (
               <Reveal key={s.title} delay={i * 100}>
-                <div className="gradient-border rounded-2xl p-6 h-full hover:-translate-y-1 transition-transform duration-500">
-                  <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4">
-                    <s.icon className="text-gold" size={22} aria-hidden />
+                <Link
+                  to={s.to}
+                  className="group block h-full rounded-2xl glass overflow-hidden hover:-translate-y-1 transition-transform duration-500"
+                >
+                  <div className="relative h-44 overflow-hidden">
+                    <img
+                      src={s.img}
+                      alt={s.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy"
+                      width={800}
+                      height={600}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                    <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
+                      <s.icon className="text-gold" size={18} aria-hidden />
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold mb-2">{s.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-                </div>
+                  <div className="p-5">
+                    <h3 className="text-lg font-bold mb-2">{s.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">{s.desc}</p>
+                    <span className="inline-flex items-center gap-1 text-xs text-gradient-gold">
+                      اكتشف المزيد <ArrowLeft size={12} aria-hidden />
+                    </span>
+                  </div>
+                </Link>
               </Reveal>
             ))}
           </div>
@@ -247,67 +336,44 @@ function HomePage() {
         </div>
       </section>
 
-      {/* FEATURED PROJECTS */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4 mb-14">
-              <div>
-                <div className="text-xs tracking-widest text-gradient-gold mb-3">PORTFOLIO</div>
-                <h2 className="text-3xl sm:text-4xl font-bold">مشاريع مختارة</h2>
-              </div>
-              <Link to="/portfolio" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-                عرض الكل <ArrowLeft size={16} aria-hidden />
-              </Link>
-            </div>
-          </Reveal>
-          <div className="grid gap-6 md:grid-cols-3">
-            {featured.map((f, i) => (
-              <Reveal key={f.title} delay={i * 120}>
-                <Link to="/portfolio" className="block group">
-                  <div className="relative overflow-hidden rounded-2xl glass">
-                    <img src={f.img} alt={f.title} width={1024} height={768} loading="lazy"
-                      className="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-                    <div className="absolute bottom-0 right-0 left-0 p-5">
-                      <div className="text-xs text-gradient-gold mb-1">{f.cat}</div>
-                      <div className="text-lg font-bold">{f.title}</div>
-                    </div>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
+      {/* TESTIMONIALS — real reviews */}
       <section className="relative py-24">
         <div className="mx-auto max-w-7xl px-6">
           <Reveal>
             <div className="text-center mb-14">
               <div className="text-xs tracking-widest text-gradient-gold mb-3">TESTIMONIALS</div>
-              <h2 className="text-3xl sm:text-4xl font-bold">آراء عملائنا</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold">آراء حقيقية من عملائنا</h2>
+              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">تقييمات منشورة من عملاء أكوا هيفن.</p>
             </div>
           </Reveal>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((t, i) => (
-              <Reveal key={t.name} delay={i * 120}>
-                <div className="glass rounded-2xl p-7 h-full relative">
-                  <Quote className="absolute top-5 left-5 text-gold opacity-40" size={28} aria-hidden />
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: t.rating }).map((_, k) => (
-                      <Star key={k} size={14} className="fill-gold text-gold" aria-hidden />
+              <Reveal key={t.name} delay={i * 60}>
+                <div className="glass rounded-2xl p-6 h-full relative">
+                  <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
+                  <div className="flex gap-1 mb-3">
+                    {Array.from({ length: 5 }).map((_, k) => (
+                      <Star key={k} size={13} className="fill-gold text-gold" aria-hidden />
                     ))}
                   </div>
-                  <p className="text-sm leading-relaxed text-foreground/90 mb-5">"{t.quote}"</p>
-                  <div className="border-t border-white/5 pt-4">
+                  <p className="text-sm leading-relaxed text-foreground/90 mb-5">{t.quote}</p>
+                  <div className="border-t border-white/5 pt-3">
                     <div className="font-bold text-sm">{t.name}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">{t.role}</div>
                   </div>
                 </div>
               </Reveal>
             ))}
+          </div>
+          <div className="text-center mt-10">
+            <a
+              href="https://aqh.sa/ar/testimonials"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-gradient-gold"
+            >
+              عرض كل التقييمات <ArrowLeft size={14} aria-hidden />
+            </a>
           </div>
         </div>
       </section>
@@ -406,6 +472,7 @@ function HomePage() {
           </Reveal>
         </div>
       </section>
+
     </>
   );
 }

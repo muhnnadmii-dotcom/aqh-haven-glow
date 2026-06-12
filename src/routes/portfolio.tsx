@@ -34,6 +34,7 @@ import {
   Headphones,
 } from "lucide-react";
 import { projects, formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
+import { BusinessSolutions } from "../components/BusinessSolutions";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
@@ -151,6 +152,8 @@ function PortfolioPage() {
           </Reveal>
         ))}
       </div>
+
+      <BusinessSolutions />
 
       {open && <ProjectModal project={open} onClose={() => setOpen(null)} />}
     </div>
