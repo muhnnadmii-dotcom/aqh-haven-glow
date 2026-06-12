@@ -123,6 +123,10 @@ function AdminRequestsPage() {
                 </div>
               )}
 
+              {tank && tank.tank_type === "marine" && (r.type === "consultation" || r.type === "maintenance") && (
+                <MarineCard tank={tank} />
+              )}
+
               {Object.keys(r.details ?? {}).length > 0 && (
                 <div className="text-xs grid sm:grid-cols-2 gap-1">
                   {Object.entries(r.details).map(([k, v]) => v ? (
