@@ -210,46 +210,109 @@ export type Database = {
       }
       customer_tanks: {
         Row: {
+          city: string | null
+          co2_hours: number | null
+          co2_type: string | null
           created_at: string
+          depth_cm: number | null
           dimensions: string | null
+          filter_model: string | null
+          filter_type: string | null
+          has_co2: boolean | null
+          has_heater: boolean | null
+          has_plants: boolean | null
+          has_timer: boolean | null
+          heater_model: string | null
+          heater_watts: number | null
+          height_cm: number | null
           id: string
           image_path: string | null
+          image_paths: string[]
           install_date: string | null
+          lighting_hours: number | null
+          lighting_model: string | null
+          lighting_type: string | null
           livestock: string | null
+          livestock_items: Json
           name: string
           notes: string | null
+          plants: Json
+          primary_image: string | null
           tank_type: string | null
           updated_at: string
           user_id: string
           volume_liters: number | null
+          width_cm: number | null
         }
         Insert: {
+          city?: string | null
+          co2_hours?: number | null
+          co2_type?: string | null
           created_at?: string
+          depth_cm?: number | null
           dimensions?: string | null
+          filter_model?: string | null
+          filter_type?: string | null
+          has_co2?: boolean | null
+          has_heater?: boolean | null
+          has_plants?: boolean | null
+          has_timer?: boolean | null
+          heater_model?: string | null
+          heater_watts?: number | null
+          height_cm?: number | null
           id?: string
           image_path?: string | null
+          image_paths?: string[]
           install_date?: string | null
+          lighting_hours?: number | null
+          lighting_model?: string | null
+          lighting_type?: string | null
           livestock?: string | null
+          livestock_items?: Json
           name: string
           notes?: string | null
+          plants?: Json
+          primary_image?: string | null
           tank_type?: string | null
           updated_at?: string
           user_id: string
           volume_liters?: number | null
+          width_cm?: number | null
         }
         Update: {
+          city?: string | null
+          co2_hours?: number | null
+          co2_type?: string | null
           created_at?: string
+          depth_cm?: number | null
           dimensions?: string | null
+          filter_model?: string | null
+          filter_type?: string | null
+          has_co2?: boolean | null
+          has_heater?: boolean | null
+          has_plants?: boolean | null
+          has_timer?: boolean | null
+          heater_model?: string | null
+          heater_watts?: number | null
+          height_cm?: number | null
           id?: string
           image_path?: string | null
+          image_paths?: string[]
           install_date?: string | null
+          lighting_hours?: number | null
+          lighting_model?: string | null
+          lighting_type?: string | null
           livestock?: string | null
+          livestock_items?: Json
           name?: string
           notes?: string | null
+          plants?: Json
+          primary_image?: string | null
           tank_type?: string | null
           updated_at?: string
           user_id?: string
           volume_liters?: number | null
+          width_cm?: number | null
         }
         Relationships: []
       }
@@ -452,6 +515,68 @@ export type Database = {
           year?: string | null
         }
         Relationships: []
+      }
+      service_requests: {
+        Row: {
+          admin_notes: string | null
+          attachments: string[]
+          city: string | null
+          created_at: string
+          customer_notes: string | null
+          details: Json
+          id: string
+          name: string
+          phone: string
+          preferred_times: string | null
+          status: Database["public"]["Enums"]["service_request_status"]
+          tank_id: string | null
+          type: Database["public"]["Enums"]["service_request_type"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          attachments?: string[]
+          city?: string | null
+          created_at?: string
+          customer_notes?: string | null
+          details?: Json
+          id?: string
+          name: string
+          phone: string
+          preferred_times?: string | null
+          status?: Database["public"]["Enums"]["service_request_status"]
+          tank_id?: string | null
+          type: Database["public"]["Enums"]["service_request_type"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          attachments?: string[]
+          city?: string | null
+          created_at?: string
+          customer_notes?: string | null
+          details?: Json
+          id?: string
+          name?: string
+          phone?: string
+          preferred_times?: string | null
+          status?: Database["public"]["Enums"]["service_request_status"]
+          tank_id?: string | null
+          type?: Database["public"]["Enums"]["service_request_type"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -657,6 +782,15 @@ export type Database = {
     Enums: {
       app_role: "admin" | "customer" | "staff"
       request_status: "new" | "in_progress" | "closed"
+      service_request_status:
+        | "new"
+        | "in_review"
+        | "contacted"
+        | "awaiting_customer"
+        | "scheduled"
+        | "completed"
+        | "cancelled"
+      service_request_type: "design" | "visit" | "consultation" | "maintenance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -786,6 +920,16 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "customer", "staff"],
       request_status: ["new", "in_progress", "closed"],
+      service_request_status: [
+        "new",
+        "in_review",
+        "contacted",
+        "awaiting_customer",
+        "scheduled",
+        "completed",
+        "cancelled",
+      ],
+      service_request_type: ["design", "visit", "consultation", "maintenance"],
     },
   },
 } as const
