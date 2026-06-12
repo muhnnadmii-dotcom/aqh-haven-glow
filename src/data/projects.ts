@@ -24,6 +24,10 @@ import plantedLarge1 from "../assets/planted-large-1.jpeg.asset.json";
 import plantedLarge2 from "../assets/planted-large-2.jpeg.asset.json";
 import plantedLarge3 from "../assets/planted-large-3.png.asset.json";
 import plantedLarge4 from "../assets/planted-large-4.jpeg.asset.json";
+import urayjaNano1 from "../assets/urayja-nano-1.jpeg.asset.json";
+import urayjaNano2 from "../assets/urayja-nano-2.png.asset.json";
+import urayjaNano3 from "../assets/urayja-nano-3.png.asset.json";
+import urayjaNano4 from "../assets/urayja-nano-4.jpeg.asset.json";
 
 export type ProjectCategory = "living-room" | "office" | "entrance" | "commercial";
 
@@ -72,6 +76,65 @@ export type Project = {
 };
 
 export const projects: Project[] = [
+  {
+    id: 11,
+    slug: "urayja-bedroom-nano-reef",
+    title: "حوض بحري نانو لغرفة النوم",
+    cat: "living-room",
+    catLabel: "غرفة المعيشة",
+    featured: true,
+    location: "الرياض — حي العريجاء الغربي",
+    year: "2025",
+    cover: urayjaNano2.url,
+    images: [urayjaNano2.url, urayjaNano3.url, urayjaNano1.url, urayjaNano4.url],
+    description:
+      "⏳ ما عندك وقت تتعلم؟ هذا الحوض مسوّي كل شي عنك. حوض بحري نانو متكامل وجاهز للتشغيل، مجهز بالكامل بدورة بيولوجية مكتملة وجاهز للحياة — كل اللي عليك تستمتع. ✨ تصميم أنيق يناسب الطاولة الجانبية لغرفة النوم.",
+    specs: {
+      dimensions: "26 × 26 × 32 سم",
+      volumeLiters: "21 لتر",
+      systemType: "بحري نانو (Nano Reef) — جاهز للتشغيل",
+    },
+    equipment: {
+      filter:
+        "Back Sump فلتر خلفي مدمج متعدد المراحل (إسفنج ميكانيكي + ميديا بيولوجية + كربون نشط) — تشغيل صامت ومظهر نظيف بدون أجهزة ظاهرة",
+      returnPump:
+        "مضخة رجوع DC هادئة — تدوير ثابت للمياه بين السمب الخلفي والحوض الرئيسي",
+      lighting:
+        "Dophin 108 إضاءة بحرية احترافية — طيف كامل يدعم نمو المرجان ويُبرز ألوان الأسماك واللافقاريات",
+      heatingCooling:
+        "Dophin 50W سخان مائي مع ثرموستات — لضمان ثبات واستقرار درجة الحرارة بين 25–26°م وحماية الكائنات الحساسة",
+    },
+    waterSystem: [
+      "مقياس ملوحة (Salinity Tester) — لمتابعة دقيقة لمستوى الملوحة قبل التبديل",
+      "ملح بحري (Marine Salt) 1 كجم — لتحضير ماء التبديل بالملوحة الصحيحة",
+      "طعام أسماك بحري مخصص (Fish Food)",
+    ],
+    addOns: [
+      "صخور طبيعية حية بتصميم Aquascape",
+      "أرضية بحرية (رمل أراجونايت)",
+      "ممسحة مغناطيسية لتنظيف الزجاج من الداخل والخارج",
+      "أنبوب سحب (Siphon) لتغيير الماء وتنظيف الأرضية",
+    ],
+    servicePackages: [
+      "باقة صيانة دورية — اختيارية",
+      "دعم فني واتساب — اختياري",
+    ],
+    livestockWarranty: "ضمان شامل على المعدات لمدة 12 شهرًا",
+    contents: {
+      fish: [
+        "سمكة المهرج (Clown Fish) × 2",
+        "روبيان التنظيف (Cleaner Shrimp) × 1",
+        "نجم البحر (Starfish) × 1",
+        "حلزون تنظيف (Snail)",
+      ],
+      plantsOrCorals: [
+        "صخور حية",
+        "لافقاريات تنظيف",
+      ],
+      decor: "صخور طبيعية + رمل أراجونايت بحري",
+    },
+    priceRange: { min: 2500, max: 4500, currency: "SAR" },
+  },
   {
     id: 10,
     slug: "planted-large-yasmin",
