@@ -389,23 +389,31 @@ function HomePage() {
               </Link>
             </div>
           </Reveal>
-          <div className="grid gap-6 md:grid-cols-3">
-            {articles.map((a, i) => (
-              <Reveal key={a.slug} delay={i * 120}>
-                <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
-                  <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
-                    <div className="overflow-hidden">
-                      <img src={a.img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-lg font-bold mb-2">{a.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>
-                    </div>
-                  </article>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
+          {articles.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground">لا توجد مقالات مميزة حالياً.</p>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-3">
+              {articles.map((a, i) => {
+                const img = a.cover_path ? publicUrl(a.cover_path) : styledAquarium;
+                return (
+                  <Reveal key={a.slug} delay={i * 120}>
+                    <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
+                      <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
+                        <div className="overflow-hidden">
+                          <img src={img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-lg font-bold mb-2">{a.title}</h3>
+                          {a.excerpt && <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>}
+                        </div>
+                      </article>
+                    </Link>
+                  </Reveal>
+                );
+              })}
+            </div>
+          )}
+
         </div>
       </section>
 
