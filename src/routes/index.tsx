@@ -113,6 +113,27 @@ function HomePage() {
   const servicesEnabled = sections.services?.enabled ?? true;
   const serviceItems = (services?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
 
+  const why = sections.why_us?.content;
+  const whyEnabled = sections.why_us?.enabled ?? true;
+  const whyItems = (why?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+  const proc = sections.process?.content;
+  const procEnabled = sections.process?.enabled ?? true;
+  const procItems = (proc?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+  const faqC = sections.faq?.content;
+  const faqEnabled = sections.faq?.enabled ?? true;
+  const faqItems = (faqC?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+  const ctaC = sections.cta?.content;
+  const ctaEnabled = sections.cta?.enabled ?? true;
+
+  const testHead = sections.testimonials_header?.content;
+  const testHeadEnabled = sections.testimonials_header?.enabled ?? true;
+  const knowHead = sections.knowledge_header?.content;
+  const knowHeadEnabled = sections.knowledge_header?.enabled ?? true;
+
+
   return (
     <>
       {/* HERO */}
