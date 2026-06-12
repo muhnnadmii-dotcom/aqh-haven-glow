@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, Shield } from "lucide-react";
 import aqhLogo from "@/assets/aqh-logo.png.asset.json";
+import { useAuth } from "@/hooks/use-auth";
 
 const links = [
   { to: "/", label: "الرئيسية" },
@@ -17,6 +18,7 @@ const links = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -60,6 +62,20 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Link to="/admin" className="hidden sm:inline-flex items-center gap-1.5 glass rounded-xl px-3 py-2 text-xs hover:bg-white/10" title="لوحة الإدارة">
+                <Shield size={14} /> الإدارة
+              </Link>
+            )}
+            {user ? (
+              <Link to="/account" className="grid place-items-center h-10 w-10 rounded-xl glass hover:bg-white/10" aria-label="حسابي">
+                <User size={16} />
+              </Link>
+            ) : (
+              <Link to="/auth" className="hidden sm:inline-flex items-center glass rounded-xl px-4 py-2 text-sm hover:bg-white/10">
+                دخول
+              </Link>
+            )}
             <a
               href="https://aqh.sa"
               target="_blank"
@@ -90,6 +106,14 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
+            {user ? (
+              <Link to="/account" onClick={() => setOpen(false)} className="px-4 py-3 text-sm rounded-lg hover:bg-white/5">حسابي</Link>
+            ) : (
+              <Link to="/auth" onClick={() => setOpen(false)} className="px-4 py-3 text-sm rounded-lg hover:bg-white/5">تسجيل دخول</Link>
+            )}
+            {isAdmin && (
+              <Link to="/admin" onClick={() => setOpen(false)} className="px-4 py-3 text-sm rounded-lg hover:bg-white/5">لوحة الإدارة</Link>
+            )}
             <a
               href="https://aqh.sa"
               target="_blank"
