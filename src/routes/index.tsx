@@ -351,8 +351,10 @@ function HomePage() {
               })}
             </div>
           </div>
+        </section>
+      )}
 
-      </section>
+
 
       {/* TESTIMONIALS */}
       {testimonials.length > 0 && (
