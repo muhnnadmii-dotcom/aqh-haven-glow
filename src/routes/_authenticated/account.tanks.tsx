@@ -322,6 +322,7 @@ function TankEditor({ v, setV, onSave, onCancel }: { v: Tank; setV: (t: Tank) =>
   }, [autoVolume]);
 
   const showPlants = v.tank_type === "freshwater" || v.tank_type === "planted";
+  const isMarine = v.tank_type === "marine";
 
   return (
     <div className="space-y-5">
