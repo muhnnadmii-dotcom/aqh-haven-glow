@@ -64,45 +64,63 @@ export type Database = {
       articles: {
         Row: {
           body: string | null
+          category: string | null
           cover_image: string | null
           cover_path: string | null
           created_at: string
           excerpt: string | null
+          featured_on_home: boolean
+          home_order: number
           id: string
           published: boolean
           published_at: string | null
+          seo_description: string | null
+          seo_title: string | null
           slug: string
           tags: string[]
           title: string
           updated_at: string
+          visible: boolean
         }
         Insert: {
           body?: string | null
+          category?: string | null
           cover_image?: string | null
           cover_path?: string | null
           created_at?: string
           excerpt?: string | null
+          featured_on_home?: boolean
+          home_order?: number
           id?: string
           published?: boolean
           published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
           slug: string
           tags?: string[]
           title: string
           updated_at?: string
+          visible?: boolean
         }
         Update: {
           body?: string | null
+          category?: string | null
           cover_image?: string | null
           cover_path?: string | null
           created_at?: string
           excerpt?: string | null
+          featured_on_home?: boolean
+          home_order?: number
           id?: string
           published?: boolean
           published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
           slug?: string
           tags?: string[]
           title?: string
           updated_at?: string
+          visible?: boolean
         }
         Relationships: []
       }
