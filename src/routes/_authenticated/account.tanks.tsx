@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Fish, Ruler, Filter as FilterIcon, Flame, Lightbulb, Wind, Leaf, Images } from "lucide-react";
+import { Plus, Trash2, Save, Fish, Ruler, Filter as FilterIcon, Flame, Lightbulb, Wind, Leaf, Images, Waves, FlaskConical, Sparkles } from "lucide-react";
 import { MultiImageUploader } from "@/components/ImageUploader";
 import { publicUrl } from "@/lib/storage";
 
