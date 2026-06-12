@@ -329,3 +329,206 @@ function EnabledToggle({ enabled, onChange, label }: { enabled: boolean; onChang
     </label>
   );
 }
+
+/* ---------- WHY US ---------- */
+function WhyUsEditor({ value, onChange }: { value: { enabled: boolean; content: WhyUsContent }; onChange: (v: { enabled: boolean; content: WhyUsContent }) => void }) {
+  const c = value.content;
+  const setC = (next: WhyUsContent) => onChange({ ...value, content: next });
+  const updateItem = (id: string, patch: Partial<WhyUsItem>) => setC({ ...c, items: c.items.map((it) => it.id === id ? { ...it, ...patch } : it) });
+  const remove = (id: string) => setC({ ...c, items: c.items.filter((it) => it.id !== id) });
+  const move = (id: string, dir: -1 | 1) => moveOrdered(c.items, id, dir, (items) => setC({ ...c, items }));
+  const add = () => setC({ ...c, items: [...c.items, { id: genId(), icon: "Sparkles", title: "بطاقة جديدة", desc: "", order: nextOrder(c.items), visible: true }] });
+  const sorted = [...c.items].sort((a, b) => a.order - b.order);
+  return (
+    <div className="space-y-4">
+      <div className="glass rounded-2xl p-5 space-y-4">
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+        <Grid>
+          <Field label="نص علوي (Kicker)"><input className={inp} value={c.kicker} onChange={(e) => setC({ ...c, kicker: e.target.value })} /></Field>
+          <Field label="العنوان"><input className={inp} value={c.heading} onChange={(e) => setC({ ...c, heading: e.target.value })} /></Field>
+          <Field label="الوصف" full><textarea rows={2} className={ta} value={c.description} onChange={(e) => setC({ ...c, description: e.target.value })} /></Field>
+          <Field label="نص الرابط الجانبي"><input className={inp} value={c.link_label} onChange={(e) => setC({ ...c, link_label: e.target.value })} /></Field>
+          <Field label="رابط الجانب"><input dir="ltr" className={inp} value={c.link_href} onChange={(e) => setC({ ...c, link_href: e.target.value })} /></Field>
+        </Grid>
+      </div>
+      <ItemsHeader count={sorted.length} onAdd={add} label="بطاقة" />
+      <div className="grid gap-3">
+        {sorted.map((it) => (
+          <div key={it.id} className="glass rounded-2xl p-4 space-y-3">
+            <RowActions title={it.title} onUp={() => move(it.id, -1)} onDown={() => move(it.id, 1)}
+              visible={it.visible} onToggle={() => updateItem(it.id, { visible: !it.visible })} onRemove={() => remove(it.id)} />
+            <Grid>
+              <Field label="العنوان"><input className={inp} value={it.title} onChange={(e) => updateItem(it.id, { title: e.target.value })} /></Field>
+              <Field label="الوصف"><input className={inp} value={it.desc} onChange={(e) => updateItem(it.id, { desc: e.target.value })} /></Field>
+              <Field label="الأيقونة (lucide)">
+                <select className={inp} value={it.icon ?? ""} onChange={(e) => updateItem(it.id, { icon: e.target.value || null })}>
+                  <option value="">— لا شيء —</option>
+                  {ICON_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </Field>
+              <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
+            </Grid>
+          </div>
+        ))}
+        {sorted.length === 0 && <EmptyHint />}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- PROCESS ---------- */
+function ProcessEditor({ value, onChange }: { value: { enabled: boolean; content: ProcessContent }; onChange: (v: { enabled: boolean; content: ProcessContent }) => void }) {
+  const c = value.content;
+  const setC = (next: ProcessContent) => onChange({ ...value, content: next });
+  const updateItem = (id: string, patch: Partial<ProcessItem>) => setC({ ...c, items: c.items.map((it) => it.id === id ? { ...it, ...patch } : it) });
+  const remove = (id: string) => setC({ ...c, items: c.items.filter((it) => it.id !== id) });
+  const move = (id: string, dir: -1 | 1) => moveOrdered(c.items, id, dir, (items) => setC({ ...c, items }));
+  const add = () => {
+    const n = c.items.length + 1;
+    setC({ ...c, items: [...c.items, { id: genId(), icon: "Sparkles", number: String(n).padStart(2, "0"), title: "خطوة جديدة", desc: "", order: nextOrder(c.items), visible: true }] });
+  };
+  const sorted = [...c.items].sort((a, b) => a.order - b.order);
+  return (
+    <div className="space-y-4">
+      <div className="glass rounded-2xl p-5 space-y-4">
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+        <Grid>
+          <Field label="نص علوي (Kicker)"><input className={inp} value={c.kicker} onChange={(e) => setC({ ...c, kicker: e.target.value })} /></Field>
+          <Field label="العنوان"><input className={inp} value={c.heading} onChange={(e) => setC({ ...c, heading: e.target.value })} /></Field>
+          <Field label="الوصف" full><textarea rows={2} className={ta} value={c.description} onChange={(e) => setC({ ...c, description: e.target.value })} /></Field>
+        </Grid>
+      </div>
+      <ItemsHeader count={sorted.length} onAdd={add} label="خطوة" />
+      <div className="grid gap-3">
+        {sorted.map((it) => (
+          <div key={it.id} className="glass rounded-2xl p-4 space-y-3">
+            <RowActions title={`${it.number} — ${it.title}`} onUp={() => move(it.id, -1)} onDown={() => move(it.id, 1)}
+              visible={it.visible} onToggle={() => updateItem(it.id, { visible: !it.visible })} onRemove={() => remove(it.id)} />
+            <Grid>
+              <Field label="الرقم"><input className={inp} value={it.number} onChange={(e) => updateItem(it.id, { number: e.target.value })} /></Field>
+              <Field label="العنوان"><input className={inp} value={it.title} onChange={(e) => updateItem(it.id, { title: e.target.value })} /></Field>
+              <Field label="الوصف" full><textarea rows={2} className={ta} value={it.desc} onChange={(e) => updateItem(it.id, { desc: e.target.value })} /></Field>
+              <Field label="الأيقونة">
+                <select className={inp} value={it.icon ?? ""} onChange={(e) => updateItem(it.id, { icon: e.target.value || null })}>
+                  <option value="">— لا شيء —</option>
+                  {ICON_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </Field>
+              <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
+            </Grid>
+          </div>
+        ))}
+        {sorted.length === 0 && <EmptyHint />}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- FAQ ---------- */
+function FaqEditor({ value, onChange }: { value: { enabled: boolean; content: FaqContent }; onChange: (v: { enabled: boolean; content: FaqContent }) => void }) {
+  const c = value.content;
+  const setC = (next: FaqContent) => onChange({ ...value, content: next });
+  const updateItem = (id: string, patch: Partial<FaqItem>) => setC({ ...c, items: c.items.map((it) => it.id === id ? { ...it, ...patch } : it) });
+  const remove = (id: string) => setC({ ...c, items: c.items.filter((it) => it.id !== id) });
+  const move = (id: string, dir: -1 | 1) => moveOrdered(c.items, id, dir, (items) => setC({ ...c, items }));
+  const add = () => setC({ ...c, items: [...c.items, { id: genId(), q: "سؤال جديد", a: "", order: nextOrder(c.items), visible: true }] });
+  const sorted = [...c.items].sort((a, b) => a.order - b.order);
+  return (
+    <div className="space-y-4">
+      <div className="glass rounded-2xl p-5 space-y-4">
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+        <Grid>
+          <Field label="نص علوي (Kicker)"><input className={inp} value={c.kicker} onChange={(e) => setC({ ...c, kicker: e.target.value })} /></Field>
+          <Field label="العنوان"><input className={inp} value={c.heading} onChange={(e) => setC({ ...c, heading: e.target.value })} /></Field>
+        </Grid>
+      </div>
+      <ItemsHeader count={sorted.length} onAdd={add} label="سؤال" />
+      <div className="grid gap-3">
+        {sorted.map((it) => (
+          <div key={it.id} className="glass rounded-2xl p-4 space-y-3">
+            <RowActions title={it.q} onUp={() => move(it.id, -1)} onDown={() => move(it.id, 1)}
+              visible={it.visible} onToggle={() => updateItem(it.id, { visible: !it.visible })} onRemove={() => remove(it.id)} />
+            <Field label="السؤال"><input className={inp} value={it.q} onChange={(e) => updateItem(it.id, { q: e.target.value })} /></Field>
+            <Field label="الإجابة"><textarea rows={3} className={ta} value={it.a} onChange={(e) => updateItem(it.id, { a: e.target.value })} /></Field>
+            <Field label="الترتيب"><input type="number" className={inp + " w-24"} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
+          </div>
+        ))}
+        {sorted.length === 0 && <EmptyHint />}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- CTA ---------- */
+function CtaEditor({ value, onChange }: { value: { enabled: boolean; content: CtaContent }; onChange: (v: { enabled: boolean; content: CtaContent }) => void }) {
+  const c = value.content;
+  const set = <K extends keyof CtaContent>(k: K, v: CtaContent[K]) => onChange({ ...value, content: { ...c, [k]: v } });
+  return (
+    <div className="glass rounded-2xl p-5 space-y-4">
+      <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+      <Grid>
+        <Field label="العنوان" full><input className={inp} value={c.heading} onChange={(e) => set("heading", e.target.value)} /></Field>
+        <Field label="الوصف" full><textarea rows={2} className={ta} value={c.description} onChange={(e) => set("description", e.target.value)} /></Field>
+        <Field label="نص الزر الأساسي"><input className={inp} value={c.primary_label} onChange={(e) => set("primary_label", e.target.value)} /></Field>
+        <Field label="رابط الزر الأساسي"><input dir="ltr" className={inp} value={c.primary_href} onChange={(e) => set("primary_href", e.target.value)} /></Field>
+        <Field label="نص الزر الثانوي"><input className={inp} value={c.secondary_label} onChange={(e) => set("secondary_label", e.target.value)} /></Field>
+        <Field label="رابط الزر الثانوي"><input dir="ltr" className={inp} value={c.secondary_href} onChange={(e) => set("secondary_href", e.target.value)} placeholder="https://aqh.sa" /></Field>
+      </Grid>
+    </div>
+  );
+}
+
+/* ---------- HEADER (Testimonials / Knowledge) ---------- */
+function HeaderEditor({ title, value, onChange, showLinkLabel }: { title: string; value: { enabled: boolean; content: SectionHeader }; onChange: (v: { enabled: boolean; content: SectionHeader }) => void; showLinkLabel?: boolean }) {
+  const c = value.content;
+  const set = <K extends keyof SectionHeader>(k: K, v: SectionHeader[K]) => onChange({ ...value, content: { ...c, [k]: v } });
+  return (
+    <div className="glass rounded-2xl p-5 space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h3 className="font-bold">{title}</h3>
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+      </div>
+      <Grid>
+        <Field label="نص علوي (Kicker)"><input className={inp} value={c.kicker} onChange={(e) => set("kicker", e.target.value)} /></Field>
+        <Field label="العنوان"><input className={inp} value={c.heading} onChange={(e) => set("heading", e.target.value)} /></Field>
+        <Field label="النص الفرعي" full><input className={inp} value={c.subtitle ?? ""} onChange={(e) => set("subtitle", e.target.value)} /></Field>
+        {showLinkLabel && <Field label="نص رابط (مثال: كل المقالات)"><input className={inp} value={c.link_label ?? ""} onChange={(e) => set("link_label", e.target.value)} /></Field>}
+      </Grid>
+    </div>
+  );
+}
+
+/* ---------- shared helpers ---------- */
+function nextOrder(items: { order: number }[]) { return (Math.max(0, ...items.map(i => i.order)) + 1); }
+function moveOrdered<T extends { id: string; order: number }>(items: T[], id: string, dir: -1 | 1, set: (next: T[]) => void) {
+  const sorted = [...items].sort((a, b) => a.order - b.order);
+  const idx = sorted.findIndex((x) => x.id === id);
+  const swap = sorted[idx + dir]; if (!swap) return;
+  const a = sorted[idx].order, b = swap.order;
+  set(items.map((it) => it.id === sorted[idx].id ? { ...it, order: b } : it.id === swap.id ? { ...it, order: a } : it));
+}
+function ItemsHeader({ count, onAdd, label }: { count: number; onAdd: () => void; label: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <h3 className="font-bold">العناصر ({count})</h3>
+      <button onClick={onAdd} className="btn-gold rounded-xl px-4 py-2 text-sm flex items-center gap-2"><Plus size={14} /> إضافة {label}</button>
+    </div>
+  );
+}
+function RowActions({ title, onUp, onDown, visible, onToggle, onRemove }: { title: string; onUp: () => void; onDown: () => void; visible: boolean; onToggle: () => void; onRemove: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div className="text-sm font-bold truncate">{title || "—"}</div>
+      <div className="flex gap-1 shrink-0">
+        <IconBtn onClick={onUp} title="أعلى"><ArrowUp size={14} /></IconBtn>
+        <IconBtn onClick={onDown} title="أسفل"><ArrowDown size={14} /></IconBtn>
+        <IconBtn onClick={onToggle} title={visible ? "إخفاء" : "إظهار"}>{visible ? <Eye size={14} /> : <EyeOff size={14} />}</IconBtn>
+        <IconBtn onClick={onRemove} title="حذف" danger><Trash2 size={14} /></IconBtn>
+      </div>
+    </div>
+  );
+}
+function EmptyHint() {
+  return <p className="text-sm text-muted-foreground glass rounded-2xl p-5">لا توجد عناصر. اضغط زر "إضافة".</p>;
+}
+
