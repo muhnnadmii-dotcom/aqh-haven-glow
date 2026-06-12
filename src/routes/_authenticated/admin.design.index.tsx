@@ -9,7 +9,7 @@ import {
 } from "@/lib/home-sections";
 import { ImageUploader } from "@/components/ImageUploader";
 
-export const Route = createFileRoute("/_authenticated/admin/design")({
+export const Route = createFileRoute("/_authenticated/admin/design/")({
   component: DesignAdmin,
 });
 
