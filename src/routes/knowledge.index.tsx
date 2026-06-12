@@ -1,15 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Reveal } from "../components/Reveal";
-import { ArrowLeft, Clock } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { publicUrl } from "@/lib/storage";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
-import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
-import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
-import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
 
-const styledAquarium = styledAquariumAsset.url;
-const counterAquarium = counterAquariumAsset.url;
-const canisterFilter = canisterFilterAsset.url;
-const livingRoomTank = livingRoomTankAsset.url;
+const fallbackImg = styledAquariumAsset.url;
 
 export const Route = createFileRoute("/knowledge/")({
   head: () => ({
@@ -25,22 +22,36 @@ export const Route = createFileRoute("/knowledge/")({
   component: KnowledgePage,
 });
 
-const articles = [
-  { slug: "betta-care", img: styledAquarium, title: "العناية بسمك البيتا", excerpt: "كل ما تحتاج معرفته لتربية البيتا في بيئة مناسبة وصحية.", time: "6 دقائق", tag: "العناية بالأسماك" },
-  { slug: "planted-tank", img: livingRoomTank, title: "تأسيس حوض نباتي", excerpt: "خطوات تأسيس حوض نباتي ناجح من الصفر.", time: "10 دقائق", tag: "الأحواض النباتية" },
-  { slug: "shrimp-breeding", img: counterAquarium, title: "تربية الروبيان", excerpt: "دليلك المبسط لتربية روبيان النيوكاريدينا والكرستال.", time: "8 دقائق", tag: "اللافقاريات" },
-  { slug: "water-chemistry", img: canisterFilter, title: "كيمياء المياه", excerpt: "فهم pH والأمونيا والنتريت لحوض صحي ومستقر.", time: "12 دقيقة", tag: "أساسيات" },
-  { slug: "choosing-plants", img: livingRoomTank, title: "اختيار النباتات المناسبة", excerpt: "كيف تختار نباتات تتناسب مع إضاءتك وحوضك.", time: "7 دقائق", tag: "الأحواض النباتية" },
-  { slug: "shrimp-breeding-advanced", img: counterAquarium, title: "تكاثر الروبيان", excerpt: "متطلبات نجاح تكاثر الروبيان في المنزل.", time: "9 دقائق", tag: "اللافقاريات" },
-  { slug: "reef-basics", img: styledAquarium, title: "أساسيات الحوض البحري المرجاني", excerpt: "كل ما يحتاجه المبتدئ لبدء حوض ريف ناجح.", time: "14 دقيقة", tag: "الأحواض البحرية" },
-  { slug: "marine-cycling", img: canisterFilter, title: "دورة الحوض البحري", excerpt: "كيف تؤسس الدورة البيولوجية في حوض بحري جديد.", time: "11 دقيقة", tag: "الأحواض البحرية" },
-  { slug: "lighting-guide", img: livingRoomTank, title: "دليل الإضاءة الكامل", excerpt: "اختيار الإضاءة المناسبة بين الأحواض النهرية والبحرية.", time: "9 دقائق", tag: "أساسيات" },
-  { slug: "fighting-algae", img: counterAquarium, title: "محاربة الطحالب", excerpt: "أسباب ظهور الطحالب وأفضل الطرق للتعامل معها.", time: "8 دقائق", tag: "أساسيات" },
-  { slug: "feeding-schedule", img: styledAquarium, title: "جدول التغذية المثالي", excerpt: "كم مرة وكم كمية يجب أن تطعم أسماكك.", time: "5 دقائق", tag: "العناية بالأسماك" },
-  { slug: "co2-system", img: canisterFilter, title: "نظام ثاني أكسيد الكربون", excerpt: "متى تحتاج CO₂ وكيف تختار النظام المناسب.", time: "10 دقائق", tag: "الأحواض النباتية" },
-];
+type ArticleRow = {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  cover_path: string | null;
+  category: string | null;
+  tags: string[];
+  published_at: string | null;
+};
 
 function KnowledgePage() {
+  const [list, setList] = useState<ArticleRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    supabase.from("articles")
+      .select("slug, title, excerpt, cover_path, category, tags, published_at")
+      .eq("published", true).eq("visible", true)
+      .order("published_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) setError(error.message);
+        setList((data ?? []) as unknown as ArticleRow[]);
+        setLoading(false);
+      });
+    return () => { alive = false; };
+  }, []);
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
       <Reveal>
@@ -53,31 +64,43 @@ function KnowledgePage() {
         </div>
       </Reveal>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {articles.map((a, i) => (
-          <Reveal key={a.slug} delay={i * 80}>
-            <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block h-full">
-              <article className="glass rounded-2xl overflow-hidden group h-full flex flex-col hover:glass-gold transition-all">
-                <div className="overflow-hidden">
-                  <img src={a.img} alt={a.title} width={1024} height={768} loading="lazy"
-                    className="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                </div>
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                    <span className="text-gradient-gold">{a.tag}</span>
-                    <span className="flex items-center gap-1"><Clock size={12} aria-hidden /> {a.time}</span>
-                  </div>
-                  <h2 className="text-lg font-bold mb-2">{a.title}</h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{a.excerpt}</p>
-                  <span className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-                    اقرأ المقال <ArrowLeft size={14} aria-hidden />
-                  </span>
-                </div>
-              </article>
-            </Link>
-          </Reveal>
-        ))}
-      </div>
+      {loading && <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-gold" /></div>}
+      {error && <div className="text-center text-red-400 py-8">حدث خطأ: {error}</div>}
+      {!loading && !error && list.length === 0 && (
+        <div className="text-center text-muted-foreground py-12">لا توجد مقالات حالياً.</div>
+      )}
+
+      {!loading && !error && list.length > 0 && (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {list.map((a, i) => {
+            const img = a.cover_path ? publicUrl(a.cover_path) : fallbackImg;
+            return (
+              <Reveal key={a.slug} delay={i * 60}>
+                <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block h-full">
+                  <article className="glass rounded-2xl overflow-hidden group h-full flex flex-col hover:glass-gold transition-all">
+                    <div className="overflow-hidden">
+                      <img src={img} alt={a.title} width={1024} height={768} loading="lazy"
+                        className="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col">
+                      {a.category && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                          <span className="text-gradient-gold">{a.category}</span>
+                        </div>
+                      )}
+                      <h2 className="text-lg font-bold mb-2">{a.title}</h2>
+                      {a.excerpt && <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{a.excerpt}</p>}
+                      <span className="inline-flex items-center gap-2 text-sm text-gradient-gold">
+                        اقرأ المقال <ArrowLeft size={14} aria-hidden />
+                      </span>
+                    </div>
+                  </article>
+                </Link>
+              </Reveal>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

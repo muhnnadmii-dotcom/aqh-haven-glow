@@ -1,10 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Reveal } from "../components/Reveal";
 import { Bubbles } from "../components/Bubbles";
-import { Award, Eye, Heart, Sparkles } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import consultationTankAsset from "../assets/aqh-consultation-tank.png.asset.json";
+import { supabase } from "@/integrations/supabase/client";
+import { publicUrl } from "@/lib/storage";
+import { ICONS } from "@/lib/home-sections";
+import type { AboutContent } from "@/lib/site-pages";
 
-const hero = consultationTankAsset.url;
+const heroFallback = consultationTankAsset.url;
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -20,101 +25,136 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
 });
 
-const values = [
-  { icon: Award, title: "الإتقان", desc: "نسعى للكمال في كل تفصيلة من أحواضنا." },
-  { icon: Heart, title: "الشغف", desc: "نحب ما نعمل، وهذا يظهر في كل مشروع." },
-  { icon: Sparkles, title: "الفخامة", desc: "نقدم تجربة فاخرة من الاستشارة حتى التسليم." },
-  { icon: Eye, title: "الرؤية", desc: "نرى الجمال في الطبيعة ونعيد تشكيله." },
-];
-
 function AboutPage() {
+  const [c, setC] = useState<AboutContent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    supabase.from("site_pages").select("content").eq("page_key", "about").maybeSingle()
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) setError(error.message);
+        else setC((data?.content as unknown as AboutContent) ?? null);
+        setLoading(false);
+      });
+    return () => { alive = false; };
+  }, []);
+
+  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-gold" /></div>;
+  if (error) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-red-400">حدث خطأ: {error}</div>;
+  if (!c) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-muted-foreground">لا يوجد محتوى بعد.</div>;
+
+  const heroImg = c.hero.image_path ? publicUrl(c.hero.image_path) : heroFallback;
+  const sortedValues = (c.values ?? []).filter((v) => v.visible).sort((a, b) => a.order - b.order);
+  const sortedStats = (c.stats ?? []).filter((s) => s.visible).sort((a, b) => a.order - b.order);
+
   return (
     <>
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src={hero} alt="" className="h-full w-full object-cover opacity-25" />
+          <img src={heroImg} alt="" className="h-full w-full object-cover opacity-25" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/60 to-background" />
         </div>
         <Bubbles count={12} />
         <div className="relative mx-auto max-w-4xl px-6 py-24 text-center">
           <Reveal>
-            <div className="text-xs tracking-widest text-gradient-gold mb-3">ABOUT</div>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">من نحن</h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              أكوا هيفن (AQH) شركة سعودية متخصصة في تصميم وتنفيذ الأحواض المائية الفاخرة. انطلقنا من الرياض برؤية واضحة:
-              أن نقدم تجربة مائية لا مثيل لها — تجمع بين الفن الهندسي والاحترافية في الرعاية.
-            </p>
+            {c.hero.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{c.hero.kicker}</div>}
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">{c.hero.heading}</h1>
+            {c.hero.description && (
+              <p className="text-lg text-muted-foreground leading-relaxed">{c.hero.description}</p>
+            )}
           </Reveal>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-10 md:grid-cols-2 items-start">
-          <Reveal>
-            <div className="glass rounded-3xl p-10">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">قصتنا</div>
-              <h2 className="text-3xl font-bold mb-5">رحلة من الشغف إلى الاحتراف</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                بدأت أكوا هيفن من شغف عميق بعالم الأسماك والأحواض. ومع مرور السنين، تطورنا من هواة إلى مرجع موثوق في
-                المملكة، نخدم عشاق هذا العالم — من المنازل الراقية حتى أكبر المطاعم والفنادق.
-              </p>
-            </div>
-          </Reveal>
-          <Reveal delay={150}>
-            <div className="glass-gold rounded-3xl p-10">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">رؤيتنا</div>
-              <h2 className="text-3xl font-bold mb-5">العلامة الرائدة في السعودية</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                أن نكون العلامة الأولى المرجعية في عالم الأحواض المائية بالمملكة، وأن نقدم تجارب استثنائية تتحدث عن
-                نفسها. نؤمن بأن كل حوض يجب أن يكون تحفة فنية تنبض بالحياة.
-              </p>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-6 py-16">
-        <Reveal>
-          <div className="text-center mb-12">
-            <div className="text-xs tracking-widest text-gradient-gold mb-3">قيمنا</div>
-            <h2 className="text-3xl md:text-4xl font-bold">ما يحركنا</h2>
-          </div>
-        </Reveal>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {values.map((v, i) => (
-            <Reveal key={v.title} delay={i * 100}>
-              <div className="glass rounded-2xl p-6 text-center h-full">
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl glass-gold mb-4">
-                  <v.icon className="text-gold" size={24} />
+      {(c.story.heading || c.story.body || c.vision.heading || c.vision.body) && (
+        <section className="mx-auto max-w-7xl px-6 py-20">
+          <div className="grid gap-10 md:grid-cols-2 items-start">
+            {(c.story.heading || c.story.body) && (
+              <Reveal>
+                <div className="glass rounded-3xl p-10">
+                  {c.story.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{c.story.kicker}</div>}
+                  {c.story.heading && <h2 className="text-3xl font-bold mb-5">{c.story.heading}</h2>}
+                  {c.story.body && <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{c.story.body}</p>}
                 </div>
-                <h3 className="font-bold mb-2">{v.title}</h3>
-                <p className="text-sm text-muted-foreground">{v.desc}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-5xl px-6 py-20">
-        <Reveal>
-          <div className="glass rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">
-            <Bubbles count={8} />
-            <div className="relative">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">رؤية مستقبلية</div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-5">
-                مركز تجربة أكوا هيفن في <span className="text-gradient-gold">الرياض</span>
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
-                نعمل على افتتاح أول مركز تجربة ومعرض دائم في الرياض — مساحة تجمع بين أرقى الأحواض والمنتجات والاستشارات
-                المباشرة من فريقنا. قريباً، عش التجربة الكاملة.
-              </p>
-              <Link to="/contact" className="btn-gold rounded-xl px-7 py-3.5 text-sm inline-flex">
-                كن أول من يعلم
-              </Link>
-            </div>
+              </Reveal>
+            )}
+            {(c.vision.heading || c.vision.body) && (
+              <Reveal delay={150}>
+                <div className="glass-gold rounded-3xl p-10">
+                  {c.vision.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{c.vision.kicker}</div>}
+                  {c.vision.heading && <h2 className="text-3xl font-bold mb-5">{c.vision.heading}</h2>}
+                  {c.vision.body && <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{c.vision.body}</p>}
+                </div>
+              </Reveal>
+            )}
           </div>
-        </Reveal>
-      </section>
+        </section>
+      )}
+
+      {sortedValues.length > 0 && (
+        <section className="mx-auto max-w-7xl px-6 py-16">
+          <Reveal>
+            <div className="text-center mb-12">
+              {c.values_kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{c.values_kicker}</div>}
+              {c.values_heading && <h2 className="text-3xl md:text-4xl font-bold">{c.values_heading}</h2>}
+            </div>
+          </Reveal>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {sortedValues.map((v, i) => {
+              const Icon = ICONS[v.icon] ?? ICONS.Sparkles;
+              return (
+                <Reveal key={v.id} delay={i * 100}>
+                  <div className="glass rounded-2xl p-6 text-center h-full">
+                    <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl glass-gold mb-4">
+                      <Icon className="text-gold" size={24} />
+                    </div>
+                    <h3 className="font-bold mb-2">{v.title}</h3>
+                    {v.desc && <p className="text-sm text-muted-foreground">{v.desc}</p>}
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {sortedStats.length > 0 && (
+        <section className="mx-auto max-w-5xl px-6 py-12">
+          <div className="grid gap-4 sm:grid-cols-3">
+            {sortedStats.map((s) => (
+              <div key={s.id} className="glass rounded-2xl p-6 text-center">
+                <div className="text-3xl font-bold text-gradient-gold">{s.value}</div>
+                <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {c.cta.visible && (c.cta.heading || c.cta.body) && (
+        <section className="mx-auto max-w-5xl px-6 py-20">
+          <Reveal>
+            <div className="glass rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">
+              <Bubbles count={8} />
+              <div className="relative">
+                {c.cta.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{c.cta.kicker}</div>}
+                {c.cta.heading && <h2 className="text-3xl md:text-4xl font-bold mb-5">{c.cta.heading}</h2>}
+                {c.cta.body && <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8 whitespace-pre-line">{c.cta.body}</p>}
+                {c.cta.button_label && (
+                  c.cta.button_href?.startsWith("http") ? (
+                    <a href={c.cta.button_href} target="_blank" rel="noopener noreferrer" className="btn-gold rounded-xl px-7 py-3.5 text-sm inline-flex">{c.cta.button_label}</a>
+                  ) : (
+                    <Link to={c.cta.button_href || "/"} className="btn-gold rounded-xl px-7 py-3.5 text-sm inline-flex">{c.cta.button_label}</Link>
+                  )
+                )}
+              </div>
+            </div>
+          </Reveal>
+        </section>
+      )}
     </>
   );
 }
