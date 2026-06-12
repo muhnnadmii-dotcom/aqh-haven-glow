@@ -14,10 +14,58 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          kind: string
+          notes: string | null
+          preferred_date: string | null
+          status: string
+          tank_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          notes?: string | null
+          preferred_date?: string | null
+          status?: string
+          tank_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          notes?: string | null
+          preferred_date?: string | null
+          status?: string
+          tank_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           body: string | null
           cover_image: string | null
+          cover_path: string | null
           created_at: string
           excerpt: string | null
           id: string
@@ -31,6 +79,7 @@ export type Database = {
         Insert: {
           body?: string | null
           cover_image?: string | null
+          cover_path?: string | null
           created_at?: string
           excerpt?: string | null
           id?: string
@@ -44,6 +93,7 @@ export type Database = {
         Update: {
           body?: string | null
           cover_image?: string | null
+          cover_path?: string | null
           created_at?: string
           excerpt?: string | null
           id?: string
@@ -140,6 +190,98 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_tanks: {
+        Row: {
+          created_at: string
+          dimensions: string | null
+          id: string
+          image_path: string | null
+          install_date: string | null
+          livestock: string | null
+          name: string
+          notes: string | null
+          tank_type: string | null
+          updated_at: string
+          user_id: string
+          volume_liters: number | null
+        }
+        Insert: {
+          created_at?: string
+          dimensions?: string | null
+          id?: string
+          image_path?: string | null
+          install_date?: string | null
+          livestock?: string | null
+          name: string
+          notes?: string | null
+          tank_type?: string | null
+          updated_at?: string
+          user_id: string
+          volume_liters?: number | null
+        }
+        Update: {
+          created_at?: string
+          dimensions?: string | null
+          id?: string
+          image_path?: string | null
+          install_date?: string | null
+          livestock?: string | null
+          name?: string
+          notes?: string | null
+          tank_type?: string | null
+          updated_at?: string
+          user_id?: string
+          volume_liters?: number | null
+        }
+        Relationships: []
+      }
+      maintenance_reports: {
+        Row: {
+          actions: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          overall_status: string | null
+          tank_id: string
+          technician: string | null
+          updated_at: string
+          visit_date: string
+        }
+        Insert: {
+          actions?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          overall_status?: string | null
+          tank_id: string
+          technician?: string | null
+          updated_at?: string
+          visit_date?: string
+        }
+        Update: {
+          actions?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          overall_status?: string | null
+          tank_id?: string
+          technician?: string | null
+          updated_at?: string
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_reports_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -174,12 +316,14 @@ export type Database = {
           category_label: string | null
           contents: Json
           cover: string | null
+          cover_path: string | null
           created_at: string
           currency: string
           description: string | null
           equipment: Json
           featured: boolean
           id: string
+          image_paths: string[]
           images: string[]
           livestock_warranty: string | null
           location: string | null
@@ -201,12 +345,14 @@ export type Database = {
           category_label?: string | null
           contents?: Json
           cover?: string | null
+          cover_path?: string | null
           created_at?: string
           currency?: string
           description?: string | null
           equipment?: Json
           featured?: boolean
           id?: string
+          image_paths?: string[]
           images?: string[]
           livestock_warranty?: string | null
           location?: string | null
@@ -228,12 +374,14 @@ export type Database = {
           category_label?: string | null
           contents?: Json
           cover?: string | null
+          cover_path?: string | null
           created_at?: string
           currency?: string
           description?: string | null
           equipment?: Json
           featured?: boolean
           id?: string
+          image_paths?: string[]
           images?: string[]
           livestock_warranty?: string | null
           location?: string | null
@@ -248,6 +396,72 @@ export type Database = {
           updated_at?: string
           water_system?: string[] | null
           year?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json
+          icon: string | null
+          id: string
+          image_path: string | null
+          published: boolean
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          icon?: string | null
+          id?: string
+          image_path?: string | null
+          published?: boolean
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          icon?: string | null
+          id?: string
+          image_path?: string | null
+          published?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_pages: {
+        Row: {
+          content: Json
+          id: string
+          page_key: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          id?: string
+          page_key: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          id?: string
+          page_key?: string
+          title?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -305,6 +519,65 @@ export type Database = {
         }
         Relationships: []
       }
+      water_tests: {
+        Row: {
+          ammonia: number | null
+          created_at: string
+          gh: number | null
+          id: string
+          kh: number | null
+          nitrate: number | null
+          nitrite: number | null
+          notes: string | null
+          ph: number | null
+          salinity: number | null
+          tank_id: string
+          tds: number | null
+          temperature: number | null
+          test_date: string
+        }
+        Insert: {
+          ammonia?: number | null
+          created_at?: string
+          gh?: number | null
+          id?: string
+          kh?: number | null
+          nitrate?: number | null
+          nitrite?: number | null
+          notes?: string | null
+          ph?: number | null
+          salinity?: number | null
+          tank_id: string
+          tds?: number | null
+          temperature?: number | null
+          test_date?: string
+        }
+        Update: {
+          ammonia?: number | null
+          created_at?: string
+          gh?: number | null
+          id?: string
+          kh?: number | null
+          nitrate?: number | null
+          nitrite?: number | null
+          notes?: string | null
+          ph?: number | null
+          salinity?: number | null
+          tank_id?: string
+          tds?: number | null
+          temperature?: number | null
+          test_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "water_tests_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -319,7 +592,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "customer"
+      app_role: "admin" | "customer" | "staff"
       request_status: "new" | "in_progress" | "closed"
     }
     CompositeTypes: {
@@ -448,7 +721,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "customer"],
+      app_role: ["admin", "customer", "staff"],
       request_status: ["new", "in_progress", "closed"],
     },
   },

@@ -26,10 +26,21 @@ import { Route as KnowledgeSlugRouteImport } from './routes/knowledge.$slug'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAccountIndexRouteImport } from './routes/_authenticated/account.index'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminTestimonialsRouteImport } from './routes/_authenticated/admin.testimonials'
+import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin.staff'
+import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authenticated/admin.services'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
 import { Route as AuthenticatedAdminProjectsRouteImport } from './routes/_authenticated/admin.projects'
+import { Route as AuthenticatedAdminPagesRouteImport } from './routes/_authenticated/admin.pages'
 import { Route as AuthenticatedAdminArticlesRouteImport } from './routes/_authenticated/admin.articles'
+import { Route as AuthenticatedAdminAppointmentsRouteImport } from './routes/_authenticated/admin.appointments'
+import { Route as AuthenticatedAccountTanksRouteImport } from './routes/_authenticated/account.tanks'
+import { Route as AuthenticatedAccountRequestsRouteImport } from './routes/_authenticated/account.requests'
+import { Route as AuthenticatedAccountProfileRouteImport } from './routes/_authenticated/account.profile'
+import { Route as AuthenticatedAccountAppointmentsRouteImport } from './routes/_authenticated/account.appointments'
+import { Route as AuthenticatedAccountTanksIdRouteImport } from './routes/_authenticated/account.tanks.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -115,10 +126,32 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAccountIndexRoute =
+  AuthenticatedAccountIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAccountRoute,
+  } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminTestimonialsRoute =
   AuthenticatedAdminTestimonialsRouteImport.update({
     id: '/testimonials',
     path: '/testimonials',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminServicesRoute =
+  AuthenticatedAdminServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminRequestsRoute =
@@ -133,11 +166,52 @@ const AuthenticatedAdminProjectsRoute =
     path: '/projects',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPagesRoute = AuthenticatedAdminPagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminArticlesRoute =
   AuthenticatedAdminArticlesRouteImport.update({
     id: '/articles',
     path: '/articles',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAppointmentsRoute =
+  AuthenticatedAdminAppointmentsRouteImport.update({
+    id: '/appointments',
+    path: '/appointments',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAccountTanksRoute =
+  AuthenticatedAccountTanksRouteImport.update({
+    id: '/tanks',
+    path: '/tanks',
+    getParentRoute: () => AuthenticatedAccountRoute,
+  } as any)
+const AuthenticatedAccountRequestsRoute =
+  AuthenticatedAccountRequestsRouteImport.update({
+    id: '/requests',
+    path: '/requests',
+    getParentRoute: () => AuthenticatedAccountRoute,
+  } as any)
+const AuthenticatedAccountProfileRoute =
+  AuthenticatedAccountProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedAccountRoute,
+  } as any)
+const AuthenticatedAccountAppointmentsRoute =
+  AuthenticatedAccountAppointmentsRouteImport.update({
+    id: '/appointments',
+    path: '/appointments',
+    getParentRoute: () => AuthenticatedAccountRoute,
+  } as any)
+const AuthenticatedAccountTanksIdRoute =
+  AuthenticatedAccountTanksIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAccountTanksRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -152,15 +226,26 @@ export interface FileRoutesByFullPath {
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/account': typeof AuthenticatedAccountRoute
+  '/account': typeof AuthenticatedAccountRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/knowledge/': typeof KnowledgeIndexRoute
+  '/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
+  '/account/profile': typeof AuthenticatedAccountProfileRoute
+  '/account/requests': typeof AuthenticatedAccountRequestsRoute
+  '/account/tanks': typeof AuthenticatedAccountTanksRouteWithChildren
+  '/admin/appointments': typeof AuthenticatedAdminAppointmentsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
+  '/admin/pages': typeof AuthenticatedAdminPagesRoute
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/account/': typeof AuthenticatedAccountIndexRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -173,14 +258,24 @@ export interface FileRoutesByTo {
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/account': typeof AuthenticatedAccountRoute
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/knowledge': typeof KnowledgeIndexRoute
+  '/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
+  '/account/profile': typeof AuthenticatedAccountProfileRoute
+  '/account/requests': typeof AuthenticatedAccountRequestsRoute
+  '/account/tanks': typeof AuthenticatedAccountTanksRouteWithChildren
+  '/admin/appointments': typeof AuthenticatedAdminAppointmentsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
+  '/admin/pages': typeof AuthenticatedAdminPagesRoute
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/account': typeof AuthenticatedAccountIndexRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -196,15 +291,26 @@ export interface FileRoutesById {
   '/portfolio': typeof PortfolioRoute
   '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/knowledge/': typeof KnowledgeIndexRoute
+  '/_authenticated/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
+  '/_authenticated/account/profile': typeof AuthenticatedAccountProfileRoute
+  '/_authenticated/account/requests': typeof AuthenticatedAccountRequestsRoute
+  '/_authenticated/account/tanks': typeof AuthenticatedAccountTanksRouteWithChildren
+  '/_authenticated/admin/appointments': typeof AuthenticatedAdminAppointmentsRoute
   '/_authenticated/admin/articles': typeof AuthenticatedAdminArticlesRoute
+  '/_authenticated/admin/pages': typeof AuthenticatedAdminPagesRoute
   '/_authenticated/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
+  '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/account/': typeof AuthenticatedAccountIndexRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -224,11 +330,22 @@ export interface FileRouteTypes {
     | '/admin'
     | '/knowledge/$slug'
     | '/knowledge/'
+    | '/account/appointments'
+    | '/account/profile'
+    | '/account/requests'
+    | '/account/tanks'
+    | '/admin/appointments'
     | '/admin/articles'
+    | '/admin/pages'
     | '/admin/projects'
     | '/admin/requests'
+    | '/admin/services'
+    | '/admin/staff'
     | '/admin/testimonials'
+    | '/admin/users'
+    | '/account/'
     | '/admin/'
+    | '/account/tanks/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -241,14 +358,24 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/services'
     | '/sitemap.xml'
-    | '/account'
     | '/knowledge/$slug'
     | '/knowledge'
+    | '/account/appointments'
+    | '/account/profile'
+    | '/account/requests'
+    | '/account/tanks'
+    | '/admin/appointments'
     | '/admin/articles'
+    | '/admin/pages'
     | '/admin/projects'
     | '/admin/requests'
+    | '/admin/services'
+    | '/admin/staff'
     | '/admin/testimonials'
+    | '/admin/users'
+    | '/account'
     | '/admin'
+    | '/account/tanks/$id'
   id:
     | '__root__'
     | '/'
@@ -267,11 +394,22 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/knowledge/$slug'
     | '/knowledge/'
+    | '/_authenticated/account/appointments'
+    | '/_authenticated/account/profile'
+    | '/_authenticated/account/requests'
+    | '/_authenticated/account/tanks'
+    | '/_authenticated/admin/appointments'
     | '/_authenticated/admin/articles'
+    | '/_authenticated/admin/pages'
     | '/_authenticated/admin/projects'
     | '/_authenticated/admin/requests'
+    | '/_authenticated/admin/services'
+    | '/_authenticated/admin/staff'
     | '/_authenticated/admin/testimonials'
+    | '/_authenticated/admin/users'
+    | '/_authenticated/account/'
     | '/_authenticated/admin/'
+    | '/_authenticated/account/tanks/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -410,11 +548,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/account/': {
+      id: '/_authenticated/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AuthenticatedAccountIndexRouteImport
+      parentRoute: typeof AuthenticatedAccountRoute
+    }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/testimonials': {
       id: '/_authenticated/admin/testimonials'
       path: '/testimonials'
       fullPath: '/admin/testimonials'
       preLoaderRoute: typeof AuthenticatedAdminTestimonialsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/staff': {
+      id: '/_authenticated/admin/staff'
+      path: '/staff'
+      fullPath: '/admin/staff'
+      preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/services': {
+      id: '/_authenticated/admin/services'
+      path: '/services'
+      fullPath: '/admin/services'
+      preLoaderRoute: typeof AuthenticatedAdminServicesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/requests': {
@@ -431,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminProjectsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/pages': {
+      id: '/_authenticated/admin/pages'
+      path: '/pages'
+      fullPath: '/admin/pages'
+      preLoaderRoute: typeof AuthenticatedAdminPagesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/articles': {
       id: '/_authenticated/admin/articles'
       path: '/articles'
@@ -438,22 +611,107 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminArticlesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/appointments': {
+      id: '/_authenticated/admin/appointments'
+      path: '/appointments'
+      fullPath: '/admin/appointments'
+      preLoaderRoute: typeof AuthenticatedAdminAppointmentsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/account/tanks': {
+      id: '/_authenticated/account/tanks'
+      path: '/tanks'
+      fullPath: '/account/tanks'
+      preLoaderRoute: typeof AuthenticatedAccountTanksRouteImport
+      parentRoute: typeof AuthenticatedAccountRoute
+    }
+    '/_authenticated/account/requests': {
+      id: '/_authenticated/account/requests'
+      path: '/requests'
+      fullPath: '/account/requests'
+      preLoaderRoute: typeof AuthenticatedAccountRequestsRouteImport
+      parentRoute: typeof AuthenticatedAccountRoute
+    }
+    '/_authenticated/account/profile': {
+      id: '/_authenticated/account/profile'
+      path: '/profile'
+      fullPath: '/account/profile'
+      preLoaderRoute: typeof AuthenticatedAccountProfileRouteImport
+      parentRoute: typeof AuthenticatedAccountRoute
+    }
+    '/_authenticated/account/appointments': {
+      id: '/_authenticated/account/appointments'
+      path: '/appointments'
+      fullPath: '/account/appointments'
+      preLoaderRoute: typeof AuthenticatedAccountAppointmentsRouteImport
+      parentRoute: typeof AuthenticatedAccountRoute
+    }
+    '/_authenticated/account/tanks/$id': {
+      id: '/_authenticated/account/tanks/$id'
+      path: '/$id'
+      fullPath: '/account/tanks/$id'
+      preLoaderRoute: typeof AuthenticatedAccountTanksIdRouteImport
+      parentRoute: typeof AuthenticatedAccountTanksRoute
+    }
   }
 }
 
+interface AuthenticatedAccountTanksRouteChildren {
+  AuthenticatedAccountTanksIdRoute: typeof AuthenticatedAccountTanksIdRoute
+}
+
+const AuthenticatedAccountTanksRouteChildren: AuthenticatedAccountTanksRouteChildren =
+  {
+    AuthenticatedAccountTanksIdRoute: AuthenticatedAccountTanksIdRoute,
+  }
+
+const AuthenticatedAccountTanksRouteWithChildren =
+  AuthenticatedAccountTanksRoute._addFileChildren(
+    AuthenticatedAccountTanksRouteChildren,
+  )
+
+interface AuthenticatedAccountRouteChildren {
+  AuthenticatedAccountAppointmentsRoute: typeof AuthenticatedAccountAppointmentsRoute
+  AuthenticatedAccountProfileRoute: typeof AuthenticatedAccountProfileRoute
+  AuthenticatedAccountRequestsRoute: typeof AuthenticatedAccountRequestsRoute
+  AuthenticatedAccountTanksRoute: typeof AuthenticatedAccountTanksRouteWithChildren
+  AuthenticatedAccountIndexRoute: typeof AuthenticatedAccountIndexRoute
+}
+
+const AuthenticatedAccountRouteChildren: AuthenticatedAccountRouteChildren = {
+  AuthenticatedAccountAppointmentsRoute: AuthenticatedAccountAppointmentsRoute,
+  AuthenticatedAccountProfileRoute: AuthenticatedAccountProfileRoute,
+  AuthenticatedAccountRequestsRoute: AuthenticatedAccountRequestsRoute,
+  AuthenticatedAccountTanksRoute: AuthenticatedAccountTanksRouteWithChildren,
+  AuthenticatedAccountIndexRoute: AuthenticatedAccountIndexRoute,
+}
+
+const AuthenticatedAccountRouteWithChildren =
+  AuthenticatedAccountRoute._addFileChildren(AuthenticatedAccountRouteChildren)
+
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAppointmentsRoute: typeof AuthenticatedAdminAppointmentsRoute
   AuthenticatedAdminArticlesRoute: typeof AuthenticatedAdminArticlesRoute
+  AuthenticatedAdminPagesRoute: typeof AuthenticatedAdminPagesRoute
   AuthenticatedAdminProjectsRoute: typeof AuthenticatedAdminProjectsRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
+  AuthenticatedAdminServicesRoute: typeof AuthenticatedAdminServicesRoute
+  AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminTestimonialsRoute: typeof AuthenticatedAdminTestimonialsRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAppointmentsRoute: AuthenticatedAdminAppointmentsRoute,
   AuthenticatedAdminArticlesRoute: AuthenticatedAdminArticlesRoute,
+  AuthenticatedAdminPagesRoute: AuthenticatedAdminPagesRoute,
   AuthenticatedAdminProjectsRoute: AuthenticatedAdminProjectsRoute,
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
+  AuthenticatedAdminServicesRoute: AuthenticatedAdminServicesRoute,
+  AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
   AuthenticatedAdminTestimonialsRoute: AuthenticatedAdminTestimonialsRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
@@ -461,12 +719,12 @@ const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRouteWithChildren
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedAccountRoute: AuthenticatedAccountRouteWithChildren,
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
 }
 
