@@ -5,8 +5,7 @@ import { Reveal } from "../components/Reveal";
 import { Counter } from "../components/Counter";
 import {
   ArrowLeft,
-  Sparkles, BadgeCheck,
-  Search, PenTool, Hammer, LifeBuoy, Plus, Minus, Star, Quote,
+  Plus, Minus, Star, Quote,
 } from "lucide-react";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
 import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
@@ -15,12 +14,14 @@ import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json"
 import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
-import { ICONS, type HeroContent, type ExploreContent, type ServicesContent } from "@/lib/home-sections";
+import {
+  ICONS,
+  type HeroContent, type ExploreContent, type ServicesContent,
+  type WhyUsContent, type ProcessContent, type FaqContent, type CtaContent, type SectionHeader,
+} from "@/lib/home-sections";
 
 const heroFallback = livingRoomTankAsset.url;
 const styledAquarium = styledAquariumAsset.url;
-const counterAquarium = counterAquariumAsset.url;
-const canisterFilter = canisterFilterAsset.url;
 const serviceFallbacks = [marineCubeAsset.url, counterAquariumAsset.url, canisterFilterAsset.url, styledAquariumAsset.url];
 
 export const Route = createFileRoute("/")({
@@ -37,20 +38,6 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const whyUs = [
-  { icon: Sparkles, title: "تصميم فاخر", desc: "تصاميم استوديو خاصة تليق بالمساحات الراقية." },
-  { icon: BadgeCheck, title: "فريق احترافي", desc: "فريق ذو خبرة طويلة في المجال يتولى مشروعك من الألف للياء." },
-  { icon: PenTool, title: "تصميم واضح", desc: "خبرة في تنفيذ أشكال وأنماط مختلفة حسب طلبك وذوقك." },
-  { icon: LifeBuoy, title: "متابعة مستمرة", desc: "ندعمك بعد التسليم لضمان استقرار الحوض وصحته." },
-];
-
-const process = [
-  { icon: Search, n: "01", title: "الاستكشاف", desc: "نزور موقعك ونفهم رؤيتك واحتياجاتك بدقة." },
-  { icon: PenTool, n: "02", title: "التصميم", desc: "نقدّم تصوراً واضحاً للحوض بكل تفاصيله التقنية والجمالية." },
-  { icon: Hammer, n: "03", title: "التنفيذ", desc: "تركيب احترافي يضمن الجودة والمتانة والجمال." },
-  { icon: LifeBuoy, n: "04", title: "العناية", desc: "متابعة وصيانة دورية لاستدامة حوضك بأفضل حالة." },
-];
-
 const stats = [
   { num: 9, suffix: "+", label: "سنوات خبرة" },
   { num: 320, suffix: "+", label: "مشروع منجز" },
@@ -59,51 +46,42 @@ const stats = [
 
 const partners = ["EHEIM", "JBL", "FLUVAL", "RED SEA", "ADA", "SEACHEM", "TUNZE", "CHIHIROS"];
 
-type Testimonial = {
-  id: string;
-  name: string;
-  role: string | null;
-  rating: number;
-  body: string;
-  image_path: string | null;
-};
-
-type FeaturedArticle = {
-  slug: string;
-  title: string;
-  excerpt: string | null;
-  cover_path: string | null;
-};
-
-
-const faqs = [
-  { q: "هل تقدمون خدماتكم خارج الرياض؟", a: "خدماتنا الأساسية داخل الرياض، أما المشاريع الكبيرة (تجارية أو فلل خاصة) فنلتزم بتنفيذها في باقي مناطق المملكة بعد اتفاق مسبق." },
-  { q: "كم يستغرق تنفيذ حوض مخصص؟", a: "يعتمد على حجم المشروع وتعقيده، عادة من 2 إلى 6 أسابيع تشمل التصميم والتنفيذ والتأسيس البيئي." },
-  { q: "ما الذي تشمله خطة الصيانة الدورية؟", a: "تشمل فحص المياه، تنظيف الفلاتر، تغيير جزئي للمياه، فحص المعدات، وتقرير دوري بحالة الحوض." },
-  { q: "هل تقدمون أنظمة لمطاعم وكافيهات؟", a: "نعم، لدينا قسم متخصص في الحلول التجارية للكافيهات والمطاعم والفعاليات وأنظمة المأكولات البحرية الحية." },
-  { q: "هل الحوض يصدر رائحة؟", a: "الحوض المتوازن بيئياً وبفلترة سليمة لا تصدر منه أي رائحة. أنظمتنا مصممة لضمان مياه نقية وهواء نظيف حول الحوض." },
-  { q: "كيف أطلب مشروعاً جديداً؟", a: "تواصل معنا عبر نموذج التواصل أو واتساب، وسيقوم فريقنا بترتيب زيارة استكشافية مجانية داخل الرياض." },
-];
+type Testimonial = { id: string; name: string; role: string | null; rating: number; body: string; image_path: string | null };
+type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
 
 type Sections = {
   hero: { enabled: boolean; content: HeroContent } | null;
   explore: { enabled: boolean; content: ExploreContent } | null;
   services: { enabled: boolean; content: ServicesContent } | null;
+  why_us: { enabled: boolean; content: WhyUsContent } | null;
+  process: { enabled: boolean; content: ProcessContent } | null;
+  faq: { enabled: boolean; content: FaqContent } | null;
+  cta: { enabled: boolean; content: CtaContent } | null;
+  testimonials_header: { enabled: boolean; content: SectionHeader } | null;
+  knowledge_header: { enabled: boolean; content: SectionHeader } | null;
 };
+
+const EMPTY_SECTIONS: Sections = {
+  hero: null, explore: null, services: null,
+  why_us: null, process: null, faq: null, cta: null,
+  testimonials_header: null, knowledge_header: null,
+};
+
+const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "testimonials_header", "knowledge_header"];
 
 function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [sections, setSections] = useState<Sections>({ hero: null, explore: null, services: null });
+  const [sections, setSections] = useState<Sections>(EMPTY_SECTIONS);
   const [articles, setArticles] = useState<FeaturedArticle[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
   useEffect(() => {
     let alive = true;
     supabase.from("home_sections").select("section_key, enabled, content")
-      .in("section_key", ["hero", "explore", "services"])
+      .in("section_key", SECTION_KEYS)
       .then(({ data }) => {
         if (!alive) return;
-        const m: any = { hero: null, explore: null, services: null };
+        const m: any = { ...EMPTY_SECTIONS };
         (data ?? []).forEach((r: any) => { m[r.section_key] = { enabled: r.enabled, content: r.content }; });
         setSections(m);
       });
@@ -119,6 +97,8 @@ function HomePage() {
   }, []);
 
 
+
+
   const hero = sections.hero?.content;
   const heroEnabled = sections.hero?.enabled ?? true;
   const heroImg = hero?.image_path ? publicUrl(hero.image_path) : heroFallback;
@@ -132,6 +112,27 @@ function HomePage() {
   const services = sections.services?.content;
   const servicesEnabled = sections.services?.enabled ?? true;
   const serviceItems = (services?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+  const why = sections.why_us?.content;
+  const whyEnabled = sections.why_us?.enabled ?? true;
+  const whyItems = (why?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+  const proc = sections.process?.content;
+  const procEnabled = sections.process?.enabled ?? true;
+  const procItems = (proc?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+  const faqC = sections.faq?.content;
+  const faqEnabled = sections.faq?.enabled ?? true;
+  const faqItems = (faqC?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+  const ctaC = sections.cta?.content;
+  const ctaEnabled = sections.cta?.enabled ?? true;
+
+  const testHead = sections.testimonials_header?.content;
+  const testHeadEnabled = sections.testimonials_header?.enabled ?? true;
+  const knowHead = sections.knowledge_header?.content;
+  const knowHeadEnabled = sections.knowledge_header?.enabled ?? true;
+
 
   return (
     <>
@@ -280,74 +281,90 @@ function HomePage() {
       )}
 
       {/* WHY US */}
-      <section className="relative py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] items-center">
-            <Reveal>
-              <div>
-                <div className="text-xs tracking-widest text-gradient-gold mb-3">WHY AQH</div>
-                <h2 className="text-3xl sm:text-4xl font-bold mb-4">لماذا أكوا هيفن؟</h2>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  لأن الحوض ليس مجرد زجاج وماء — بل تجربة تعيشها كل يوم. نهتم بأدق التفاصيل من الهندسة حتى الإضاءة.
-                </p>
-                <Link to="/about" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-                  تعرف علينا أكثر <ArrowLeft size={16} aria-hidden />
-                </Link>
-              </div>
-            </Reveal>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {whyUs.map((w, i) => (
-                <Reveal key={w.title} delay={i * 100}>
-                  <div className="glass rounded-2xl p-5 hover:glass-gold transition">
-                    <div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
-                      <w.icon className="text-gold" size={20} aria-hidden />
-                    </div>
-                    <h3 className="font-bold mb-1.5">{w.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{w.desc}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PROCESS */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <Reveal>
-            <div className="text-center mb-14">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">PROCESS</div>
-              <h2 className="text-3xl sm:text-4xl font-bold">كيف نعمل</h2>
-              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">أربع خطوات منضبطة من الفكرة حتى الصيانة المستمرة.</p>
-            </div>
-          </Reveal>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 relative">
-            {process.map((s, i) => (
-              <Reveal key={s.n} delay={i * 100}>
-                <div className="glass rounded-2xl p-6 h-full relative overflow-hidden group">
-                  <div className="absolute -top-2 -left-2 text-7xl font-black text-gradient-gold opacity-20 group-hover:opacity-40 transition">{s.n}</div>
-                  <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4 relative">
-                    <s.icon className="text-gold" size={22} aria-hidden />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2 relative">{s.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed relative">{s.desc}</p>
+      {whyEnabled && whyItems.length > 0 && (
+        <section className="relative py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] items-center">
+              <Reveal>
+                <div>
+                  {why?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{why.kicker}</div>}
+                  {why?.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-4">{why.heading}</h2>}
+                  {why?.description && <p className="text-muted-foreground leading-relaxed mb-6">{why.description}</p>}
+                  {why?.link_label && (
+                    <SmartLink to={why.link_href || "/about"} className="inline-flex items-center gap-2 text-sm text-gradient-gold">
+                      {why.link_label} <ArrowLeft size={16} aria-hidden />
+                    </SmartLink>
+                  )}
                 </div>
               </Reveal>
-            ))}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {whyItems.map((w, i) => {
+                  const Icon = w.icon ? ICONS[w.icon] : null;
+                  return (
+                    <Reveal key={w.id} delay={i * 100}>
+                      <div className="glass rounded-2xl p-5 hover:glass-gold transition">
+                        {Icon && (
+                          <div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
+                            <Icon className="text-gold" size={20} aria-hidden />
+                          </div>
+                        )}
+                        <h3 className="font-bold mb-1.5">{w.title}</h3>
+                        {w.desc && <p className="text-sm text-muted-foreground leading-relaxed">{w.desc}</p>}
+                      </div>
+                    </Reveal>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* TESTIMONIALS */}
-      {testimonials.length > 0 && (
+      {/* PROCESS */}
+      {procEnabled && procItems.length > 0 && (
         <section className="relative py-24">
           <div className="mx-auto max-w-7xl px-6">
             <Reveal>
               <div className="text-center mb-14">
-                <div className="text-xs tracking-widest text-gradient-gold mb-3">TESTIMONIALS</div>
-                <h2 className="text-3xl sm:text-4xl font-bold">آراء حقيقية من عملائنا</h2>
-                <p className="text-muted-foreground mt-3 max-w-xl mx-auto">تقييمات منشورة من عملاء أكوا هيفن.</p>
+                {proc?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{proc.kicker}</div>}
+                {proc?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{proc.heading}</h2>}
+                {proc?.description && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{proc.description}</p>}
+              </div>
+            </Reveal>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 relative">
+              {procItems.map((s, i) => {
+                const Icon = s.icon ? ICONS[s.icon] : null;
+                return (
+                  <Reveal key={s.id} delay={i * 100}>
+                    <div className="glass rounded-2xl p-6 h-full relative overflow-hidden group">
+                      <div className="absolute -top-2 -left-2 text-7xl font-black text-gradient-gold opacity-20 group-hover:opacity-40 transition">{s.number}</div>
+                      {Icon && (
+                        <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4 relative">
+                          <Icon className="text-gold" size={22} aria-hidden />
+                        </div>
+                      )}
+                      <h3 className="text-lg font-bold mb-2 relative">{s.title}</h3>
+                      {s.desc && <p className="text-sm text-muted-foreground leading-relaxed relative">{s.desc}</p>}
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+
+
+      {/* TESTIMONIALS */}
+      {testHeadEnabled && testimonials.length > 0 && (
+        <section className="relative py-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <Reveal>
+              <div className="text-center mb-14">
+                {testHead?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{testHead.kicker}</div>}
+                {testHead?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{testHead.heading}</h2>}
+                {testHead?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{testHead.subtitle}</p>}
               </div>
             </Reveal>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -381,96 +398,106 @@ function HomePage() {
       )}
 
       {/* KNOWLEDGE */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4 mb-14">
-              <div>
-                <div className="text-xs tracking-widest text-gradient-gold mb-3">KNOWLEDGE</div>
-                <h2 className="text-3xl sm:text-4xl font-bold">أحدث المقالات</h2>
+      {knowHeadEnabled && (
+        <section className="relative py-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <Reveal>
+              <div className="flex flex-wrap items-end justify-between gap-4 mb-14">
+                <div>
+                  {knowHead?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{knowHead.kicker}</div>}
+                  {knowHead?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{knowHead.heading}</h2>}
+                </div>
+                <Link to="/knowledge" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
+                  {knowHead?.link_label || "كل المقالات"} <ArrowLeft size={16} aria-hidden />
+                </Link>
               </div>
-              <Link to="/knowledge" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-                كل المقالات <ArrowLeft size={16} aria-hidden />
-              </Link>
-            </div>
-          </Reveal>
-          {articles.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground">لا توجد مقالات مميزة حالياً.</p>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-3">
-              {articles.map((a, i) => {
-                const img = a.cover_path ? publicUrl(a.cover_path) : styledAquarium;
-                return (
-                  <Reveal key={a.slug} delay={i * 120}>
-                    <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
-                      <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
-                        <div className="overflow-hidden">
-                          <img src={img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                        </div>
-                        <div className="p-6">
-                          <h3 className="text-lg font-bold mb-2">{a.title}</h3>
-                          {a.excerpt && <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>}
-                        </div>
-                      </article>
-                    </Link>
-                  </Reveal>
-                );
-              })}
-            </div>
-          )}
-
-        </div>
-      </section>
+            </Reveal>
+            {articles.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground">لا توجد مقالات مميزة حالياً.</p>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-3">
+                {articles.map((a, i) => {
+                  const img = a.cover_path ? publicUrl(a.cover_path) : styledAquarium;
+                  return (
+                    <Reveal key={a.slug} delay={i * 120}>
+                      <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
+                        <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
+                          <div className="overflow-hidden">
+                            <img src={img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          </div>
+                          <div className="p-6">
+                            <h3 className="text-lg font-bold mb-2">{a.title}</h3>
+                            {a.excerpt && <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>}
+                          </div>
+                        </article>
+                      </Link>
+                    </Reveal>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* FAQ */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-3xl px-6">
-          <Reveal>
-            <div className="text-center mb-12">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">FAQ</div>
-              <h2 className="text-3xl sm:text-4xl font-bold">الأسئلة الشائعة</h2>
-            </div>
-          </Reveal>
-          <div className="space-y-3">
-            {faqs.map((f, i) => (
-              <Reveal key={f.q} delay={i * 60}>
-                <div className="glass rounded-2xl overflow-hidden">
-                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between gap-4 p-5 text-right" aria-expanded={openFaq === i}>
-                    <span className="font-bold text-sm md:text-base">{f.q}</span>
-                    <span className="grid place-items-center h-8 w-8 rounded-lg glass-gold flex-shrink-0" aria-hidden>
-                      {openFaq === i ? <Minus size={14} /> : <Plus size={14} />}
-                    </span>
-                  </button>
-                  <div className="grid transition-all duration-300 ease-out" style={{ gridTemplateRows: openFaq === i ? "1fr" : "0fr" }}>
-                    <div className="overflow-hidden">
-                      <p className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+      {faqEnabled && faqItems.length > 0 && (
+        <section className="relative py-24">
+          <div className="mx-auto max-w-3xl px-6">
+            <Reveal>
+              <div className="text-center mb-12">
+                {faqC?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{faqC.kicker}</div>}
+                {faqC?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{faqC.heading}</h2>}
+              </div>
+            </Reveal>
+            <div className="space-y-3">
+              {faqItems.map((f, i) => (
+                <Reveal key={f.id} delay={i * 60}>
+                  <div className="glass rounded-2xl overflow-hidden">
+                    <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between gap-4 p-5 text-right" aria-expanded={openFaq === i}>
+                      <span className="font-bold text-sm md:text-base">{f.q}</span>
+                      <span className="grid place-items-center h-8 w-8 rounded-lg glass-gold flex-shrink-0" aria-hidden>
+                        {openFaq === i ? <Minus size={14} /> : <Plus size={14} />}
+                      </span>
+                    </button>
+                    <div className="grid transition-all duration-300 ease-out" style={{ gridTemplateRows: openFaq === i ? "1fr" : "0fr" }}>
+                      <div className="overflow-hidden">
+                        <p className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Reveal>
-            ))}
+                </Reveal>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA */}
-      <section className="relative py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <Reveal>
-            <div className="gradient-border rounded-3xl p-10 md:p-14 text-center relative overflow-hidden">
-              <div className="light-rays" aria-hidden />
-              <div className="relative">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">جاهز لتأسيس عالمك المائي؟</h2>
-                <p className="text-muted-foreground mb-8 max-w-xl mx-auto">تواصل معنا اليوم ودعنا نحول رؤيتك إلى تحفة مائية فاخرة.</p>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <Link to="/contact" className="btn-gold rounded-xl px-7 py-3.5 text-sm">ابدأ مشروعك</Link>
-                  <a href="https://aqh.sa" target="_blank" rel="noopener noreferrer" className="btn-outline-gold rounded-xl px-7 py-3.5 text-sm">زيارة المتجر</a>
+      {ctaEnabled && (ctaC?.heading || ctaC?.description) && (
+        <section className="relative py-20">
+          <div className="mx-auto max-w-5xl px-6">
+            <Reveal>
+              <div className="gradient-border rounded-3xl p-10 md:p-14 text-center relative overflow-hidden">
+                <div className="light-rays" aria-hidden />
+                <div className="relative">
+                  {ctaC?.heading && <h2 className="text-3xl md:text-4xl font-bold mb-4">{ctaC.heading}</h2>}
+                  {ctaC?.description && <p className="text-muted-foreground mb-8 max-w-xl mx-auto">{ctaC.description}</p>}
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {ctaC?.primary_label && (
+                      <CTAButton href={ctaC.primary_href} variant="gold">{ctaC.primary_label}</CTAButton>
+                    )}
+                    {ctaC?.secondary_label && (
+                      <CTAButton href={ctaC.secondary_href} variant="outline">{ctaC.secondary_label}</CTAButton>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+            </Reveal>
+          </div>
+        </section>
+      )}
+
 
     </>
   );
