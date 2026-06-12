@@ -38,7 +38,7 @@ function AdminRequestsPage() {
     setList(reqs);
     const ids = Array.from(new Set(reqs.map((r) => r.tank_id).filter(Boolean))) as string[];
     if (ids.length) {
-      const { data: t } = await supabase.from("customer_tanks").select("id, name, tank_type, volume_liters, dimensions").in("id", ids);
+      const { data: t } = await supabase.from("customer_tanks").select("*").in("id", ids);
       const map: Record<string, TankRef> = {};
       (t ?? []).forEach((x: any) => { map[x.id] = x; });
       setTanks(map);
