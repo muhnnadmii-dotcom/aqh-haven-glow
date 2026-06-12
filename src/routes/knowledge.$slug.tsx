@@ -1,12 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Reveal } from "../components/Reveal";
 import { ArrowRight, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
 
 const fallbackImg = livingRoomTankAsset.url;
+
 
 type Article = {
   slug: string;
@@ -69,10 +69,8 @@ function renderBody(body: string) {
 
 function ArticlePage() {
   const a = Route.useLoaderData();
-  // Suppress unused import — keep state hook unused but ensure no warning
-  useEffect(() => { void 0; }, []);
-  const [hydrated] = useState(true); void hydrated;
   const img = a.cover_path ? publicUrl(a.cover_path) : fallbackImg;
+
   return (
     <article className="mx-auto max-w-3xl px-6 py-16">
       <Reveal>
