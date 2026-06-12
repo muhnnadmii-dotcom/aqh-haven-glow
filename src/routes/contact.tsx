@@ -3,6 +3,8 @@ import { useState, type FormEvent } from "react";
 import { Reveal } from "../components/Reveal";
 import { whatsappLink, WHATSAPP_NUMBER } from "../components/WhatsAppButton";
 import { Instagram, MapPin, Phone, MessageCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -39,8 +41,14 @@ function ContactPage() {
   const [type, setType] = useState<(typeof types)[number]>("استفسار");
   const [message, setMessage] = useState("");
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase.from("contact_requests").insert({
+      name, phone, type, message, user_id: u.user?.id ?? null,
+    });
+    if (error) { toast.error("تعذر إرسال الطلب"); return; }
+    toast.success("تم استلام طلبك، سنتواصل معك قريباً");
     const text =
       `السلام عليكم، أنا ${name}.\n` +
       `نوع الطلب: ${type}\n` +

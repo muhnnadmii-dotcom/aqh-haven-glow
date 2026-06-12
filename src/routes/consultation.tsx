@@ -3,6 +3,8 @@ import { useState, type FormEvent } from "react";
 import { Reveal } from "../components/Reveal";
 import { whatsappLink } from "../components/WhatsAppButton";
 import { MessagesSquare, CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/consultation")({
   head: () => ({
