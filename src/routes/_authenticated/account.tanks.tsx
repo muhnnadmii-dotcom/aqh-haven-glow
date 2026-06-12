@@ -461,6 +461,123 @@ function TankEditor({ v, setV, onSave, onCancel }: { v: Tank; setV: (t: Tank) =>
         </Section>
       )}
 
+      {isMarine && (
+        <>
+          <Section icon={Waves} title="معدات الحوض البحري">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={v.has_protein_skimmer} onChange={(e) => set("has_protein_skimmer", e.target.checked)} />
+                  بروتين سكيمر
+                </label>
+                {v.has_protein_skimmer && (
+                  <input className={inp} placeholder="موديل البروتين سكيمر" value={v.protein_skimmer_model}
+                    onChange={(e) => set("protein_skimmer_model", e.target.value)} />
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={v.has_wave_maker} onChange={(e) => set("has_wave_maker", e.target.checked)} />
+                  ويف ميكر
+                </label>
+                {v.has_wave_maker && (
+                  <input className={inp} placeholder="موديل الويف ميكر" value={v.wave_maker_model}
+                    onChange={(e) => set("wave_maker_model", e.target.value)} />
+                )}
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={v.has_sump} onChange={(e) => set("has_sump", e.target.checked)} />
+                يوجد سامب
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={v.has_ato} onChange={(e) => set("has_ato", e.target.checked)} />
+                يوجد ATO لتعويض التبخر
+              </label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label><span className={lbl}>نوع الملح</span>
+                <input className={inp} value={v.salt_brand} onChange={(e) => set("salt_brand", e.target.value)} placeholder="Red Sea / Tropic Marin..." /></label>
+              <label><span className={lbl}>نسبة الملوحة (SG)</span>
+                <input type="number" step="0.001" className={inp} value={v.salinity} onChange={(e) => set("salinity", e.target.value)} placeholder="1.025" /></label>
+              <label><span className={lbl}>درجة الحرارة (°C)</span>
+                <input type="number" step="0.1" className={inp} value={v.marine_temperature} onChange={(e) => set("marine_temperature", e.target.value)} /></label>
+              <label><span className={lbl}>آخر تغيير ماء</span>
+                <input type="date" className={inp} value={v.last_water_change ?? ""} onChange={(e) => set("last_water_change", e.target.value || null)} /></label>
+              <label><span className={lbl}>نسبة تغيير الماء المعتادة (%)</span>
+                <input type="number" className={inp} value={v.water_change_percent} onChange={(e) => set("water_change_percent", e.target.value)} placeholder="10" /></label>
+            </div>
+          </Section>
+
+          <Section icon={Lightbulb} title="الإضاءة البحرية">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label><span className={lbl}>نوع الإضاءة</span>
+                <input className={inp} value={v.marine_light_type} onChange={(e) => set("marine_light_type", e.target.value)} placeholder="Reef LED / T5 / Hybrid..." /></label>
+              <label><span className={lbl}>مدة تشغيل الأبيض (ساعة)</span>
+                <input type="number" className={inp} value={v.white_light_hours} onChange={(e) => set("white_light_hours", e.target.value)} /></label>
+              <label><span className={lbl}>مدة تشغيل الأزرق (ساعة)</span>
+                <input type="number" className={inp} value={v.blue_light_hours} onChange={(e) => set("blue_light_hours", e.target.value)} /></label>
+              <div>
+                <span className={lbl}>هل الإضاءة مناسبة للمرجان؟</span>
+                <div className="flex gap-3 text-sm">
+                  {[["yes", "نعم"], ["no", "لا"], ["unknown", "لا أعلم"]].map(([val, label]) => (
+                    <label key={val} className="flex items-center gap-1">
+                      <input type="radio" name="coral_safe_light" checked={v.coral_safe_light === val}
+                        onChange={() => set("coral_safe_light", val)} />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          <Section icon={Sparkles} title="المرجان">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={v.has_coral} onChange={(e) => set("has_coral", e.target.checked)} />
+              يوجد مرجان
+            </label>
+            {v.has_coral && (
+              <div className="space-y-2">
+                {v.corals.map((c, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_100px_1fr_auto] gap-2">
+                    <input className={inp} placeholder="نوع المرجان" value={c.type}
+                      onChange={(e) => { const list = [...v.corals]; list[i] = { ...c, type: e.target.value }; set("corals", list); }} />
+                    <input className={inp} type="number" placeholder="العدد" value={c.count}
+                      onChange={(e) => { const list = [...v.corals]; list[i] = { ...c, count: e.target.value }; set("corals", list); }} />
+                    <input className={inp} placeholder="ملاحظات" value={c.notes}
+                      onChange={(e) => { const list = [...v.corals]; list[i] = { ...c, notes: e.target.value }; set("corals", list); }} />
+                    <button type="button" onClick={() => set("corals", v.corals.filter((_, idx) => idx !== i))}
+                      className="glass rounded-xl px-2 text-red-400 hover:bg-red-500/10"><Trash2 size={14} /></button>
+                  </div>
+                ))}
+                <button type="button" onClick={() => set("corals", [...v.corals, { type: "", count: "", notes: "" }])}
+                  className="glass rounded-xl px-3 py-1.5 text-xs flex items-center gap-1 hover:bg-white/10"><Plus size={14} /> إضافة مرجان</button>
+              </div>
+            )}
+          </Section>
+
+          <Section icon={FlaskConical} title="الفحوصات (اختياري)">
+            <div className="grid gap-4 sm:grid-cols-3">
+              {([
+                ["test_salinity", "الملوحة (SG)", "0.001"],
+                ["test_ph", "pH", "0.01"],
+                ["test_kh", "KH (dKH)", "0.1"],
+                ["test_calcium", "Calcium (ppm)", "1"],
+                ["test_magnesium", "Magnesium (ppm)", "1"],
+                ["test_nitrate", "Nitrate (ppm)", "0.1"],
+                ["test_phosphate", "Phosphate (ppm)", "0.01"],
+                ["test_ammonia", "Ammonia (ppm)", "0.01"],
+                ["test_nitrite", "Nitrite (ppm)", "0.01"],
+              ] as const).map(([k, label, step]) => (
+                <label key={k}><span className={lbl}>{label}</span>
+                  <input type="number" step={step} className={inp} value={v[k] as string}
+                    onChange={(e) => set(k, e.target.value as any)} /></label>
+              ))}
+            </div>
+          </Section>
+        </>
+      )}
+
       <Section icon={Images} title="صور الحوض">
         <MultiImageUploader values={v.image_paths} cover={v.primary_image}
           onChange={(values, cover) => setV({ ...v, image_paths: values, primary_image: cover })}
