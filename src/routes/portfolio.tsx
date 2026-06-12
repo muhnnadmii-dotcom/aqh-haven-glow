@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Reveal } from "../components/Reveal";
 import { ProjectGallery } from "../components/ProjectGallery";
 import { SpecCard } from "../components/SpecCard";
