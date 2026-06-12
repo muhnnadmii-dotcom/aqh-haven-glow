@@ -281,63 +281,77 @@ function HomePage() {
       )}
 
       {/* WHY US */}
-      <section className="relative py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] items-center">
-            <Reveal>
-              <div>
-                <div className="text-xs tracking-widest text-gradient-gold mb-3">WHY AQH</div>
-                <h2 className="text-3xl sm:text-4xl font-bold mb-4">لماذا أكوا هيفن؟</h2>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  لأن الحوض ليس مجرد زجاج وماء — بل تجربة تعيشها كل يوم. نهتم بأدق التفاصيل من الهندسة حتى الإضاءة.
-                </p>
-                <Link to="/about" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-                  تعرف علينا أكثر <ArrowLeft size={16} aria-hidden />
-                </Link>
-              </div>
-            </Reveal>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {whyUs.map((w, i) => (
-                <Reveal key={w.title} delay={i * 100}>
-                  <div className="glass rounded-2xl p-5 hover:glass-gold transition">
-                    <div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
-                      <w.icon className="text-gold" size={20} aria-hidden />
-                    </div>
-                    <h3 className="font-bold mb-1.5">{w.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{w.desc}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PROCESS */}
-      <section className="relative py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <Reveal>
-            <div className="text-center mb-14">
-              <div className="text-xs tracking-widest text-gradient-gold mb-3">PROCESS</div>
-              <h2 className="text-3xl sm:text-4xl font-bold">كيف نعمل</h2>
-              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">أربع خطوات منضبطة من الفكرة حتى الصيانة المستمرة.</p>
-            </div>
-          </Reveal>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 relative">
-            {process.map((s, i) => (
-              <Reveal key={s.n} delay={i * 100}>
-                <div className="glass rounded-2xl p-6 h-full relative overflow-hidden group">
-                  <div className="absolute -top-2 -left-2 text-7xl font-black text-gradient-gold opacity-20 group-hover:opacity-40 transition">{s.n}</div>
-                  <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4 relative">
-                    <s.icon className="text-gold" size={22} aria-hidden />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2 relative">{s.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed relative">{s.desc}</p>
+      {whyEnabled && whyItems.length > 0 && (
+        <section className="relative py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] items-center">
+              <Reveal>
+                <div>
+                  {why?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{why.kicker}</div>}
+                  {why?.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-4">{why.heading}</h2>}
+                  {why?.description && <p className="text-muted-foreground leading-relaxed mb-6">{why.description}</p>}
+                  {why?.link_label && (
+                    <SmartLink to={why.link_href || "/about"} className="inline-flex items-center gap-2 text-sm text-gradient-gold">
+                      {why.link_label} <ArrowLeft size={16} aria-hidden />
+                    </SmartLink>
+                  )}
                 </div>
               </Reveal>
-            ))}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {whyItems.map((w, i) => {
+                  const Icon = w.icon ? ICONS[w.icon] : null;
+                  return (
+                    <Reveal key={w.id} delay={i * 100}>
+                      <div className="glass rounded-2xl p-5 hover:glass-gold transition">
+                        {Icon && (
+                          <div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
+                            <Icon className="text-gold" size={20} aria-hidden />
+                          </div>
+                        )}
+                        <h3 className="font-bold mb-1.5">{w.title}</h3>
+                        {w.desc && <p className="text-sm text-muted-foreground leading-relaxed">{w.desc}</p>}
+                      </div>
+                    </Reveal>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+      )}
+
+      {/* PROCESS */}
+      {procEnabled && procItems.length > 0 && (
+        <section className="relative py-24">
+          <div className="mx-auto max-w-7xl px-6">
+            <Reveal>
+              <div className="text-center mb-14">
+                {proc?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{proc.kicker}</div>}
+                {proc?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{proc.heading}</h2>}
+                {proc?.description && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{proc.description}</p>}
+              </div>
+            </Reveal>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 relative">
+              {procItems.map((s, i) => {
+                const Icon = s.icon ? ICONS[s.icon] : null;
+                return (
+                  <Reveal key={s.id} delay={i * 100}>
+                    <div className="glass rounded-2xl p-6 h-full relative overflow-hidden group">
+                      <div className="absolute -top-2 -left-2 text-7xl font-black text-gradient-gold opacity-20 group-hover:opacity-40 transition">{s.number}</div>
+                      {Icon && (
+                        <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4 relative">
+                          <Icon className="text-gold" size={22} aria-hidden />
+                        </div>
+                      )}
+                      <h3 className="text-lg font-bold mb-2 relative">{s.title}</h3>
+                      {s.desc && <p className="text-sm text-muted-foreground leading-relaxed relative">{s.desc}</p>}
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+
       </section>
 
       {/* TESTIMONIALS */}
