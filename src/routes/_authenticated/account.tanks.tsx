@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Fish, Ruler, Filter as FilterIcon, Flame, Lightbulb, Wind, Leaf, Images } from "lucide-react";
+import { Plus, Trash2, Save, Fish, Ruler, Filter as FilterIcon, Flame, Lightbulb, Wind, Leaf, Images, Waves, FlaskConical, Sparkles } from "lucide-react";
 import { MultiImageUploader } from "@/components/ImageUploader";
 import { publicUrl } from "@/lib/storage";
 
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/account/tanks")({
 
 type LivestockItem = { species: string; count: string };
 type PlantItem = { name: string; count: string };
+type CoralItem = { type: string; count: string; notes: string };
 
 type Tank = {
   id?: string;
@@ -41,6 +42,36 @@ type Tank = {
   plants: PlantItem[];
   image_paths: string[];
   primary_image: string | null;
+  // Marine equipment
+  has_protein_skimmer: boolean;
+  protein_skimmer_model: string;
+  has_wave_maker: boolean;
+  wave_maker_model: string;
+  has_sump: boolean;
+  has_ato: boolean;
+  salt_brand: string;
+  salinity: string;
+  marine_temperature: string;
+  last_water_change: string | null;
+  water_change_percent: string;
+  // Marine lighting
+  marine_light_type: string;
+  white_light_hours: string;
+  blue_light_hours: string;
+  coral_safe_light: string; // yes | no | unknown
+  // Coral
+  has_coral: boolean;
+  corals: CoralItem[];
+  // Tests
+  test_salinity: string;
+  test_ph: string;
+  test_kh: string;
+  test_calcium: string;
+  test_magnesium: string;
+  test_nitrate: string;
+  test_phosphate: string;
+  test_ammonia: string;
+  test_nitrite: string;
 };
 
 const blank: Tank = {
@@ -52,6 +83,15 @@ const blank: Tank = {
   has_co2: false, co2_type: "", co2_hours: "",
   livestock_items: [], has_plants: false, plants: [],
   image_paths: [], primary_image: null,
+  has_protein_skimmer: false, protein_skimmer_model: "",
+  has_wave_maker: false, wave_maker_model: "",
+  has_sump: false, has_ato: false,
+  salt_brand: "", salinity: "", marine_temperature: "",
+  last_water_change: null, water_change_percent: "",
+  marine_light_type: "", white_light_hours: "", blue_light_hours: "", coral_safe_light: "",
+  has_coral: false, corals: [],
+  test_salinity: "", test_ph: "", test_kh: "", test_calcium: "", test_magnesium: "",
+  test_nitrate: "", test_phosphate: "", test_ammonia: "", test_nitrite: "",
 };
 
 const TANK_TYPES = [
@@ -90,6 +130,32 @@ function fromRow(r: any): Tank {
     plants: Array.isArray(r.plants) ? r.plants : [],
     image_paths: Array.isArray(r.image_paths) ? r.image_paths : [],
     primary_image: r.primary_image ?? null,
+    has_protein_skimmer: !!r.has_protein_skimmer,
+    protein_skimmer_model: r.protein_skimmer_model ?? "",
+    has_wave_maker: !!r.has_wave_maker,
+    wave_maker_model: r.wave_maker_model ?? "",
+    has_sump: !!r.has_sump,
+    has_ato: !!r.has_ato,
+    salt_brand: r.salt_brand ?? "",
+    salinity: r.salinity?.toString() ?? "",
+    marine_temperature: r.marine_temperature?.toString() ?? "",
+    last_water_change: r.last_water_change,
+    water_change_percent: r.water_change_percent?.toString() ?? "",
+    marine_light_type: r.marine_light_type ?? "",
+    white_light_hours: r.white_light_hours?.toString() ?? "",
+    blue_light_hours: r.blue_light_hours?.toString() ?? "",
+    coral_safe_light: r.coral_safe_light ?? "",
+    has_coral: !!r.has_coral,
+    corals: Array.isArray(r.corals) ? r.corals : [],
+    test_salinity: r.test_salinity?.toString() ?? "",
+    test_ph: r.test_ph?.toString() ?? "",
+    test_kh: r.test_kh?.toString() ?? "",
+    test_calcium: r.test_calcium?.toString() ?? "",
+    test_magnesium: r.test_magnesium?.toString() ?? "",
+    test_nitrate: r.test_nitrate?.toString() ?? "",
+    test_phosphate: r.test_phosphate?.toString() ?? "",
+    test_ammonia: r.test_ammonia?.toString() ?? "",
+    test_nitrite: r.test_nitrite?.toString() ?? "",
   };
 }
 
@@ -145,6 +211,43 @@ function TanksPage() {
       primary_image: editing.primary_image,
       image_path: editing.primary_image,
     };
+    const isMarine = editing.tank_type === "marine";
+    const num = (s: string) => (s.trim() ? Number(s) : null);
+    if (isMarine) {
+      const tests = {
+        test_salinity: num(editing.test_salinity),
+        test_ph: num(editing.test_ph),
+        test_kh: num(editing.test_kh),
+        test_calcium: num(editing.test_calcium),
+        test_magnesium: num(editing.test_magnesium),
+        test_nitrate: num(editing.test_nitrate),
+        test_phosphate: num(editing.test_phosphate),
+        test_ammonia: num(editing.test_ammonia),
+        test_nitrite: num(editing.test_nitrite),
+      };
+      const anyTest = Object.values(tests).some((x) => x !== null);
+      Object.assign(payload, {
+        has_protein_skimmer: editing.has_protein_skimmer,
+        protein_skimmer_model: editing.has_protein_skimmer ? editing.protein_skimmer_model || null : null,
+        has_wave_maker: editing.has_wave_maker,
+        wave_maker_model: editing.has_wave_maker ? editing.wave_maker_model || null : null,
+        has_sump: editing.has_sump,
+        has_ato: editing.has_ato,
+        salt_brand: editing.salt_brand || null,
+        salinity: num(editing.salinity),
+        marine_temperature: num(editing.marine_temperature),
+        last_water_change: editing.last_water_change || null,
+        water_change_percent: num(editing.water_change_percent),
+        marine_light_type: editing.marine_light_type || null,
+        white_light_hours: num(editing.white_light_hours),
+        blue_light_hours: num(editing.blue_light_hours),
+        coral_safe_light: editing.coral_safe_light || null,
+        has_coral: editing.has_coral,
+        corals: editing.has_coral ? editing.corals : [],
+        ...tests,
+        tests_updated_at: anyTest ? new Date().toISOString() : null,
+      });
+    }
     const { error } = editing.id
       ? await supabase.from("customer_tanks").update(payload).eq("id", editing.id)
       : await supabase.from("customer_tanks").insert(payload);
@@ -219,6 +322,7 @@ function TankEditor({ v, setV, onSave, onCancel }: { v: Tank; setV: (t: Tank) =>
   }, [autoVolume]);
 
   const showPlants = v.tank_type === "freshwater" || v.tank_type === "planted";
+  const isMarine = v.tank_type === "marine";
 
   return (
     <div className="space-y-5">
@@ -355,6 +459,123 @@ function TankEditor({ v, setV, onSave, onCancel }: { v: Tank; setV: (t: Tank) =>
             </div>
           )}
         </Section>
+      )}
+
+      {isMarine && (
+        <>
+          <Section icon={Waves} title="معدات الحوض البحري">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={v.has_protein_skimmer} onChange={(e) => set("has_protein_skimmer", e.target.checked)} />
+                  بروتين سكيمر
+                </label>
+                {v.has_protein_skimmer && (
+                  <input className={inp} placeholder="موديل البروتين سكيمر" value={v.protein_skimmer_model}
+                    onChange={(e) => set("protein_skimmer_model", e.target.value)} />
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={v.has_wave_maker} onChange={(e) => set("has_wave_maker", e.target.checked)} />
+                  ويف ميكر
+                </label>
+                {v.has_wave_maker && (
+                  <input className={inp} placeholder="موديل الويف ميكر" value={v.wave_maker_model}
+                    onChange={(e) => set("wave_maker_model", e.target.value)} />
+                )}
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={v.has_sump} onChange={(e) => set("has_sump", e.target.checked)} />
+                يوجد سامب
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={v.has_ato} onChange={(e) => set("has_ato", e.target.checked)} />
+                يوجد ATO لتعويض التبخر
+              </label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label><span className={lbl}>نوع الملح</span>
+                <input className={inp} value={v.salt_brand} onChange={(e) => set("salt_brand", e.target.value)} placeholder="Red Sea / Tropic Marin..." /></label>
+              <label><span className={lbl}>نسبة الملوحة (SG)</span>
+                <input type="number" step="0.001" className={inp} value={v.salinity} onChange={(e) => set("salinity", e.target.value)} placeholder="1.025" /></label>
+              <label><span className={lbl}>درجة الحرارة (°C)</span>
+                <input type="number" step="0.1" className={inp} value={v.marine_temperature} onChange={(e) => set("marine_temperature", e.target.value)} /></label>
+              <label><span className={lbl}>آخر تغيير ماء</span>
+                <input type="date" className={inp} value={v.last_water_change ?? ""} onChange={(e) => set("last_water_change", e.target.value || null)} /></label>
+              <label><span className={lbl}>نسبة تغيير الماء المعتادة (%)</span>
+                <input type="number" className={inp} value={v.water_change_percent} onChange={(e) => set("water_change_percent", e.target.value)} placeholder="10" /></label>
+            </div>
+          </Section>
+
+          <Section icon={Lightbulb} title="الإضاءة البحرية">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label><span className={lbl}>نوع الإضاءة</span>
+                <input className={inp} value={v.marine_light_type} onChange={(e) => set("marine_light_type", e.target.value)} placeholder="Reef LED / T5 / Hybrid..." /></label>
+              <label><span className={lbl}>مدة تشغيل الأبيض (ساعة)</span>
+                <input type="number" className={inp} value={v.white_light_hours} onChange={(e) => set("white_light_hours", e.target.value)} /></label>
+              <label><span className={lbl}>مدة تشغيل الأزرق (ساعة)</span>
+                <input type="number" className={inp} value={v.blue_light_hours} onChange={(e) => set("blue_light_hours", e.target.value)} /></label>
+              <div>
+                <span className={lbl}>هل الإضاءة مناسبة للمرجان؟</span>
+                <div className="flex gap-3 text-sm">
+                  {[["yes", "نعم"], ["no", "لا"], ["unknown", "لا أعلم"]].map(([val, label]) => (
+                    <label key={val} className="flex items-center gap-1">
+                      <input type="radio" name="coral_safe_light" checked={v.coral_safe_light === val}
+                        onChange={() => set("coral_safe_light", val)} />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          <Section icon={Sparkles} title="المرجان">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={v.has_coral} onChange={(e) => set("has_coral", e.target.checked)} />
+              يوجد مرجان
+            </label>
+            {v.has_coral && (
+              <div className="space-y-2">
+                {v.corals.map((c, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_100px_1fr_auto] gap-2">
+                    <input className={inp} placeholder="نوع المرجان" value={c.type}
+                      onChange={(e) => { const list = [...v.corals]; list[i] = { ...c, type: e.target.value }; set("corals", list); }} />
+                    <input className={inp} type="number" placeholder="العدد" value={c.count}
+                      onChange={(e) => { const list = [...v.corals]; list[i] = { ...c, count: e.target.value }; set("corals", list); }} />
+                    <input className={inp} placeholder="ملاحظات" value={c.notes}
+                      onChange={(e) => { const list = [...v.corals]; list[i] = { ...c, notes: e.target.value }; set("corals", list); }} />
+                    <button type="button" onClick={() => set("corals", v.corals.filter((_, idx) => idx !== i))}
+                      className="glass rounded-xl px-2 text-red-400 hover:bg-red-500/10"><Trash2 size={14} /></button>
+                  </div>
+                ))}
+                <button type="button" onClick={() => set("corals", [...v.corals, { type: "", count: "", notes: "" }])}
+                  className="glass rounded-xl px-3 py-1.5 text-xs flex items-center gap-1 hover:bg-white/10"><Plus size={14} /> إضافة مرجان</button>
+              </div>
+            )}
+          </Section>
+
+          <Section icon={FlaskConical} title="الفحوصات (اختياري)">
+            <div className="grid gap-4 sm:grid-cols-3">
+              {([
+                ["test_salinity", "الملوحة (SG)", "0.001"],
+                ["test_ph", "pH", "0.01"],
+                ["test_kh", "KH (dKH)", "0.1"],
+                ["test_calcium", "Calcium (ppm)", "1"],
+                ["test_magnesium", "Magnesium (ppm)", "1"],
+                ["test_nitrate", "Nitrate (ppm)", "0.1"],
+                ["test_phosphate", "Phosphate (ppm)", "0.01"],
+                ["test_ammonia", "Ammonia (ppm)", "0.01"],
+                ["test_nitrite", "Nitrite (ppm)", "0.01"],
+              ] as const).map(([k, label, step]) => (
+                <label key={k}><span className={lbl}>{label}</span>
+                  <input type="number" step={step} className={inp} value={v[k] as string}
+                    onChange={(e) => set(k, e.target.value as any)} /></label>
+              ))}
+            </div>
+          </Section>
+        </>
       )}
 
       <Section icon={Images} title="صور الحوض">

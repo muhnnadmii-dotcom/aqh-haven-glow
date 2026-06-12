@@ -210,18 +210,26 @@ export type Database = {
       }
       customer_tanks: {
         Row: {
+          blue_light_hours: number | null
           city: string | null
           co2_hours: number | null
           co2_type: string | null
+          coral_safe_light: string | null
+          corals: Json | null
           created_at: string
           depth_cm: number | null
           dimensions: string | null
           filter_model: string | null
           filter_type: string | null
+          has_ato: boolean | null
           has_co2: boolean | null
+          has_coral: boolean | null
           has_heater: boolean | null
           has_plants: boolean | null
+          has_protein_skimmer: boolean | null
+          has_sump: boolean | null
           has_timer: boolean | null
+          has_wave_maker: boolean | null
           heater_model: string | null
           heater_watts: number | null
           height_cm: number | null
@@ -229,34 +237,61 @@ export type Database = {
           image_path: string | null
           image_paths: string[]
           install_date: string | null
+          last_water_change: string | null
           lighting_hours: number | null
           lighting_model: string | null
           lighting_type: string | null
           livestock: string | null
           livestock_items: Json
+          marine_light_type: string | null
+          marine_temperature: number | null
           name: string
           notes: string | null
           plants: Json
           primary_image: string | null
+          protein_skimmer_model: string | null
+          salinity: number | null
+          salt_brand: string | null
           tank_type: string | null
+          test_ammonia: number | null
+          test_calcium: number | null
+          test_kh: number | null
+          test_magnesium: number | null
+          test_nitrate: number | null
+          test_nitrite: number | null
+          test_ph: number | null
+          test_phosphate: number | null
+          test_salinity: number | null
+          tests_updated_at: string | null
           updated_at: string
           user_id: string
           volume_liters: number | null
+          water_change_percent: number | null
+          wave_maker_model: string | null
+          white_light_hours: number | null
           width_cm: number | null
         }
         Insert: {
+          blue_light_hours?: number | null
           city?: string | null
           co2_hours?: number | null
           co2_type?: string | null
+          coral_safe_light?: string | null
+          corals?: Json | null
           created_at?: string
           depth_cm?: number | null
           dimensions?: string | null
           filter_model?: string | null
           filter_type?: string | null
+          has_ato?: boolean | null
           has_co2?: boolean | null
+          has_coral?: boolean | null
           has_heater?: boolean | null
           has_plants?: boolean | null
+          has_protein_skimmer?: boolean | null
+          has_sump?: boolean | null
           has_timer?: boolean | null
+          has_wave_maker?: boolean | null
           heater_model?: string | null
           heater_watts?: number | null
           height_cm?: number | null
@@ -264,34 +299,61 @@ export type Database = {
           image_path?: string | null
           image_paths?: string[]
           install_date?: string | null
+          last_water_change?: string | null
           lighting_hours?: number | null
           lighting_model?: string | null
           lighting_type?: string | null
           livestock?: string | null
           livestock_items?: Json
+          marine_light_type?: string | null
+          marine_temperature?: number | null
           name: string
           notes?: string | null
           plants?: Json
           primary_image?: string | null
+          protein_skimmer_model?: string | null
+          salinity?: number | null
+          salt_brand?: string | null
           tank_type?: string | null
+          test_ammonia?: number | null
+          test_calcium?: number | null
+          test_kh?: number | null
+          test_magnesium?: number | null
+          test_nitrate?: number | null
+          test_nitrite?: number | null
+          test_ph?: number | null
+          test_phosphate?: number | null
+          test_salinity?: number | null
+          tests_updated_at?: string | null
           updated_at?: string
           user_id: string
           volume_liters?: number | null
+          water_change_percent?: number | null
+          wave_maker_model?: string | null
+          white_light_hours?: number | null
           width_cm?: number | null
         }
         Update: {
+          blue_light_hours?: number | null
           city?: string | null
           co2_hours?: number | null
           co2_type?: string | null
+          coral_safe_light?: string | null
+          corals?: Json | null
           created_at?: string
           depth_cm?: number | null
           dimensions?: string | null
           filter_model?: string | null
           filter_type?: string | null
+          has_ato?: boolean | null
           has_co2?: boolean | null
+          has_coral?: boolean | null
           has_heater?: boolean | null
           has_plants?: boolean | null
+          has_protein_skimmer?: boolean | null
+          has_sump?: boolean | null
           has_timer?: boolean | null
+          has_wave_maker?: boolean | null
           heater_model?: string | null
           heater_watts?: number | null
           height_cm?: number | null
@@ -299,19 +361,38 @@ export type Database = {
           image_path?: string | null
           image_paths?: string[]
           install_date?: string | null
+          last_water_change?: string | null
           lighting_hours?: number | null
           lighting_model?: string | null
           lighting_type?: string | null
           livestock?: string | null
           livestock_items?: Json
+          marine_light_type?: string | null
+          marine_temperature?: number | null
           name?: string
           notes?: string | null
           plants?: Json
           primary_image?: string | null
+          protein_skimmer_model?: string | null
+          salinity?: number | null
+          salt_brand?: string | null
           tank_type?: string | null
+          test_ammonia?: number | null
+          test_calcium?: number | null
+          test_kh?: number | null
+          test_magnesium?: number | null
+          test_nitrate?: number | null
+          test_nitrite?: number | null
+          test_ph?: number | null
+          test_phosphate?: number | null
+          test_salinity?: number | null
+          tests_updated_at?: string | null
           updated_at?: string
           user_id?: string
           volume_liters?: number | null
+          water_change_percent?: number | null
+          wave_maker_model?: string | null
+          white_light_hours?: number | null
           width_cm?: number | null
         }
         Relationships: []
