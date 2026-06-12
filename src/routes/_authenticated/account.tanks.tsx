@@ -211,6 +211,43 @@ function TanksPage() {
       primary_image: editing.primary_image,
       image_path: editing.primary_image,
     };
+    const isMarine = editing.tank_type === "marine";
+    const num = (s: string) => (s.trim() ? Number(s) : null);
+    if (isMarine) {
+      const tests = {
+        test_salinity: num(editing.test_salinity),
+        test_ph: num(editing.test_ph),
+        test_kh: num(editing.test_kh),
+        test_calcium: num(editing.test_calcium),
+        test_magnesium: num(editing.test_magnesium),
+        test_nitrate: num(editing.test_nitrate),
+        test_phosphate: num(editing.test_phosphate),
+        test_ammonia: num(editing.test_ammonia),
+        test_nitrite: num(editing.test_nitrite),
+      };
+      const anyTest = Object.values(tests).some((x) => x !== null);
+      Object.assign(payload, {
+        has_protein_skimmer: editing.has_protein_skimmer,
+        protein_skimmer_model: editing.has_protein_skimmer ? editing.protein_skimmer_model || null : null,
+        has_wave_maker: editing.has_wave_maker,
+        wave_maker_model: editing.has_wave_maker ? editing.wave_maker_model || null : null,
+        has_sump: editing.has_sump,
+        has_ato: editing.has_ato,
+        salt_brand: editing.salt_brand || null,
+        salinity: num(editing.salinity),
+        marine_temperature: num(editing.marine_temperature),
+        last_water_change: editing.last_water_change || null,
+        water_change_percent: num(editing.water_change_percent),
+        marine_light_type: editing.marine_light_type || null,
+        white_light_hours: num(editing.white_light_hours),
+        blue_light_hours: num(editing.blue_light_hours),
+        coral_safe_light: editing.coral_safe_light || null,
+        has_coral: editing.has_coral,
+        corals: editing.has_coral ? editing.corals : [],
+        ...tests,
+        tests_updated_at: anyTest ? new Date().toISOString() : null,
+      });
+    }
     const { error } = editing.id
       ? await supabase.from("customer_tanks").update(payload).eq("id", editing.id)
       : await supabase.from("customer_tanks").insert(payload);
