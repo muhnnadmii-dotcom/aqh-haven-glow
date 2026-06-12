@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-rout
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { LayoutDashboard, Fish, Calendar, Inbox, User, LogOut, Sparkles, Wrench } from "lucide-react";
-import { toast } from "sonner";
+import type { RequestType } from "@/lib/service-requests";
 
 export const Route = createFileRoute("/_authenticated/account")({
   component: AccountLayout,
