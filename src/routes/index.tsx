@@ -451,8 +451,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* dev-only: subtle hint for admin to edit */}
-      <Wrench className="hidden" />
     </>
   );
 }
