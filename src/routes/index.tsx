@@ -72,11 +72,13 @@ const testimonials = [
   { name: "Danah Adam", role: "عميلة", quote: "أكثر شي حبيته البكج اللي يجي فيه كل شي. المتجر متعاون ويردون بسرعة 🤍🐠" },
 ];
 
-const articles = [
-  { slug: "betta-care", img: styledAquarium, title: "العناية بسمك البيتا", excerpt: "دليلك الشامل لتربية البيتا في بيئة مثالية." },
-  { slug: "shrimp-breeding", img: counterAquarium, title: "تربية الروبيان", excerpt: "كل ما تحتاج معرفته عن تربية روبيان النيوكاريدينا." },
-  { slug: "water-chemistry", img: canisterFilter, title: "كيمياء المياه", excerpt: "أساسيات pH والقساوة وتوازن الأمونيا في حوضك." },
-];
+type FeaturedArticle = {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  cover_path: string | null;
+};
+
 
 const faqs = [
   { q: "هل تقدمون خدماتكم خارج الرياض؟", a: "خدماتنا الأساسية داخل الرياض، أما المشاريع الكبيرة (تجارية أو فلل خاصة) فنلتزم بتنفيذها في باقي مناطق المملكة بعد اتفاق مسبق." },
@@ -96,6 +98,7 @@ type Sections = {
 function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [sections, setSections] = useState<Sections>({ hero: null, explore: null, services: null });
+  const [articles, setArticles] = useState<FeaturedArticle[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -107,8 +110,13 @@ function HomePage() {
         (data ?? []).forEach((r: any) => { m[r.section_key] = { enabled: r.enabled, content: r.content }; });
         setSections(m);
       });
+    supabase.from("articles").select("slug, title, excerpt, cover_path")
+      .eq("published", true).eq("visible", true).eq("featured_on_home", true)
+      .order("home_order", { ascending: true }).limit(3)
+      .then(({ data }) => { if (alive) setArticles((data ?? []) as unknown as FeaturedArticle[]); });
     return () => { alive = false; };
   }, []);
+
 
   const hero = sections.hero?.content;
   const heroEnabled = sections.hero?.enabled ?? true;
