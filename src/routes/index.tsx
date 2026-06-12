@@ -7,18 +7,15 @@ import {
   Fish, Building2, Wrench, MessagesSquare, ArrowLeft,
   Sparkles, BadgeCheck,
   Search, PenTool, Hammer, LifeBuoy, Plus, Minus, Star, Quote,
-  Briefcase, BookOpen, Phone, Users, Layers,
+  Briefcase, BookOpen, Phone, Users,
 } from "lucide-react";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
-import saudiServiceAsset from "../assets/aqh-saudi-service.png.asset.json";
 import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
 import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
 import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
 
 const hero = livingRoomTankAsset.url;
-const livingRoomTank = livingRoomTankAsset.url;
-const saudiService = saudiServiceAsset.url;
 const marineCube = marineCubeAsset.url;
 const styledAquarium = styledAquariumAsset.url;
 const counterAquarium = counterAquariumAsset.url;
@@ -476,8 +473,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Suppress unused warnings */}
-      <span className="hidden">{livingRoomTank}{saudiService}{Layers ? "" : ""}</span>
     </>
   );
 }
