@@ -14,16 +14,313 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      articles: {
+        Row: {
+          body: string | null
+          cover_image: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published: boolean
+          published_at: string | null
+          slug: string
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          slug: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          slug?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consultation_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          details: string
+          goal: string | null
+          id: string
+          name: string
+          phone: string
+          size: string | null
+          status: Database["public"]["Enums"]["request_status"]
+          tank_type: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          details: string
+          goal?: string | null
+          id?: string
+          name: string
+          phone: string
+          size?: string | null
+          status?: Database["public"]["Enums"]["request_status"]
+          tank_type?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          details?: string
+          goal?: string | null
+          id?: string
+          name?: string
+          phone?: string
+          size?: string | null
+          status?: Database["public"]["Enums"]["request_status"]
+          tank_type?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      contact_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          message: string
+          name: string
+          phone: string
+          status: Database["public"]["Enums"]["request_status"]
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          name: string
+          phone: string
+          status?: Database["public"]["Enums"]["request_status"]
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          phone?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          add_ons: string[] | null
+          category: string
+          category_label: string | null
+          contents: Json
+          cover: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          equipment: Json
+          featured: boolean
+          id: string
+          images: string[]
+          livestock_warranty: string | null
+          location: string | null
+          price_max: number | null
+          price_min: number | null
+          published: boolean
+          service_packages: string[] | null
+          slug: string
+          sort_order: number
+          specs: Json
+          title: string
+          updated_at: string
+          water_system: string[] | null
+          year: string | null
+        }
+        Insert: {
+          add_ons?: string[] | null
+          category?: string
+          category_label?: string | null
+          contents?: Json
+          cover?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          equipment?: Json
+          featured?: boolean
+          id?: string
+          images?: string[]
+          livestock_warranty?: string | null
+          location?: string | null
+          price_max?: number | null
+          price_min?: number | null
+          published?: boolean
+          service_packages?: string[] | null
+          slug: string
+          sort_order?: number
+          specs?: Json
+          title: string
+          updated_at?: string
+          water_system?: string[] | null
+          year?: string | null
+        }
+        Update: {
+          add_ons?: string[] | null
+          category?: string
+          category_label?: string | null
+          contents?: Json
+          cover?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          equipment?: Json
+          featured?: boolean
+          id?: string
+          images?: string[]
+          livestock_warranty?: string | null
+          location?: string | null
+          price_max?: number | null
+          price_min?: number | null
+          published?: boolean
+          service_packages?: string[] | null
+          slug?: string
+          sort_order?: number
+          specs?: Json
+          title?: string
+          updated_at?: string
+          water_system?: string[] | null
+          year?: string | null
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          body: string
+          created_at: string
+          featured: boolean
+          id: string
+          name: string
+          rating: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          featured?: boolean
+          id?: string
+          name: string
+          rating?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          featured?: boolean
+          id?: string
+          name?: string
+          rating?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "customer"
+      request_status: "new" | "in_progress" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +447,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "customer"],
+      request_status: ["new", "in_progress", "closed"],
+    },
   },
 } as const
