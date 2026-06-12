@@ -4,7 +4,7 @@ import { Bubbles } from "../components/Bubbles";
 import { Reveal } from "../components/Reveal";
 import { Counter } from "../components/Counter";
 import {
-  Wrench, ArrowLeft,
+  ArrowLeft,
   Sparkles, BadgeCheck,
   Search, PenTool, Hammer, LifeBuoy, Plus, Minus, Star, Quote,
 } from "lucide-react";
