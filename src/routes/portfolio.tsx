@@ -33,7 +33,9 @@ import {
   Heart,
   Headphones,
 } from "lucide-react";
-import { projects, formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
+import { formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
+import { supabase } from "@/integrations/supabase/client";
+import { publicUrl } from "@/lib/storage";
 import { BusinessSolutions } from "../components/BusinessSolutions";
 
 export const Route = createFileRoute("/portfolio")({
