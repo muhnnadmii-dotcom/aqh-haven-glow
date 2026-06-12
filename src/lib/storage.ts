@@ -8,10 +8,15 @@ export function publicUrl(path: string | null | undefined): string {
   return supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
+export const MAX_IMAGE_MB = 8;
+
 export async function uploadMedia(file: File, folder = "uploads"): Promise<string> {
   const { data: u } = await supabase.auth.getUser();
   const uid = u.user?.id;
   if (!uid) throw new Error("يجب تسجيل الدخول لرفع الملفات");
+  if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+    throw new Error(`حجم الصورة كبير. الحد الأقصى ${MAX_IMAGE_MB} ميجابايت`);
+  }
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   // RLS requires path to start with the user's uid (unless admin/staff, which still passes).
