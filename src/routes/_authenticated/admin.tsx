@@ -25,7 +25,9 @@ const navGroups = [
   {
     label: "تصميم المتجر",
     items: [
-      { to: "/admin/design", label: "الصفحة الرئيسية", icon: Palette, exact: false },
+      { to: "/admin/design", label: "الصفحة الرئيسية", icon: Palette, exact: true },
+      { to: "/admin/design/about", label: "من نحن", icon: FileText, exact: false },
+      { to: "/admin/design/contact", label: "تواصل معنا", icon: FileText, exact: false },
     ],
   },
   {
