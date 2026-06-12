@@ -6,6 +6,10 @@ import {
   fetchHomeSections, saveHomeSection, genId, ICON_NAMES,
   type HeroContent, type ExploreContent, type ExploreItem,
   type ServicesContent, type ServiceItem,
+  type WhyUsContent, type WhyUsItem,
+  type ProcessContent, type ProcessItem,
+  type FaqContent, type FaqItem,
+  type CtaContent, type SectionHeader,
 } from "@/lib/home-sections";
 import { ImageUploader } from "@/components/ImageUploader";
 
@@ -14,9 +18,14 @@ export const Route = createFileRoute("/_authenticated/admin/design/")({
 });
 
 const TABS = [
-  { key: "hero", label: "البانر الرئيسي" },
-  { key: "explore", label: "استكشف أكوا هيفن" },
+  { key: "hero", label: "البانر" },
+  { key: "explore", label: "استكشف" },
   { key: "services", label: "ماذا نقدم" },
+  { key: "why_us", label: "لماذا نحن" },
+  { key: "process", label: "كيف نعمل" },
+  { key: "faq", label: "الأسئلة الشائعة" },
+  { key: "cta", label: "CTA الأخير" },
+  { key: "headers", label: "عناوين أقسام" },
 ] as const;
 
 const DEFAULT_HERO: HeroContent = {
@@ -25,6 +34,11 @@ const DEFAULT_HERO: HeroContent = {
   secondary_cta_label: "", secondary_cta_href: "",
   image_path: "", overlay_enabled: true, overlay_opacity: 0.6,
 };
+const DEFAULT_WHY: WhyUsContent = { kicker: "", heading: "", description: "", link_label: "", link_href: "", items: [] };
+const DEFAULT_PROCESS: ProcessContent = { kicker: "", heading: "", description: "", items: [] };
+const DEFAULT_FAQ: FaqContent = { kicker: "", heading: "", items: [] };
+const DEFAULT_CTA: CtaContent = { heading: "", description: "", primary_label: "", primary_href: "", secondary_label: "", secondary_href: "" };
+const DEFAULT_HEADER: SectionHeader = { kicker: "", heading: "", subtitle: "", link_label: "" };
 
 function DesignAdmin() {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("hero");
@@ -32,6 +46,12 @@ function DesignAdmin() {
   const [hero, setHero] = useState<{ enabled: boolean; content: HeroContent }>({ enabled: true, content: DEFAULT_HERO });
   const [explore, setExplore] = useState<{ enabled: boolean; content: ExploreContent }>({ enabled: true, content: { kicker: "", heading: "", subtitle: "", items: [] } });
   const [services, setServices] = useState<{ enabled: boolean; content: ServicesContent }>({ enabled: true, content: { kicker: "", heading: "", description: "", items: [] } });
+  const [whyUs, setWhyUs] = useState<{ enabled: boolean; content: WhyUsContent }>({ enabled: true, content: DEFAULT_WHY });
+  const [processS, setProcessS] = useState<{ enabled: boolean; content: ProcessContent }>({ enabled: true, content: DEFAULT_PROCESS });
+  const [faq, setFaq] = useState<{ enabled: boolean; content: FaqContent }>({ enabled: true, content: DEFAULT_FAQ });
+  const [cta, setCta] = useState<{ enabled: boolean; content: CtaContent }>({ enabled: true, content: DEFAULT_CTA });
+  const [testHeader, setTestHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
+  const [knowHeader, setKnowHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -41,6 +61,12 @@ function DesignAdmin() {
         if (s.hero) setHero({ enabled: s.hero.enabled, content: { ...DEFAULT_HERO, ...s.hero.content } });
         if (s.explore) setExplore({ enabled: s.explore.enabled, content: s.explore.content });
         if (s.services) setServices({ enabled: s.services.enabled, content: s.services.content });
+        if (s.why_us) setWhyUs({ enabled: s.why_us.enabled, content: { ...DEFAULT_WHY, ...s.why_us.content } });
+        if (s.process) setProcessS({ enabled: s.process.enabled, content: { ...DEFAULT_PROCESS, ...s.process.content } });
+        if (s.faq) setFaq({ enabled: s.faq.enabled, content: { ...DEFAULT_FAQ, ...s.faq.content } });
+        if (s.cta) setCta({ enabled: s.cta.enabled, content: { ...DEFAULT_CTA, ...s.cta.content } });
+        if (s.testimonials_header) setTestHeader({ enabled: s.testimonials_header.enabled, content: { ...DEFAULT_HEADER, ...s.testimonials_header.content } });
+        if (s.knowledge_header) setKnowHeader({ enabled: s.knowledge_header.enabled, content: { ...DEFAULT_HEADER, ...s.knowledge_header.content } });
       } catch (e: any) { toast.error(e?.message ?? "فشل التحميل"); }
       finally { setLoading(false); }
     })();
@@ -51,7 +77,15 @@ function DesignAdmin() {
     try {
       if (tab === "hero") await saveHomeSection("hero", hero.enabled, hero.content);
       else if (tab === "explore") await saveHomeSection("explore", explore.enabled, explore.content);
-      else await saveHomeSection("services", services.enabled, services.content);
+      else if (tab === "services") await saveHomeSection("services", services.enabled, services.content);
+      else if (tab === "why_us") await saveHomeSection("why_us", whyUs.enabled, whyUs.content);
+      else if (tab === "process") await saveHomeSection("process", processS.enabled, processS.content);
+      else if (tab === "faq") await saveHomeSection("faq", faq.enabled, faq.content);
+      else if (tab === "cta") await saveHomeSection("cta", cta.enabled, cta.content);
+      else if (tab === "headers") {
+        await saveHomeSection("testimonials_header", testHeader.enabled, testHeader.content);
+        await saveHomeSection("knowledge_header", knowHeader.enabled, knowHeader.content);
+      }
       toast.success("تم الحفظ");
     } catch (e: any) { toast.error(e?.message ?? "فشل الحفظ"); }
     finally { setSaving(false); }
@@ -84,9 +118,20 @@ function DesignAdmin() {
       {tab === "hero" && <HeroEditor value={hero} onChange={setHero} />}
       {tab === "explore" && <ExploreEditor value={explore} onChange={setExplore} />}
       {tab === "services" && <ServicesEditor value={services} onChange={setServices} />}
+      {tab === "why_us" && <WhyUsEditor value={whyUs} onChange={setWhyUs} />}
+      {tab === "process" && <ProcessEditor value={processS} onChange={setProcessS} />}
+      {tab === "faq" && <FaqEditor value={faq} onChange={setFaq} />}
+      {tab === "cta" && <CtaEditor value={cta} onChange={setCta} />}
+      {tab === "headers" && (
+        <div className="space-y-4">
+          <HeaderEditor title="عنوان قسم التقييمات" value={testHeader} onChange={setTestHeader} />
+          <HeaderEditor title="عنوان قسم المقالات" value={knowHeader} onChange={setKnowHeader} showLinkLabel />
+        </div>
+      )}
     </div>
   );
 }
+
 
 /* ---------- HERO ---------- */
 function HeroEditor({ value, onChange }: { value: { enabled: boolean; content: HeroContent }; onChange: (v: { enabled: boolean; content: HeroContent }) => void }) {
