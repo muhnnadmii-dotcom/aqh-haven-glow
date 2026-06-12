@@ -68,7 +68,7 @@ function ContactPage() {
               <div className="flex items-center gap-3 mb-2 text-gradient-gold">
                 <Phone size={18} /> <span className="font-bold">الهاتف / واتساب</span>
               </div>
-              <a href={`tel:+${WHATSAPP_NUMBER}`} className="text-lg block">+966 52 704 4200</a>
+              <a href={`tel:+${WHATSAPP_NUMBER}`} dir="ltr" className="text-lg block text-right">+966 52 704 4200</a>
             </div>
             <div className="glass rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-2 text-gradient-gold">

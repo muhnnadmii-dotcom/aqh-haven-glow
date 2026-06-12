@@ -1,0 +1,136 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
+import { Reveal } from "../components/Reveal";
+import { whatsappLink } from "../components/WhatsAppButton";
+import { MessagesSquare, CheckCircle2 } from "lucide-react";
+
+export const Route = createFileRoute("/consultation")({
+  head: () => ({
+    meta: [
+      { title: "استشارة متخصصة — أكوا هيفن" },
+      { name: "description", content: "اطلب استشارة احترافية من خبراء أكوا هيفن لتأسيس أو تطوير حوضك." },
+      { property: "og:title", content: "استشارة متخصصة — أكوا هيفن" },
+      { property: "og:description", content: "أرسل تفاصيل حوضك واحصل على توصية متخصصة." },
+      { property: "og:url", content: "/consultation" },
+    ],
+    links: [{ rel: "canonical", href: "/consultation" }],
+  }),
+  component: ConsultationPage,
+});
+
+const tankTypes = ["نهري مزروع", "نهري عادي", "بحري ريف", "بحري سمك فقط", "غير محدد"] as const;
+const goals = ["تأسيس حوض جديد", "تطوير حوض حالي", "حل مشكلة (طحالب/أمراض/تعكر)", "اختيار أسماك أو نباتات", "اختيار معدات", "أخرى"] as const;
+
+function ConsultationPage() {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [tankType, setTankType] = useState<(typeof tankTypes)[number]>("غير محدد");
+  const [goal, setGoal] = useState<(typeof goals)[number]>("تأسيس حوض جديد");
+  const [size, setSize] = useState("");
+  const [details, setDetails] = useState("");
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const text =
+      `السلام عليكم، أرغب بحجز استشارة.\n` +
+      `الاسم: ${name}\n` +
+      `الجوال: ${phone}\n` +
+      `نوع الحوض: ${tankType}\n` +
+      `الحجم/المقاس: ${size || "—"}\n` +
+      `الهدف من الاستشارة: ${goal}\n` +
+      `تفاصيل إضافية:\n${details}`;
+    window.open(whatsappLink(text), "_blank");
+  };
+
+  return (
+    <div className="mx-auto max-w-5xl px-6 py-16">
+      <Reveal>
+        <div className="text-center mb-12">
+          <div className="text-xs tracking-widest text-gradient-gold mb-3">CONSULTATION</div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">احجز استشارتك</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            عبئ الحقول التالية بتفاصيل حوضك وما تحتاجه، وسيتواصل معك متخصص من فريقنا عبر واتساب.
+          </p>
+        </div>
+      </Reveal>
+
+      <div className="grid gap-8 md:grid-cols-[1fr_1.4fr]">
+        <Reveal>
+          <div className="space-y-4">
+            <div className="glass-gold rounded-2xl p-6">
+              <div className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--gold)]/15 mb-3">
+                <MessagesSquare className="text-gold" size={20} />
+              </div>
+              <div className="font-bold mb-2">استشارة من خبير</div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                نخصص لك متخصصاً يجاوبك بناءً على نوع حوضك وهدفك. كل استشارة تُعامل بسرية تامة.
+              </p>
+            </div>
+            <ul className="glass rounded-2xl p-6 space-y-3">
+              {[
+                "رد سريع خلال ساعات العمل",
+                "توصيات عملية قابلة للتنفيذ",
+                "متابعة بعد الاستشارة عند الحاجة",
+              ].map((p) => (
+                <li key={p} className="flex items-start gap-2 text-sm">
+                  <CheckCircle2 size={16} className="text-gold mt-0.5 shrink-0" />
+                  <span className="text-foreground/90">{p}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+
+        <Reveal delay={120}>
+          <form onSubmit={onSubmit} className="glass rounded-3xl p-8 space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm mb-2">الاسم</label>
+                <input required value={name} onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60"
+                  placeholder="اسمك الكامل" />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">الجوال</label>
+                <input required type="tel" dir="ltr" value={phone} onChange={(e) => setPhone(e.target.value)}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60 text-right"
+                  placeholder="05xxxxxxxx" />
+              </div>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm mb-2">نوع الحوض</label>
+                <select value={tankType} onChange={(e) => setTankType(e.target.value as (typeof tankTypes)[number])}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60">
+                  {tankTypes.map((t) => <option key={t} value={t} className="bg-background">{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm mb-2">المقاس / الحجم</label>
+                <input value={size} onChange={(e) => setSize(e.target.value)}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60"
+                  placeholder="مثال: 80×40×40 — 130 لتر" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm mb-2">الهدف من الاستشارة</label>
+              <select value={goal} onChange={(e) => setGoal(e.target.value as (typeof goals)[number])}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60">
+                {goals.map((g) => <option key={g} value={g} className="bg-background">{g}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm mb-2">اشرح تفاصيل استشارتك</label>
+              <textarea required rows={6} value={details} onChange={(e) => setDetails(e.target.value)}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60 resize-none"
+                placeholder="اكتب الوضع الحالي، المشكلة، أو ما الذي تطمح له..." />
+            </div>
+            <button type="submit" className="btn-gold w-full rounded-xl px-6 py-3.5 text-sm">
+              إرسال الاستشارة عبر واتساب
+            </button>
+          </form>
+        </Reveal>
+      </div>
+    </div>
+  );
+}
