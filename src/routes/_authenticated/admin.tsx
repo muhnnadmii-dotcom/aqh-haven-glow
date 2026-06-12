@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog, Wrench, FileText, Calendar } from "lucide-react";
+import { LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog, Wrench, FileText, Calendar, Palette } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
@@ -20,6 +20,12 @@ const navGroups = [
       { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
       { to: "/admin/requests", label: "الطلبات", icon: Inbox, exact: false },
       { to: "/admin/appointments", label: "المواعيد", icon: Calendar, exact: false },
+    ],
+  },
+  {
+    label: "تصميم المتجر",
+    items: [
+      { to: "/admin/design", label: "الصفحة الرئيسية", icon: Palette, exact: false },
     ],
   },
   {
