@@ -59,19 +59,70 @@ export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
 });
 
-type Cat = "all" | Project["cat"];
+type Cat = string;
 
-const tabs: { id: Cat; label: string }[] = [
+const DEFAULT_TABS: { id: Cat; label: string }[] = [
   { id: "all", label: "الكل" },
-  { id: "living-room", label: "غرفة المعيشة" },
-  { id: "office", label: "مكتب" },
-  { id: "entrance", label: "مدخل" },
-  { id: "commercial", label: "مشاريع تجارية" },
 ];
+
+function adapt(r: any): Project {
+  const imgs: string[] = [];
+  for (const p of (r.image_paths ?? []) as string[]) {
+    const u = publicUrl(p); if (u) imgs.push(u);
+  }
+  for (const u of (r.images ?? []) as string[]) {
+    if (u && !imgs.includes(u)) imgs.push(u);
+  }
+  const cover = publicUrl(r.cover_path) || r.cover || imgs[0] || "";
+  if (imgs.length === 0 && cover) imgs.push(cover);
+  return {
+    id: r.sort_order ?? 0,
+    slug: r.slug,
+    title: r.title,
+    cat: r.category,
+    catLabel: r.category_label ?? r.category,
+    featured: !!r.featured,
+    location: r.location ?? "",
+    year: r.year ?? "",
+    cover,
+    images: imgs,
+    description: r.description ?? "",
+    specs: r.specs ?? {},
+    equipment: r.equipment ?? {},
+    waterSystem: r.water_system ?? undefined,
+    addOns: r.add_ons ?? undefined,
+    servicePackages: r.service_packages ?? undefined,
+    livestockWarranty: r.livestock_warranty ?? undefined,
+    contents: { fish: [], plantsOrCorals: [], decor: "", ...(r.contents ?? {}) },
+    priceRange: { min: r.price_min ?? 0, max: r.price_max ?? 0 },
+  } as Project;
+}
 
 function PortfolioPage() {
   const [cat, setCat] = useState<Cat>("all");
   const [open, setOpen] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    supabase.from("projects").select("*").eq("published", true)
+      .order("sort_order").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) setError(error.message);
+        setProjects(((data ?? []) as any[]).map(adapt));
+        setLoading(false);
+      });
+    return () => { alive = false; };
+  }, []);
+
+  const tabs = useMemo(() => {
+    const seen = new Map<string, string>();
+    projects.forEach((p) => { if (!seen.has(p.cat)) seen.set(p.cat, p.catLabel); });
+    return [{ id: "all" as Cat, label: "الكل" }, ...Array.from(seen.entries()).map(([id, label]) => ({ id, label }))];
+  }, [projects]);
 
   const filtered = cat === "all" ? projects : projects.filter((p) => p.cat === cat);
 
