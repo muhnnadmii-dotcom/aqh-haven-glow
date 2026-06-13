@@ -5,11 +5,12 @@ import { LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, User
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
   beforeLoad: async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) throw redirect({ to: "/auth" });
-    const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id).in("role", ["admin", "staff"]).maybeSingle();
+    const { data: s } = await supabase.auth.getSession();
+    if (!s.session?.user) throw redirect({ to: "/auth" });
+    const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", s.session.user.id).in("role", ["admin", "staff"]).maybeSingle();
     if (!r) throw redirect({ to: "/account" });
   },
+
   component: AdminLayout,
 });
 
