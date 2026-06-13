@@ -88,6 +88,7 @@ function DesignAdmin() {
       else if (tab === "process") await saveHomeSection("process", processS.enabled, processS.content);
       else if (tab === "faq") await saveHomeSection("faq", faq.enabled, faq.content);
       else if (tab === "cta") await saveHomeSection("cta", cta.enabled, cta.content);
+      else if (tab === "partners") await saveHomeSection("partners", partners.enabled, partners.content);
       else if (tab === "headers") {
         await saveHomeSection("testimonials_header", testHeader.enabled, testHeader.content);
         await saveHomeSection("knowledge_header", knowHeader.enabled, knowHeader.content);
