@@ -541,3 +541,64 @@ function EmptyHint() {
   return <p className="text-sm text-muted-foreground glass rounded-2xl p-5">لا توجد عناصر. اضغط زر "إضافة".</p>;
 }
 
+
+/* ---------- HERO STATS ---------- */
+function HeroStatsEditor({ stats, onChange }: { stats: StatItem[]; onChange: (s: StatItem[]) => void }) {
+  const update = (id: string, patch: Partial<StatItem>) => onChange(stats.map((s) => s.id === id ? { ...s, ...patch } : s));
+  const remove = (id: string) => onChange(stats.filter((s) => s.id !== id));
+  const add = () => onChange([...stats, { id: genId(), value: 0, suffix: "+", label: "" }]);
+  return (
+    <div className="space-y-3 border-t border-white/10 pt-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-sm">شريط الإحصائيات (تحت أزرار البانر)</h3>
+        <button onClick={add} className="btn-gold rounded-xl px-3 py-1.5 text-xs flex items-center gap-1"><Plus size={12} /> إضافة</button>
+      </div>
+      <div className="grid gap-2">
+        {stats.map((s) => (
+          <div key={s.id} className="glass rounded-xl p-3 grid gap-2 sm:grid-cols-[110px_90px_1fr_auto] items-end">
+            <Field label="الرقم"><input type="number" className={inp} value={s.value} onChange={(e) => update(s.id, { value: Number(e.target.value) })} /></Field>
+            <Field label="اللاحقة"><input className={inp} value={s.suffix} onChange={(e) => update(s.id, { suffix: e.target.value })} /></Field>
+            <Field label="التسمية"><input className={inp} value={s.label} onChange={(e) => update(s.id, { label: e.target.value })} /></Field>
+            <IconBtn onClick={() => remove(s.id)} danger title="حذف"><Trash2 size={14} /></IconBtn>
+          </div>
+        ))}
+        {stats.length === 0 && <p className="text-xs text-muted-foreground">لا توجد إحصائيات. أضف حتى 3 بطاقات.</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- PARTNERS ---------- */
+function PartnersEditor({ value, onChange }: { value: { enabled: boolean; content: PartnersContent }; onChange: (v: { enabled: boolean; content: PartnersContent }) => void }) {
+  const c = value.content;
+  const setC = (next: PartnersContent) => onChange({ ...value, content: next });
+  const updateItem = (id: string, patch: Partial<PartnerItem>) => setC({ ...c, items: c.items.map((it) => it.id === id ? { ...it, ...patch } : it) });
+  const remove = (id: string) => setC({ ...c, items: c.items.filter((it) => it.id !== id) });
+  const move = (id: string, dir: -1 | 1) => moveOrdered(c.items, id, dir, (items) => setC({ ...c, items }));
+  const add = () => setC({ ...c, items: [...c.items, { id: genId(), label: "BRAND", order: nextOrder(c.items), visible: true }] });
+  const sorted = [...c.items].sort((a, b) => a.order - b.order);
+  return (
+    <div className="space-y-4">
+      <div className="glass rounded-2xl p-5 space-y-4">
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+        <Field label="عنوان القسم"><input className={inp} value={c.title} onChange={(e) => setC({ ...c, title: e.target.value })} /></Field>
+      </div>
+      <ItemsHeader count={sorted.length} onAdd={add} label="شعار" />
+      <div className="grid gap-2">
+        {sorted.map((it) => (
+          <div key={it.id} className="glass rounded-xl p-3 grid gap-2 sm:grid-cols-[1fr_80px_auto] items-end">
+            <Field label="اسم العلامة"><input dir="ltr" className={inp} value={it.label} onChange={(e) => updateItem(it.id, { label: e.target.value })} /></Field>
+            <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
+            <div className="flex gap-1">
+              <IconBtn onClick={() => move(it.id, -1)}><ArrowUp size={14} /></IconBtn>
+              <IconBtn onClick={() => move(it.id, 1)}><ArrowDown size={14} /></IconBtn>
+              <IconBtn onClick={() => updateItem(it.id, { visible: !it.visible })}>{it.visible ? <Eye size={14} /> : <EyeOff size={14} />}</IconBtn>
+              <IconBtn onClick={() => remove(it.id)} danger><Trash2 size={14} /></IconBtn>
+            </div>
+          </div>
+        ))}
+        {sorted.length === 0 && <EmptyHint />}
+      </div>
+    </div>
+  );
+}
