@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from "@/lib/client-auth";
 
 export const Route = createFileRoute("/_authenticated/account/appointments")({
   component: AppointmentsPage,
@@ -12,8 +13,8 @@ function AppointmentsPage() {
   const [list, setList] = useState<Appt[]>([]);
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser(); if (!u.user) return;
-      const { data } = await supabase.from("appointments").select("*").eq("user_id", u.user.id).order("created_at", { ascending: false });
+      const user = await getSessionUser(); if (!user) return;
+      const { data } = await supabase.from("appointments").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
       setList((data ?? []) as Appt[]);
     })();
   }, []);

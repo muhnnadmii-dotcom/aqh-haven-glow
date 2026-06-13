@@ -5,6 +5,7 @@ import { Instagram, MapPin, Phone, MessageCircle, Mail, Clock, Loader2 } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ContactContent, SocialItem } from "@/lib/site-pages";
+import { getSessionUser } from "@/lib/client-auth";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -67,10 +68,12 @@ function ContactPage() {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!c) return;
-    const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("contact_requests").insert({
-      name, phone, type, message, user_id: u.user?.id ?? null,
-    });
+    const user = await getSessionUser();
+    const payload: { name: string; phone: string; type: string; message: string; user_id?: string } = {
+      name, phone, type, message,
+    };
+    if (user) payload.user_id = user.id;
+    const { error } = await supabase.from("contact_requests").insert(payload);
     if (error) { toast.error("تعذر إرسال الطلب"); return; }
     toast.success(c.form.success_message || "تم الاستلام");
     if (c.whatsapp_number) {

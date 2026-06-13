@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from "@/lib/client-auth";
 
 export const MEDIA_BUCKET = "media";
 
@@ -11,8 +12,7 @@ export function publicUrl(path: string | null | undefined): string {
 export const MAX_IMAGE_MB = 8;
 
 export async function uploadMedia(file: File, folder = "uploads"): Promise<string> {
-  const { data: u } = await supabase.auth.getUser();
-  const uid = u.user?.id;
+  const uid = (await getSessionUser())?.id;
   if (!uid) throw new Error("يجب تسجيل الدخول لرفع الملفات");
   if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
     throw new Error(`حجم الصورة كبير. الحد الأقصى ${MAX_IMAGE_MB} ميجابايت`);

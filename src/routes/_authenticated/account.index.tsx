@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Fish, Calendar, Inbox, Sparkles } from "lucide-react";
+import { getSessionUser } from "@/lib/client-auth";
 
 export const Route = createFileRoute("/_authenticated/account/")({
   component: AccountHome,
@@ -13,15 +14,15 @@ function AccountHome() {
 
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", u.user.id).maybeSingle();
+      const user = await getSessionUser();
+      if (!user) return;
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
       setName(prof?.full_name ?? "");
       const [t, a, c, cs] = await Promise.all([
-        supabase.from("customer_tanks").select("id", { count: "exact", head: true }).eq("user_id", u.user.id),
-        supabase.from("appointments").select("id", { count: "exact", head: true }).eq("user_id", u.user.id),
-        supabase.from("contact_requests").select("id", { count: "exact", head: true }).eq("user_id", u.user.id),
-        supabase.from("consultation_requests").select("id", { count: "exact", head: true }).eq("user_id", u.user.id),
+        supabase.from("customer_tanks").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("appointments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("contact_requests").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("consultation_requests").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
       setStats({
         tanks: t.count ?? 0,

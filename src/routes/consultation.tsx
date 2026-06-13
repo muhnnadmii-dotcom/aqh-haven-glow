@@ -5,6 +5,7 @@ import { whatsappLink } from "../components/WhatsAppButton";
 import { MessagesSquare, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getSessionUser } from "@/lib/client-auth";
 
 export const Route = createFileRoute("/consultation")({
   head: () => ({
@@ -33,10 +34,12 @@ function ConsultationPage() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("consultation_requests").insert({
-      name, phone, tank_type: tankType, goal, size, details, user_id: u.user?.id ?? null,
-    });
+    const user = await getSessionUser();
+    const payload: { name: string; phone: string; tank_type: string; goal: string; size: string; details: string; user_id?: string } = {
+      name, phone, tank_type: tankType, goal, size, details,
+    };
+    if (user) payload.user_id = user.id;
+    const { error } = await supabase.from("consultation_requests").insert(payload);
     if (error) { toast.error("تعذر إرسال الاستشارة"); return; }
     toast.success("تم استلام استشارتك، سنتواصل معك قريباً");
     const text =

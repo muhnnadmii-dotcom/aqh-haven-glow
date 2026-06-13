@@ -5,6 +5,7 @@ import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MultiImageUploader } from "@/components/ImageUploader";
+import { getSessionUser } from "@/lib/client-auth";
 import {
   REQUEST_TYPE_LABEL, REQUIRES_TANK, SUCCESS_MESSAGE, type RequestType,
 } from "@/lib/service-requests";
@@ -43,13 +44,13 @@ function NewRequestPage() {
 
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { data: p } = await supabase.from("profiles").select("full_name, phone").eq("id", u.user.id).maybeSingle();
+      const user = await getSessionUser();
+      if (!user) return;
+      const { data: p } = await supabase.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle();
       setProfile((prev) => ({ ...prev, name: p?.full_name ?? prev.name, phone: (p as any)?.phone ?? prev.phone }));
       if (requiresTank) {
         const { data: t } = await supabase.from("customer_tanks")
-          .select("id, name, tank_type, volume_liters").eq("user_id", u.user.id)
+          .select("id, name, tank_type, volume_liters").eq("user_id", user.id)
           .order("created_at", { ascending: false });
         setTanks((t ?? []) as TankLite[]);
       }
@@ -67,10 +68,10 @@ function NewRequestPage() {
       toast.error("اختر الحوض أو أضف حوضك أولًا"); return;
     }
     setSubmitting(true);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) { setSubmitting(false); return; }
+    const user = await getSessionUser();
+    if (!user) { setSubmitting(false); return; }
     const { error } = await supabase.from("service_requests").insert({
-      user_id: u.user.id,
+      user_id: user.id,
       type,
       tank_id: requiresTank ? tankId : null,
       name: profile.name.trim(),

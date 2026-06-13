@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Save, Fish, Ruler, Filter as FilterIcon, Flame, Lightbulb, Wind, Leaf, Images, Waves, FlaskConical, Sparkles } from "lucide-react";
 import { MultiImageUploader } from "@/components/ImageUploader";
 import { publicUrl } from "@/lib/storage";
+import { getSessionUser } from "@/lib/client-auth";
 
 export const Route = createFileRoute("/_authenticated/account/tanks")({
   component: TanksPage,
@@ -166,8 +167,8 @@ function TanksPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data: u } = await supabase.auth.getUser(); if (!u.user) return;
-    const { data } = await supabase.from("customer_tanks").select("*").eq("user_id", u.user.id).order("created_at", { ascending: false });
+    const user = await getSessionUser(); if (!user) { setLoading(false); return; }
+    const { data } = await supabase.from("customer_tanks").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
     setList(data ?? []);
     setLoading(false);
   };
@@ -178,9 +179,9 @@ function TanksPage() {
     if (!editing.name.trim()) { toast.error("اسم الحوض مطلوب"); return; }
     if (!editing.tank_type) { toast.error("نوع الحوض مطلوب"); return; }
     if (!editing.filter_type) { toast.error("نوع الفلتر مطلوب"); return; }
-    const { data: u } = await supabase.auth.getUser(); if (!u.user) return;
+    const user = await getSessionUser(); if (!user) return;
     const payload: any = {
-      user_id: u.user.id,
+      user_id: user.id,
       name: editing.name.trim(),
       tank_type: editing.tank_type,
       install_date: editing.install_date || null,
