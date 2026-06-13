@@ -128,6 +128,12 @@ function HomePage() {
   const knowHead = sections.knowledge_header?.content;
   const knowHeadEnabled = sections.knowledge_header?.enabled ?? true;
 
+  const heroStats = (hero?.stats ?? []).filter((s) => s && s.label);
+  const partnersC = sections.partners?.content;
+  const partnersEnabled = sections.partners?.enabled ?? true;
+  const partnerItems = (partnersC?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+
 
   return (
     <>
