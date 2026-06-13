@@ -51,17 +51,18 @@ type Sections = {
   process: { enabled: boolean; content: ProcessContent } | null;
   faq: { enabled: boolean; content: FaqContent } | null;
   cta: { enabled: boolean; content: CtaContent } | null;
+  partners: { enabled: boolean; content: PartnersContent } | null;
   testimonials_header: { enabled: boolean; content: SectionHeader } | null;
   knowledge_header: { enabled: boolean; content: SectionHeader } | null;
 };
 
 const EMPTY_SECTIONS: Sections = {
   hero: null, explore: null, services: null,
-  why_us: null, process: null, faq: null, cta: null,
+  why_us: null, process: null, faq: null, cta: null, partners: null,
   testimonials_header: null, knowledge_header: null,
 };
 
-const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "testimonials_header", "knowledge_header"];
+const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header"];
 
 function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
