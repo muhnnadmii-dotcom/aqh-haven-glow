@@ -2,48 +2,62 @@ import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+// Module-level cache to avoid refetching role per-component mount
+let cachedIsAdmin: boolean | null = null;
+let inflight: Promise<boolean> | null = null;
+
+async function fetchIsAdmin(userId: string): Promise<boolean> {
+  if (inflight) return inflight;
+  inflight = (async () => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    cachedIsAdmin = !!data;
+    inflight = null;
+    return cachedIsAdmin as boolean;
+  })();
+  return inflight;
+}
+
+
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(cachedIsAdmin ?? false);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    let mounted = true;
+    const apply = (s: Session | null) => {
+      if (!mounted) return;
       setSession(s);
       setUser(s?.user ?? null);
+      setLoading(false);
       if (s?.user) {
-        // defer to avoid auth-event deadlock
-        setTimeout(() => {
-          supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", s.user.id)
-            .eq("role", "admin")
-            .maybeSingle()
-            .then(({ data }) => setIsAdmin(!!data));
-        }, 0);
+        if (cachedIsAdmin !== null) {
+          setIsAdmin(cachedIsAdmin);
+        } else {
+          fetchIsAdmin(s.user.id).then((v) => mounted && setIsAdmin(v)).catch(() => {});
+        }
       } else {
+        cachedIsAdmin = null;
         setIsAdmin(false);
       }
+    };
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      // INITIAL_SESSION fires on subscribe so we don't need a separate getSession call
+      if (event === "SIGNED_OUT") cachedIsAdmin = null;
+      apply(s);
     });
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-      if (data.session?.user) {
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.session.user.id)
-          .eq("role", "admin")
-          .maybeSingle()
-          .then(({ data: r }) => setIsAdmin(!!r));
-      }
-    });
-
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return { session, user, loading, isAdmin };
