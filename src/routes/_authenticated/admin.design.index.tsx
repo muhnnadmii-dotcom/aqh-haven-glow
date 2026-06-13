@@ -56,6 +56,7 @@ function DesignAdmin() {
   const [cta, setCta] = useState<{ enabled: boolean; content: CtaContent }>({ enabled: true, content: DEFAULT_CTA });
   const [testHeader, setTestHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
   const [knowHeader, setKnowHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
+  const [partners, setPartners] = useState<{ enabled: boolean; content: PartnersContent }>({ enabled: true, content: DEFAULT_PARTNERS });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
