@@ -26,6 +26,7 @@ const TABS = [
   { key: "process", label: "كيف نعمل" },
   { key: "faq", label: "الأسئلة الشائعة" },
   { key: "cta", label: "CTA الأخير" },
+  { key: "partners", label: "الشركاء" },
   { key: "headers", label: "عناوين أقسام" },
 ] as const;
 
@@ -34,12 +35,14 @@ const DEFAULT_HERO: HeroContent = {
   description: "", primary_cta_label: "", primary_cta_href: "",
   secondary_cta_label: "", secondary_cta_href: "",
   image_path: "", overlay_enabled: true, overlay_opacity: 0.6,
+  stats: [],
 };
 const DEFAULT_WHY: WhyUsContent = { kicker: "", heading: "", description: "", link_label: "", link_href: "", items: [] };
 const DEFAULT_PROCESS: ProcessContent = { kicker: "", heading: "", description: "", items: [] };
 const DEFAULT_FAQ: FaqContent = { kicker: "", heading: "", items: [] };
 const DEFAULT_CTA: CtaContent = { heading: "", description: "", primary_label: "", primary_href: "", secondary_label: "", secondary_href: "" };
 const DEFAULT_HEADER: SectionHeader = { kicker: "", heading: "", subtitle: "", link_label: "" };
+const DEFAULT_PARTNERS: PartnersContent = { title: "العلامات التي نثق بها", items: [] };
 
 function DesignAdmin() {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("hero");
