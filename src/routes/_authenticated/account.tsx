@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { LayoutDashboard, Fish, Calendar, Inbox, User, LogOut, Sparkles, Wrench } from "lucide-react";
+import { LayoutDashboard, Fish, Calendar, Inbox, User, LogOut, Sparkles, Wrench, Menu, X } from "lucide-react";
 import type { RequestType } from "@/lib/service-requests";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -26,21 +27,33 @@ const quickRequests: { kind: RequestType; label: string; icon: any }[] = [
 function AccountLayout() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const close = () => setMenuOpen(false);
 
   const logout = async () => {
+    close();
     await supabase.auth.signOut();
     navigate({ to: "/" });
   };
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
+      <button
+        onClick={() => setMenuOpen((v) => !v)}
+        className="lg:hidden mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl glass text-sm"
+        aria-expanded={menuOpen}
+      >
+        {menuOpen ? <X size={16} /> : <Menu size={16} />}
+        {menuOpen ? "إغلاق القائمة" : "القائمة"}
+      </button>
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-        <aside className="glass rounded-2xl p-4 h-fit lg:sticky lg:top-28 space-y-5">
+        <aside className={`${menuOpen ? "block" : "hidden"} lg:block glass rounded-2xl p-4 h-fit lg:sticky lg:top-28 space-y-5`}>
           <div>
             <div className="text-xs tracking-widest text-gradient-gold mb-3 px-2">حسابي</div>
             <nav className="flex flex-col gap-0.5">
               {navItems.map((n) => (
                 <Link key={n.to} to={n.to} activeOptions={{ exact: n.exact }}
+                  onClick={close}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm hover:bg-white/5"
                   activeProps={{ className: "flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-white/10 font-semibold" }}>
                   <n.icon size={15} /> {n.label}
@@ -53,6 +66,7 @@ function AccountLayout() {
             <div className="flex flex-col gap-1.5">
               {quickRequests.map((q) => (
                 <Link key={q.kind} to="/account/requests/new" search={{ type: q.kind, tank: "" }}
+                  onClick={close}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs bg-gold/10 text-gold hover:bg-gold/20">
                   <q.icon size={14} /> {q.label}
                 </Link>
@@ -60,7 +74,7 @@ function AccountLayout() {
             </div>
           </div>
           {isAdmin && (
-            <Link to="/admin" className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-white/5 hover:bg-white/10">
+            <Link to="/admin" onClick={close} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-white/5 hover:bg-white/10">
               <LayoutDashboard size={15} /> لوحة الإدارة
             </Link>
           )}

@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog, Wrench, FileText, Calendar, Palette } from "lucide-react";
+import { LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog, Wrench, FileText, Calendar, Palette, Menu, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
@@ -50,10 +51,21 @@ const navGroups = [
 ] as const;
 
 function AdminLayout() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const close = () => setMenuOpen(false);
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
+      <button
+        onClick={() => setMenuOpen((v) => !v)}
+        className="lg:hidden mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl glass text-sm"
+        aria-expanded={menuOpen}
+      >
+        {menuOpen ? <X size={16} /> : <Menu size={16} />}
+        {menuOpen ? "إغلاق القائمة" : "القائمة"}
+      </button>
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-        <aside className="glass rounded-2xl p-4 h-fit lg:sticky lg:top-28">
+        <aside className={`${menuOpen ? "block" : "hidden"} lg:block glass rounded-2xl p-4 h-fit lg:sticky lg:top-28`}>
           <div className="text-xs tracking-widest text-gradient-gold mb-4 px-2">ADMIN</div>
           <nav className="flex flex-col gap-4">
             {navGroups.map((g) => (
@@ -62,6 +74,7 @@ function AdminLayout() {
                 <div className="flex flex-col gap-0.5">
                   {g.items.map((n) => (
                     <Link key={n.to} to={n.to}
+                      onClick={close}
                       activeOptions={{ exact: n.exact }}
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm hover:bg-white/5 whitespace-nowrap"
                       activeProps={{ className: "flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-white/10 text-foreground font-semibold whitespace-nowrap" }}>
