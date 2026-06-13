@@ -231,14 +231,16 @@ function HomePage() {
       )}
 
       {/* PARTNERS MARQUEE */}
-      <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
-        <div className="text-center text-sm text-muted-foreground mb-6 leading-loose">العلامات التي نثق بها</div>
-        <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none">
-          {[...partners, ...partners].map((p, i) => (
-            <span key={i} className="whitespace-nowrap" dir="ltr">{p}</span>
-          ))}
-        </div>
-      </section>
+      {partnersEnabled && partnerItems.length > 0 && (
+        <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
+          {partnersC?.title && <div className="text-center text-sm text-muted-foreground mb-6 leading-loose">{partnersC.title}</div>}
+          <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none">
+            {[...partnerItems, ...partnerItems].map((p, i) => (
+              <span key={`${p.id}-${i}`} className="whitespace-nowrap" dir="ltr">{p.label}</span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* SERVICES */}
       {servicesEnabled && serviceItems.length > 0 && (
