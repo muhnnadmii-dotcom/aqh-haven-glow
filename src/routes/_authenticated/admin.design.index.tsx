@@ -166,6 +166,7 @@ function HeroEditor({ value, onChange }: { value: { enabled: boolean; content: H
           <input type="range" min={0} max={1} step={0.05} value={c.overlay_opacity} onChange={(e) => set("overlay_opacity", Number(e.target.value))} className="w-full" />
         </Field>
       </Grid>
+      <HeroStatsEditor stats={c.stats ?? []} onChange={(stats) => set("stats", stats)} />
     </div>
   );
 }
