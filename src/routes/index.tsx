@@ -39,13 +39,8 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const stats = [
-  { num: 9, suffix: "+", label: "سنوات خبرة" },
-  { num: 320, suffix: "+", label: "مشروع منجز" },
-  { num: 1915, suffix: "+", label: "عميل سعيد" },
-];
-
-const partners = ["EHEIM", "JBL", "FLUVAL", "RED SEA", "ADA", "SEACHEM", "TUNZE", "CHIHIROS"];
+type Testimonial = { id: string; name: string; role: string | null; rating: number; body: string; image_path: string | null };
+type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
 
 type Testimonial = { id: string; name: string; role: string | null; rating: number; body: string; image_path: string | null };
 type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
