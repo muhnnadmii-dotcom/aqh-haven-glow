@@ -18,6 +18,7 @@ import {
   ICONS,
   type HeroContent, type ExploreContent, type ServicesContent,
   type WhyUsContent, type ProcessContent, type FaqContent, type CtaContent, type SectionHeader,
+  type PartnersContent,
 } from "@/lib/home-sections";
 
 const heroFallback = livingRoomTankAsset.url;
@@ -38,13 +39,6 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const stats = [
-  { num: 9, suffix: "+", label: "سنوات خبرة" },
-  { num: 320, suffix: "+", label: "مشروع منجز" },
-  { num: 1915, suffix: "+", label: "عميل سعيد" },
-];
-
-const partners = ["EHEIM", "JBL", "FLUVAL", "RED SEA", "ADA", "SEACHEM", "TUNZE", "CHIHIROS"];
 
 type Testimonial = { id: string; name: string; role: string | null; rating: number; body: string; image_path: string | null };
 type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
@@ -57,17 +51,18 @@ type Sections = {
   process: { enabled: boolean; content: ProcessContent } | null;
   faq: { enabled: boolean; content: FaqContent } | null;
   cta: { enabled: boolean; content: CtaContent } | null;
+  partners: { enabled: boolean; content: PartnersContent } | null;
   testimonials_header: { enabled: boolean; content: SectionHeader } | null;
   knowledge_header: { enabled: boolean; content: SectionHeader } | null;
 };
 
 const EMPTY_SECTIONS: Sections = {
   hero: null, explore: null, services: null,
-  why_us: null, process: null, faq: null, cta: null,
+  why_us: null, process: null, faq: null, cta: null, partners: null,
   testimonials_header: null, knowledge_header: null,
 };
 
-const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "testimonials_header", "knowledge_header"];
+const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header"];
 
 function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -133,6 +128,12 @@ function HomePage() {
   const knowHead = sections.knowledge_header?.content;
   const knowHeadEnabled = sections.knowledge_header?.enabled ?? true;
 
+  const heroStats = (hero?.stats ?? []).filter((s) => s && s.label);
+  const partnersC = sections.partners?.content;
+  const partnersEnabled = sections.partners?.enabled ?? true;
+  const partnerItems = (partnersC?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
+
+
 
   return (
     <>
@@ -172,18 +173,20 @@ function HomePage() {
                 )}
               </div>
             </Reveal>
-            <Reveal delay={480}>
-              <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
-                {stats.map((s) => (
-                  <div key={s.label} className="glass rounded-2xl p-4">
-                    <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
-                      <Counter to={s.num} suffix={s.suffix} />
+            {heroStats.length > 0 && (
+              <Reveal delay={480}>
+                <div className={`grid gap-4 max-w-2xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                  {heroStats.map((s) => (
+                    <div key={s.id} className="glass rounded-2xl p-4">
+                      <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
+                        <Counter to={s.value} suffix={s.suffix} />
+                      </div>
+                      <div className="text-[11px] md:text-xs text-muted-foreground mt-1">{s.label}</div>
                     </div>
-                    <div className="text-[11px] md:text-xs text-muted-foreground mt-1">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
+                  ))}
+                </div>
+              </Reveal>
+            )}
           </div>
         </section>
       )}
@@ -228,14 +231,16 @@ function HomePage() {
       )}
 
       {/* PARTNERS MARQUEE */}
-      <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
-        <div className="text-center text-sm text-muted-foreground mb-6 leading-loose">العلامات التي نثق بها</div>
-        <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none">
-          {[...partners, ...partners].map((p, i) => (
-            <span key={i} className="whitespace-nowrap" dir="ltr">{p}</span>
-          ))}
-        </div>
-      </section>
+      {partnersEnabled && partnerItems.length > 0 && (
+        <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
+          {partnersC?.title && <div className="text-center text-sm text-muted-foreground mb-6 leading-loose">{partnersC.title}</div>}
+          <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none">
+            {[...partnerItems, ...partnerItems].map((p, i) => (
+              <span key={`${p.id}-${i}`} className="whitespace-nowrap" dir="ltr">{p.label}</span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* SERVICES */}
       {servicesEnabled && serviceItems.length > 0 && (

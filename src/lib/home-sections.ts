@@ -13,6 +13,8 @@ export const ICONS: Record<string, LucideIcon> = {
 };
 export const ICON_NAMES = Object.keys(ICONS);
 
+export type StatItem = { id: string; value: number; suffix: string; label: string };
+
 export type HeroContent = {
   title: string;
   subtitle: string;
@@ -24,7 +26,11 @@ export type HeroContent = {
   image_path: string;
   overlay_enabled: boolean;
   overlay_opacity: number;
+  stats?: StatItem[];
 };
+
+export type PartnerItem = { id: string; label: string; order: number; visible: boolean };
+export type PartnersContent = { title: string; items: PartnerItem[] };
 
 export type ExploreItem = {
   id: string;
@@ -86,7 +92,7 @@ export type HomeSection<T = unknown> = {
   updated_at: string;
 };
 
-const ALL_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "testimonials_header", "knowledge_header"] as const;
+const ALL_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header"] as const;
 
 export async function fetchHomeSections() {
   const { data, error } = await supabase
@@ -104,6 +110,7 @@ export async function fetchHomeSections() {
     process: map.process as HomeSection<ProcessContent> | undefined,
     faq: map.faq as HomeSection<FaqContent> | undefined,
     cta: map.cta as HomeSection<CtaContent> | undefined,
+    partners: map.partners as HomeSection<PartnersContent> | undefined,
     testimonials_header: map.testimonials_header as HomeSection<SectionHeader> | undefined,
     knowledge_header: map.knowledge_header as HomeSection<SectionHeader> | undefined,
   };

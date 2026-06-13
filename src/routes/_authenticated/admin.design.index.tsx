@@ -4,12 +4,13 @@ import { toast } from "sonner";
 import { Save, Plus, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import {
   fetchHomeSections, saveHomeSection, genId, ICON_NAMES,
-  type HeroContent, type ExploreContent, type ExploreItem,
+  type HeroContent, type StatItem, type ExploreContent, type ExploreItem,
   type ServicesContent, type ServiceItem,
   type WhyUsContent, type WhyUsItem,
   type ProcessContent, type ProcessItem,
   type FaqContent, type FaqItem,
   type CtaContent, type SectionHeader,
+  type PartnersContent, type PartnerItem,
 } from "@/lib/home-sections";
 import { ImageUploader } from "@/components/ImageUploader";
 
@@ -25,6 +26,7 @@ const TABS = [
   { key: "process", label: "كيف نعمل" },
   { key: "faq", label: "الأسئلة الشائعة" },
   { key: "cta", label: "CTA الأخير" },
+  { key: "partners", label: "الشركاء" },
   { key: "headers", label: "عناوين أقسام" },
 ] as const;
 
@@ -33,12 +35,14 @@ const DEFAULT_HERO: HeroContent = {
   description: "", primary_cta_label: "", primary_cta_href: "",
   secondary_cta_label: "", secondary_cta_href: "",
   image_path: "", overlay_enabled: true, overlay_opacity: 0.6,
+  stats: [],
 };
 const DEFAULT_WHY: WhyUsContent = { kicker: "", heading: "", description: "", link_label: "", link_href: "", items: [] };
 const DEFAULT_PROCESS: ProcessContent = { kicker: "", heading: "", description: "", items: [] };
 const DEFAULT_FAQ: FaqContent = { kicker: "", heading: "", items: [] };
 const DEFAULT_CTA: CtaContent = { heading: "", description: "", primary_label: "", primary_href: "", secondary_label: "", secondary_href: "" };
 const DEFAULT_HEADER: SectionHeader = { kicker: "", heading: "", subtitle: "", link_label: "" };
+const DEFAULT_PARTNERS: PartnersContent = { title: "العلامات التي نثق بها", items: [] };
 
 function DesignAdmin() {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("hero");
@@ -52,6 +56,7 @@ function DesignAdmin() {
   const [cta, setCta] = useState<{ enabled: boolean; content: CtaContent }>({ enabled: true, content: DEFAULT_CTA });
   const [testHeader, setTestHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
   const [knowHeader, setKnowHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
+  const [partners, setPartners] = useState<{ enabled: boolean; content: PartnersContent }>({ enabled: true, content: DEFAULT_PARTNERS });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -67,6 +72,7 @@ function DesignAdmin() {
         if (s.cta) setCta({ enabled: s.cta.enabled, content: { ...DEFAULT_CTA, ...s.cta.content } });
         if (s.testimonials_header) setTestHeader({ enabled: s.testimonials_header.enabled, content: { ...DEFAULT_HEADER, ...s.testimonials_header.content } });
         if (s.knowledge_header) setKnowHeader({ enabled: s.knowledge_header.enabled, content: { ...DEFAULT_HEADER, ...s.knowledge_header.content } });
+        if (s.partners) setPartners({ enabled: s.partners.enabled, content: { ...DEFAULT_PARTNERS, ...s.partners.content } });
       } catch (e: any) { toast.error(e?.message ?? "فشل التحميل"); }
       finally { setLoading(false); }
     })();
@@ -82,6 +88,7 @@ function DesignAdmin() {
       else if (tab === "process") await saveHomeSection("process", processS.enabled, processS.content);
       else if (tab === "faq") await saveHomeSection("faq", faq.enabled, faq.content);
       else if (tab === "cta") await saveHomeSection("cta", cta.enabled, cta.content);
+      else if (tab === "partners") await saveHomeSection("partners", partners.enabled, partners.content);
       else if (tab === "headers") {
         await saveHomeSection("testimonials_header", testHeader.enabled, testHeader.content);
         await saveHomeSection("knowledge_header", knowHeader.enabled, knowHeader.content);
@@ -122,6 +129,7 @@ function DesignAdmin() {
       {tab === "process" && <ProcessEditor value={processS} onChange={setProcessS} />}
       {tab === "faq" && <FaqEditor value={faq} onChange={setFaq} />}
       {tab === "cta" && <CtaEditor value={cta} onChange={setCta} />}
+      {tab === "partners" && <PartnersEditor value={partners} onChange={setPartners} />}
       {tab === "headers" && (
         <div className="space-y-4">
           <HeaderEditor title="عنوان قسم التقييمات" value={testHeader} onChange={setTestHeader} />
@@ -158,6 +166,7 @@ function HeroEditor({ value, onChange }: { value: { enabled: boolean; content: H
           <input type="range" min={0} max={1} step={0.05} value={c.overlay_opacity} onChange={(e) => set("overlay_opacity", Number(e.target.value))} className="w-full" />
         </Field>
       </Grid>
+      <HeroStatsEditor stats={c.stats ?? []} onChange={(stats) => set("stats", stats)} />
     </div>
   );
 }
@@ -532,3 +541,64 @@ function EmptyHint() {
   return <p className="text-sm text-muted-foreground glass rounded-2xl p-5">لا توجد عناصر. اضغط زر "إضافة".</p>;
 }
 
+
+/* ---------- HERO STATS ---------- */
+function HeroStatsEditor({ stats, onChange }: { stats: StatItem[]; onChange: (s: StatItem[]) => void }) {
+  const update = (id: string, patch: Partial<StatItem>) => onChange(stats.map((s) => s.id === id ? { ...s, ...patch } : s));
+  const remove = (id: string) => onChange(stats.filter((s) => s.id !== id));
+  const add = () => onChange([...stats, { id: genId(), value: 0, suffix: "+", label: "" }]);
+  return (
+    <div className="space-y-3 border-t border-white/10 pt-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-sm">شريط الإحصائيات (تحت أزرار البانر)</h3>
+        <button onClick={add} className="btn-gold rounded-xl px-3 py-1.5 text-xs flex items-center gap-1"><Plus size={12} /> إضافة</button>
+      </div>
+      <div className="grid gap-2">
+        {stats.map((s) => (
+          <div key={s.id} className="glass rounded-xl p-3 grid gap-2 sm:grid-cols-[110px_90px_1fr_auto] items-end">
+            <Field label="الرقم"><input type="number" className={inp} value={s.value} onChange={(e) => update(s.id, { value: Number(e.target.value) })} /></Field>
+            <Field label="اللاحقة"><input className={inp} value={s.suffix} onChange={(e) => update(s.id, { suffix: e.target.value })} /></Field>
+            <Field label="التسمية"><input className={inp} value={s.label} onChange={(e) => update(s.id, { label: e.target.value })} /></Field>
+            <IconBtn onClick={() => remove(s.id)} danger title="حذف"><Trash2 size={14} /></IconBtn>
+          </div>
+        ))}
+        {stats.length === 0 && <p className="text-xs text-muted-foreground">لا توجد إحصائيات. أضف حتى 3 بطاقات.</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- PARTNERS ---------- */
+function PartnersEditor({ value, onChange }: { value: { enabled: boolean; content: PartnersContent }; onChange: (v: { enabled: boolean; content: PartnersContent }) => void }) {
+  const c = value.content;
+  const setC = (next: PartnersContent) => onChange({ ...value, content: next });
+  const updateItem = (id: string, patch: Partial<PartnerItem>) => setC({ ...c, items: c.items.map((it) => it.id === id ? { ...it, ...patch } : it) });
+  const remove = (id: string) => setC({ ...c, items: c.items.filter((it) => it.id !== id) });
+  const move = (id: string, dir: -1 | 1) => moveOrdered(c.items, id, dir, (items) => setC({ ...c, items }));
+  const add = () => setC({ ...c, items: [...c.items, { id: genId(), label: "BRAND", order: nextOrder(c.items), visible: true }] });
+  const sorted = [...c.items].sort((a, b) => a.order - b.order);
+  return (
+    <div className="space-y-4">
+      <div className="glass rounded-2xl p-5 space-y-4">
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+        <Field label="عنوان القسم"><input className={inp} value={c.title} onChange={(e) => setC({ ...c, title: e.target.value })} /></Field>
+      </div>
+      <ItemsHeader count={sorted.length} onAdd={add} label="شعار" />
+      <div className="grid gap-2">
+        {sorted.map((it) => (
+          <div key={it.id} className="glass rounded-xl p-3 grid gap-2 sm:grid-cols-[1fr_80px_auto] items-end">
+            <Field label="اسم العلامة"><input dir="ltr" className={inp} value={it.label} onChange={(e) => updateItem(it.id, { label: e.target.value })} /></Field>
+            <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
+            <div className="flex gap-1">
+              <IconBtn onClick={() => move(it.id, -1)}><ArrowUp size={14} /></IconBtn>
+              <IconBtn onClick={() => move(it.id, 1)}><ArrowDown size={14} /></IconBtn>
+              <IconBtn onClick={() => updateItem(it.id, { visible: !it.visible })}>{it.visible ? <Eye size={14} /> : <EyeOff size={14} />}</IconBtn>
+              <IconBtn onClick={() => remove(it.id)} danger><Trash2 size={14} /></IconBtn>
+            </div>
+          </div>
+        ))}
+        {sorted.length === 0 && <EmptyHint />}
+      </div>
+    </div>
+  );
+}
