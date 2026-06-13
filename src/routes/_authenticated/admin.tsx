@@ -35,7 +35,6 @@ const navGroups = [
     items: [
       { to: "/admin/projects", label: "اعمالنا (الأحواض)", icon: Fish, exact: false },
       { to: "/admin/services", label: "خدماتنا", icon: Wrench, exact: false },
-      { to: "/admin/pages", label: "صفحات الموقع", icon: FileText, exact: false },
       { to: "/admin/articles", label: "المقالات", icon: BookOpen, exact: false },
       { to: "/admin/testimonials", label: "التقييمات", icon: MessageSquareQuote, exact: false },
     ],
