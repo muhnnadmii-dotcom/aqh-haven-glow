@@ -13,6 +13,8 @@ export const ICONS: Record<string, LucideIcon> = {
 };
 export const ICON_NAMES = Object.keys(ICONS);
 
+export type StatItem = { id: string; value: number; suffix: string; label: string };
+
 export type HeroContent = {
   title: string;
   subtitle: string;
@@ -24,7 +26,11 @@ export type HeroContent = {
   image_path: string;
   overlay_enabled: boolean;
   overlay_opacity: number;
+  stats?: StatItem[];
 };
+
+export type PartnerItem = { id: string; label: string; order: number; visible: boolean };
+export type PartnersContent = { title: string; items: PartnerItem[] };
 
 export type ExploreItem = {
   id: string;
