@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus } from "lucide-react";
+import { getSessionUser } from "@/lib/client-auth";
 import {
   REQUEST_TYPE_LABEL, REQUEST_STATUS_LABEL, REQUEST_STATUS_COLOR, ALL_TYPES,
   type RequestType, type RequestStatus,
@@ -24,10 +25,10 @@ function RequestsPage() {
 
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) { setLoading(false); return; }
+      const user = await getSessionUser();
+      if (!user) { setLoading(false); return; }
       const { data, error } = await supabase.from("service_requests")
-        .select("*").eq("user_id", u.user.id).order("created_at", { ascending: false });
+        .select("*").eq("user_id", user.id).order("created_at", { ascending: false });
       if (error) setError(error.message);
       setList((data ?? []) as unknown as Req[]);
       setLoading(false);

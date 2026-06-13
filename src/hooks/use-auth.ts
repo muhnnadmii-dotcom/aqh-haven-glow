@@ -4,9 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Module-level cache to avoid refetching role per-component mount
 let cachedIsAdmin: boolean | null = null;
+let cachedUserId: string | null = null;
 let inflight: Promise<boolean> | null = null;
 
 async function fetchIsAdmin(userId: string): Promise<boolean> {
+  if (cachedUserId === userId && cachedIsAdmin !== null) return cachedIsAdmin;
+  if (cachedUserId !== userId) {
+    cachedUserId = userId;
+    cachedIsAdmin = null;
+    inflight = null;
+  }
   if (inflight) return inflight;
   inflight = (async () => {
     const { data } = await supabase
@@ -44,13 +51,18 @@ export function useAuth() {
         }
       } else {
         cachedIsAdmin = null;
+        cachedUserId = null;
         setIsAdmin(false);
       }
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       // INITIAL_SESSION fires on subscribe so we don't need a separate getSession call
-      if (event === "SIGNED_OUT") cachedIsAdmin = null;
+      if (event === "SIGNED_OUT") {
+        cachedIsAdmin = null;
+        cachedUserId = null;
+        inflight = null;
+      }
       apply(s);
     });
 
