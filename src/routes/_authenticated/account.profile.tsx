@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getSessionUser } from "@/lib/client-auth";
 
 export const Route = createFileRoute("/_authenticated/account/profile")({
   component: ProfilePage,
@@ -15,17 +16,17 @@ function ProfilePage() {
 
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser(); if (!u.user) return;
-      setEmail(u.user.email ?? "");
-      const { data: p } = await supabase.from("profiles").select("full_name, phone").eq("id", u.user.id).maybeSingle();
+      const user = await getSessionUser(); if (!user) return;
+      setEmail(user.email ?? "");
+      const { data: p } = await supabase.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle();
       setName(p?.full_name ?? ""); setPhone(p?.phone ?? "");
     })();
   }, []);
 
   const save = async () => {
     setSaving(true);
-    const { data: u } = await supabase.auth.getUser(); if (!u.user) { setSaving(false); return; }
-    const { error } = await supabase.from("profiles").upsert({ id: u.user.id, full_name: name, phone });
+    const user = await getSessionUser(); if (!user) { setSaving(false); return; }
+    const { error } = await supabase.from("profiles").upsert({ id: user.id, full_name: name, phone });
     setSaving(false);
     if (error) toast.error(error.message); else toast.success("تم الحفظ");
   };
