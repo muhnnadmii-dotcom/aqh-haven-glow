@@ -8,19 +8,20 @@ let inflight: Promise<boolean> | null = null;
 
 async function fetchIsAdmin(userId: string): Promise<boolean> {
   if (inflight) return inflight;
-  inflight = supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle()
-    .then(({ data }) => {
-      cachedIsAdmin = !!data;
-      inflight = null;
-      return cachedIsAdmin;
-    });
+  inflight = (async () => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    cachedIsAdmin = !!data;
+    inflight = null;
+    return cachedIsAdmin as boolean;
+  })();
   return inflight;
 }
+
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
