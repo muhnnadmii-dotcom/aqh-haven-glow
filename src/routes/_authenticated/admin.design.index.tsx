@@ -4,12 +4,13 @@ import { toast } from "sonner";
 import { Save, Plus, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import {
   fetchHomeSections, saveHomeSection, genId, ICON_NAMES,
-  type HeroContent, type ExploreContent, type ExploreItem,
+  type HeroContent, type StatItem, type ExploreContent, type ExploreItem,
   type ServicesContent, type ServiceItem,
   type WhyUsContent, type WhyUsItem,
   type ProcessContent, type ProcessItem,
   type FaqContent, type FaqItem,
   type CtaContent, type SectionHeader,
+  type PartnersContent, type PartnerItem,
 } from "@/lib/home-sections";
 import { ImageUploader } from "@/components/ImageUploader";
 
