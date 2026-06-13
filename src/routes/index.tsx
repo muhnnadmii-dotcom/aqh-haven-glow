@@ -18,6 +18,7 @@ import {
   ICONS,
   type HeroContent, type ExploreContent, type ServicesContent,
   type WhyUsContent, type ProcessContent, type FaqContent, type CtaContent, type SectionHeader,
+  type PartnersContent,
 } from "@/lib/home-sections";
 
 const heroFallback = livingRoomTankAsset.url;
