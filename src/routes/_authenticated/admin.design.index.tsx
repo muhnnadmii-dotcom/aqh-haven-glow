@@ -129,6 +129,7 @@ function DesignAdmin() {
       {tab === "process" && <ProcessEditor value={processS} onChange={setProcessS} />}
       {tab === "faq" && <FaqEditor value={faq} onChange={setFaq} />}
       {tab === "cta" && <CtaEditor value={cta} onChange={setCta} />}
+      {tab === "partners" && <PartnersEditor value={partners} onChange={setPartners} />}
       {tab === "headers" && (
         <div className="space-y-4">
           <HeaderEditor title="عنوان قسم التقييمات" value={testHeader} onChange={setTestHeader} />
