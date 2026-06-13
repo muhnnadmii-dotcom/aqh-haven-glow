@@ -72,6 +72,7 @@ function DesignAdmin() {
         if (s.cta) setCta({ enabled: s.cta.enabled, content: { ...DEFAULT_CTA, ...s.cta.content } });
         if (s.testimonials_header) setTestHeader({ enabled: s.testimonials_header.enabled, content: { ...DEFAULT_HEADER, ...s.testimonials_header.content } });
         if (s.knowledge_header) setKnowHeader({ enabled: s.knowledge_header.enabled, content: { ...DEFAULT_HEADER, ...s.knowledge_header.content } });
+        if (s.partners) setPartners({ enabled: s.partners.enabled, content: { ...DEFAULT_PARTNERS, ...s.partners.content } });
       } catch (e: any) { toast.error(e?.message ?? "فشل التحميل"); }
       finally { setLoading(false); }
     })();
