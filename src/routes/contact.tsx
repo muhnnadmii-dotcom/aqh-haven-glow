@@ -69,9 +69,11 @@ function ContactPage() {
     e.preventDefault();
     if (!c) return;
     const user = await getSessionUser();
-    const { error } = await supabase.from("contact_requests").insert({
-      name, phone, type, message, user_id: user?.id ?? null,
-    });
+    const payload: { name: string; phone: string; type: string; message: string; user_id?: string } = {
+      name, phone, type, message,
+    };
+    if (user) payload.user_id = user.id;
+    const { error } = await supabase.from("contact_requests").insert(payload);
     if (error) { toast.error("تعذر إرسال الطلب"); return; }
     toast.success(c.form.success_message || "تم الاستلام");
     if (c.whatsapp_number) {

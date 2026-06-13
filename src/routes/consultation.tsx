@@ -35,9 +35,11 @@ function ConsultationPage() {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const user = await getSessionUser();
-    const { error } = await supabase.from("consultation_requests").insert({
-      name, phone, tank_type: tankType, goal, size, details, user_id: user?.id ?? null,
-    });
+    const payload: { name: string; phone: string; tank_type: string; goal: string; size: string; details: string; user_id?: string } = {
+      name, phone, tank_type: tankType, goal, size, details,
+    };
+    if (user) payload.user_id = user.id;
+    const { error } = await supabase.from("consultation_requests").insert(payload);
     if (error) { toast.error("تعذر إرسال الاستشارة"); return; }
     toast.success("تم استلام استشارتك، سنتواصل معك قريباً");
     const text =
