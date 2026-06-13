@@ -39,8 +39,6 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-type Testimonial = { id: string; name: string; role: string | null; rating: number; body: string; image_path: string | null };
-type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
 
 type Testimonial = { id: string; name: string; role: string | null; rating: number; body: string; image_path: string | null };
 type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
