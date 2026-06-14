@@ -629,3 +629,41 @@ function PartnersEditor({ value, onChange }: { value: { enabled: boolean; conten
     </div>
   );
 }
+
+/* ---------- HOMEPAGE TESTIMONIALS (exactly 3) ---------- */
+function HomeTestimonialsEditor({ value, onChange }: { value: { enabled: boolean; content: HomeTestimonialsContent }; onChange: (v: { enabled: boolean; content: HomeTestimonialsContent }) => void }) {
+  const items = value.content.items;
+  const update = (i: number, patch: Partial<HomeTestimonialItem>) => {
+    const next = items.map((it, idx) => idx === i ? { ...it, ...patch } : it);
+    onChange({ ...value, content: { items: next } });
+  };
+  return (
+    <div className="space-y-4">
+      <div className="glass rounded-2xl p-5 space-y-1">
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار قسم التقييمات في الرئيسية" />
+        <p className="text-xs text-muted-foreground">3 تقييمات ثابتة تظهر في الصفحة الرئيسية. تُدار يدوياً من هنا فقط.</p>
+      </div>
+      {items.map((it, i) => (
+        <div key={it.id} className="glass rounded-2xl p-5 space-y-3">
+          <div className="text-sm font-bold text-gradient-gold">تقييم #{i + 1}</div>
+          <Grid>
+            <Field label="اسم العميل"><input className={inp} value={it.name} onChange={(e) => update(i, { name: e.target.value })} /></Field>
+            <Field label="التقييم (نجوم)">
+              <div className="flex items-center gap-1">
+                {[1,2,3,4,5].map((n) => (
+                  <button key={n} type="button" onClick={() => update(i, { rating: n })} className="p-1" title={`${n}`}>
+                    <Star size={20} className={n <= it.rating ? "fill-gold text-gold" : "text-white/30"} />
+                  </button>
+                ))}
+                <span className="text-xs text-muted-foreground mr-2">{it.rating}/5</span>
+              </div>
+            </Field>
+            <Field label="نص التقييم" full>
+              <textarea rows={3} className={ta} value={it.body} onChange={(e) => update(i, { body: e.target.value })} />
+            </Field>
+          </Grid>
+        </div>
+      ))}
+    </div>
+  );
+}
