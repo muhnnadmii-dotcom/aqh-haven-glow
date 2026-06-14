@@ -118,6 +118,8 @@ export async function fetchHomeSections() {
     partners: map.partners as HomeSection<PartnersContent> | undefined,
     testimonials_header: map.testimonials_header as HomeSection<SectionHeader> | undefined,
     knowledge_header: map.knowledge_header as HomeSection<SectionHeader> | undefined,
+    homepage_testimonials: map.homepage_testimonials as HomeSection<HomeTestimonialsContent> | undefined,
+
   };
 }
 
