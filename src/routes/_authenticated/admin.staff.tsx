@@ -8,21 +8,26 @@ export const Route = createFileRoute("/_authenticated/admin/staff")({
   component: StaffAdmin,
 });
 
-type Row = { user_id: string; role: string; full_name: string | null; phone: string | null };
+type Row = { user_id: string; roles: string[]; full_name: string | null; phone: string | null };
 
 function StaffAdmin() {
   const [rows, setRows] = useState<Row[]>([]);
 
   const load = async () => {
     const { data: r } = await supabase.from("user_roles").select("user_id, role").in("role", ["admin", "staff"]);
-    const ids = (r ?? []).map((x: any) => x.user_id);
+    const grouped = new Map<string, string[]>();
+    (r ?? []).forEach((x: any) => {
+      grouped.set(x.user_id, [...(grouped.get(x.user_id) ?? []), x.role]);
+    });
+    const ids = Array.from(grouped.keys());
     if (ids.length === 0) { setRows([]); return; }
     const { data: profs } = await supabase.from("profiles").select("id, full_name, phone").in("id", ids);
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
-    setRows((r ?? []).map((x: any) => ({
-      user_id: x.user_id, role: x.role,
-      full_name: (map.get(x.user_id) as any)?.full_name ?? null,
-      phone: (map.get(x.user_id) as any)?.phone ?? null,
+    setRows(ids.map((uid) => ({
+      user_id: uid,
+      roles: grouped.get(uid)!,
+      full_name: (map.get(uid) as any)?.full_name ?? null,
+      phone: (map.get(uid) as any)?.phone ?? null,
     })));
   };
   useEffect(() => { load(); }, []);
@@ -40,12 +45,25 @@ function StaffAdmin() {
       <div className="grid gap-3">
         {rows.length === 0 && <p className="text-sm text-muted-foreground">لا يوجد فريق عمل بعد.</p>}
         {rows.map((s) => (
-          <div key={s.user_id + s.role} className="glass rounded-2xl p-4 flex items-center gap-4">
+          <div key={s.user_id} className="glass rounded-2xl p-4 flex flex-wrap items-center gap-3">
             <div className="flex-1 min-w-0">
-              <div className="font-bold">{s.full_name || "بدون اسم"} <span className="text-xs text-gold mx-2">[{s.role}]</span></div>
+              <div className="font-bold flex items-center gap-2 flex-wrap">
+                {s.full_name || "بدون اسم"}
+                <span className="flex gap-1">
+                  {s.roles.map((r) => (
+                    <span key={r} className="text-[10px] px-2 py-0.5 rounded-md bg-gold/15 text-gold">{r}</span>
+                  ))}
+                </span>
+              </div>
               <div className="text-xs text-muted-foreground" dir="ltr">{s.phone || "—"}</div>
             </div>
-            <button onClick={() => remove(s.user_id, s.role)} className="text-red-400"><Trash2 size={16} /></button>
+            <div className="flex gap-2">
+              {s.roles.map((r) => (
+                <button key={r} onClick={() => remove(s.user_id, r)} className="text-red-400 text-xs flex items-center gap-1 hover:bg-red-500/10 px-2 py-1 rounded-lg">
+                  <Trash2 size={12} /> إزالة {r}
+                </button>
+              ))}
+            </div>
           </div>
         ))}
       </div>
