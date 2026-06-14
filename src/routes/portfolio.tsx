@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Reveal } from "../components/Reveal";
 import { ProjectGallery } from "../components/ProjectGallery";
@@ -36,7 +36,7 @@ import {
 import { formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
-import { BusinessSolutions } from "../components/BusinessSolutions";
+import { Briefcase, ArrowLeft as ArrowLeftIcon } from "lucide-react";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
@@ -222,7 +222,27 @@ function PortfolioPage() {
         ))}
       </div>
 
-      <BusinessSolutions />
+      {/* BUSINESS subsection */}
+      <section className="mt-20 pt-12 border-t border-white/10">
+        <Reveal>
+          <div className="text-center mb-8">
+            <div className="text-xs tracking-widest text-gradient-gold mb-3">BUSINESS</div>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">قسم الأعمال التجارية</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              مشاريع وحلول مخصصة للكافيهات، المطاعم، الفعاليات، والمحلات — اطلع على الصفحة المخصصة للتفاصيل الكاملة.
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Link
+              to="/business-solutions"
+              className="btn-gold rounded-xl px-6 py-3 text-sm inline-flex items-center gap-2"
+            >
+              <Briefcase size={16} /> استعرض حلول الأعمال
+              <ArrowLeftIcon size={14} />
+            </Link>
+          </div>
+        </Reveal>
+      </section>
 
       {open && <ProjectModal project={open} onClose={() => setOpen(null)} />}
     </div>

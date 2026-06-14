@@ -23,6 +23,7 @@ const navGroups = [
       { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
       { to: "/admin/requests", label: "الطلبات", icon: Inbox, exact: false },
       { to: "/admin/appointments", label: "المواعيد", icon: Calendar, exact: false },
+      { to: "/admin/tanks", label: "أحواض العملاء", icon: Fish, exact: false },
     ],
   },
   {
