@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Upload, X, Loader2, Star } from "lucide-react";
-import { uploadMedia, publicUrl, deleteMedia } from "@/lib/storage";
+import { uploadMedia, publicUrl, deleteMedia, onImageError } from "@/lib/storage";
 import { toast } from "sonner";
 
 type SingleProps = {
@@ -33,7 +33,7 @@ export function ImageUploader({ value, onChange, folder = "uploads", label = "ا
     <div className={`flex items-center gap-3 ${className ?? ""}`}>
       {value ? (
         <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-white/10 shrink-0">
-          <img src={publicUrl(value)} alt="" className="h-full w-full object-cover" />
+          <img src={publicUrl(value)} alt="معاينة" loading="lazy" onError={onImageError} className="h-full w-full object-cover" />
           <button type="button" onClick={() => onChange(null)} className="absolute top-1 left-1 bg-black/70 rounded-full p-1 text-white hover:bg-red-500">
             <X size={12} />
           </button>
@@ -107,7 +107,7 @@ export function MultiImageUploader({ values, cover, onChange, folder = "projects
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
           {values.map((p) => (
             <div key={p} className={`relative aspect-square rounded-xl overflow-hidden border-2 ${cover === p ? "border-gold" : "border-white/10"}`}>
-              <img src={publicUrl(p)} alt="" className="h-full w-full object-cover" />
+              <img src={publicUrl(p)} alt="" loading="lazy" onError={onImageError} className="h-full w-full object-cover" />
               <button type="button" onClick={() => onChange(values, p)} title="اجعلها الرئيسية"
                 className="absolute top-1 right-1 bg-black/70 rounded-full p-1 text-gold hover:bg-gold hover:text-black">
                 <Star size={12} fill={cover === p ? "currentColor" : "none"} />
