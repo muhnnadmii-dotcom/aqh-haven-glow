@@ -9,6 +9,7 @@ const links = [
   { to: "/portfolio", label: "أعمالنا" },
   { to: "/services", label: "خدماتنا" },
   { to: "/maintenance", label: "الصيانة" },
+  { to: "/business-solutions", label: "حلول الأعمال" },
   { to: "/knowledge", label: "مركز المعرفة" },
   { to: "/about", label: "من نحن" },
   { to: "/contact", label: "تواصل معنا" },

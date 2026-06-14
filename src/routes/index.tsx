@@ -321,19 +321,19 @@ function HomePage() {
                   )}
                 </div>
               </Reveal>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 items-stretch auto-rows-fr">
                 {whyItems.map((w, i) => {
                   const Icon = w.icon ? ICONS[w.icon] : null;
                   return (
-                    <Reveal key={w.id} delay={i * 100}>
-                      <div className="glass rounded-2xl p-5 hover:glass-gold transition">
+                    <Reveal key={w.id} delay={i * 100} className="h-full">
+                      <div className="glass rounded-2xl p-5 hover:glass-gold transition h-full flex flex-col">
                         {Icon && (
-                          <div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
+                          <div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3 shrink-0">
                             <Icon className="text-gold" size={20} aria-hidden />
                           </div>
                         )}
                         <h3 className="font-bold mb-1.5">{w.title}</h3>
-                        {w.desc && <p className="text-sm text-muted-foreground leading-relaxed">{w.desc}</p>}
+                        {w.desc && <p className="text-sm text-muted-foreground leading-relaxed flex-1">{w.desc}</p>}
                       </div>
                     </Reveal>
                   );
