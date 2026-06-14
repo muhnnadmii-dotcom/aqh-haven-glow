@@ -39,6 +39,7 @@ export type ExploreItem = {
   label: string;
   desc: string;
   href: string;
+  image_path: string;
   order: number;
   visible: boolean;
 };
@@ -48,6 +49,10 @@ export type ExploreContent = {
   subtitle: string;
   items: ExploreItem[];
 };
+
+export type HomeTestimonialItem = { id: string; name: string; rating: number; body: string };
+export type HomeTestimonialsContent = { items: HomeTestimonialItem[] };
+
 
 export type ServiceItem = {
   id: string;
