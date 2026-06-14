@@ -39,6 +39,7 @@ export type ExploreItem = {
   label: string;
   desc: string;
   href: string;
+  image_path: string;
   order: number;
   visible: boolean;
 };
@@ -48,6 +49,10 @@ export type ExploreContent = {
   subtitle: string;
   items: ExploreItem[];
 };
+
+export type HomeTestimonialItem = { id: string; name: string; rating: number; body: string };
+export type HomeTestimonialsContent = { items: HomeTestimonialItem[] };
+
 
 export type ServiceItem = {
   id: string;
@@ -92,7 +97,7 @@ export type HomeSection<T = unknown> = {
   updated_at: string;
 };
 
-const ALL_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header"] as const;
+const ALL_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header", "homepage_testimonials"] as const;
 
 export async function fetchHomeSections() {
   const { data, error } = await supabase
@@ -113,6 +118,8 @@ export async function fetchHomeSections() {
     partners: map.partners as HomeSection<PartnersContent> | undefined,
     testimonials_header: map.testimonials_header as HomeSection<SectionHeader> | undefined,
     knowledge_header: map.knowledge_header as HomeSection<SectionHeader> | undefined,
+    homepage_testimonials: map.homepage_testimonials as HomeSection<HomeTestimonialsContent> | undefined,
+
   };
 }
 

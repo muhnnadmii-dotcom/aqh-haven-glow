@@ -11,7 +11,10 @@ import {
   type FaqContent, type FaqItem,
   type CtaContent, type SectionHeader,
   type PartnersContent, type PartnerItem,
+  type HomeTestimonialsContent, type HomeTestimonialItem,
 } from "@/lib/home-sections";
+import { Star } from "lucide-react";
+
 import { ImageUploader } from "@/components/ImageUploader";
 
 export const Route = createFileRoute("/_authenticated/admin/design/")({
@@ -28,7 +31,9 @@ const TABS = [
   { key: "cta", label: "CTA الأخير" },
   { key: "partners", label: "الشركاء" },
   { key: "headers", label: "عناوين أقسام" },
+  { key: "homepage_testimonials", label: "تقييمات الرئيسية (3)" },
 ] as const;
+
 
 const DEFAULT_HERO: HeroContent = {
   title: "عالمك المائي", subtitle: "يبدأ من هنا",
@@ -43,6 +48,14 @@ const DEFAULT_FAQ: FaqContent = { kicker: "", heading: "", items: [] };
 const DEFAULT_CTA: CtaContent = { heading: "", description: "", primary_label: "", primary_href: "", secondary_label: "", secondary_href: "" };
 const DEFAULT_HEADER: SectionHeader = { kicker: "", heading: "", subtitle: "", link_label: "" };
 const DEFAULT_PARTNERS: PartnersContent = { title: "العلامات التي نثق بها", items: [] };
+const blankT = (): HomeTestimonialItem => ({ id: genId(), name: "", rating: 5, body: "" });
+const DEFAULT_HOME_TEST: HomeTestimonialsContent = { items: [blankT(), blankT(), blankT()] };
+function normalizeHomeTest(c?: HomeTestimonialsContent): HomeTestimonialsContent {
+  const items = (c?.items ?? []).slice(0, 3);
+  while (items.length < 3) items.push(blankT());
+  return { items };
+}
+
 
 function DesignAdmin() {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("hero");
@@ -57,7 +70,9 @@ function DesignAdmin() {
   const [testHeader, setTestHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
   const [knowHeader, setKnowHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
   const [partners, setPartners] = useState<{ enabled: boolean; content: PartnersContent }>({ enabled: true, content: DEFAULT_PARTNERS });
+  const [homeTest, setHomeTest] = useState<{ enabled: boolean; content: HomeTestimonialsContent }>({ enabled: true, content: DEFAULT_HOME_TEST });
   const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     (async () => {
@@ -73,6 +88,8 @@ function DesignAdmin() {
         if (s.testimonials_header) setTestHeader({ enabled: s.testimonials_header.enabled, content: { ...DEFAULT_HEADER, ...s.testimonials_header.content } });
         if (s.knowledge_header) setKnowHeader({ enabled: s.knowledge_header.enabled, content: { ...DEFAULT_HEADER, ...s.knowledge_header.content } });
         if (s.partners) setPartners({ enabled: s.partners.enabled, content: { ...DEFAULT_PARTNERS, ...s.partners.content } });
+        if (s.homepage_testimonials) setHomeTest({ enabled: s.homepage_testimonials.enabled, content: normalizeHomeTest(s.homepage_testimonials.content) });
+
       } catch (e: any) { toast.error(e?.message ?? "فشل التحميل"); }
       finally { setLoading(false); }
     })();
@@ -93,6 +110,10 @@ function DesignAdmin() {
         await saveHomeSection("testimonials_header", testHeader.enabled, testHeader.content);
         await saveHomeSection("knowledge_header", knowHeader.enabled, knowHeader.content);
       }
+      else if (tab === "homepage_testimonials") {
+        await saveHomeSection("homepage_testimonials", homeTest.enabled, homeTest.content);
+      }
+
       toast.success("تم الحفظ");
     } catch (e: any) { toast.error(e?.message ?? "فشل الحفظ"); }
     finally { setSaving(false); }
@@ -136,6 +157,8 @@ function DesignAdmin() {
           <HeaderEditor title="عنوان قسم المقالات" value={knowHeader} onChange={setKnowHeader} showLinkLabel />
         </div>
       )}
+      {tab === "homepage_testimonials" && <HomeTestimonialsEditor value={homeTest} onChange={setHomeTest} />}
+
     </div>
   );
 }
@@ -185,7 +208,7 @@ function ExploreEditor({ value, onChange }: { value: { enabled: boolean; content
     const a = sorted[idx].order, b = swap.order;
     setC({ ...c, items: c.items.map((it) => it.id === sorted[idx].id ? { ...it, order: b } : it.id === swap.id ? { ...it, order: a } : it) });
   };
-  const add = () => setC({ ...c, items: [...c.items, { id: genId(), icon: "Sparkles", emoji: null, label: "عنصر جديد", desc: "", href: "/", order: (Math.max(0, ...c.items.map(i => i.order)) + 1), visible: true }] });
+  const add = () => setC({ ...c, items: [...c.items, { id: genId(), icon: "Sparkles", emoji: null, label: "عنصر جديد", desc: "", href: "/", image_path: "", order: (Math.max(0, ...c.items.map(i => i.order)) + 1), visible: true }] });
 
   const sorted = [...c.items].sort((a, b) => a.order - b.order);
 
@@ -231,7 +254,11 @@ function ExploreEditor({ value, onChange }: { value: { enabled: boolean; content
               <Field label="إيموجي بديل"><input className={inp} value={it.emoji ?? ""} onChange={(e) => updateItem(it.id, { emoji: e.target.value || null })} placeholder="مثال: 🐠" /></Field>
               <Field label="الرابط"><input dir="ltr" className={inp} value={it.href} onChange={(e) => updateItem(it.id, { href: e.target.value })} /></Field>
               <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
+              <Field label="صورة البطاقة" full>
+                <ImageUploader value={it.image_path || null} onChange={(p) => updateItem(it.id, { image_path: p ?? "" })} folder="home/explore" />
+              </Field>
             </Grid>
+
           </div>
         ))}
         {sorted.length === 0 && <p className="text-sm text-muted-foreground glass rounded-2xl p-5">لا توجد مربعات. اضغط "إضافة مربع".</p>}
@@ -599,6 +626,44 @@ function PartnersEditor({ value, onChange }: { value: { enabled: boolean; conten
         ))}
         {sorted.length === 0 && <EmptyHint />}
       </div>
+    </div>
+  );
+}
+
+/* ---------- HOMEPAGE TESTIMONIALS (exactly 3) ---------- */
+function HomeTestimonialsEditor({ value, onChange }: { value: { enabled: boolean; content: HomeTestimonialsContent }; onChange: (v: { enabled: boolean; content: HomeTestimonialsContent }) => void }) {
+  const items = value.content.items;
+  const update = (i: number, patch: Partial<HomeTestimonialItem>) => {
+    const next = items.map((it, idx) => idx === i ? { ...it, ...patch } : it);
+    onChange({ ...value, content: { items: next } });
+  };
+  return (
+    <div className="space-y-4">
+      <div className="glass rounded-2xl p-5 space-y-1">
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار قسم التقييمات في الرئيسية" />
+        <p className="text-xs text-muted-foreground">3 تقييمات ثابتة تظهر في الصفحة الرئيسية. تُدار يدوياً من هنا فقط.</p>
+      </div>
+      {items.map((it, i) => (
+        <div key={it.id} className="glass rounded-2xl p-5 space-y-3">
+          <div className="text-sm font-bold text-gradient-gold">تقييم #{i + 1}</div>
+          <Grid>
+            <Field label="اسم العميل"><input className={inp} value={it.name} onChange={(e) => update(i, { name: e.target.value })} /></Field>
+            <Field label="التقييم (نجوم)">
+              <div className="flex items-center gap-1">
+                {[1,2,3,4,5].map((n) => (
+                  <button key={n} type="button" onClick={() => update(i, { rating: n })} className="p-1" title={`${n}`}>
+                    <Star size={20} className={n <= it.rating ? "fill-gold text-gold" : "text-white/30"} />
+                  </button>
+                ))}
+                <span className="text-xs text-muted-foreground mr-2">{it.rating}/5</span>
+              </div>
+            </Field>
+            <Field label="نص التقييم" full>
+              <textarea rows={3} className={ta} value={it.body} onChange={(e) => update(i, { body: e.target.value })} />
+            </Field>
+          </Grid>
+        </div>
+      ))}
     </div>
   );
 }

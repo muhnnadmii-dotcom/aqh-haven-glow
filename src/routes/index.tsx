@@ -18,8 +18,10 @@ import {
   ICONS,
   type HeroContent, type ExploreContent, type ServicesContent,
   type WhyUsContent, type ProcessContent, type FaqContent, type CtaContent, type SectionHeader,
-  type PartnersContent,
+  type PartnersContent, type HomeTestimonialsContent,
 } from "@/lib/home-sections";
+import { getImageUrl, onImageError } from "@/lib/storage";
+
 
 const heroFallback = livingRoomTankAsset.url;
 const styledAquarium = styledAquariumAsset.url;
@@ -40,7 +42,6 @@ export const Route = createFileRoute("/")({
 });
 
 
-type Testimonial = { id: string; name: string; role: string | null; rating: number; body: string; image_path: string | null };
 type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
 
 type Sections = {
@@ -54,21 +55,22 @@ type Sections = {
   partners: { enabled: boolean; content: PartnersContent } | null;
   testimonials_header: { enabled: boolean; content: SectionHeader } | null;
   knowledge_header: { enabled: boolean; content: SectionHeader } | null;
+  homepage_testimonials: { enabled: boolean; content: HomeTestimonialsContent } | null;
 };
 
 const EMPTY_SECTIONS: Sections = {
   hero: null, explore: null, services: null,
   why_us: null, process: null, faq: null, cta: null, partners: null,
-  testimonials_header: null, knowledge_header: null,
+  testimonials_header: null, knowledge_header: null, homepage_testimonials: null,
 };
 
-const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header"];
+const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header", "homepage_testimonials"];
+
 
 function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [sections, setSections] = useState<Sections>(EMPTY_SECTIONS);
   const [articles, setArticles] = useState<FeaturedArticle[]>([]);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -84,12 +86,9 @@ function HomePage() {
       .eq("published", true).eq("visible", true).eq("featured_on_home", true)
       .order("home_order", { ascending: true }).limit(3)
       .then(({ data }) => { if (alive) setArticles((data ?? []) as unknown as FeaturedArticle[]); });
-    supabase.from("testimonials").select("id, name, role, rating, body, image_path")
-      .eq("visible", true).eq("featured", true)
-      .order("sort_order", { ascending: true })
-      .then(({ data }) => { if (alive) setTestimonials((data ?? []) as unknown as Testimonial[]); });
     return () => { alive = false; };
   }, []);
+
 
 
 
@@ -127,6 +126,13 @@ function HomePage() {
   const testHeadEnabled = sections.testimonials_header?.enabled ?? true;
   const knowHead = sections.knowledge_header?.content;
   const knowHeadEnabled = sections.knowledge_header?.enabled ?? true;
+
+  const homeTestEnabled = sections.homepage_testimonials?.enabled ?? true;
+  const testimonials = ((sections.homepage_testimonials?.content?.items ?? [])
+    .filter((t) => t && (t.name?.trim() || t.body?.trim()))
+    .slice(0, 3));
+  const showTestimonials = testHeadEnabled && homeTestEnabled && testimonials.length > 0;
+
 
   const heroStats = (hero?.stats ?? []).filter((s) => s && s.label);
   const partnersC = sections.partners?.content;
@@ -202,23 +208,35 @@ function HomePage() {
                 {explore?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{explore.subtitle}</p>}
               </div>
             </Reveal>
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
               {exploreItems.map((c, i) => {
                 const Icon = c.icon ? ICONS[c.icon] : null;
+                const img = getImageUrl(c.image_path);
                 return (
                   <Reveal key={c.id} delay={i * 60}>
-                    <SmartLink to={c.href} className="group relative block aspect-square rounded-2xl glass hover:glass-gold transition-all p-5 overflow-hidden hover:-translate-y-1 duration-500">
-                      <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-[color:var(--gold)]/10 blur-2xl group-hover:bg-[color:var(--gold)]/25 transition" />
-                      <div className="relative h-full flex flex-col items-start justify-between">
-                        <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold">
-                          {Icon ? <Icon className="text-gold" size={22} aria-hidden /> : c.emoji ? <span className="text-2xl">{c.emoji}</span> : null}
-                        </div>
-                        <div>
-                          <div className="text-lg sm:text-xl font-bold mb-1">{c.label}</div>
-                          {c.desc && <div className="text-xs text-muted-foreground">{c.desc}</div>}
-                          <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold opacity-0 group-hover:opacity-100 transition">
-                            ادخل <ArrowLeft size={12} aria-hidden />
+                    <SmartLink to={c.href} className="group block h-full rounded-2xl glass overflow-hidden hover:glass-gold hover:-translate-y-1 transition-all duration-500 flex flex-col">
+                      <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
+                        <img
+                          src={img}
+                          alt={c.label}
+                          loading="lazy"
+                          onError={onImageError}
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          width={800}
+                          height={500}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-transparent" />
+                        {(Icon || c.emoji) && (
+                          <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
+                            {Icon ? <Icon className="text-gold" size={18} aria-hidden /> : <span className="text-lg">{c.emoji}</span>}
                           </div>
+                        )}
+                      </div>
+                      <div className="p-5 flex flex-col flex-1">
+                        <h3 className="text-lg font-bold mb-1.5">{c.label}</h3>
+                        {c.desc && <p className="text-xs text-muted-foreground leading-relaxed flex-1">{c.desc}</p>}
+                        <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold">
+                          ادخل <ArrowLeft size={12} aria-hidden />
                         </div>
                       </div>
                     </SmartLink>
@@ -226,6 +244,7 @@ function HomePage() {
                 );
               })}
             </div>
+
           </div>
         </section>
       )}
@@ -362,7 +381,7 @@ function HomePage() {
 
 
       {/* TESTIMONIALS */}
-      {testHeadEnabled && testimonials.length > 0 && (
+      {showTestimonials && (
         <section className="relative py-24">
           <div className="mx-auto max-w-7xl px-6">
             <Reveal>
@@ -372,26 +391,21 @@ function HomePage() {
                 {testHead?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{testHead.subtitle}</p>}
               </div>
             </Reveal>
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-3 items-stretch">
               {testimonials.map((t, i) => (
                 <Reveal key={t.id} delay={i * 60}>
-                  <div className="glass rounded-2xl p-6 h-full relative">
+                  <div className="glass rounded-2xl p-6 h-full relative flex flex-col">
                     <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
                     <div className="flex gap-1 mb-3">
-                      {Array.from({ length: t.rating || 5 }).map((_, k) => (
-                        <Star key={k} size={13} className="fill-gold text-gold" aria-hidden />
+                      {Array.from({ length: 5 }).map((_, k) => (
+                        <Star key={k} size={14} className={k < (t.rating || 5) ? "fill-gold text-gold" : "text-white/20"} aria-hidden />
                       ))}
                     </div>
-                    <p className="text-sm leading-relaxed text-foreground/90 mb-5">{t.body}</p>
-                    <div className="border-t border-white/5 pt-3 flex items-center gap-3">
-                      {t.image_path ? (
-                        <img src={publicUrl(t.image_path)} alt={t.name} className="h-10 w-10 rounded-full object-cover" />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full glass-gold grid place-items-center text-gold text-sm">{t.name.charAt(0)}</div>
-                      )}
-                      <div>
-                        <div className="font-bold text-sm">{t.name}</div>
-                        {t.role && <div className="text-xs text-muted-foreground mt-0.5">{t.role}</div>}
+                    <p className="text-sm leading-relaxed text-foreground/90 mb-5 flex-1">{t.body}</p>
+                    <div className="border-t border-white/5 pt-3 flex items-center gap-3 mt-auto">
+                      <div className="h-10 w-10 rounded-full glass-gold grid place-items-center text-gold text-sm shrink-0">{(t.name || "؟").charAt(0)}</div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm truncate">{t.name || "—"}</div>
                       </div>
                     </div>
                   </div>
@@ -401,6 +415,7 @@ function HomePage() {
           </div>
         </section>
       )}
+
 
       {/* KNOWLEDGE */}
       {knowHeadEnabled && (
