@@ -11,7 +11,10 @@ import {
   type FaqContent, type FaqItem,
   type CtaContent, type SectionHeader,
   type PartnersContent, type PartnerItem,
+  type HomeTestimonialsContent, type HomeTestimonialItem,
 } from "@/lib/home-sections";
+import { Star } from "lucide-react";
+
 import { ImageUploader } from "@/components/ImageUploader";
 
 export const Route = createFileRoute("/_authenticated/admin/design/")({
