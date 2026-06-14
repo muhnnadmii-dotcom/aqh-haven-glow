@@ -18,8 +18,10 @@ import {
   ICONS,
   type HeroContent, type ExploreContent, type ServicesContent,
   type WhyUsContent, type ProcessContent, type FaqContent, type CtaContent, type SectionHeader,
-  type PartnersContent,
+  type PartnersContent, type HomeTestimonialsContent,
 } from "@/lib/home-sections";
+import { getImageUrl, onImageError } from "@/lib/storage";
+
 
 const heroFallback = livingRoomTankAsset.url;
 const styledAquarium = styledAquariumAsset.url;
