@@ -110,6 +110,10 @@ function DesignAdmin() {
         await saveHomeSection("testimonials_header", testHeader.enabled, testHeader.content);
         await saveHomeSection("knowledge_header", knowHeader.enabled, knowHeader.content);
       }
+      else if (tab === "homepage_testimonials") {
+        await saveHomeSection("homepage_testimonials", homeTest.enabled, homeTest.content);
+      }
+
       toast.success("تم الحفظ");
     } catch (e: any) { toast.error(e?.message ?? "فشل الحفظ"); }
     finally { setSaving(false); }
