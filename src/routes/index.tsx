@@ -127,6 +127,13 @@ function HomePage() {
   const knowHead = sections.knowledge_header?.content;
   const knowHeadEnabled = sections.knowledge_header?.enabled ?? true;
 
+  const homeTestEnabled = sections.homepage_testimonials?.enabled ?? true;
+  const testimonials = ((sections.homepage_testimonials?.content?.items ?? [])
+    .filter((t) => t && (t.name?.trim() || t.body?.trim()))
+    .slice(0, 3));
+  const showTestimonials = testHeadEnabled && homeTestEnabled && testimonials.length > 0;
+
+
   const heroStats = (hero?.stats ?? []).filter((s) => s && s.label);
   const partnersC = sections.partners?.content;
   const partnersEnabled = sections.partners?.enabled ?? true;
