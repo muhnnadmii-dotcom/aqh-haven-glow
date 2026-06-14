@@ -368,7 +368,7 @@ function HomePage() {
 
 
       {/* TESTIMONIALS */}
-      {testHeadEnabled && testimonials.length > 0 && (
+      {showTestimonials && (
         <section className="relative py-24">
           <div className="mx-auto max-w-7xl px-6">
             <Reveal>
@@ -378,26 +378,21 @@ function HomePage() {
                 {testHead?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{testHead.subtitle}</p>}
               </div>
             </Reveal>
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-3 items-stretch">
               {testimonials.map((t, i) => (
                 <Reveal key={t.id} delay={i * 60}>
-                  <div className="glass rounded-2xl p-6 h-full relative">
+                  <div className="glass rounded-2xl p-6 h-full relative flex flex-col">
                     <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
                     <div className="flex gap-1 mb-3">
-                      {Array.from({ length: t.rating || 5 }).map((_, k) => (
-                        <Star key={k} size={13} className="fill-gold text-gold" aria-hidden />
+                      {Array.from({ length: 5 }).map((_, k) => (
+                        <Star key={k} size={14} className={k < (t.rating || 5) ? "fill-gold text-gold" : "text-white/20"} aria-hidden />
                       ))}
                     </div>
-                    <p className="text-sm leading-relaxed text-foreground/90 mb-5">{t.body}</p>
-                    <div className="border-t border-white/5 pt-3 flex items-center gap-3">
-                      {t.image_path ? (
-                        <img src={publicUrl(t.image_path)} alt={t.name} className="h-10 w-10 rounded-full object-cover" />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full glass-gold grid place-items-center text-gold text-sm">{t.name.charAt(0)}</div>
-                      )}
-                      <div>
-                        <div className="font-bold text-sm">{t.name}</div>
-                        {t.role && <div className="text-xs text-muted-foreground mt-0.5">{t.role}</div>}
+                    <p className="text-sm leading-relaxed text-foreground/90 mb-5 flex-1">{t.body}</p>
+                    <div className="border-t border-white/5 pt-3 flex items-center gap-3 mt-auto">
+                      <div className="h-10 w-10 rounded-full glass-gold grid place-items-center text-gold text-sm shrink-0">{(t.name || "؟").charAt(0)}</div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm truncate">{t.name || "—"}</div>
                       </div>
                     </div>
                   </div>
@@ -407,6 +402,7 @@ function HomePage() {
           </div>
         </section>
       )}
+
 
       {/* KNOWLEDGE */}
       {knowHeadEnabled && (
