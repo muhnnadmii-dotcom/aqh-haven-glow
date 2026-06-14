@@ -157,6 +157,8 @@ function DesignAdmin() {
           <HeaderEditor title="عنوان قسم المقالات" value={knowHeader} onChange={setKnowHeader} showLinkLabel />
         </div>
       )}
+      {tab === "homepage_testimonials" && <HomeTestimonialsEditor value={homeTest} onChange={setHomeTest} />}
+
     </div>
   );
 }
