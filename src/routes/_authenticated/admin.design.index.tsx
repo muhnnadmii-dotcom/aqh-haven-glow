@@ -48,6 +48,14 @@ const DEFAULT_FAQ: FaqContent = { kicker: "", heading: "", items: [] };
 const DEFAULT_CTA: CtaContent = { heading: "", description: "", primary_label: "", primary_href: "", secondary_label: "", secondary_href: "" };
 const DEFAULT_HEADER: SectionHeader = { kicker: "", heading: "", subtitle: "", link_label: "" };
 const DEFAULT_PARTNERS: PartnersContent = { title: "العلامات التي نثق بها", items: [] };
+const blankT = (): HomeTestimonialItem => ({ id: genId(), name: "", rating: 5, body: "" });
+const DEFAULT_HOME_TEST: HomeTestimonialsContent = { items: [blankT(), blankT(), blankT()] };
+function normalizeHomeTest(c?: HomeTestimonialsContent): HomeTestimonialsContent {
+  const items = (c?.items ?? []).slice(0, 3);
+  while (items.length < 3) items.push(blankT());
+  return { items };
+}
+
 
 function DesignAdmin() {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("hero");
