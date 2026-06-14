@@ -4,8 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Reveal } from "@/components/Reveal";
 import { toast } from "sonner";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+
+const authSearch = z.object({
+  redirect: fallback(z.string(), "/account").default("/account"),
+});
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: zodValidator(authSearch),
   head: () => ({
     meta: [
       { title: "تسجيل الدخول — أكوا هيفن" },
@@ -17,6 +24,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,13 +33,13 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/account" });
+      if (data.session) navigate({ to: redirect, replace: true });
     });
-  }, [navigate]);
+  }, [navigate, redirect]);
 
   const onGoogle = async () => {
     setBusy(true);
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/account" });
+    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + redirect });
     if (res.error) {
       toast.error("تعذر تسجيل الدخول عبر Google");
       setBusy(false);
@@ -46,7 +54,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin + "/account" },
+          options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin + redirect },
         });
         if (error) throw error;
         toast.success("تم إنشاء الحساب! تحقق من بريدك للتأكيد ثم سجل الدخول.");
@@ -55,7 +63,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("تم تسجيل الدخول");
-        navigate({ to: "/account" });
+        navigate({ to: redirect, replace: true });
       }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "حدث خطأ");
