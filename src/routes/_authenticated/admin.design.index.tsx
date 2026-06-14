@@ -88,6 +88,8 @@ function DesignAdmin() {
         if (s.testimonials_header) setTestHeader({ enabled: s.testimonials_header.enabled, content: { ...DEFAULT_HEADER, ...s.testimonials_header.content } });
         if (s.knowledge_header) setKnowHeader({ enabled: s.knowledge_header.enabled, content: { ...DEFAULT_HEADER, ...s.knowledge_header.content } });
         if (s.partners) setPartners({ enabled: s.partners.enabled, content: { ...DEFAULT_PARTNERS, ...s.partners.content } });
+        if (s.homepage_testimonials) setHomeTest({ enabled: s.homepage_testimonials.enabled, content: normalizeHomeTest(s.homepage_testimonials.content) });
+
       } catch (e: any) { toast.error(e?.message ?? "فشل التحميل"); }
       finally { setLoading(false); }
     })();
