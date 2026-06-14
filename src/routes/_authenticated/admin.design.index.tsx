@@ -231,7 +231,11 @@ function ExploreEditor({ value, onChange }: { value: { enabled: boolean; content
               <Field label="إيموجي بديل"><input className={inp} value={it.emoji ?? ""} onChange={(e) => updateItem(it.id, { emoji: e.target.value || null })} placeholder="مثال: 🐠" /></Field>
               <Field label="الرابط"><input dir="ltr" className={inp} value={it.href} onChange={(e) => updateItem(it.id, { href: e.target.value })} /></Field>
               <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
+              <Field label="صورة البطاقة" full>
+                <ImageUploader value={it.image_path || null} onChange={(p) => updateItem(it.id, { image_path: p ?? "" })} folder="home/explore" />
+              </Field>
             </Grid>
+
           </div>
         ))}
         {sorted.length === 0 && <p className="text-sm text-muted-foreground glass rounded-2xl p-5">لا توجد مربعات. اضغط "إضافة مربع".</p>}
