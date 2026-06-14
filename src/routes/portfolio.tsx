@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Reveal } from "../components/Reveal";
 import { ProjectGallery } from "../components/ProjectGallery";
@@ -36,7 +36,6 @@ import {
 import { formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
-import { Link } from "@tanstack/react-router";
 import { Briefcase, ArrowLeft as ArrowLeftIcon } from "lucide-react";
 
 export const Route = createFileRoute("/portfolio")({
