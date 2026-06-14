@@ -185,7 +185,7 @@ function ExploreEditor({ value, onChange }: { value: { enabled: boolean; content
     const a = sorted[idx].order, b = swap.order;
     setC({ ...c, items: c.items.map((it) => it.id === sorted[idx].id ? { ...it, order: b } : it.id === swap.id ? { ...it, order: a } : it) });
   };
-  const add = () => setC({ ...c, items: [...c.items, { id: genId(), icon: "Sparkles", emoji: null, label: "عنصر جديد", desc: "", href: "/", order: (Math.max(0, ...c.items.map(i => i.order)) + 1), visible: true }] });
+  const add = () => setC({ ...c, items: [...c.items, { id: genId(), icon: "Sparkles", emoji: null, label: "عنصر جديد", desc: "", href: "/", image_path: "", order: (Math.max(0, ...c.items.map(i => i.order)) + 1), visible: true }] });
 
   const sorted = [...c.items].sort((a, b) => a.order - b.order);
 
