@@ -97,7 +97,7 @@ export type HomeSection<T = unknown> = {
   updated_at: string;
 };
 
-const ALL_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header"] as const;
+const ALL_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header", "homepage_testimonials"] as const;
 
 export async function fetchHomeSections() {
   const { data, error } = await supabase
