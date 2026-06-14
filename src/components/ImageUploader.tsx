@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Upload, X, Loader2, Star } from "lucide-react";
-import { uploadMedia, publicUrl, deleteMedia } from "@/lib/storage";
+import { uploadMedia, publicUrl, deleteMedia, onImageError } from "@/lib/storage";
 import { toast } from "sonner";
 
 type SingleProps = {
