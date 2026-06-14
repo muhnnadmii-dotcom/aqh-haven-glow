@@ -31,7 +31,9 @@ const TABS = [
   { key: "cta", label: "CTA الأخير" },
   { key: "partners", label: "الشركاء" },
   { key: "headers", label: "عناوين أقسام" },
+  { key: "homepage_testimonials", label: "تقييمات الرئيسية (3)" },
 ] as const;
+
 
 const DEFAULT_HERO: HeroContent = {
   title: "عالمك المائي", subtitle: "يبدأ من هنا",
