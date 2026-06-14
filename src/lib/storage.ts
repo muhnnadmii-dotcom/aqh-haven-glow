@@ -3,36 +3,57 @@ import { getSessionUser } from "@/lib/client-auth";
 
 export const MEDIA_BUCKET = "media";
 
-export function publicUrl(path: string | null | undefined): string {
-  if (!path) return "";
-  if (path.startsWith("http") || path.startsWith("/")) return path;
-  return supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl;
+// 1×1 transparent PNG — used as last-resort fallback for broken images.
+export const IMAGE_PLACEHOLDER =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='100%25' height='100%25' fill='%230a1a2e'/><text x='50%25' y='50%25' fill='%23ffffff55' font-family='sans-serif' font-size='18' text-anchor='middle' dominant-baseline='middle'>لا توجد صورة</text></svg>";
+
+/**
+ * Resolve any stored image reference to a usable URL.
+ * - empty → placeholder
+ * - already absolute (http/https) or root-relative (/) → returned as-is
+ * - storage path → public URL from the `media` bucket
+ */
+export function getImageUrl(path: string | null | undefined): string {
+  if (!path) return IMAGE_PLACEHOLDER;
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/") || path.startsWith("data:")) {
+    return path;
+  }
+  return supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl || IMAGE_PLACEHOLDER;
 }
 
-export const MAX_IMAGE_MB = 8;
+// Back-compat alias — existing components import publicUrl.
+export const publicUrl = getImageUrl;
 
-const ALLOWED_MIME = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-]);
-const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+/** Drop-in onError handler for <img> tags. */
+export function onImageError(e: React.SyntheticEvent<HTMLImageElement>) {
+  const el = e.currentTarget;
+  if (el.src !== IMAGE_PLACEHOLDER) el.src = IMAGE_PLACEHOLDER;
+}
+
+export const MAX_IMAGE_MB = 5;
+
+const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
 
 export async function uploadMedia(file: File, folder = "uploads"): Promise<string> {
   const uid = (await getSessionUser())?.id;
   if (!uid) throw new Error("يجب تسجيل الدخول لرفع الملفات");
+  if (!file || file.size === 0) {
+    throw new Error("الملف فارغ أو غير صالح");
+  }
   if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
     throw new Error(`حجم الصورة كبير. الحد الأقصى ${MAX_IMAGE_MB} ميجابايت`);
   }
   const mime = (file.type || "").toLowerCase();
   const ext = (file.name.split(".").pop() ?? "").toLowerCase();
   if (!ALLOWED_MIME.has(mime) || !ALLOWED_EXT.has(ext)) {
-    throw new Error("نوع الملف غير مدعوم. الأنواع المسموحة: JPG, PNG, WEBP, GIF");
+    throw new Error("نوع الملف غير مدعوم. الأنواع المسموحة: JPG, PNG, WEBP");
   }
-  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  // RLS requires path to start with the user's uid (unless admin/staff, which still passes).
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+  // RLS requires path to start with the user's uid (admin/staff also allowed).
   const path = `${uid}/${folder}/${name}`;
+  // eslint-disable-next-line no-console
+  console.debug("[uploadMedia]", { path, size: file.size, mime });
   const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
     cacheControl: "31536000",
     upsert: false,
@@ -42,8 +63,7 @@ export async function uploadMedia(file: File, folder = "uploads"): Promise<strin
   return path;
 }
 
-
 export async function deleteMedia(path: string): Promise<void> {
-  if (!path || path.startsWith("http")) return;
+  if (!path || path.startsWith("http") || path.startsWith("data:")) return;
   await supabase.storage.from(MEDIA_BUCKET).remove([path]);
 }
