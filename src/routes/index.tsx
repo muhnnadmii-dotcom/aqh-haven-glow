@@ -208,23 +208,35 @@ function HomePage() {
                 {explore?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{explore.subtitle}</p>}
               </div>
             </Reveal>
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
               {exploreItems.map((c, i) => {
                 const Icon = c.icon ? ICONS[c.icon] : null;
+                const img = getImageUrl(c.image_path);
                 return (
                   <Reveal key={c.id} delay={i * 60}>
-                    <SmartLink to={c.href} className="group relative block aspect-square rounded-2xl glass hover:glass-gold transition-all p-5 overflow-hidden hover:-translate-y-1 duration-500">
-                      <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-[color:var(--gold)]/10 blur-2xl group-hover:bg-[color:var(--gold)]/25 transition" />
-                      <div className="relative h-full flex flex-col items-start justify-between">
-                        <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold">
-                          {Icon ? <Icon className="text-gold" size={22} aria-hidden /> : c.emoji ? <span className="text-2xl">{c.emoji}</span> : null}
-                        </div>
-                        <div>
-                          <div className="text-lg sm:text-xl font-bold mb-1">{c.label}</div>
-                          {c.desc && <div className="text-xs text-muted-foreground">{c.desc}</div>}
-                          <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold opacity-0 group-hover:opacity-100 transition">
-                            ادخل <ArrowLeft size={12} aria-hidden />
+                    <SmartLink to={c.href} className="group block h-full rounded-2xl glass overflow-hidden hover:glass-gold hover:-translate-y-1 transition-all duration-500 flex flex-col">
+                      <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
+                        <img
+                          src={img}
+                          alt={c.label}
+                          loading="lazy"
+                          onError={onImageError}
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          width={800}
+                          height={500}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-transparent" />
+                        {(Icon || c.emoji) && (
+                          <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
+                            {Icon ? <Icon className="text-gold" size={18} aria-hidden /> : <span className="text-lg">{c.emoji}</span>}
                           </div>
+                        )}
+                      </div>
+                      <div className="p-5 flex flex-col flex-1">
+                        <h3 className="text-lg font-bold mb-1.5">{c.label}</h3>
+                        {c.desc && <p className="text-xs text-muted-foreground leading-relaxed flex-1">{c.desc}</p>}
+                        <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold">
+                          ادخل <ArrowLeft size={12} aria-hidden />
                         </div>
                       </div>
                     </SmartLink>
@@ -232,6 +244,7 @@ function HomePage() {
                 );
               })}
             </div>
+
           </div>
         </section>
       )}
