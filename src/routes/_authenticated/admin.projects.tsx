@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Search, Eye, EyeOff, Home as HomeIcon } from "lucide-react";
-import { MultiImageUploader } from "@/components/ImageUploader";
-import { publicUrl } from "@/lib/storage";
+import { Plus, Trash2, Save, Search, Eye, EyeOff, Home as HomeIcon, Upload, Loader2, Star, X as XIcon } from "lucide-react";
+import { publicUrl, uploadMedia, deleteMedia, onImageError } from "@/lib/storage";
+
 
 export const Route = createFileRoute("/_authenticated/admin/projects")({
   component: ProjectsAdmin,
