@@ -585,8 +585,100 @@ function HomePage() {
         </section>
       )}
 
+      {/* FINAL WHATSAPP CTA */}
+      <section className="relative py-16 sm:py-20">
+        <div className="mx-auto max-w-4xl px-5 sm:px-6">
+          <div className="gradient-border rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
+            <div className="light-rays" aria-hidden />
+            <div className="relative">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">جاهز تبدأ مشروعك المائي؟</h2>
+              <p className="text-sm sm:text-base text-muted-foreground mb-7 max-w-lg mx-auto">
+                تواصل معنا الآن واحصل على استشارة مجانية وعرض سعر مخصص لمشروعك.
+              </p>
+              <a
+                href={whatsappLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold text-white shadow-deep transition-transform hover:scale-105"
+                style={{ background: "linear-gradient(135deg, #25D366, #128C7E)" }}
+              >
+                <MessageCircle size={20} /> تواصل معنا عبر واتساب
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
 
     </>
+  );
+}
+
+function FeaturedProjectsSection({ projects }: { projects: FeaturedProject[] }) {
+  const fallback: FeaturedProject[] = [
+    { slug: "", title: "حوض غرفة المعيشة", category_label: "مياه عذبة مزروع", location: "الرياض", description: "تصميم طبيعي بنباتات حية وإضاءة احترافية.", cover_path: null, cover: null, specs: { dimensions: "150×60×60 سم" } },
+    { slug: "", title: "حوض الشعاب المرجانية", category_label: "بحري ريف", location: "جدة", description: "نظام بحري متكامل مع مرجانيات وأسماك ملونة.", cover_path: null, cover: null, specs: { dimensions: "120×60×60 سم" } },
+    { slug: "", title: "حوض الكافيه", category_label: "تجاري", location: "الرياض", description: "حوض مميز يعزز تجربة العملاء في الكافيه.", cover_path: null, cover: null, specs: { dimensions: "200×70×70 سم" } },
+    { slug: "", title: "حوض المكتب التنفيذي", category_label: "مكتبي", location: "الرياض", description: "تصميم فاخر يضفي هدوءاً على بيئة العمل.", cover_path: null, cover: null, specs: { dimensions: "100×40×50 سم" } },
+    { slug: "", title: "نانو منزلي", category_label: "نانو", location: "الدمام", description: "حوض صغير مثالي للمبتدئين بتشطيب راقٍ.", cover_path: null, cover: null, specs: { dimensions: "60×30×35 سم" } },
+    { slug: "", title: "حوض المطعم", category_label: "تجاري كبير", location: "الرياض", description: "حوض جانبي ضخم يصبح نقطة جذب المطعم.", cover_path: null, cover: null, specs: { dimensions: "250×80×80 سم" } },
+  ];
+  const items = projects.length > 0 ? projects : fallback;
+  return (
+    <section className="relative py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6">
+        <Reveal>
+          <div className="text-center mb-12">
+            <div className="text-xs tracking-widest text-gradient-gold mb-3">PORTFOLIO</div>
+            <h2 className="text-3xl sm:text-4xl font-bold">أعمال مختارة</h2>
+            <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-sm sm:text-base">
+              نماذج من المشاريع التي نفذناها للعملاء بمختلف الأذواق والاحتياجات.
+            </p>
+          </div>
+        </Reveal>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
+          {items.map((p, i) => {
+            const img = p.cover_path ? publicUrl(p.cover_path) : (p.cover || projectFallbacks[i % projectFallbacks.length]);
+            const dims = p.specs?.dimensions || p.specs?.size;
+            const waText = `أبغى نفس فكرة "${p.title}"`;
+            const card = (
+              <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full flex flex-col">
+                <div className="relative aspect-[16/10] overflow-hidden bg-white/5">
+                  <img src={img} alt={p.title} loading="lazy" onError={onImageError} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  {p.category_label && (
+                    <div className="absolute top-3 right-3 glass-gold rounded-lg px-2.5 py-1 text-[10px] font-bold text-gold">{p.category_label}</div>
+                  )}
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                  <h3 className="text-base sm:text-lg font-bold mb-2">{p.title}</h3>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground mb-2">
+                    {dims && <span className="inline-flex items-center gap-1"><Ruler size={12} aria-hidden /> {dims}</span>}
+                    {p.location && <span className="inline-flex items-center gap-1"><MapPin size={12} aria-hidden /> {p.location}</span>}
+                  </div>
+                  {p.description && <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-3">{p.description}</p>}
+                  <a
+                    href={whatsappLink(waText)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold btn-gold"
+                  >
+                    <MessageCircle size={14} /> أبغى نفس الفكرة
+                  </a>
+                </div>
+              </article>
+            );
+            return (
+              <Reveal key={p.slug || `fb-${i}`} delay={i * 80} className="h-full">
+                {p.slug ? <Link to="/portfolio" className="block h-full">{card}</Link> : <div className="h-full">{card}</div>}
+              </Reveal>
+            );
+          })}
+        </div>
+        <div className="text-center mt-10">
+          <CTAButton href="/portfolio" variant="outline">كل الأعمال</CTAButton>
+        </div>
+      </div>
+    </section>
   );
 }
 
