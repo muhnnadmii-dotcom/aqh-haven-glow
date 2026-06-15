@@ -114,6 +114,10 @@ function adapt(r: any): Project {
     addOns: r.add_ons ?? undefined,
     servicePackages: r.service_packages ?? undefined,
     livestockWarranty: r.livestock_warranty ?? undefined,
+    equipmentWarrantyEnabled: !!r.equipment_warranty_enabled,
+    equipmentWarrantyText: r.equipment_warranty_text ?? undefined,
+    livestockWarrantyEnabled: !!r.livestock_warranty_enabled,
+    livestockWarrantyText: r.livestock_warranty_text ?? undefined,
     contents: { fish: [], plantsOrCorals: [], decor: "", ...(r.contents ?? {}) },
     priceRange: { min: r.price_min ?? 0, max: r.price_max ?? 0, currency: "SAR" },
     priceType: (r.price_type ?? undefined) as Project["priceType"],
@@ -434,48 +438,70 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
             </Section>
           )}
 
-          {/* Service Packages + Livestock Warranty */}
-          {(project.servicePackages?.length || project.livestockWarranty) && (
-            <Section title="باقات الخدمة والضمان">
-              <div className="space-y-4">
-                {project.livestockWarranty && (
-                  <div className="glass-gold rounded-2xl p-5 flex items-start gap-3">
-                    <div className="h-11 w-11 grid place-items-center rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
-                      <Heart size={20} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs font-bold text-[color:var(--gold)] mb-1">
-                        ضمان المعدات (مشمول)
+          {/* Service Packages + Warranties */}
+          {(() => {
+            const showEquipWarranty = !!(project.equipmentWarrantyEnabled && (project.equipmentWarrantyText ?? "").trim());
+            const showLiveWarranty = !!(project.livestockWarrantyEnabled && (project.livestockWarrantyText ?? "").trim());
+            const hasPackages = !!(project.servicePackages && project.servicePackages.length > 0);
+            if (!showEquipWarranty && !showLiveWarranty && !hasPackages) return null;
+            return (
+              <Section title="باقات الخدمة والضمان">
+                <div className="space-y-4">
+                  {showEquipWarranty && (
+                    <div className="glass-gold rounded-2xl p-5 flex items-start gap-3">
+                      <div className="h-11 w-11 grid place-items-center rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+                        <ShieldCheck size={20} />
                       </div>
-                      <div className="text-sm text-foreground/90 leading-relaxed">
-                        {project.livestockWarranty}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {project.servicePackages && project.servicePackages.length > 0 && (
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-3 flex items-center gap-2">
-                      <Sparkles size={14} className="text-[color:var(--gold)]" />
-                      باقات اختيارية يمكن إضافتها للمشروع:
-                    </div>
-                    <div className="grid gap-2">
-                      {project.servicePackages.map((pkg, i) => (
-                        <div
-                          key={i}
-                          className="glass rounded-xl px-4 py-3 border border-white/10 flex items-start gap-3 text-sm"
-                        >
-                          <ShieldCheck size={16} className="text-[color:var(--gold)] mt-0.5 shrink-0" />
-                          <span className="text-foreground/90 leading-relaxed">{pkg}</span>
+                      <div className="flex-1">
+                        <div className="text-xs font-bold text-[color:var(--gold)] mb-1">
+                          ضمان المعدات (مشمول)
                         </div>
-                      ))}
+                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                          {project.equipmentWarrantyText}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </Section>
-          )}
+                  )}
+
+                  {showLiveWarranty && (
+                    <div className="glass-gold rounded-2xl p-5 flex items-start gap-3">
+                      <div className="h-11 w-11 grid place-items-center rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--gold)] shrink-0">
+                        <Heart size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-bold text-[color:var(--gold)] mb-1">
+                          ضمان الكائنات الحية (مشمول)
+                        </div>
+                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                          {project.livestockWarrantyText}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {hasPackages && (
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-3 flex items-center gap-2">
+                        <Sparkles size={14} className="text-[color:var(--gold)]" />
+                        باقات اختيارية يمكن إضافتها للمشروع:
+                      </div>
+                      <div className="grid gap-2">
+                        {project.servicePackages!.map((pkg, i) => (
+                          <div
+                            key={i}
+                            className="glass rounded-xl px-4 py-3 border border-white/10 flex items-start gap-3 text-sm"
+                          >
+                            <ShieldCheck size={16} className="text-[color:var(--gold)] mt-0.5 shrink-0" />
+                            <span className="text-foreground/90 leading-relaxed">{pkg}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Section>
+            );
+          })()}
 
 
           {/* Suggested Fish */}

@@ -541,6 +541,8 @@ export type Database = {
           description: string | null
           duration: string | null
           equipment: Json
+          equipment_warranty_enabled: boolean
+          equipment_warranty_text: string | null
           featured: boolean
           featured_on_home: boolean
           height_cm: number | null
@@ -550,6 +552,8 @@ export type Database = {
           images: string[]
           length_cm: number | null
           livestock_warranty: string | null
+          livestock_warranty_enabled: boolean
+          livestock_warranty_text: string | null
           location: string | null
           price_max: number | null
           price_min: number | null
@@ -578,6 +582,8 @@ export type Database = {
           description?: string | null
           duration?: string | null
           equipment?: Json
+          equipment_warranty_enabled?: boolean
+          equipment_warranty_text?: string | null
           featured?: boolean
           featured_on_home?: boolean
           height_cm?: number | null
@@ -587,6 +593,8 @@ export type Database = {
           images?: string[]
           length_cm?: number | null
           livestock_warranty?: string | null
+          livestock_warranty_enabled?: boolean
+          livestock_warranty_text?: string | null
           location?: string | null
           price_max?: number | null
           price_min?: number | null
@@ -615,6 +623,8 @@ export type Database = {
           description?: string | null
           duration?: string | null
           equipment?: Json
+          equipment_warranty_enabled?: boolean
+          equipment_warranty_text?: string | null
           featured?: boolean
           featured_on_home?: boolean
           height_cm?: number | null
@@ -624,6 +634,8 @@ export type Database = {
           images?: string[]
           length_cm?: number | null
           livestock_warranty?: string | null
+          livestock_warranty_enabled?: boolean
+          livestock_warranty_text?: string | null
           location?: string | null
           price_max?: number | null
           price_min?: number | null

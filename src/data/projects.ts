@@ -71,6 +71,10 @@ export type Project = {
   addOns?: string[];
   servicePackages?: string[];
   livestockWarranty?: string;
+  equipmentWarrantyEnabled?: boolean;
+  equipmentWarrantyText?: string;
+  livestockWarrantyEnabled?: boolean;
+  livestockWarrantyText?: string;
   contents: {
     fish: string[];
     plantsOrCorals?: string[];

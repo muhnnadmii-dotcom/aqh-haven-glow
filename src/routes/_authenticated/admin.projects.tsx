@@ -36,6 +36,10 @@ type Project = {
   add_ons: string[] | null;
   service_packages: string[] | null;
   livestock_warranty: string | null;
+  equipment_warranty_enabled: boolean;
+  equipment_warranty_text: string | null;
+  livestock_warranty_enabled: boolean;
+  livestock_warranty_text: string | null;
   contents: { fish?: string[]; plantsOrCorals?: string[]; decor?: string };
   price_min: number | null;
   price_max: number | null;
@@ -73,6 +77,8 @@ const blank: Project = {
   images: [], image_paths: [], cover_path: null,
   specs: { dimensions: "", volumeLiters: "", systemType: "" }, equipment: { filter: "", lighting: "" },
   water_system: [], add_ons: [], service_packages: [], livestock_warranty: "",
+  equipment_warranty_enabled: false, equipment_warranty_text: "",
+  livestock_warranty_enabled: false, livestock_warranty_text: "",
   contents: { fish: [], plantsOrCorals: [], decor: "" },
   price_min: null, price_max: null, price_type: "range",
   length_cm: null, width_cm: null, height_cm: null, volume_liters: null,
@@ -142,10 +148,26 @@ function ProjectsAdmin() {
     const dimensionsStr = (l && w && h) ? `${l} × ${w} × ${h} سم` : (editing.specs.dimensions ?? "");
     const volumeStr = editing.volume_liters != null ? `${editing.volume_liters} لتر` : (editing.specs.volumeLiters ?? "");
     const nextSpecs = { ...editing.specs, dimensions: dimensionsStr, volumeLiters: volumeStr };
+    const cleanList = (a: string[] | null | undefined) =>
+      (a ?? []).map((x) => x.trim()).filter(Boolean);
     const payload = {
       ...editing,
       price_min, price_max,
       specs: nextSpecs,
+      water_system: cleanList(editing.water_system),
+      add_ons: cleanList(editing.add_ons),
+      service_packages: cleanList(editing.service_packages),
+      contents: {
+        ...editing.contents,
+        fish: cleanList(editing.contents?.fish),
+        plantsOrCorals: cleanList(editing.contents?.plantsOrCorals),
+      },
+      equipment_warranty_text: editing.equipment_warranty_enabled
+        ? (editing.equipment_warranty_text ?? "").trim() || null
+        : null,
+      livestock_warranty_text: editing.livestock_warranty_enabled
+        ? (editing.livestock_warranty_text ?? "").trim() || null
+        : null,
       category_label: editing.category_label || catLabel(editing.category),
     };
     const { error } = editing.id
@@ -265,7 +287,8 @@ function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value:
   const set = <K extends keyof Project>(k: K, val: Project[K]) => onChange({ ...v, [k]: val });
   const setSpec = (k: string, val: string) => onChange({ ...v, specs: { ...v.specs, [k]: val } });
   const setEq = (k: string, val: string) => onChange({ ...v, equipment: { ...v.equipment, [k]: val } });
-  const list = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+  // Preserve spaces and empty lines while typing; cleanup happens on save.
+  const list = (s: string) => s.split("\n");
   const joined = (a: string[] | null | undefined) => (a ?? []).join("\n");
 
   return (
@@ -379,7 +402,35 @@ function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value:
         <Field label="نظام المياه (سطر لكل عنصر)" full><textarea rows={3} className={ta} value={joined(v.water_system)} onChange={(e) => set("water_system", list(e.target.value))} /></Field>
         <Field label="إضافات (سطر لكل عنصر)" full><textarea rows={3} className={ta} value={joined(v.add_ons)} onChange={(e) => set("add_ons", list(e.target.value))} /></Field>
         <Field label="باقات الخدمة (سطر لكل عنصر)" full><textarea rows={3} className={ta} value={joined(v.service_packages)} onChange={(e) => set("service_packages", list(e.target.value))} /></Field>
-        <Field label="ضمان الكائنات الحية"><input className={inp} value={v.livestock_warranty ?? ""} onChange={(e) => set("livestock_warranty", e.target.value)} /></Field>
+      </Section>
+
+      <Section title="الضمانات">
+        <Field label="ضمان المعدات" full>
+          <label className="flex items-center gap-2 text-sm mb-2">
+            <input type="checkbox" checked={v.equipment_warranty_enabled}
+              onChange={(e) => set("equipment_warranty_enabled", e.target.checked)} />
+            يشمل ضمان المعدات
+          </label>
+          {v.equipment_warranty_enabled && (
+            <textarea rows={3} className={ta}
+              placeholder="اكتب تفاصيل ضمان المعدات..."
+              value={v.equipment_warranty_text ?? ""}
+              onChange={(e) => set("equipment_warranty_text", e.target.value)} />
+          )}
+        </Field>
+        <Field label="ضمان الكائنات الحية" full>
+          <label className="flex items-center gap-2 text-sm mb-2">
+            <input type="checkbox" checked={v.livestock_warranty_enabled}
+              onChange={(e) => set("livestock_warranty_enabled", e.target.checked)} />
+            يشمل ضمان الكائنات الحية
+          </label>
+          {v.livestock_warranty_enabled && (
+            <textarea rows={3} className={ta}
+              placeholder="اكتب تفاصيل ضمان الكائنات الحية..."
+              value={v.livestock_warranty_text ?? ""}
+              onChange={(e) => set("livestock_warranty_text", e.target.value)} />
+          )}
+        </Field>
       </Section>
 
       <Section title="المحتويات">
