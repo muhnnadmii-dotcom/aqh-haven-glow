@@ -168,20 +168,29 @@ function HomePage() {
           <div className="light-rays" aria-hidden />
           <Bubbles count={22} />
 
-          <div className="relative mx-auto max-w-7xl px-6 py-20 text-center">
+          <div className="relative mx-auto max-w-7xl px-5 py-16 sm:py-20 text-center">
             <Reveal delay={120}>
-              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold leading-[1.05] mb-6 tracking-tight">
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] mb-5 tracking-tight">
                 <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
-                  {hero?.title ?? "عالمك المائي"}
+                  {hero?.title || "عالمك المائي يبدأ من هنا"}
                 </span>
                 {hero?.subtitle && (<><br /><span className="text-foreground/95">{hero.subtitle}</span></>)}
               </h1>
             </Reveal>
-            {hero?.description && (
-              <Reveal delay={240}>
-                <p className="mx-auto max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed mb-10">{hero.description}</p>
-              </Reveal>
-            )}
+            <Reveal delay={240}>
+              <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed mb-8 sm:mb-10 px-2">
+                {hero?.description || "نصمم وننفذ أحواض مائية مخصصة للمنازل، المكاتب، الكافيهات والمشاريع التجارية بعناية احترافية من الفكرة حتى التشغيل."}
+              </p>
+            </Reveal>
+            <Reveal delay={360}>
+              <div className="flex flex-wrap justify-center gap-3 mb-10 sm:mb-12">
+                <CTAButton href={hero?.primary_cta_href || "/contact"} variant="gold">{hero?.primary_cta_label || "اطلب مشروعك"}</CTAButton>
+                <CTAButton href={hero?.secondary_cta_href || "/portfolio"} variant="outline">{hero?.secondary_cta_label || "شاهد أعمالنا"}</CTAButton>
+                <CTAButton href={whatsappLink()} variant="outline">
+                  <MessageCircle size={16} className="ml-1" /> واتساب
+                </CTAButton>
+              </div>
+            </Reveal>
             <Reveal delay={360}>
               <div className="flex flex-wrap justify-center gap-3 mb-12">
                 {hero?.primary_cta_label && (
