@@ -36,6 +36,10 @@ type Project = {
   add_ons: string[] | null;
   service_packages: string[] | null;
   livestock_warranty: string | null;
+  equipment_warranty_enabled: boolean;
+  equipment_warranty_text: string | null;
+  livestock_warranty_enabled: boolean;
+  livestock_warranty_text: string | null;
   contents: { fish?: string[]; plantsOrCorals?: string[]; decor?: string };
   price_min: number | null;
   price_max: number | null;
