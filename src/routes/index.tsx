@@ -191,16 +191,6 @@ function HomePage() {
                 </CTAButton>
               </div>
             </Reveal>
-            <Reveal delay={360}>
-              <div className="flex flex-wrap justify-center gap-3 mb-12">
-                {hero?.primary_cta_label && (
-                  <CTAButton href={hero.primary_cta_href} variant="gold">{hero.primary_cta_label}</CTAButton>
-                )}
-                {hero?.secondary_cta_label && (
-                  <CTAButton href={hero.secondary_cta_href} variant="outline">{hero.secondary_cta_label}</CTAButton>
-                )}
-              </div>
-            </Reveal>
             {heroStats.length > 0 && (
               <Reveal delay={480}>
                 <div className={`grid gap-4 max-w-2xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
