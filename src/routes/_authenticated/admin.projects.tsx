@@ -389,8 +389,47 @@ function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value:
       </Section>
 
       <Section title="السعر">
-        <Field label="من (ريال)"><input type="number" className={inp} value={v.price_min ?? ""} onChange={(e) => set("price_min", e.target.value ? Number(e.target.value) : null)} /></Field>
-        <Field label="إلى (ريال)"><input type="number" className={inp} value={v.price_max ?? ""} onChange={(e) => set("price_max", e.target.value ? Number(e.target.value) : null)} /></Field>
+        <Field label="نوع السعر" full>
+          <select className={inp} value={v.price_type}
+            onChange={(e) => set("price_type", e.target.value as PriceType)}>
+            <option value="fixed">سعر ثابت</option>
+            <option value="from">سعر يبدأ من</option>
+            <option value="range">سعر من إلى</option>
+            <option value="on_request">حسب المعاينة</option>
+            <option value="hidden">مخفي (لا يظهر للزائر)</option>
+          </select>
+        </Field>
+        {v.price_type === "fixed" && (
+          <Field label="السعر (ريال)">
+            <input type="number" min={0} className={inp} value={v.price_min ?? ""}
+              onChange={(e) => set("price_min", e.target.value ? Number(e.target.value) : null)} />
+          </Field>
+        )}
+        {v.price_type === "from" && (
+          <Field label="السعر الابتدائي (ريال)">
+            <input type="number" min={0} className={inp} value={v.price_min ?? ""}
+              onChange={(e) => set("price_min", e.target.value ? Number(e.target.value) : null)} />
+          </Field>
+        )}
+        {v.price_type === "range" && (
+          <>
+            <Field label="من (ريال)">
+              <input type="number" min={0} className={inp} value={v.price_min ?? ""}
+                onChange={(e) => set("price_min", e.target.value ? Number(e.target.value) : null)} />
+            </Field>
+            <Field label="إلى (ريال)">
+              <input type="number" min={0} className={inp} value={v.price_max ?? ""}
+                onChange={(e) => set("price_max", e.target.value ? Number(e.target.value) : null)} />
+            </Field>
+          </>
+        )}
+        {(v.price_type === "on_request" || v.price_type === "hidden") && (
+          <Field label="ملاحظة" full>
+            <div className="text-xs text-muted-foreground glass rounded-xl px-3 py-2">
+              {v.price_type === "on_request" ? "سيظهر للزائر: «السعر حسب المعاينة»" : "لن يظهر أي سعر للزائر."}
+            </div>
+          </Field>
+        )}
       </Section>
 
       <div className="flex justify-end gap-2 pt-2">
