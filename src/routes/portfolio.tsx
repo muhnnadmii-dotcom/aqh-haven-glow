@@ -224,11 +224,14 @@ function PortfolioPage() {
                     <Sparkles size={12} /> مميّز
                   </div>
                 )}
-                {(p.priceRange?.min || p.priceRange?.max) ? (
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-background/70 backdrop-blur">
-                    {formatPriceFrom(p.priceRange)}
-                  </div>
-                ) : null}
+                {(() => {
+                  const label = formatPriceFrom(p.priceRange, p.priceType);
+                  return label ? (
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-background/70 backdrop-blur">
+                      {label}
+                    </div>
+                  ) : null;
+                })()}
 
                 <div className="absolute bottom-0 right-0 left-0 p-5">
                   <div className="text-xs text-gradient-gold mb-1">{p.catLabel}</div>
