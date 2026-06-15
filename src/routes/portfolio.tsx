@@ -57,12 +57,20 @@ export const Route = createFileRoute("/portfolio")({
     links: [{ rel: "canonical", href: "/portfolio" }],
   }),
   loader: async () => {
-    const { data } = await supabase.from("projects").select("*").eq("published", true)
-      .order("sort_order").order("created_at", { ascending: false });
-    return { projects: ((data ?? []) as any[]).map(adapt) };
+    const [{ data: projects }, { data: cats }] = await Promise.all([
+      supabase.from("projects").select("*").eq("published", true)
+        .order("sort_order").order("created_at", { ascending: false }),
+      (supabase as any).from("project_categories").select("slug,label,sort_order,published")
+        .eq("published", true).order("sort_order").order("label"),
+    ]);
+    return {
+      projects: ((projects ?? []) as any[]).map(adapt),
+      categories: ((cats ?? []) as { slug: string; label: string }[]),
+    };
   },
   component: PortfolioPage,
 });
+
 
 type Cat = string;
 
