@@ -288,37 +288,48 @@ function HomePage() {
         </section>
       )}
 
-      {/* SERVICES */}
-      {servicesEnabled && serviceItems.length > 0 && (
+      {/* SERVICES — sourced from DB (services table, is_featured) */}
+      {servicesEnabled && dbServices.length > 0 && (
         <section className="relative py-24">
           <div className="mx-auto max-w-7xl px-6">
             <Reveal>
               <div className="text-center mb-14">
-                {services?.kicker && <div className="text-xs text-gradient-gold mb-3" style={{ letterSpacing: "0.3em" }}>{services.kicker}</div>}
+                <div className="text-xs text-gradient-gold mb-3" style={{ letterSpacing: "0.3em" }}>{services?.kicker ?? "SERVICES"}</div>
                 <h2 className="text-3xl sm:text-4xl font-bold">{services?.heading ?? "ماذا نقدم"}</h2>
-                {services?.description && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{services.description}</p>}
+                <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{services?.description ?? "حلول متكاملة لكل من يطمح لعالم مائي استثنائي."}</p>
               </div>
             </Reveal>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {serviceItems.map((s, i) => {
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {dbServices.map((s, i) => {
                 const Icon = s.icon ? ICONS[s.icon] : null;
-                const img = s.image_path ? publicUrl(s.image_path) : serviceFallbacks[i % serviceFallbacks.length];
+                const img = getImageUrl(s.image_path);
+                const href = s.linked_page_type === "existing_page" && s.linked_page_url
+                  ? s.linked_page_url
+                  : s.linked_page_type === "external_link" && s.linked_page_url
+                  ? s.linked_page_url
+                  : s.linked_page_type === "whatsapp"
+                  ? whatsappLink(`السلام عليكم، أرغب بالاستفسار عن خدمة: ${s.title}`)
+                  : `/services/${s.slug}`;
                 return (
                   <Reveal key={s.id} delay={i * 100}>
-                    <SmartLink to={s.href} className="group block h-full rounded-2xl glass overflow-hidden hover:-translate-y-1 transition-transform duration-500">
-                      <div className="relative h-44 overflow-hidden">
-                        <img src={img} alt={s.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" width={800} height={600} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                    <SmartLink to={href} className="group block h-full rounded-2xl glass overflow-hidden hover:-translate-y-1 transition-transform duration-500 flex flex-col">
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        <img src={img} alt={s.title} onError={onImageError} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent" />
                         {Icon && (
                           <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
                             <Icon className="text-gold" size={18} aria-hidden />
                           </div>
                         )}
                       </div>
-                      <div className="p-5">
+                      <div className="p-5 flex flex-col flex-1">
                         <h3 className="text-lg font-bold mb-2">{s.title}</h3>
-                        {s.desc && <p className="text-sm text-muted-foreground leading-relaxed mb-3">{s.desc}</p>}
-                        <span className="inline-flex items-center gap-1 text-xs text-gradient-gold">
+                        {(s.short_description || s.description) && (
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-3 line-clamp-3 flex-1">
+                            {s.short_description || s.description}
+                          </p>
+                        )}
+                        <span className="inline-flex items-center gap-1 text-xs text-gradient-gold mt-auto">
                           اكتشف المزيد <ArrowLeft size={12} aria-hidden />
                         </span>
                       </div>
