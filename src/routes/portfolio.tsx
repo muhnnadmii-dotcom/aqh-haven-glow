@@ -175,14 +175,14 @@ function PortfolioPage() {
         {filtered.map((p, i) => (
           <Reveal key={p.slug} delay={i * 80}>
             <button onClick={() => setOpen(p)} className="group block w-full text-right">
-              <div className="relative overflow-hidden rounded-2xl glass">
+              <div className="relative overflow-hidden rounded-2xl glass aspect-square">
                 <img
                   src={p.cover}
                   alt={p.title}
                   width={1024}
-                  height={768}
+                  height={1024}
                   loading="lazy"
-                  className="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
 

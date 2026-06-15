@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Search, Eye, EyeOff, Home as HomeIcon } from "lucide-react";
-import { MultiImageUploader } from "@/components/ImageUploader";
-import { publicUrl } from "@/lib/storage";
+import { Plus, Trash2, Save, Search, Eye, EyeOff, Home as HomeIcon, Upload, Loader2, Star, X as XIcon } from "lucide-react";
+import { publicUrl, uploadMedia, deleteMedia, onImageError } from "@/lib/storage";
+
 
 export const Route = createFileRoute("/_authenticated/admin/projects")({
   component: ProjectsAdmin,
@@ -247,15 +247,10 @@ function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; on
 
       <Section title="الصور">
         <div className="sm:col-span-2">
-          <MultiImageUploader
-            values={v.image_paths ?? []}
-            cover={v.cover_path}
-            onChange={(values, cover) => onChange({ ...v, image_paths: values, cover_path: cover })}
-            folder={`projects/${v.slug || "new"}`}
-          />
+          <ProjectImagesManager value={v} onChange={onChange} />
         </div>
-        <Field label="رابط صورة خارجي (اختياري)"><input dir="ltr" className={inp} value={v.cover ?? ""} onChange={(e) => set("cover", e.target.value)} placeholder="https://..." /></Field>
       </Section>
+
 
       <Section title="المواصفات">
         <Field label="الأبعاد"><input className={inp} value={v.specs.dimensions ?? ""} onChange={(e) => setSpec("dimensions", e.target.value)} /></Field>
@@ -322,3 +317,133 @@ function Field({ label, children, full }: { label: string; children: React.React
     </label>
   );
 }
+
+function ProjectImagesManager({ value, onChange }: { value: Project; onChange: (v: Project) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+
+  const paths = value.image_paths ?? [];
+  const urls = value.images ?? [];
+  const coverPath = value.cover_path ?? null;
+  const coverUrl = value.cover ?? "";
+
+  const isCoverPath = (p: string) => coverPath === p;
+  const isCoverUrl = (u: string) => !coverPath && coverUrl === u;
+
+  const addFiles = async (files: FileList) => {
+    setBusy(true);
+    try {
+      const added: string[] = [];
+      for (const f of Array.from(files)) {
+        const p = await uploadMedia(f, `projects/${value.slug || "new"}`);
+        added.push(p);
+      }
+      const nextPaths = [...paths, ...added];
+      const nextCoverPath = coverPath ?? (coverUrl ? null : added[0] ?? null);
+      onChange({ ...value, image_paths: nextPaths, cover_path: nextCoverPath });
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذر الرفع");
+    } finally { setBusy(false); }
+  };
+
+  const removePath = async (p: string) => {
+    if (!confirm("حذف هذه الصورة نهائيًا؟")) return;
+    deleteMedia(p).catch(() => {});
+    const next = paths.filter((x) => x !== p);
+    const nextCover = coverPath === p ? (next[0] ?? null) : coverPath;
+    onChange({ ...value, image_paths: next, cover_path: nextCover });
+  };
+
+  const removeUrl = (u: string) => {
+    if (!confirm("حذف هذه الصورة من القائمة؟ (لن يتم حذف الملف الأصلي)")) return;
+    const next = urls.filter((x) => x !== u);
+    const nextCoverUrl = coverUrl === u ? "" : coverUrl;
+    onChange({ ...value, images: next, cover: nextCoverUrl });
+  };
+
+  const setCoverFromPath = (p: string) => {
+    onChange({ ...value, cover_path: p, cover: "" });
+  };
+  const setCoverFromUrl = (u: string) => {
+    onChange({ ...value, cover_path: null, cover: u });
+  };
+
+  const addUrl = () => {
+    const u = urlInput.trim();
+    if (!u) return;
+    if (!/^https?:\/\//i.test(u)) { toast.error("الرابط يجب أن يبدأ بـ http(s)://"); return; }
+    if (urls.includes(u)) { toast.error("الرابط موجود مسبقًا"); return; }
+    const next = [...urls, u];
+    onChange({ ...value, images: next, cover: coverUrl || (!coverPath ? u : "") });
+    setUrlInput("");
+  };
+
+  const total = paths.length + urls.length;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <button type="button" disabled={busy} onClick={() => ref.current?.click()}
+          className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-white/10 disabled:opacity-50">
+          {busy ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+          {busy ? "جاري الرفع..." : "أضف صور"}
+        </button>
+        <input ref={ref} type="file" accept="image/*" multiple className="hidden"
+          onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = ""; }} />
+        <span className="text-xs text-muted-foreground">{total} صورة</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input dir="ltr" className={inp} value={urlInput} onChange={(e) => setUrlInput(e.target.value)}
+          placeholder="رابط صورة خارجي https://..." />
+        <button type="button" onClick={addUrl} className="glass rounded-xl px-3 py-2 text-sm hover:bg-white/10 shrink-0">
+          أضف رابط
+        </button>
+      </div>
+
+      {total === 0 ? (
+        <div className="rounded-xl border border-dashed border-white/15 p-6 text-center text-xs text-muted-foreground">
+          لا توجد صور بعد. ارفع صورًا جديدة أو أضف روابط خارجية.
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          {paths.map((p) => (
+            <ImageTile key={`p:${p}`} src={publicUrl(p)} isCover={isCoverPath(p)} kind="new"
+              onCover={() => setCoverFromPath(p)} onRemove={() => removePath(p)} />
+          ))}
+          {urls.map((u) => (
+            <ImageTile key={`u:${u}`} src={u} isCover={isCoverUrl(u)} kind="old"
+              onCover={() => setCoverFromUrl(u)} onRemove={() => removeUrl(u)} />
+          ))}
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        انقر النجمة لاختيار الصورة الرئيسية. اضغط ✕ للحذف. شارة «قديم» تعني صورة بالرابط، و«جديد» تعني صورة مرفوعة.
+      </p>
+    </div>
+  );
+}
+
+function ImageTile({ src, isCover, kind, onCover, onRemove }: {
+  src: string; isCover: boolean; kind: "new" | "old"; onCover: () => void; onRemove: () => void;
+}) {
+  return (
+    <div className={`relative aspect-square rounded-xl overflow-hidden border-2 ${isCover ? "border-gold" : "border-white/10"}`}>
+      <img src={src} alt="" loading="lazy" onError={onImageError} className="h-full w-full object-cover" />
+      <span className={`absolute bottom-1 right-1 text-[9px] px-1.5 py-0.5 rounded-full ${kind === "old" ? "bg-amber-500/80 text-black" : "bg-emerald-500/80 text-black"}`}>
+        {kind === "old" ? "قديم" : "جديد"}
+      </span>
+      <button type="button" onClick={onCover} title="اجعلها الرئيسية"
+        className="absolute top-1 right-1 bg-black/70 rounded-full p-1 text-gold hover:bg-gold hover:text-black">
+        <Star size={12} fill={isCover ? "currentColor" : "none"} />
+      </button>
+      <button type="button" onClick={onRemove} title="حذف"
+        className="absolute top-1 left-1 bg-black/70 rounded-full p-1 text-white hover:bg-red-500">
+        <XIcon size={12} />
+      </button>
+    </div>
+  );
+}
+
