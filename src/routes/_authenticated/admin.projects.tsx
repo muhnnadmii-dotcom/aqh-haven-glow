@@ -247,15 +247,10 @@ function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; on
 
       <Section title="الصور">
         <div className="sm:col-span-2">
-          <MultiImageUploader
-            values={v.image_paths ?? []}
-            cover={v.cover_path}
-            onChange={(values, cover) => onChange({ ...v, image_paths: values, cover_path: cover })}
-            folder={`projects/${v.slug || "new"}`}
-          />
+          <ProjectImagesManager value={v} onChange={onChange} />
         </div>
-        <Field label="رابط صورة خارجي (اختياري)"><input dir="ltr" className={inp} value={v.cover ?? ""} onChange={(e) => set("cover", e.target.value)} placeholder="https://..." /></Field>
       </Section>
+
 
       <Section title="المواصفات">
         <Field label="الأبعاد"><input className={inp} value={v.specs.dimensions ?? ""} onChange={(e) => setSpec("dimensions", e.target.value)} /></Field>
