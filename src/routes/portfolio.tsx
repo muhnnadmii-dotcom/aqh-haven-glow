@@ -88,6 +88,14 @@ function adapt(r: any): Project {
   }
   const cover = publicUrl(r.cover_path) || r.cover || imgs[0] || "";
   if (imgs.length === 0 && cover) imgs.push(cover);
+  // Prefer new structured columns, fall back to legacy specs jsonb
+  const specs = { ...(r.specs ?? {}) };
+  if (r.length_cm && r.width_cm && r.height_cm) {
+    specs.dimensions = `${r.length_cm} × ${r.width_cm} × ${r.height_cm} سم`;
+  }
+  if (r.volume_liters != null) {
+    specs.volumeLiters = `${r.volume_liters} لتر`;
+  }
   return {
     id: r.sort_order ?? 0,
     slug: r.slug,
@@ -100,14 +108,15 @@ function adapt(r: any): Project {
     cover,
     images: imgs,
     description: r.description ?? "",
-    specs: r.specs ?? {},
+    specs,
     equipment: r.equipment ?? {},
     waterSystem: r.water_system ?? undefined,
     addOns: r.add_ons ?? undefined,
     servicePackages: r.service_packages ?? undefined,
     livestockWarranty: r.livestock_warranty ?? undefined,
     contents: { fish: [], plantsOrCorals: [], decor: "", ...(r.contents ?? {}) },
-    priceRange: { min: r.price_min ?? 0, max: r.price_max ?? 0 },
+    priceRange: { min: r.price_min ?? 0, max: r.price_max ?? 0, currency: "SAR" },
+    priceType: (r.price_type ?? undefined) as Project["priceType"],
   } as Project;
 }
 
