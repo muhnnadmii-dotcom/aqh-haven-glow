@@ -199,7 +199,7 @@ function HomePage() {
             </Reveal>
             {heroStats.length > 0 && (
               <Reveal delay={480}>
-                <div className={`grid gap-4 max-w-2xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                <div className={`grid gap-3 sm:gap-4 max-w-3xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
                   {heroStats.map((s) => (
                     <div key={s.id} className="glass rounded-2xl p-4">
                       <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
