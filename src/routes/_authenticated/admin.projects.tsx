@@ -77,6 +77,8 @@ const blank: Project = {
   images: [], image_paths: [], cover_path: null,
   specs: { dimensions: "", volumeLiters: "", systemType: "" }, equipment: { filter: "", lighting: "" },
   water_system: [], add_ons: [], service_packages: [], livestock_warranty: "",
+  equipment_warranty_enabled: false, equipment_warranty_text: "",
+  livestock_warranty_enabled: false, livestock_warranty_text: "",
   contents: { fish: [], plantsOrCorals: [], decor: "" },
   price_min: null, price_max: null, price_type: "range",
   length_cm: null, width_cm: null, height_cm: null, volume_liters: null,
