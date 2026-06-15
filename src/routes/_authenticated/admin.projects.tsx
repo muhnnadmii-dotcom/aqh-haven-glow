@@ -40,7 +40,10 @@ type Project = {
   sort_order: number;
 };
 
-const CATEGORIES: { value: string; label: string }[] = [
+type CategoryOpt = { value: string; label: string };
+
+// Fallback used only until categories load from DB; the DB list is the source of truth.
+const FALLBACK_CATEGORIES: CategoryOpt[] = [
   { value: "planted", label: "نباتي" },
   { value: "marine", label: "بحري" },
   { value: "betta", label: "فايتر" },
@@ -52,7 +55,9 @@ const CATEGORIES: { value: string; label: string }[] = [
   { value: "entrance", label: "مدخل" },
   { value: "commercial", label: "تجاري" },
 ];
-const catLabel = (v: string) => CATEGORIES.find((c) => c.value === v)?.label ?? v;
+const catLabelFrom = (cats: CategoryOpt[], v: string) =>
+  cats.find((c) => c.value === v)?.label ?? v;
+
 
 const blank: Project = {
   slug: "", title: "", category: "planted", category_label: "نباتي",
