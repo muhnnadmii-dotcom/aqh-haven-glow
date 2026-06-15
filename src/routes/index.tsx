@@ -147,7 +147,13 @@ function HomePage() {
   const showTestimonials = testHeadEnabled && homeTestEnabled && testimonials.length > 0;
 
 
-  const heroStats = (hero?.stats ?? []).filter((s) => s && s.label);
+  const configuredStats = (hero?.stats ?? []).filter((s) => s && s.label);
+  const heroStats = configuredStats.length > 0 ? configuredStats : [
+    { id: "s1", value: 250, suffix: "+", label: "عميل سعيد" },
+    { id: "s2", value: 9, suffix: "+", label: "سنوات خبرة" },
+    { id: "s3", value: 180, suffix: "+", label: "مشروع منفذ" },
+    { id: "s4", value: 98, suffix: "%", label: "رضا العملاء" },
+  ];
   const partnersC = sections.partners?.content;
   const partnersEnabled = sections.partners?.enabled ?? true;
   const partnerItems = (partnersC?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
