@@ -43,6 +43,26 @@ export const Route = createFileRoute("/")({
     ],
     links: [{ rel: "canonical", href: "/" }],
   }),
+  loader: async () => {
+    const [sectionsRes, articlesRes, projectsRes, servicesRes] = await Promise.all([
+      supabase.from("home_sections").select("section_key, enabled, content").in("section_key", SECTION_KEYS),
+      supabase.from("articles").select("slug, title, excerpt, cover_path")
+        .eq("published", true).eq("visible", true).eq("featured_on_home", true)
+        .order("home_order", { ascending: true }).limit(3),
+      supabase.from("projects").select("slug, title, category_label, location, description, cover_path, cover, specs")
+        .eq("published", true).order("featured", { ascending: false }).order("sort_order", { ascending: true }).limit(6),
+      supabase.from("services").select("id, slug, title, short_description, description, image_path, icon, linked_page_type, linked_page_url")
+        .eq("published", true).eq("is_featured", true).order("sort_order").limit(6),
+    ]);
+    const m: any = { ...EMPTY_SECTIONS };
+    (sectionsRes.data ?? []).forEach((r: any) => { m[r.section_key] = { enabled: r.enabled, content: r.content }; });
+    return {
+      sections: m as Sections,
+      articles: (articlesRes.data ?? []) as unknown as FeaturedArticle[],
+      projects: (projectsRes.data ?? []) as unknown as FeaturedProject[],
+      dbServices: (servicesRes.data ?? []) as unknown as FeaturedService[],
+    };
+  },
   component: HomePage,
 });
 
@@ -79,37 +99,12 @@ const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq",
 
 
 function HomePage() {
+  const initial = Route.useLoaderData();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [sections, setSections] = useState<Sections>(EMPTY_SECTIONS);
-  const [articles, setArticles] = useState<FeaturedArticle[]>([]);
-  const [projects, setProjects] = useState<FeaturedProject[]>([]);
-  const [dbServices, setDbServices] = useState<FeaturedService[]>([]);
-
-  useEffect(() => {
-    let alive = true;
-    supabase.from("home_sections").select("section_key, enabled, content")
-      .in("section_key", SECTION_KEYS)
-      .then(({ data }) => {
-        if (!alive) return;
-        const m: any = { ...EMPTY_SECTIONS };
-        (data ?? []).forEach((r: any) => { m[r.section_key] = { enabled: r.enabled, content: r.content }; });
-        setSections(m);
-      });
-    supabase.from("articles").select("slug, title, excerpt, cover_path")
-      .eq("published", true).eq("visible", true).eq("featured_on_home", true)
-      .order("home_order", { ascending: true }).limit(3)
-      .then(({ data }) => { if (alive) setArticles((data ?? []) as unknown as FeaturedArticle[]); });
-    supabase.from("projects").select("slug, title, category_label, location, description, cover_path, cover, specs")
-      .eq("published", true)
-      .order("featured", { ascending: false })
-      .order("sort_order", { ascending: true })
-      .limit(6)
-      .then(({ data }) => { if (alive) setProjects((data ?? []) as unknown as FeaturedProject[]); });
-    supabase.from("services").select("id, slug, title, short_description, description, image_path, icon, linked_page_type, linked_page_url")
-      .eq("published", true).eq("is_featured", true).order("sort_order").limit(6)
-      .then(({ data }) => { if (alive) setDbServices(((data ?? []) as any[]) as FeaturedService[]); });
-    return () => { alive = false; };
-  }, []);
+  const sections = initial.sections;
+  const articles = initial.articles;
+  const projects = initial.projects;
+  const dbServices = initial.dbServices;
 
 
 
