@@ -55,7 +55,7 @@ function KnowledgePage() {
         </div>
       </Reveal>
 
-      {loading && <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-gold" /></div>}
+      {loading && <div className="flex items-center justify-center py-12" />}
       {error && <div className="text-center text-red-400 py-8">حدث خطأ: {error}</div>}
       {!loading && !error && list.length === 0 && (
         <div className="text-center text-muted-foreground py-12">لا توجد مقالات حالياً.</div>
