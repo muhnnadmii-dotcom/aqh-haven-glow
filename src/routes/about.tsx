@@ -1,8 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { Reveal } from "../components/Reveal";
 import { Bubbles } from "../components/Bubbles";
-import { Loader2 } from "lucide-react";
 import consultationTankAsset from "../assets/aqh-consultation-tank.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
@@ -22,28 +20,15 @@ export const Route = createFileRoute("/about")({
     ],
     links: [{ rel: "canonical", href: "/about" }],
   }),
+  loader: async () => {
+    const { data } = await supabase.from("site_pages").select("content").eq("page_key", "about").maybeSingle();
+    return { content: ((data?.content as unknown) as AboutContent | null) ?? null };
+  },
   component: AboutPage,
 });
 
 function AboutPage() {
-  const [c, setC] = useState<AboutContent | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    supabase.from("site_pages").select("content").eq("page_key", "about").maybeSingle()
-      .then(({ data, error }) => {
-        if (!alive) return;
-        if (error) setError(error.message);
-        else setC((data?.content as unknown as AboutContent) ?? null);
-        setLoading(false);
-      });
-    return () => { alive = false; };
-  }, []);
-
-  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-gold" /></div>;
-  if (error) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-red-400">حدث خطأ: {error}</div>;
+  const c = Route.useLoaderData().content as AboutContent | null;
   if (!c) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-muted-foreground">لا يوجد محتوى بعد.</div>;
 
   const heroImg = c.hero.image_path ? publicUrl(c.hero.image_path) : heroFallback;

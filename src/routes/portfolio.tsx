@@ -56,6 +56,11 @@ export const Route = createFileRoute("/portfolio")({
     ],
     links: [{ rel: "canonical", href: "/portfolio" }],
   }),
+  loader: async () => {
+    const { data } = await supabase.from("projects").select("*").eq("published", true)
+      .order("sort_order").order("created_at", { ascending: false });
+    return { projects: ((data ?? []) as any[]).map(adapt) };
+  },
   component: PortfolioPage,
 });
 
@@ -99,24 +104,12 @@ function adapt(r: any): Project {
 }
 
 function PortfolioPage() {
+  const initial = Route.useLoaderData();
   const [cat, setCat] = useState<Cat>("all");
   const [open, setOpen] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    supabase.from("projects").select("*").eq("published", true)
-      .order("sort_order").order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (!alive) return;
-        if (error) setError(error.message);
-        setProjects(((data ?? []) as any[]).map(adapt));
-        setLoading(false);
-      });
-    return () => { alive = false; };
-  }, []);
+  const projects = initial.projects as Project[];
+  const loading = false;
+  const error: string | null = null;
 
   const tabs = useMemo(() => {
     const seen = new Map<string, string>();

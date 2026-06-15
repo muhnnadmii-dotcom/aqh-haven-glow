@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
@@ -18,6 +18,14 @@ export const Route = createFileRoute("/services/")({
     ],
     links: [{ rel: "canonical", href: "/services" }],
   }),
+  loader: async () => {
+    const { data } = await supabase.from("services").select("*").eq("published", true).order("sort_order");
+    const list = ((data ?? []) as any[]).map((r) => ({
+      ...r,
+      features: Array.isArray(r.features) ? r.features : [],
+    })) as Svc[];
+    return { list };
+  },
   component: ServicesIndex,
 });
 
@@ -72,17 +80,8 @@ const processSteps = [
 ];
 
 function ServicesIndex() {
-  const [list, setList] = useState<Svc[] | null>(null);
+  const list = Route.useLoaderData().list as Svc[];
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-
-  useEffect(() => {
-    supabase.from("services").select("*").eq("published", true).order("sort_order").then(({ data }) => {
-      setList(((data ?? []) as any[]).map((r) => ({
-        ...r,
-        features: Array.isArray(r.features) ? r.features : [],
-      })) as Svc[]);
-    });
-  }, []);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
@@ -97,11 +96,7 @@ function ServicesIndex() {
       </Reveal>
 
       {/* Cards */}
-      {list === null ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-16">
-          {[1,2,3,4,5,6].map(i => <div key={i} className="glass rounded-2xl h-96 animate-pulse" />)}
-        </div>
-      ) : list.length === 0 ? null : (
+      {list.length === 0 ? null : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-20 items-stretch">
           {list.map((s, i) => {
             const link = resolveHref(s);

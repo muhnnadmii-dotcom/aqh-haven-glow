@@ -1,12 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { Reveal } from "../components/Reveal";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
 
 const fallbackImg = styledAquariumAsset.url;
+
+type ArticleRow = {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  cover_path: string | null;
+  category: string | null;
+  tags: string[];
+  published_at: string | null;
+};
 
 export const Route = createFileRoute("/knowledge/")({
   head: () => ({
@@ -19,38 +28,21 @@ export const Route = createFileRoute("/knowledge/")({
     ],
     links: [{ rel: "canonical", href: "/knowledge" }],
   }),
+  loader: async () => {
+    const { data } = await supabase.from("articles")
+      .select("slug, title, excerpt, cover_path, category, tags, published_at")
+      .eq("published", true).eq("visible", true)
+      .order("published_at", { ascending: false });
+    return { list: ((data ?? []) as unknown as ArticleRow[]) };
+  },
   component: KnowledgePage,
 });
 
-type ArticleRow = {
-  slug: string;
-  title: string;
-  excerpt: string | null;
-  cover_path: string | null;
-  category: string | null;
-  tags: string[];
-  published_at: string | null;
-};
-
 function KnowledgePage() {
-  const [list, setList] = useState<ArticleRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    supabase.from("articles")
-      .select("slug, title, excerpt, cover_path, category, tags, published_at")
-      .eq("published", true).eq("visible", true)
-      .order("published_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (!alive) return;
-        if (error) setError(error.message);
-        setList((data ?? []) as unknown as ArticleRow[]);
-        setLoading(false);
-      });
-    return () => { alive = false; };
-  }, []);
+  const data = Route.useLoaderData();
+  const list = data.list as ArticleRow[];
+  const loading = false;
+  const error: string | null = null;
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
@@ -64,7 +56,7 @@ function KnowledgePage() {
         </div>
       </Reveal>
 
-      {loading && <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-gold" /></div>}
+      {loading && <div className="flex items-center justify-center py-12" />}
       {error && <div className="text-center text-red-400 py-8">حدث خطأ: {error}</div>}
       {!loading && !error && list.length === 0 && (
         <div className="text-center text-muted-foreground py-12">لا توجد مقالات حالياً.</div>
