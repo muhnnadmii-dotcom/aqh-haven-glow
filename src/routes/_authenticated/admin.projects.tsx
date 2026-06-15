@@ -386,7 +386,35 @@ function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value:
         <Field label="نظام المياه (سطر لكل عنصر)" full><textarea rows={3} className={ta} value={joined(v.water_system)} onChange={(e) => set("water_system", list(e.target.value))} /></Field>
         <Field label="إضافات (سطر لكل عنصر)" full><textarea rows={3} className={ta} value={joined(v.add_ons)} onChange={(e) => set("add_ons", list(e.target.value))} /></Field>
         <Field label="باقات الخدمة (سطر لكل عنصر)" full><textarea rows={3} className={ta} value={joined(v.service_packages)} onChange={(e) => set("service_packages", list(e.target.value))} /></Field>
-        <Field label="ضمان الكائنات الحية"><input className={inp} value={v.livestock_warranty ?? ""} onChange={(e) => set("livestock_warranty", e.target.value)} /></Field>
+      </Section>
+
+      <Section title="الضمانات">
+        <Field label="ضمان المعدات" full>
+          <label className="flex items-center gap-2 text-sm mb-2">
+            <input type="checkbox" checked={v.equipment_warranty_enabled}
+              onChange={(e) => set("equipment_warranty_enabled", e.target.checked)} />
+            يشمل ضمان المعدات
+          </label>
+          {v.equipment_warranty_enabled && (
+            <textarea rows={3} className={ta}
+              placeholder="اكتب تفاصيل ضمان المعدات..."
+              value={v.equipment_warranty_text ?? ""}
+              onChange={(e) => set("equipment_warranty_text", e.target.value)} />
+          )}
+        </Field>
+        <Field label="ضمان الكائنات الحية" full>
+          <label className="flex items-center gap-2 text-sm mb-2">
+            <input type="checkbox" checked={v.livestock_warranty_enabled}
+              onChange={(e) => set("livestock_warranty_enabled", e.target.checked)} />
+            يشمل ضمان الكائنات الحية
+          </label>
+          {v.livestock_warranty_enabled && (
+            <textarea rows={3} className={ta}
+              placeholder="اكتب تفاصيل ضمان الكائنات الحية..."
+              value={v.livestock_warranty_text ?? ""}
+              onChange={(e) => set("livestock_warranty_text", e.target.value)} />
+          )}
+        </Field>
       </Section>
 
       <Section title="المحتويات">
