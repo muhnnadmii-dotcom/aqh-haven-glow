@@ -148,10 +148,26 @@ function ProjectsAdmin() {
     const dimensionsStr = (l && w && h) ? `${l} × ${w} × ${h} سم` : (editing.specs.dimensions ?? "");
     const volumeStr = editing.volume_liters != null ? `${editing.volume_liters} لتر` : (editing.specs.volumeLiters ?? "");
     const nextSpecs = { ...editing.specs, dimensions: dimensionsStr, volumeLiters: volumeStr };
+    const cleanList = (a: string[] | null | undefined) =>
+      (a ?? []).map((x) => x.trim()).filter(Boolean);
     const payload = {
       ...editing,
       price_min, price_max,
       specs: nextSpecs,
+      water_system: cleanList(editing.water_system),
+      add_ons: cleanList(editing.add_ons),
+      service_packages: cleanList(editing.service_packages),
+      contents: {
+        ...editing.contents,
+        fish: cleanList(editing.contents?.fish),
+        plantsOrCorals: cleanList(editing.contents?.plantsOrCorals),
+      },
+      equipment_warranty_text: editing.equipment_warranty_enabled
+        ? (editing.equipment_warranty_text ?? "").trim() || null
+        : null,
+      livestock_warranty_text: editing.livestock_warranty_enabled
+        ? (editing.livestock_warranty_text ?? "").trim() || null
+        : null,
       category_label: editing.category_label || catLabel(editing.category),
     };
     const { error } = editing.id
