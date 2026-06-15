@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, redirect, notFound } from "@tanstack/react-router";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { Reveal } from "@/components/Reveal";
 import * as Icons from "lucide-react";
-import { ArrowLeft, ArrowRight, CheckCircle2, MessageCircle, ChevronDown } from "lucide-react";
+import { ArrowRight, CheckCircle2, MessageCircle, ChevronDown } from "lucide-react";
 
 type Svc = {
   id: string; slug: string; title: string;
@@ -18,10 +18,7 @@ type Svc = {
   linked_page_type: string; linked_page_url: string | null;
 };
 
-async function fetchService(slug: string): Promise<Svc | null> {
-  const { data } = await supabase.from("services").select("*").eq("slug", slug).eq("published", true).maybeSingle();
-  if (!data) return null;
-  const r: any = data;
+function adapt(r: any): Svc {
   return {
     ...r,
     features: Array.isArray(r.features) ? r.features : [],
@@ -33,13 +30,34 @@ async function fetchService(slug: string): Promise<Svc | null> {
 }
 
 export const Route = createFileRoute("/services/$slug")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `${params.slug} — أكوا هيفن` },
-      { property: "og:url", content: `/services/${params.slug}` },
-    ],
-    links: [{ rel: "canonical", href: `/services/${params.slug}` }],
-  }),
+  loader: async ({ params }) => {
+    const { data } = await supabase.from("services").select("*").eq("slug", params.slug).eq("published", true).maybeSingle();
+    if (!data) throw notFound();
+    const svc = adapt(data);
+    if ((svc.linked_page_type === "existing_page" || svc.linked_page_type === "external_link") && svc.linked_page_url) {
+      throw redirect({ href: svc.linked_page_url });
+    }
+    const { data: relData } = await supabase.from("services").select("*").eq("published", true).neq("id", svc.id).limit(6);
+    const related = ((relData ?? []) as any[])
+      .map(adapt)
+      .filter((r) => !svc.category || r.category === svc.category || r.linked_page_type === "custom_service_page")
+      .slice(0, 3);
+    return { svc, related };
+  },
+  head: ({ params, loaderData }) => {
+    const t = loaderData?.svc?.meta_title || loaderData?.svc?.title || params.slug;
+    const d = loaderData?.svc?.meta_description || loaderData?.svc?.short_description || "";
+    return {
+      meta: [
+        { title: `${t} — أكوا هيفن` },
+        { name: "description", content: d },
+        { property: "og:title", content: t },
+        { property: "og:description", content: d },
+        { property: "og:url", content: `/services/${params.slug}` },
+      ],
+      links: [{ rel: "canonical", href: `/services/${params.slug}` }],
+    };
+  },
   component: ServiceDetail,
   notFoundComponent: () => (
     <div className="mx-auto max-w-3xl px-6 py-24 text-center">
@@ -63,53 +81,10 @@ function IconOf({ name }: { name?: string | null }) {
 }
 
 function ServiceDetail() {
-  const { slug } = Route.useParams();
-  const [svc, setSvc] = useState<Svc | null | undefined>(undefined);
-  const [related, setRelated] = useState<Svc[]>([]);
+  const data = Route.useLoaderData();
+  const svc = data.svc as Svc;
+  const related = data.related as Svc[];
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-
-  useEffect(() => {
-    let alive = true;
-    fetchService(slug).then(async (s) => {
-      if (!alive) return;
-      // If this service is linked to an existing page, redirect there
-      if (s && s.linked_page_type === "existing_page" && s.linked_page_url) {
-        window.location.replace(s.linked_page_url);
-        return;
-      }
-      if (s && s.linked_page_type === "external_link" && s.linked_page_url) {
-        window.location.replace(s.linked_page_url);
-        return;
-      }
-      setSvc(s);
-      if (s) {
-        const { data } = await supabase.from("services").select("*").eq("published", true).neq("id", s.id).limit(6);
-        const arr = ((data ?? []) as any[])
-          .map((r) => ({ ...r, features: r.features ?? [] }) as Svc)
-          .filter((r) => !s.category || r.category === s.category || r.linked_page_type === "custom_service_page")
-          .slice(0, 3);
-        if (alive) setRelated(arr);
-      }
-    });
-    return () => { alive = false; };
-  }, [slug]);
-
-  if (svc === undefined) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 py-16">
-        <div className="glass rounded-3xl h-72 animate-pulse mb-6" />
-        <div className="glass rounded-2xl h-40 animate-pulse" />
-      </div>
-    );
-  }
-  if (!svc) {
-    return (
-      <div className="mx-auto max-w-3xl px-6 py-24 text-center">
-        <h1 className="text-3xl font-bold mb-3">الخدمة غير موجودة</h1>
-        <Link to="/services" className="text-gradient-gold">رجوع للخدمات</Link>
-      </div>
-    );
-  }
 
   const img = getImageUrl(svc.image_path);
   const wa = whatsappLink(`مرحبًا Aqua Haven، أرغب بالاستفسار عن خدمة: ${svc.title}`);
