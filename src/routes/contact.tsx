@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Reveal } from "../components/Reveal";
-import { Instagram, MapPin, Phone, MessageCircle, Mail, Clock, Loader2 } from "lucide-react";
+import { Instagram, MapPin, Phone, MessageCircle, Mail, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ContactContent, SocialItem } from "@/lib/site-pages";
@@ -18,6 +18,10 @@ export const Route = createFileRoute("/contact")({
     ],
     links: [{ rel: "canonical", href: "/contact" }],
   }),
+  loader: async () => {
+    const { data } = await supabase.from("site_pages").select("content").eq("page_key", "contact").maybeSingle();
+    return { content: ((data?.content as unknown) as ContactContent | null) ?? null };
+  },
   component: ContactPage,
 });
 
@@ -40,30 +44,11 @@ function whatsappLinkFor(number: string, message: string) {
 }
 
 function ContactPage() {
-  const [c, setC] = useState<ContactContent | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const c = Route.useLoaderData().content as ContactContent | null;
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [type, setType] = useState("");
+  const [type, setType] = useState(c?.request_types?.[0] ?? "");
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    let alive = true;
-    supabase.from("site_pages").select("content").eq("page_key", "contact").maybeSingle()
-      .then(({ data, error }) => {
-        if (!alive) return;
-        if (error) setError(error.message);
-        else {
-          const content = (data?.content as unknown as ContactContent) ?? null;
-          setC(content);
-          if (content?.request_types?.[0]) setType(content.request_types[0]);
-        }
-        setLoading(false);
-      });
-    return () => { alive = false; };
-  }, []);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -86,8 +71,6 @@ function ContactPage() {
     }
   };
 
-  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-gold" /></div>;
-  if (error) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-red-400">حدث خطأ: {error}</div>;
   if (!c) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-muted-foreground">لا يوجد محتوى بعد.</div>;
 
   const visibleSocials = (c.socials ?? []).filter((s) => s.visible && s.href);
