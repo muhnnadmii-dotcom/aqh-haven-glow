@@ -77,6 +77,7 @@ export type Project = {
     decor?: string;
   };
   priceRange: { min: number; max: number; currency: "SAR" };
+  priceType?: "fixed" | "from" | "range" | "on_request" | "hidden";
 };
 
 export const projects: Project[] = [
@@ -612,11 +613,37 @@ export const projects: Project[] = [
   },
 ];
 
-export function formatPriceRange(p: Project["priceRange"]) {
-  const fmt = (n: number) => n.toLocaleString("ar-SA");
-  return `${fmt(p.min)} — ${fmt(p.max)} ر.س`;
+const fmtSAR = (n: number) => n.toLocaleString("ar-SA");
+
+export function formatPriceRange(p: Project["priceRange"], type?: Project["priceType"]) {
+  const t = type ?? (p.min && p.max && p.min !== p.max ? "range" : p.min ? "fixed" : "hidden");
+  switch (t) {
+    case "fixed":
+      return p.min ? `${fmtSAR(p.min)} ر.س` : "";
+    case "from":
+      return p.min ? `يبدأ من ${fmtSAR(p.min)} ر.س` : "";
+    case "range":
+      return p.min && p.max ? `${fmtSAR(p.min)} — ${fmtSAR(p.max)} ر.س` : "";
+    case "on_request":
+      return "السعر حسب المعاينة";
+    case "hidden":
+    default:
+      return "";
+  }
 }
 
-export function formatPriceFrom(p: Project["priceRange"]) {
-  return `من ${p.min.toLocaleString("ar-SA")} ر.س`;
+export function formatPriceFrom(p: Project["priceRange"], type?: Project["priceType"]) {
+  const t = type ?? (p.min && p.max && p.min !== p.max ? "range" : p.min ? "fixed" : "hidden");
+  switch (t) {
+    case "fixed":
+      return p.min ? `${fmtSAR(p.min)} ر.س` : "";
+    case "from":
+    case "range":
+      return p.min ? `من ${fmtSAR(p.min)} ر.س` : "";
+    case "on_request":
+      return "حسب المعاينة";
+    case "hidden":
+    default:
+      return "";
+  }
 }

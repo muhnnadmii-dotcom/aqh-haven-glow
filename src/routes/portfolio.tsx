@@ -88,6 +88,14 @@ function adapt(r: any): Project {
   }
   const cover = publicUrl(r.cover_path) || r.cover || imgs[0] || "";
   if (imgs.length === 0 && cover) imgs.push(cover);
+  // Prefer new structured columns, fall back to legacy specs jsonb
+  const specs = { ...(r.specs ?? {}) };
+  if (r.length_cm && r.width_cm && r.height_cm) {
+    specs.dimensions = `${r.length_cm} × ${r.width_cm} × ${r.height_cm} سم`;
+  }
+  if (r.volume_liters != null) {
+    specs.volumeLiters = `${r.volume_liters} لتر`;
+  }
   return {
     id: r.sort_order ?? 0,
     slug: r.slug,
@@ -100,14 +108,15 @@ function adapt(r: any): Project {
     cover,
     images: imgs,
     description: r.description ?? "",
-    specs: r.specs ?? {},
+    specs,
     equipment: r.equipment ?? {},
     waterSystem: r.water_system ?? undefined,
     addOns: r.add_ons ?? undefined,
     servicePackages: r.service_packages ?? undefined,
     livestockWarranty: r.livestock_warranty ?? undefined,
     contents: { fish: [], plantsOrCorals: [], decor: "", ...(r.contents ?? {}) },
-    priceRange: { min: r.price_min ?? 0, max: r.price_max ?? 0 },
+    priceRange: { min: r.price_min ?? 0, max: r.price_max ?? 0, currency: "SAR" },
+    priceType: (r.price_type ?? undefined) as Project["priceType"],
   } as Project;
 }
 
@@ -215,11 +224,14 @@ function PortfolioPage() {
                     <Sparkles size={12} /> مميّز
                   </div>
                 )}
-                {(p.priceRange?.min || p.priceRange?.max) ? (
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-background/70 backdrop-blur">
-                    {formatPriceFrom(p.priceRange)}
-                  </div>
-                ) : null}
+                {(() => {
+                  const label = formatPriceFrom(p.priceRange, p.priceType);
+                  return label ? (
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-background/70 backdrop-blur">
+                      {label}
+                    </div>
+                  ) : null;
+                })()}
 
                 <div className="absolute bottom-0 right-0 left-0 p-5">
                   <div className="text-xs text-gradient-gold mb-1">{p.catLabel}</div>
@@ -509,28 +521,59 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
 
 
           {/* Price */}
-          <div className="relative overflow-hidden rounded-2xl glass-gold p-6">
-            <div className="light-rays" aria-hidden />
-            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">النطاق السعري التقريبي</div>
-                <div className="text-2xl sm:text-3xl font-bold text-gradient-gold">
-                  {formatPriceRange(project.priceRange)}
+          {(() => {
+            const priceLabel = formatPriceRange(project.priceRange, project.priceType);
+            if (project.priceType === "hidden" || !priceLabel) {
+              // Hidden price: only show CTA, no price text
+              return (
+                <div className="relative overflow-hidden rounded-2xl glass-gold p-6">
+                  <div className="light-rays" aria-hidden />
+                  <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      لطلب عرض سعر، تواصل معنا مباشرة عبر واتساب.
+                    </div>
+                    <a
+                      href={whatsappLink(waMsg)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-gold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 justify-center whitespace-nowrap"
+                    >
+                      <MessageCircle size={16} /> اطلب عرض سعر
+                    </a>
+                  </div>
                 </div>
-                <div className="text-[11px] text-muted-foreground mt-1">
-                  يشمل التصميم والتنفيذ والتركيب — السعر النهائي يتحدد بعد المعاينة.
+              );
+            }
+            const heading = project.priceType === "on_request"
+              ? "السعر"
+              : project.priceType === "fixed"
+                ? "السعر"
+                : "النطاق السعري التقريبي";
+            return (
+              <div className="relative overflow-hidden rounded-2xl glass-gold p-6">
+                <div className="light-rays" aria-hidden />
+                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">{heading}</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-gradient-gold">
+                      {priceLabel}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-1">
+                      يشمل التصميم والتنفيذ والتركيب — السعر النهائي يتحدد بعد المعاينة.
+                    </div>
+                  </div>
+                  <a
+                    href={whatsappLink(waMsg)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-gold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 justify-center whitespace-nowrap"
+                  >
+                    <MessageCircle size={16} /> اطلب عرض سعر مماثل
+                  </a>
                 </div>
               </div>
-              <a
-                href={whatsappLink(waMsg)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-gold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 justify-center whitespace-nowrap"
-              >
-                <MessageCircle size={16} /> اطلب عرض سعر مماثل
-              </a>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </div>
       </div>

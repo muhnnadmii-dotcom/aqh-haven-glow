@@ -543,14 +543,17 @@ export type Database = {
           equipment: Json
           featured: boolean
           featured_on_home: boolean
+          height_cm: number | null
           home_order: number
           id: string
           image_paths: string[]
           images: string[]
+          length_cm: number | null
           livestock_warranty: string | null
           location: string | null
           price_max: number | null
           price_min: number | null
+          price_type: string
           published: boolean
           service_packages: string[] | null
           slug: string
@@ -558,7 +561,9 @@ export type Database = {
           specs: Json
           title: string
           updated_at: string
+          volume_liters: number | null
           water_system: string[] | null
+          width_cm: number | null
           year: string | null
         }
         Insert: {
@@ -575,14 +580,17 @@ export type Database = {
           equipment?: Json
           featured?: boolean
           featured_on_home?: boolean
+          height_cm?: number | null
           home_order?: number
           id?: string
           image_paths?: string[]
           images?: string[]
+          length_cm?: number | null
           livestock_warranty?: string | null
           location?: string | null
           price_max?: number | null
           price_min?: number | null
+          price_type?: string
           published?: boolean
           service_packages?: string[] | null
           slug: string
@@ -590,7 +598,9 @@ export type Database = {
           specs?: Json
           title: string
           updated_at?: string
+          volume_liters?: number | null
           water_system?: string[] | null
+          width_cm?: number | null
           year?: string | null
         }
         Update: {
@@ -607,14 +617,17 @@ export type Database = {
           equipment?: Json
           featured?: boolean
           featured_on_home?: boolean
+          height_cm?: number | null
           home_order?: number
           id?: string
           image_paths?: string[]
           images?: string[]
+          length_cm?: number | null
           livestock_warranty?: string | null
           location?: string | null
           price_max?: number | null
           price_min?: number | null
+          price_type?: string
           published?: boolean
           service_packages?: string[] | null
           slug?: string
@@ -622,7 +635,9 @@ export type Database = {
           specs?: Json
           title?: string
           updated_at?: string
+          volume_liters?: number | null
           water_system?: string[] | null
+          width_cm?: number | null
           year?: string | null
         }
         Relationships: []

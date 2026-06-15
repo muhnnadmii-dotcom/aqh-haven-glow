@@ -10,6 +10,8 @@ export const Route = createFileRoute("/_authenticated/admin/projects")({
   component: ProjectsAdmin,
 });
 
+type PriceType = "fixed" | "from" | "range" | "on_request" | "hidden";
+
 type Project = {
   id?: string;
   slug: string;
@@ -37,6 +39,11 @@ type Project = {
   contents: { fish?: string[]; plantsOrCorals?: string[]; decor?: string };
   price_min: number | null;
   price_max: number | null;
+  price_type: PriceType;
+  length_cm: number | null;
+  width_cm: number | null;
+  height_cm: number | null;
+  volume_liters: number | null;
   sort_order: number;
 };
 
@@ -67,7 +74,9 @@ const blank: Project = {
   specs: { dimensions: "", volumeLiters: "", systemType: "" }, equipment: { filter: "", lighting: "" },
   water_system: [], add_ons: [], service_packages: [], livestock_warranty: "",
   contents: { fish: [], plantsOrCorals: [], decor: "" },
-  price_min: null, price_max: null, sort_order: 0,
+  price_min: null, price_max: null, price_type: "range",
+  length_cm: null, width_cm: null, height_cm: null, volume_liters: null,
+  sort_order: 0,
 };
 
 function ProjectsAdmin() {
@@ -108,7 +117,37 @@ function ProjectsAdmin() {
     if (!editing.title.trim() || !editing.slug.trim()) {
       toast.error("العنوان والـ slug مطلوبان"); return;
     }
-    const payload = { ...editing, category_label: editing.category_label || catLabel(editing.category) };
+    // Normalize price fields based on selected type
+    let price_min = editing.price_min;
+    let price_max = editing.price_max;
+    switch (editing.price_type) {
+      case "fixed":
+        if (price_min == null) { toast.error("أدخل السعر"); return; }
+        price_max = price_min;
+        break;
+      case "from":
+        if (price_min == null) { toast.error("أدخل السعر الابتدائي"); return; }
+        price_max = null;
+        break;
+      case "range":
+        if (price_min == null || price_max == null) { toast.error("أدخل سعر من وإلى"); return; }
+        break;
+      case "on_request":
+      case "hidden":
+        price_min = null; price_max = null;
+        break;
+    }
+    // Mirror dimensions/volume into specs jsonb so legacy display stays in sync
+    const l = editing.length_cm, w = editing.width_cm, h = editing.height_cm;
+    const dimensionsStr = (l && w && h) ? `${l} × ${w} × ${h} سم` : (editing.specs.dimensions ?? "");
+    const volumeStr = editing.volume_liters != null ? `${editing.volume_liters} لتر` : (editing.specs.volumeLiters ?? "");
+    const nextSpecs = { ...editing.specs, dimensions: dimensionsStr, volumeLiters: volumeStr };
+    const payload = {
+      ...editing,
+      price_min, price_max,
+      specs: nextSpecs,
+      category_label: editing.category_label || catLabel(editing.category),
+    };
     const { error } = editing.id
       ? await supabase.from("projects").update(payload).eq("id", editing.id)
       : await supabase.from("projects").insert(payload);
@@ -278,8 +317,47 @@ function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value:
 
 
       <Section title="المواصفات">
-        <Field label="الأبعاد"><input className={inp} value={v.specs.dimensions ?? ""} onChange={(e) => setSpec("dimensions", e.target.value)} /></Field>
-        <Field label="الحجم (لتر)"><input className={inp} value={v.specs.volumeLiters ?? ""} onChange={(e) => setSpec("volumeLiters", e.target.value)} /></Field>
+        <Field label="الطول (سم)">
+          <input type="number" min={0} step="0.1" className={inp}
+            value={v.length_cm ?? ""}
+            onChange={(e) => {
+              const n = e.target.value === "" ? null : Number(e.target.value);
+              const next = { ...v, length_cm: n };
+              if (n != null && v.width_cm != null && v.height_cm != null) {
+                next.volume_liters = Number(((n * v.width_cm * v.height_cm) / 1000).toFixed(2));
+              }
+              onChange(next);
+            }} />
+        </Field>
+        <Field label="العرض (سم)">
+          <input type="number" min={0} step="0.1" className={inp}
+            value={v.width_cm ?? ""}
+            onChange={(e) => {
+              const n = e.target.value === "" ? null : Number(e.target.value);
+              const next = { ...v, width_cm: n };
+              if (n != null && v.length_cm != null && v.height_cm != null) {
+                next.volume_liters = Number(((v.length_cm * n * v.height_cm) / 1000).toFixed(2));
+              }
+              onChange(next);
+            }} />
+        </Field>
+        <Field label="الارتفاع (سم)">
+          <input type="number" min={0} step="0.1" className={inp}
+            value={v.height_cm ?? ""}
+            onChange={(e) => {
+              const n = e.target.value === "" ? null : Number(e.target.value);
+              const next = { ...v, height_cm: n };
+              if (n != null && v.length_cm != null && v.width_cm != null) {
+                next.volume_liters = Number(((v.length_cm * v.width_cm * n) / 1000).toFixed(2));
+              }
+              onChange(next);
+            }} />
+        </Field>
+        <Field label="الحجم (لتر) — يُحسب تلقائيًا ويمكن تعديله">
+          <input type="number" min={0} step="0.1" className={inp}
+            value={v.volume_liters ?? ""}
+            onChange={(e) => set("volume_liters", e.target.value === "" ? null : Number(e.target.value))} />
+        </Field>
         <Field label="نوع النظام"><input className={inp} value={v.specs.systemType ?? ""} onChange={(e) => setSpec("systemType", e.target.value)} /></Field>
         <Field label="نوع الزجاج"><input className={inp} value={v.specs.glassType ?? ""} onChange={(e) => setSpec("glassType", e.target.value)} /></Field>
         <Field label="PAR"><input className={inp} value={v.specs.parIntensity ?? ""} onChange={(e) => setSpec("parIntensity", e.target.value)} /></Field>
@@ -311,8 +389,47 @@ function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value:
       </Section>
 
       <Section title="السعر">
-        <Field label="من (ريال)"><input type="number" className={inp} value={v.price_min ?? ""} onChange={(e) => set("price_min", e.target.value ? Number(e.target.value) : null)} /></Field>
-        <Field label="إلى (ريال)"><input type="number" className={inp} value={v.price_max ?? ""} onChange={(e) => set("price_max", e.target.value ? Number(e.target.value) : null)} /></Field>
+        <Field label="نوع السعر" full>
+          <select className={inp} value={v.price_type}
+            onChange={(e) => set("price_type", e.target.value as PriceType)}>
+            <option value="fixed">سعر ثابت</option>
+            <option value="from">سعر يبدأ من</option>
+            <option value="range">سعر من إلى</option>
+            <option value="on_request">حسب المعاينة</option>
+            <option value="hidden">مخفي (لا يظهر للزائر)</option>
+          </select>
+        </Field>
+        {v.price_type === "fixed" && (
+          <Field label="السعر (ريال)">
+            <input type="number" min={0} className={inp} value={v.price_min ?? ""}
+              onChange={(e) => set("price_min", e.target.value ? Number(e.target.value) : null)} />
+          </Field>
+        )}
+        {v.price_type === "from" && (
+          <Field label="السعر الابتدائي (ريال)">
+            <input type="number" min={0} className={inp} value={v.price_min ?? ""}
+              onChange={(e) => set("price_min", e.target.value ? Number(e.target.value) : null)} />
+          </Field>
+        )}
+        {v.price_type === "range" && (
+          <>
+            <Field label="من (ريال)">
+              <input type="number" min={0} className={inp} value={v.price_min ?? ""}
+                onChange={(e) => set("price_min", e.target.value ? Number(e.target.value) : null)} />
+            </Field>
+            <Field label="إلى (ريال)">
+              <input type="number" min={0} className={inp} value={v.price_max ?? ""}
+                onChange={(e) => set("price_max", e.target.value ? Number(e.target.value) : null)} />
+            </Field>
+          </>
+        )}
+        {(v.price_type === "on_request" || v.price_type === "hidden") && (
+          <Field label="ملاحظة" full>
+            <div className="text-xs text-muted-foreground glass rounded-xl px-3 py-2">
+              {v.price_type === "on_request" ? "سيظهر للزائر: «السعر حسب المعاينة»" : "لن يظهر أي سعر للزائر."}
+            </div>
+          </Field>
+        )}
       </Section>
 
       <div className="flex justify-end gap-2 pt-2">
