@@ -39,7 +39,8 @@ export const Route = createFileRoute("/knowledge/")({
 });
 
 function KnowledgePage() {
-  const { list } = Route.useLoaderData();
+  const data = Route.useLoaderData();
+  const list = data.list as ArticleRow[];
   const loading = false;
   const error: string | null = null;
 
