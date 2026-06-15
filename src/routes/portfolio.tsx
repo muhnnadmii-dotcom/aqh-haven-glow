@@ -121,7 +121,7 @@ function PortfolioPage() {
   const error: string | null = null;
 
   const tabs = useMemo(() => {
-    const used = new Set(projects.map((p) => p.cat));
+    const used = new Set<string>(projects.map((p) => p.cat as unknown as string));
     const ordered: { id: Cat; label: string }[] = [];
     const seen = new Set<string>();
     // First, admin-defined order for categories that actually have projects
@@ -133,8 +133,10 @@ function PortfolioPage() {
     }
     // Then any leftover legacy categories present on projects but not in admin list
     projects.forEach((p) => {
-      if (!seen.has(p.cat)) { ordered.push({ id: p.cat, label: p.catLabel }); seen.add(p.cat); }
+      const slug = p.cat as unknown as string;
+      if (!seen.has(slug)) { ordered.push({ id: slug, label: p.catLabel }); seen.add(slug); }
     });
+
     return [{ id: "all" as Cat, label: "الكل" }, ...ordered];
   }, [projects, adminCats]);
 
