@@ -5,13 +5,14 @@ import { Reveal } from "../components/Reveal";
 import { Counter } from "../components/Counter";
 import {
   ArrowLeft,
-  Plus, Minus, Star, Quote,
+  Plus, Minus, Star, Quote, Wrench, Building2, MapPin, Ruler, MessageCircle,
 } from "lucide-react";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
 import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
 import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
 import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
+import saudiServiceAsset from "../assets/aqh-saudi-service.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
 import {
@@ -21,10 +22,14 @@ import {
   type PartnersContent, type HomeTestimonialsContent,
 } from "@/lib/home-sections";
 import { getImageUrl, onImageError } from "@/lib/storage";
+import { whatsappLink } from "@/components/WhatsAppButton";
 
 
 const heroFallback = livingRoomTankAsset.url;
 const styledAquarium = styledAquariumAsset.url;
+const maintenanceImg = saudiServiceAsset.url;
+const businessImg = counterAquariumAsset.url;
+const projectFallbacks = [livingRoomTankAsset.url, marineCubeAsset.url, styledAquariumAsset.url, counterAquariumAsset.url, canisterFilterAsset.url, saudiServiceAsset.url];
 const serviceFallbacks = [marineCubeAsset.url, counterAquariumAsset.url, canisterFilterAsset.url, styledAquariumAsset.url];
 
 export const Route = createFileRoute("/")({
@@ -43,6 +48,7 @@ export const Route = createFileRoute("/")({
 
 
 type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
+type FeaturedProject = { slug: string; title: string; category_label: string | null; location: string | null; description: string | null; cover_path: string | null; cover: string | null; specs: any };
 
 type Sections = {
   hero: { enabled: boolean; content: HeroContent } | null;
@@ -71,6 +77,7 @@ function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [sections, setSections] = useState<Sections>(EMPTY_SECTIONS);
   const [articles, setArticles] = useState<FeaturedArticle[]>([]);
+  const [projects, setProjects] = useState<FeaturedProject[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -86,6 +93,12 @@ function HomePage() {
       .eq("published", true).eq("visible", true).eq("featured_on_home", true)
       .order("home_order", { ascending: true }).limit(3)
       .then(({ data }) => { if (alive) setArticles((data ?? []) as unknown as FeaturedArticle[]); });
+    supabase.from("projects").select("slug, title, category_label, location, description, cover_path, cover, specs")
+      .eq("published", true)
+      .order("featured", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .limit(6)
+      .then(({ data }) => { if (alive) setProjects((data ?? []) as unknown as FeaturedProject[]); });
     return () => { alive = false; };
   }, []);
 
@@ -134,7 +147,13 @@ function HomePage() {
   const showTestimonials = testHeadEnabled && homeTestEnabled && testimonials.length > 0;
 
 
-  const heroStats = (hero?.stats ?? []).filter((s) => s && s.label);
+  const configuredStats = (hero?.stats ?? []).filter((s) => s && s.label);
+  const heroStats = configuredStats.length > 0 ? configuredStats : [
+    { id: "s1", value: 250, suffix: "+", label: "عميل سعيد" },
+    { id: "s2", value: 9, suffix: "+", label: "سنوات خبرة" },
+    { id: "s3", value: 180, suffix: "+", label: "مشروع منفذ" },
+    { id: "s4", value: 98, suffix: "%", label: "رضا العملاء" },
+  ];
   const partnersC = sections.partners?.content;
   const partnersEnabled = sections.partners?.enabled ?? true;
   const partnerItems = (partnersC?.items ?? []).filter((i) => i.visible).sort((a, b) => a.order - b.order);
@@ -155,33 +174,32 @@ function HomePage() {
           <div className="light-rays" aria-hidden />
           <Bubbles count={22} />
 
-          <div className="relative mx-auto max-w-7xl px-6 py-20 text-center">
+          <div className="relative mx-auto max-w-7xl px-5 py-16 sm:py-20 text-center">
             <Reveal delay={120}>
-              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold leading-[1.05] mb-6 tracking-tight">
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] mb-5 tracking-tight">
                 <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
-                  {hero?.title ?? "عالمك المائي"}
+                  {hero?.title || "عالمك المائي يبدأ من هنا"}
                 </span>
                 {hero?.subtitle && (<><br /><span className="text-foreground/95">{hero.subtitle}</span></>)}
               </h1>
             </Reveal>
-            {hero?.description && (
-              <Reveal delay={240}>
-                <p className="mx-auto max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed mb-10">{hero.description}</p>
-              </Reveal>
-            )}
+            <Reveal delay={240}>
+              <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed mb-8 sm:mb-10 px-2">
+                {hero?.description || "نصمم وننفذ أحواض مائية مخصصة للمنازل، المكاتب، الكافيهات والمشاريع التجارية بعناية احترافية من الفكرة حتى التشغيل."}
+              </p>
+            </Reveal>
             <Reveal delay={360}>
-              <div className="flex flex-wrap justify-center gap-3 mb-12">
-                {hero?.primary_cta_label && (
-                  <CTAButton href={hero.primary_cta_href} variant="gold">{hero.primary_cta_label}</CTAButton>
-                )}
-                {hero?.secondary_cta_label && (
-                  <CTAButton href={hero.secondary_cta_href} variant="outline">{hero.secondary_cta_label}</CTAButton>
-                )}
+              <div className="flex flex-wrap justify-center gap-3 mb-10 sm:mb-12">
+                <CTAButton href={hero?.primary_cta_href || "/contact"} variant="gold">{hero?.primary_cta_label || "اطلب مشروعك"}</CTAButton>
+                <CTAButton href={hero?.secondary_cta_href || "/portfolio"} variant="outline">{hero?.secondary_cta_label || "شاهد أعمالنا"}</CTAButton>
+                <CTAButton href={whatsappLink()} variant="outline">
+                  <MessageCircle size={16} className="ml-1" /> واتساب
+                </CTAButton>
               </div>
             </Reveal>
             {heroStats.length > 0 && (
               <Reveal delay={480}>
-                <div className={`grid gap-4 max-w-2xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                <div className={`grid gap-3 sm:gap-4 max-w-3xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
                   {heroStats.map((s) => (
                     <div key={s.id} className="glass rounded-2xl p-4">
                       <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
@@ -344,6 +362,59 @@ function HomePage() {
         </section>
       )}
 
+      {/* FEATURED PROJECTS */}
+      <FeaturedProjectsSection projects={projects} />
+
+      {/* MAINTENANCE TEASER */}
+      <section className="relative py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6">
+          <div className="glass rounded-3xl overflow-hidden grid md:grid-cols-2 items-stretch">
+            <div className="relative h-56 md:h-auto min-h-[220px]">
+              <img src={maintenanceImg} alt="صيانة أحواض" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-l from-background/80 via-background/30 to-transparent md:bg-gradient-to-r" />
+            </div>
+            <div className="p-6 sm:p-10 flex flex-col justify-center">
+              <div className="inline-flex items-center gap-2 text-xs tracking-widest text-gradient-gold mb-3">
+                <Wrench size={14} /> صيانة احترافية
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">حوضك بأفضل حال طوال السنة</h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">
+                باقات صيانة دورية تشمل تنظيف، فحص جودة الماء، فلاتر، إضاءة، وأسماك ونباتات. متابعة مستمرة من فريق متخصص.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <CTAButton href="/maintenance" variant="gold">احجز صيانة</CTAButton>
+                <CTAButton href={whatsappLink("أرغب بحجز صيانة لحوضي")} variant="outline">استفسار سريع</CTAButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BUSINESS SOLUTIONS TEASER */}
+      <section className="relative py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6">
+          <div className="glass rounded-3xl overflow-hidden grid md:grid-cols-2 items-stretch">
+            <div className="p-6 sm:p-10 flex flex-col justify-center order-2 md:order-1">
+              <div className="inline-flex items-center gap-2 text-xs tracking-widest text-gradient-gold mb-3">
+                <Building2 size={14} /> حلول الأعمال
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">أحواض للكافيهات والمكاتب والمطاعم</h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">
+                نصمم تجربة بصرية فاخرة تعزز هوية مكانك وتجذب عملاءك، مع عقود صيانة كاملة وضمان تشغيلي.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <CTAButton href="/business-solutions" variant="gold">حلول الأعمال</CTAButton>
+                <CTAButton href={whatsappLink("استفسار عن حلول الأعمال لأكوا هيفن")} variant="outline">تواصل معنا</CTAButton>
+              </div>
+            </div>
+            <div className="relative h-56 md:h-auto min-h-[220px] order-1 md:order-2">
+              <img src={businessImg} alt="حلول الأعمال" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent md:bg-gradient-to-l" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* PROCESS */}
       {procEnabled && procItems.length > 0 && (
         <section className="relative py-24">
@@ -418,7 +489,7 @@ function HomePage() {
 
 
       {/* KNOWLEDGE */}
-      {knowHeadEnabled && (
+      {knowHeadEnabled && articles.length > 0 && (
         <section className="relative py-24">
           <div className="mx-auto max-w-7xl px-6">
             <Reveal>
@@ -432,30 +503,26 @@ function HomePage() {
                 </Link>
               </div>
             </Reveal>
-            {articles.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground">لا توجد مقالات مميزة حالياً.</p>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-3">
-                {articles.map((a, i) => {
-                  const img = a.cover_path ? publicUrl(a.cover_path) : styledAquarium;
-                  return (
-                    <Reveal key={a.slug} delay={i * 120}>
-                      <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
-                        <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
-                          <div className="overflow-hidden">
-                            <img src={img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                          </div>
-                          <div className="p-6">
-                            <h3 className="text-lg font-bold mb-2">{a.title}</h3>
-                            {a.excerpt && <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>}
-                          </div>
-                        </article>
-                      </Link>
-                    </Reveal>
-                  );
-                })}
-              </div>
-            )}
+            <div className="grid gap-6 md:grid-cols-3">
+              {articles.map((a, i) => {
+                const img = a.cover_path ? publicUrl(a.cover_path) : styledAquarium;
+                return (
+                  <Reveal key={a.slug} delay={i * 120}>
+                    <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
+                      <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
+                        <div className="overflow-hidden">
+                          <img src={img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-lg font-bold mb-2">{a.title}</h3>
+                          {a.excerpt && <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>}
+                        </div>
+                      </article>
+                    </Link>
+                  </Reveal>
+                );
+              })}
+            </div>
           </div>
         </section>
       )}
@@ -518,8 +585,100 @@ function HomePage() {
         </section>
       )}
 
+      {/* FINAL WHATSAPP CTA */}
+      <section className="relative py-16 sm:py-20">
+        <div className="mx-auto max-w-4xl px-5 sm:px-6">
+          <div className="gradient-border rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
+            <div className="light-rays" aria-hidden />
+            <div className="relative">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">جاهز تبدأ مشروعك المائي؟</h2>
+              <p className="text-sm sm:text-base text-muted-foreground mb-7 max-w-lg mx-auto">
+                تواصل معنا الآن واحصل على استشارة مجانية وعرض سعر مخصص لمشروعك.
+              </p>
+              <a
+                href={whatsappLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold text-white shadow-deep transition-transform hover:scale-105"
+                style={{ background: "linear-gradient(135deg, #25D366, #128C7E)" }}
+              >
+                <MessageCircle size={20} /> تواصل معنا عبر واتساب
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
 
     </>
+  );
+}
+
+function FeaturedProjectsSection({ projects }: { projects: FeaturedProject[] }) {
+  const fallback: FeaturedProject[] = [
+    { slug: "", title: "حوض غرفة المعيشة", category_label: "مياه عذبة مزروع", location: "الرياض", description: "تصميم طبيعي بنباتات حية وإضاءة احترافية.", cover_path: null, cover: null, specs: { dimensions: "150×60×60 سم" } },
+    { slug: "", title: "حوض الشعاب المرجانية", category_label: "بحري ريف", location: "جدة", description: "نظام بحري متكامل مع مرجانيات وأسماك ملونة.", cover_path: null, cover: null, specs: { dimensions: "120×60×60 سم" } },
+    { slug: "", title: "حوض الكافيه", category_label: "تجاري", location: "الرياض", description: "حوض مميز يعزز تجربة العملاء في الكافيه.", cover_path: null, cover: null, specs: { dimensions: "200×70×70 سم" } },
+    { slug: "", title: "حوض المكتب التنفيذي", category_label: "مكتبي", location: "الرياض", description: "تصميم فاخر يضفي هدوءاً على بيئة العمل.", cover_path: null, cover: null, specs: { dimensions: "100×40×50 سم" } },
+    { slug: "", title: "نانو منزلي", category_label: "نانو", location: "الدمام", description: "حوض صغير مثالي للمبتدئين بتشطيب راقٍ.", cover_path: null, cover: null, specs: { dimensions: "60×30×35 سم" } },
+    { slug: "", title: "حوض المطعم", category_label: "تجاري كبير", location: "الرياض", description: "حوض جانبي ضخم يصبح نقطة جذب المطعم.", cover_path: null, cover: null, specs: { dimensions: "250×80×80 سم" } },
+  ];
+  const items = projects.length > 0 ? projects : fallback;
+  return (
+    <section className="relative py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6">
+        <Reveal>
+          <div className="text-center mb-12">
+            <div className="text-xs tracking-widest text-gradient-gold mb-3">PORTFOLIO</div>
+            <h2 className="text-3xl sm:text-4xl font-bold">أعمال مختارة</h2>
+            <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-sm sm:text-base">
+              نماذج من المشاريع التي نفذناها للعملاء بمختلف الأذواق والاحتياجات.
+            </p>
+          </div>
+        </Reveal>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
+          {items.map((p, i) => {
+            const img = p.cover_path ? publicUrl(p.cover_path) : (p.cover || projectFallbacks[i % projectFallbacks.length]);
+            const dims = p.specs?.dimensions || p.specs?.size;
+            const waText = `أبغى نفس فكرة "${p.title}"`;
+            const card = (
+              <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full flex flex-col">
+                <div className="relative aspect-[16/10] overflow-hidden bg-white/5">
+                  <img src={img} alt={p.title} loading="lazy" onError={onImageError} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  {p.category_label && (
+                    <div className="absolute top-3 right-3 glass-gold rounded-lg px-2.5 py-1 text-[10px] font-bold text-gold">{p.category_label}</div>
+                  )}
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                  <h3 className="text-base sm:text-lg font-bold mb-2">{p.title}</h3>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground mb-2">
+                    {dims && <span className="inline-flex items-center gap-1"><Ruler size={12} aria-hidden /> {dims}</span>}
+                    {p.location && <span className="inline-flex items-center gap-1"><MapPin size={12} aria-hidden /> {p.location}</span>}
+                  </div>
+                  {p.description && <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed flex-1 line-clamp-3">{p.description}</p>}
+                  <a
+                    href={whatsappLink(waText)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold btn-gold"
+                  >
+                    <MessageCircle size={14} /> أبغى نفس الفكرة
+                  </a>
+                </div>
+              </article>
+            );
+            return (
+              <Reveal key={p.slug || `fb-${i}`} delay={i * 80} className="h-full">
+                {p.slug ? <Link to="/portfolio" className="block h-full">{card}</Link> : <div className="h-full">{card}</div>}
+              </Reveal>
+            );
+          })}
+        </div>
+        <div className="text-center mt-10">
+          <CTAButton href="/portfolio" variant="outline">كل الأعمال</CTAButton>
+        </div>
+      </div>
+    </section>
   );
 }
 
