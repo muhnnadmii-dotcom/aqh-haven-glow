@@ -271,7 +271,8 @@ function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value:
   const set = <K extends keyof Project>(k: K, val: Project[K]) => onChange({ ...v, [k]: val });
   const setSpec = (k: string, val: string) => onChange({ ...v, specs: { ...v.specs, [k]: val } });
   const setEq = (k: string, val: string) => onChange({ ...v, equipment: { ...v.equipment, [k]: val } });
-  const list = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+  // Preserve spaces and empty lines while typing; cleanup happens on save.
+  const list = (s: string) => s.split("\n");
   const joined = (a: string[] | null | undefined) => (a ?? []).join("\n");
 
   return (
