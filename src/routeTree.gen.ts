@@ -22,6 +22,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as KnowledgeIndexRouteImport } from './routes/knowledge.index'
 import { Route as KnowledgeSlugRouteImport } from './routes/knowledge.$slug'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -112,6 +113,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ServicesRoute,
 } as any)
 const KnowledgeIndexRoute = KnowledgeIndexRouteImport.update({
   id: '/',
@@ -273,12 +279,13 @@ export interface FileRoutesByFullPath {
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/maintenance': typeof MaintenanceRoute
   '/portfolio': typeof PortfolioRoute
-  '/services': typeof ServicesRoute
+  '/services': typeof ServicesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/knowledge/': typeof KnowledgeIndexRoute
+  '/services/': typeof ServicesIndexRoute
   '/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
   '/account/profile': typeof AuthenticatedAccountProfileRoute
   '/account/requests': typeof AuthenticatedAccountRequestsRouteWithChildren
@@ -312,10 +319,10 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/maintenance': typeof MaintenanceRoute
   '/portfolio': typeof PortfolioRoute
-  '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/knowledge': typeof KnowledgeIndexRoute
+  '/services': typeof ServicesIndexRoute
   '/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
   '/account/profile': typeof AuthenticatedAccountProfileRoute
   '/account/tanks': typeof AuthenticatedAccountTanksRouteWithChildren
@@ -350,12 +357,13 @@ export interface FileRoutesById {
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/maintenance': typeof MaintenanceRoute
   '/portfolio': typeof PortfolioRoute
-  '/services': typeof ServicesRoute
+  '/services': typeof ServicesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account': typeof AuthenticatedAccountRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/knowledge/': typeof KnowledgeIndexRoute
+  '/services/': typeof ServicesIndexRoute
   '/_authenticated/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
   '/_authenticated/account/profile': typeof AuthenticatedAccountProfileRoute
   '/_authenticated/account/requests': typeof AuthenticatedAccountRequestsRouteWithChildren
@@ -398,6 +406,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/knowledge/$slug'
     | '/knowledge/'
+    | '/services/'
     | '/account/appointments'
     | '/account/profile'
     | '/account/requests'
@@ -431,10 +440,10 @@ export interface FileRouteTypes {
     | '/contact'
     | '/maintenance'
     | '/portfolio'
-    | '/services'
     | '/sitemap.xml'
     | '/knowledge/$slug'
     | '/knowledge'
+    | '/services'
     | '/account/appointments'
     | '/account/profile'
     | '/account/tanks'
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/knowledge/$slug'
     | '/knowledge/'
+    | '/services/'
     | '/_authenticated/account/appointments'
     | '/_authenticated/account/profile'
     | '/_authenticated/account/requests'
@@ -510,7 +520,7 @@ export interface RootRouteChildren {
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
   MaintenanceRoute: typeof MaintenanceRoute
   PortfolioRoute: typeof PortfolioRoute
-  ServicesRoute: typeof ServicesRoute
+  ServicesRoute: typeof ServicesRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -606,6 +616,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/services/': {
+      id: '/services/'
+      path: '/'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof ServicesRoute
     }
     '/knowledge/': {
       id: '/knowledge/'
@@ -919,6 +936,18 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
   KnowledgeRouteChildren,
 )
 
+interface ServicesRouteChildren {
+  ServicesIndexRoute: typeof ServicesIndexRoute
+}
+
+const ServicesRouteChildren: ServicesRouteChildren = {
+  ServicesIndexRoute: ServicesIndexRoute,
+}
+
+const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
+  ServicesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -931,7 +960,7 @@ const rootRouteChildren: RootRouteChildren = {
   KnowledgeRoute: KnowledgeRouteWithChildren,
   MaintenanceRoute: MaintenanceRoute,
   PortfolioRoute: PortfolioRoute,
-  ServicesRoute: ServicesRoute,
+  ServicesRoute: ServicesRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
