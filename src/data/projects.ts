@@ -77,6 +77,7 @@ export type Project = {
     decor?: string;
   };
   priceRange: { min: number; max: number; currency: "SAR" };
+  priceType?: "fixed" | "from" | "range" | "on_request" | "hidden";
 };
 
 export const projects: Project[] = [
