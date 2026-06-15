@@ -166,7 +166,8 @@ function ProjectsAdmin() {
         </div>
         <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className={inp + " w-auto"}>
           <option value="all">كل التصنيفات</option>
-          {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+
         </select>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as any)} className={inp + " w-auto"}>
           <option value="all">كل الحالات</option>
