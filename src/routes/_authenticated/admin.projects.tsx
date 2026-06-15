@@ -10,6 +10,8 @@ export const Route = createFileRoute("/_authenticated/admin/projects")({
   component: ProjectsAdmin,
 });
 
+type PriceType = "fixed" | "from" | "range" | "on_request" | "hidden";
+
 type Project = {
   id?: string;
   slug: string;
@@ -37,6 +39,11 @@ type Project = {
   contents: { fish?: string[]; plantsOrCorals?: string[]; decor?: string };
   price_min: number | null;
   price_max: number | null;
+  price_type: PriceType;
+  length_cm: number | null;
+  width_cm: number | null;
+  height_cm: number | null;
+  volume_liters: number | null;
   sort_order: number;
 };
 
@@ -67,7 +74,9 @@ const blank: Project = {
   specs: { dimensions: "", volumeLiters: "", systemType: "" }, equipment: { filter: "", lighting: "" },
   water_system: [], add_ons: [], service_packages: [], livestock_warranty: "",
   contents: { fish: [], plantsOrCorals: [], decor: "" },
-  price_min: null, price_max: null, sort_order: 0,
+  price_min: null, price_max: null, price_type: "range",
+  length_cm: null, width_cm: null, height_cm: null, volume_liters: null,
+  sort_order: 0,
 };
 
 function ProjectsAdmin() {
