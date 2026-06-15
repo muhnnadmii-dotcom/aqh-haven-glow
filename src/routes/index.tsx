@@ -48,6 +48,7 @@ export const Route = createFileRoute("/")({
 
 
 type FeaturedArticle = { slug: string; title: string; excerpt: string | null; cover_path: string | null };
+type FeaturedProject = { slug: string; title: string; category_label: string | null; location: string | null; description: string | null; cover_path: string | null; cover: string | null; specs: any };
 
 type Sections = {
   hero: { enabled: boolean; content: HeroContent } | null;
