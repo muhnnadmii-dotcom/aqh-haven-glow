@@ -661,41 +661,95 @@ export type Database = {
       }
       services: {
         Row: {
+          category: string | null
           created_at: string
+          cta_label: string | null
+          cta_type: string | null
+          cta_url: string | null
           description: string | null
+          faqs: Json
           features: Json
+          full_description: string | null
           icon: string | null
           id: string
           image_path: string | null
+          includes: Json
+          is_featured: boolean
+          linked_page_type: string
+          linked_page_url: string | null
+          meta_description: string | null
+          meta_title: string | null
+          price_label: string | null
+          process_steps: Json
           published: boolean
+          service_type: string | null
+          short_description: string | null
           slug: string
           sort_order: number
+          starting_price: number | null
+          suitable_for: Json
           title: string
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
+          cta_label?: string | null
+          cta_type?: string | null
+          cta_url?: string | null
           description?: string | null
+          faqs?: Json
           features?: Json
+          full_description?: string | null
           icon?: string | null
           id?: string
           image_path?: string | null
+          includes?: Json
+          is_featured?: boolean
+          linked_page_type?: string
+          linked_page_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          price_label?: string | null
+          process_steps?: Json
           published?: boolean
+          service_type?: string | null
+          short_description?: string | null
           slug: string
           sort_order?: number
+          starting_price?: number | null
+          suitable_for?: Json
           title: string
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
+          cta_label?: string | null
+          cta_type?: string | null
+          cta_url?: string | null
           description?: string | null
+          faqs?: Json
           features?: Json
+          full_description?: string | null
           icon?: string | null
           id?: string
           image_path?: string | null
+          includes?: Json
+          is_featured?: boolean
+          linked_page_type?: string
+          linked_page_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          price_label?: string | null
+          process_steps?: Json
           published?: boolean
+          service_type?: string | null
+          short_description?: string | null
           slug?: string
           sort_order?: number
+          starting_price?: number | null
+          suitable_for?: Json
           title?: string
           updated_at?: string
         }
