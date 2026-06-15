@@ -220,8 +220,9 @@ function ProjectsAdmin() {
   );
 }
 
-function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; onChange: (v: Project) => void; onSave: () => void; onCancel: () => void }) {
+function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value: Project; categories: CategoryOpt[]; onChange: (v: Project) => void; onSave: () => void; onCancel: () => void }) {
   const v = value;
+  const catLabel = (slug: string) => catLabelFrom(categories, slug);
   const set = <K extends keyof Project>(k: K, val: Project[K]) => onChange({ ...v, [k]: val });
   const setSpec = (k: string, val: string) => onChange({ ...v, specs: { ...v.specs, [k]: val } });
   const setEq = (k: string, val: string) => onChange({ ...v, equipment: { ...v.equipment, [k]: val } });
@@ -246,9 +247,13 @@ function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; on
             const nv = e.target.value;
             onChange({ ...v, category: nv, category_label: catLabel(nv) });
           }}>
-            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {!categories.some((c) => c.value === v.category) && v.category && (
+              <option value={v.category}>{v.category_label || v.category}</option>
+            )}
+            {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </Field>
+
         <Field label="اسم التصنيف (للعرض)"><input className={inp} value={v.category_label ?? ""} onChange={(e) => set("category_label", e.target.value)} /></Field>
         <Field label="المدينة / الموقع"><input className={inp} value={v.location ?? ""} onChange={(e) => set("location", e.target.value)} /></Field>
         <Field label="السنة"><input className={inp} value={v.year ?? ""} onChange={(e) => set("year", e.target.value)} /></Field>
