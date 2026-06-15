@@ -96,11 +96,7 @@ function ServicesIndex() {
       </Reveal>
 
       {/* Cards */}
-      {list === null ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-16">
-          {[1,2,3,4,5,6].map(i => <div key={i} className="glass rounded-2xl h-96 animate-pulse" />)}
-        </div>
-      ) : list.length === 0 ? null : (
+      {list.length === 0 ? null : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-20 items-stretch">
           {list.map((s, i) => {
             const link = resolveHref(s);
