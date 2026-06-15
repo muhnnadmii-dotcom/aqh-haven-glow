@@ -83,6 +83,7 @@ function HomePage() {
   const [sections, setSections] = useState<Sections>(EMPTY_SECTIONS);
   const [articles, setArticles] = useState<FeaturedArticle[]>([]);
   const [projects, setProjects] = useState<FeaturedProject[]>([]);
+  const [dbServices, setDbServices] = useState<FeaturedService[]>([]);
 
   useEffect(() => {
     let alive = true;
