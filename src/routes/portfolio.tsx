@@ -116,14 +116,28 @@ function PortfolioPage() {
   const [cat, setCat] = useState<Cat>("all");
   const [open, setOpen] = useState<Project | null>(null);
   const projects = initial.projects as Project[];
+  const adminCats = (initial as any).categories as { slug: string; label: string }[];
   const loading = false;
   const error: string | null = null;
 
   const tabs = useMemo(() => {
-    const seen = new Map<string, string>();
-    projects.forEach((p) => { if (!seen.has(p.cat)) seen.set(p.cat, p.catLabel); });
-    return [{ id: "all" as Cat, label: "الكل" }, ...Array.from(seen.entries()).map(([id, label]) => ({ id, label }))];
-  }, [projects]);
+    const used = new Set(projects.map((p) => p.cat));
+    const ordered: { id: Cat; label: string }[] = [];
+    const seen = new Set<string>();
+    // First, admin-defined order for categories that actually have projects
+    for (const c of adminCats ?? []) {
+      if (used.has(c.slug) && !seen.has(c.slug)) {
+        ordered.push({ id: c.slug, label: c.label });
+        seen.add(c.slug);
+      }
+    }
+    // Then any leftover legacy categories present on projects but not in admin list
+    projects.forEach((p) => {
+      if (!seen.has(p.cat)) { ordered.push({ id: p.cat, label: p.catLabel }); seen.add(p.cat); }
+    });
+    return [{ id: "all" as Cat, label: "الكل" }, ...ordered];
+  }, [projects, adminCats]);
+
 
   const filtered = cat === "all" ? projects : projects.filter((p) => p.cat === cat);
 
