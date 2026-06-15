@@ -5,13 +5,14 @@ import { Reveal } from "../components/Reveal";
 import { Counter } from "../components/Counter";
 import {
   ArrowLeft,
-  Plus, Minus, Star, Quote,
+  Plus, Minus, Star, Quote, Wrench, Building2, MapPin, Ruler, MessageCircle,
 } from "lucide-react";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
 import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
 import counterAquariumAsset from "../assets/aqh-counter-aquarium.png.asset.json";
 import canisterFilterAsset from "../assets/aqh-canister-filter.jpg.asset.json";
+import saudiServiceAsset from "../assets/aqh-saudi-service.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
 import {
@@ -21,10 +22,14 @@ import {
   type PartnersContent, type HomeTestimonialsContent,
 } from "@/lib/home-sections";
 import { getImageUrl, onImageError } from "@/lib/storage";
+import { whatsappLink } from "@/components/WhatsAppButton";
 
 
 const heroFallback = livingRoomTankAsset.url;
 const styledAquarium = styledAquariumAsset.url;
+const maintenanceImg = saudiServiceAsset.url;
+const businessImg = counterAquariumAsset.url;
+const projectFallbacks = [livingRoomTankAsset.url, marineCubeAsset.url, styledAquariumAsset.url, counterAquariumAsset.url, canisterFilterAsset.url, saudiServiceAsset.url];
 const serviceFallbacks = [marineCubeAsset.url, counterAquariumAsset.url, canisterFilterAsset.url, styledAquariumAsset.url];
 
 export const Route = createFileRoute("/")({
