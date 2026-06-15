@@ -362,6 +362,59 @@ function HomePage() {
         </section>
       )}
 
+      {/* FEATURED PROJECTS */}
+      <FeaturedProjectsSection projects={projects} />
+
+      {/* MAINTENANCE TEASER */}
+      <section className="relative py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6">
+          <div className="glass rounded-3xl overflow-hidden grid md:grid-cols-2 items-stretch">
+            <div className="relative h-56 md:h-auto min-h-[220px]">
+              <img src={maintenanceImg} alt="صيانة أحواض" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-l from-background/80 via-background/30 to-transparent md:bg-gradient-to-r" />
+            </div>
+            <div className="p-6 sm:p-10 flex flex-col justify-center">
+              <div className="inline-flex items-center gap-2 text-xs tracking-widest text-gradient-gold mb-3">
+                <Wrench size={14} /> صيانة احترافية
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">حوضك بأفضل حال طوال السنة</h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">
+                باقات صيانة دورية تشمل تنظيف، فحص جودة الماء، فلاتر، إضاءة، وأسماك ونباتات. متابعة مستمرة من فريق متخصص.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <CTAButton href="/maintenance" variant="gold">احجز صيانة</CTAButton>
+                <CTAButton href={whatsappLink("أرغب بحجز صيانة لحوضي")} variant="outline">استفسار سريع</CTAButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BUSINESS SOLUTIONS TEASER */}
+      <section className="relative py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6">
+          <div className="glass rounded-3xl overflow-hidden grid md:grid-cols-2 items-stretch">
+            <div className="p-6 sm:p-10 flex flex-col justify-center order-2 md:order-1">
+              <div className="inline-flex items-center gap-2 text-xs tracking-widest text-gradient-gold mb-3">
+                <Building2 size={14} /> حلول الأعمال
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">أحواض للكافيهات والمكاتب والمطاعم</h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">
+                نصمم تجربة بصرية فاخرة تعزز هوية مكانك وتجذب عملاءك، مع عقود صيانة كاملة وضمان تشغيلي.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <CTAButton href="/business-solutions" variant="gold">حلول الأعمال</CTAButton>
+                <CTAButton href={whatsappLink("استفسار عن حلول الأعمال لأكوا هيفن")} variant="outline">تواصل معنا</CTAButton>
+              </div>
+            </div>
+            <div className="relative h-56 md:h-auto min-h-[220px] order-1 md:order-2">
+              <img src={businessImg} alt="حلول الأعمال" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent md:bg-gradient-to-l" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* PROCESS */}
       {procEnabled && procItems.length > 0 && (
         <section className="relative py-24">
