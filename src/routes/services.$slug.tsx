@@ -81,7 +81,9 @@ function IconOf({ name }: { name?: string | null }) {
 }
 
 function ServiceDetail() {
-  const { svc, related } = Route.useLoaderData();
+  const data = Route.useLoaderData();
+  const svc = data.svc as Svc;
+  const related = data.related as Svc[];
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const img = getImageUrl(svc.image_path);
