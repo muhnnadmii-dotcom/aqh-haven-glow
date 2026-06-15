@@ -521,28 +521,59 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
 
 
           {/* Price */}
-          <div className="relative overflow-hidden rounded-2xl glass-gold p-6">
-            <div className="light-rays" aria-hidden />
-            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">النطاق السعري التقريبي</div>
-                <div className="text-2xl sm:text-3xl font-bold text-gradient-gold">
-                  {formatPriceRange(project.priceRange)}
+          {(() => {
+            const priceLabel = formatPriceRange(project.priceRange, project.priceType);
+            if (project.priceType === "hidden" || !priceLabel) {
+              // Hidden price: only show CTA, no price text
+              return (
+                <div className="relative overflow-hidden rounded-2xl glass-gold p-6">
+                  <div className="light-rays" aria-hidden />
+                  <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      لطلب عرض سعر، تواصل معنا مباشرة عبر واتساب.
+                    </div>
+                    <a
+                      href={whatsappLink(waMsg)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-gold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 justify-center whitespace-nowrap"
+                    >
+                      <MessageCircle size={16} /> اطلب عرض سعر
+                    </a>
+                  </div>
                 </div>
-                <div className="text-[11px] text-muted-foreground mt-1">
-                  يشمل التصميم والتنفيذ والتركيب — السعر النهائي يتحدد بعد المعاينة.
+              );
+            }
+            const heading = project.priceType === "on_request"
+              ? "السعر"
+              : project.priceType === "fixed"
+                ? "السعر"
+                : "النطاق السعري التقريبي";
+            return (
+              <div className="relative overflow-hidden rounded-2xl glass-gold p-6">
+                <div className="light-rays" aria-hidden />
+                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">{heading}</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-gradient-gold">
+                      {priceLabel}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-1">
+                      يشمل التصميم والتنفيذ والتركيب — السعر النهائي يتحدد بعد المعاينة.
+                    </div>
+                  </div>
+                  <a
+                    href={whatsappLink(waMsg)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-gold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 justify-center whitespace-nowrap"
+                  >
+                    <MessageCircle size={16} /> اطلب عرض سعر مماثل
+                  </a>
                 </div>
               </div>
-              <a
-                href={whatsappLink(waMsg)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-gold px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2 justify-center whitespace-nowrap"
-              >
-                <MessageCircle size={16} /> اطلب عرض سعر مماثل
-              </a>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </div>
       </div>
