@@ -105,6 +105,9 @@ function HomePage() {
       .order("sort_order", { ascending: true })
       .limit(6)
       .then(({ data }) => { if (alive) setProjects((data ?? []) as unknown as FeaturedProject[]); });
+    supabase.from("services").select("id, slug, title, short_description, description, image_path, icon, linked_page_type, linked_page_url")
+      .eq("published", true).eq("is_featured", true).order("sort_order").limit(6)
+      .then(({ data }) => { if (alive) setDbServices(((data ?? []) as any[]) as FeaturedService[]); });
     return () => { alive = false; };
   }, []);
 
