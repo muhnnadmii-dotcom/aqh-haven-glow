@@ -145,7 +145,7 @@ function ProjectsAdmin() {
   }, [list, search, filterCat, filterStatus]);
 
   if (editing) {
-    return <ProjectForm value={editing} onChange={setEditing} onSave={save} onCancel={() => setEditing(null)} />;
+    return <ProjectForm value={editing} categories={categories} onChange={setEditing} onSave={save} onCancel={() => setEditing(null)} />;
   }
 
   return (
