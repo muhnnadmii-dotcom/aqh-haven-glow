@@ -317,8 +317,47 @@ function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value:
 
 
       <Section title="المواصفات">
-        <Field label="الأبعاد"><input className={inp} value={v.specs.dimensions ?? ""} onChange={(e) => setSpec("dimensions", e.target.value)} /></Field>
-        <Field label="الحجم (لتر)"><input className={inp} value={v.specs.volumeLiters ?? ""} onChange={(e) => setSpec("volumeLiters", e.target.value)} /></Field>
+        <Field label="الطول (سم)">
+          <input type="number" min={0} step="0.1" className={inp}
+            value={v.length_cm ?? ""}
+            onChange={(e) => {
+              const n = e.target.value === "" ? null : Number(e.target.value);
+              const next = { ...v, length_cm: n };
+              if (n != null && v.width_cm != null && v.height_cm != null) {
+                next.volume_liters = Number(((n * v.width_cm * v.height_cm) / 1000).toFixed(2));
+              }
+              onChange(next);
+            }} />
+        </Field>
+        <Field label="العرض (سم)">
+          <input type="number" min={0} step="0.1" className={inp}
+            value={v.width_cm ?? ""}
+            onChange={(e) => {
+              const n = e.target.value === "" ? null : Number(e.target.value);
+              const next = { ...v, width_cm: n };
+              if (n != null && v.length_cm != null && v.height_cm != null) {
+                next.volume_liters = Number(((v.length_cm * n * v.height_cm) / 1000).toFixed(2));
+              }
+              onChange(next);
+            }} />
+        </Field>
+        <Field label="الارتفاع (سم)">
+          <input type="number" min={0} step="0.1" className={inp}
+            value={v.height_cm ?? ""}
+            onChange={(e) => {
+              const n = e.target.value === "" ? null : Number(e.target.value);
+              const next = { ...v, height_cm: n };
+              if (n != null && v.length_cm != null && v.width_cm != null) {
+                next.volume_liters = Number(((v.length_cm * v.width_cm * n) / 1000).toFixed(2));
+              }
+              onChange(next);
+            }} />
+        </Field>
+        <Field label="الحجم (لتر) — يُحسب تلقائيًا ويمكن تعديله">
+          <input type="number" min={0} step="0.1" className={inp}
+            value={v.volume_liters ?? ""}
+            onChange={(e) => set("volume_liters", e.target.value === "" ? null : Number(e.target.value))} />
+        </Field>
         <Field label="نوع النظام"><input className={inp} value={v.specs.systemType ?? ""} onChange={(e) => setSpec("systemType", e.target.value)} /></Field>
         <Field label="نوع الزجاج"><input className={inp} value={v.specs.glassType ?? ""} onChange={(e) => setSpec("glassType", e.target.value)} /></Field>
         <Field label="PAR"><input className={inp} value={v.specs.parIntensity ?? ""} onChange={(e) => setSpec("parIntensity", e.target.value)} /></Field>
