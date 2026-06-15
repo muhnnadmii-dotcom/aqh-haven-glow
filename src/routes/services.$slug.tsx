@@ -18,20 +18,18 @@ type Svc = {
   linked_page_type: string; linked_page_url: string | null;
 };
 
-function fetchService(slug: string): Promise<Svc | null> {
-  return supabase.from("services").select("*").eq("slug", slug).eq("published", true).maybeSingle()
-    .then(({ data }) => {
-      if (!data) return null;
-      const r: any = data;
-      return {
-        ...r,
-        features: Array.isArray(r.features) ? r.features : [],
-        includes: Array.isArray(r.includes) ? r.includes : [],
-        suitable_for: Array.isArray(r.suitable_for) ? r.suitable_for : [],
-        process_steps: Array.isArray(r.process_steps) ? r.process_steps : [],
-        faqs: Array.isArray(r.faqs) ? r.faqs : [],
-      } as Svc;
-    });
+async function fetchService(slug: string): Promise<Svc | null> {
+  const { data } = await supabase.from("services").select("*").eq("slug", slug).eq("published", true).maybeSingle();
+  if (!data) return null;
+  const r: any = data;
+  return {
+    ...r,
+    features: Array.isArray(r.features) ? r.features : [],
+    includes: Array.isArray(r.includes) ? r.includes : [],
+    suitable_for: Array.isArray(r.suitable_for) ? r.suitable_for : [],
+    process_steps: Array.isArray(r.process_steps) ? r.process_steps : [],
+    faqs: Array.isArray(r.faqs) ? r.faqs : [],
+  } as Svc;
 }
 
 export const Route = createFileRoute("/services/$slug")({
