@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
-import { LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog, Wrench, FileText, Calendar, Palette, Menu, X } from "lucide-react";
+import { LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog, Wrench, FileText, Calendar, Palette, Menu, X, Tags } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
@@ -38,6 +38,8 @@ const navGroups = [
     label: "محتوى الصفحات",
     items: [
       { to: "/admin/projects", label: "اعمالنا (الأحواض)", icon: Fish, exact: false },
+      { to: "/admin/project-categories", label: "تصنيفات الأحواض", icon: Tags, exact: false },
+
       { to: "/admin/services", label: "خدماتنا", icon: Wrench, exact: false },
       { to: "/admin/articles", label: "المقالات", icon: BookOpen, exact: false },
       { to: "/admin/testimonials", label: "التقييمات", icon: MessageSquareQuote, exact: false },

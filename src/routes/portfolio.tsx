@@ -57,12 +57,20 @@ export const Route = createFileRoute("/portfolio")({
     links: [{ rel: "canonical", href: "/portfolio" }],
   }),
   loader: async () => {
-    const { data } = await supabase.from("projects").select("*").eq("published", true)
-      .order("sort_order").order("created_at", { ascending: false });
-    return { projects: ((data ?? []) as any[]).map(adapt) };
+    const [{ data: projects }, { data: cats }] = await Promise.all([
+      supabase.from("projects").select("*").eq("published", true)
+        .order("sort_order").order("created_at", { ascending: false }),
+      (supabase as any).from("project_categories").select("slug,label,sort_order,published")
+        .eq("published", true).order("sort_order").order("label"),
+    ]);
+    return {
+      projects: ((projects ?? []) as any[]).map(adapt),
+      categories: ((cats ?? []) as { slug: string; label: string }[]),
+    };
   },
   component: PortfolioPage,
 });
+
 
 type Cat = string;
 
@@ -108,14 +116,30 @@ function PortfolioPage() {
   const [cat, setCat] = useState<Cat>("all");
   const [open, setOpen] = useState<Project | null>(null);
   const projects = initial.projects as Project[];
+  const adminCats = (initial as any).categories as { slug: string; label: string }[];
   const loading = false;
   const error: string | null = null;
 
   const tabs = useMemo(() => {
-    const seen = new Map<string, string>();
-    projects.forEach((p) => { if (!seen.has(p.cat)) seen.set(p.cat, p.catLabel); });
-    return [{ id: "all" as Cat, label: "الكل" }, ...Array.from(seen.entries()).map(([id, label]) => ({ id, label }))];
-  }, [projects]);
+    const used = new Set<string>(projects.map((p) => p.cat as unknown as string));
+    const ordered: { id: Cat; label: string }[] = [];
+    const seen = new Set<string>();
+    // First, admin-defined order for categories that actually have projects
+    for (const c of adminCats ?? []) {
+      if (used.has(c.slug) && !seen.has(c.slug)) {
+        ordered.push({ id: c.slug, label: c.label });
+        seen.add(c.slug);
+      }
+    }
+    // Then any leftover legacy categories present on projects but not in admin list
+    projects.forEach((p) => {
+      const slug = p.cat as unknown as string;
+      if (!seen.has(slug)) { ordered.push({ id: slug, label: p.catLabel }); seen.add(slug); }
+    });
+
+    return [{ id: "all" as Cat, label: "الكل" }, ...ordered];
+  }, [projects, adminCats]);
+
 
   const filtered = cat === "all" ? projects : projects.filter((p) => p.cat === cat);
 

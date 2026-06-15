@@ -498,6 +498,36 @@ export type Database = {
         }
         Relationships: []
       }
+      project_categories: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          published: boolean
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          published?: boolean
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          published?: boolean
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           add_ons: string[] | null

@@ -40,7 +40,10 @@ type Project = {
   sort_order: number;
 };
 
-const CATEGORIES: { value: string; label: string }[] = [
+type CategoryOpt = { value: string; label: string };
+
+// Fallback used only until categories load from DB; the DB list is the source of truth.
+const FALLBACK_CATEGORIES: CategoryOpt[] = [
   { value: "planted", label: "نباتي" },
   { value: "marine", label: "بحري" },
   { value: "betta", label: "فايتر" },
@@ -52,7 +55,9 @@ const CATEGORIES: { value: string; label: string }[] = [
   { value: "entrance", label: "مدخل" },
   { value: "commercial", label: "تجاري" },
 ];
-const catLabel = (v: string) => CATEGORIES.find((c) => c.value === v)?.label ?? v;
+const catLabelFrom = (cats: CategoryOpt[], v: string) =>
+  cats.find((c) => c.value === v)?.label ?? v;
+
 
 const blank: Project = {
   slug: "", title: "", category: "planted", category_label: "نباتي",
@@ -67,12 +72,25 @@ const blank: Project = {
 
 function ProjectsAdmin() {
   const [list, setList] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<CategoryOpt[]>(FALLBACK_CATEGORIES);
   const [editing, setEditing] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "published" | "draft">("all");
+
+  const catLabel = (v: string) => catLabelFrom(categories, v);
+
+  const loadCategories = async () => {
+    const { data } = await (supabase as any)
+      .from("project_categories").select("slug,label,published")
+      .order("sort_order").order("label");
+    const rows = (data ?? []) as { slug: string; label: string; published: boolean }[];
+    if (rows.length > 0) {
+      setCategories(rows.map((r) => ({ value: r.slug, label: r.label })));
+    }
+  };
 
   const load = async () => {
     setLoading(true); setError(null);
@@ -82,7 +100,8 @@ function ProjectsAdmin() {
     setList((data ?? []) as unknown as Project[]);
     setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadCategories(); }, []);
+
 
   const save = async () => {
     if (!editing) return;
@@ -126,7 +145,7 @@ function ProjectsAdmin() {
   }, [list, search, filterCat, filterStatus]);
 
   if (editing) {
-    return <ProjectForm value={editing} onChange={setEditing} onSave={save} onCancel={() => setEditing(null)} />;
+    return <ProjectForm value={editing} categories={categories} onChange={setEditing} onSave={save} onCancel={() => setEditing(null)} />;
   }
 
   return (
@@ -147,7 +166,8 @@ function ProjectsAdmin() {
         </div>
         <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className={inp + " w-auto"}>
           <option value="all">كل التصنيفات</option>
-          {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+
         </select>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as any)} className={inp + " w-auto"}>
           <option value="all">كل الحالات</option>
@@ -200,8 +220,9 @@ function ProjectsAdmin() {
   );
 }
 
-function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; onChange: (v: Project) => void; onSave: () => void; onCancel: () => void }) {
+function ProjectForm({ value, categories, onChange, onSave, onCancel }: { value: Project; categories: CategoryOpt[]; onChange: (v: Project) => void; onSave: () => void; onCancel: () => void }) {
   const v = value;
+  const catLabel = (slug: string) => catLabelFrom(categories, slug);
   const set = <K extends keyof Project>(k: K, val: Project[K]) => onChange({ ...v, [k]: val });
   const setSpec = (k: string, val: string) => onChange({ ...v, specs: { ...v.specs, [k]: val } });
   const setEq = (k: string, val: string) => onChange({ ...v, equipment: { ...v.equipment, [k]: val } });
@@ -226,9 +247,13 @@ function ProjectForm({ value, onChange, onSave, onCancel }: { value: Project; on
             const nv = e.target.value;
             onChange({ ...v, category: nv, category_label: catLabel(nv) });
           }}>
-            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {!categories.some((c) => c.value === v.category) && v.category && (
+              <option value={v.category}>{v.category_label || v.category}</option>
+            )}
+            {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </Field>
+
         <Field label="اسم التصنيف (للعرض)"><input className={inp} value={v.category_label ?? ""} onChange={(e) => set("category_label", e.target.value)} /></Field>
         <Field label="المدينة / الموقع"><input className={inp} value={v.location ?? ""} onChange={(e) => set("location", e.target.value)} /></Field>
         <Field label="السنة"><input className={inp} value={v.year ?? ""} onChange={(e) => set("year", e.target.value)} /></Field>
