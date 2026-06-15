@@ -117,7 +117,37 @@ function ProjectsAdmin() {
     if (!editing.title.trim() || !editing.slug.trim()) {
       toast.error("العنوان والـ slug مطلوبان"); return;
     }
-    const payload = { ...editing, category_label: editing.category_label || catLabel(editing.category) };
+    // Normalize price fields based on selected type
+    let price_min = editing.price_min;
+    let price_max = editing.price_max;
+    switch (editing.price_type) {
+      case "fixed":
+        if (price_min == null) { toast.error("أدخل السعر"); return; }
+        price_max = price_min;
+        break;
+      case "from":
+        if (price_min == null) { toast.error("أدخل السعر الابتدائي"); return; }
+        price_max = null;
+        break;
+      case "range":
+        if (price_min == null || price_max == null) { toast.error("أدخل سعر من وإلى"); return; }
+        break;
+      case "on_request":
+      case "hidden":
+        price_min = null; price_max = null;
+        break;
+    }
+    // Mirror dimensions/volume into specs jsonb so legacy display stays in sync
+    const l = editing.length_cm, w = editing.width_cm, h = editing.height_cm;
+    const dimensionsStr = (l && w && h) ? `${l} × ${w} × ${h} سم` : (editing.specs.dimensions ?? "");
+    const volumeStr = editing.volume_liters != null ? `${editing.volume_liters} لتر` : (editing.specs.volumeLiters ?? "");
+    const nextSpecs = { ...editing.specs, dimensions: dimensionsStr, volumeLiters: volumeStr };
+    const payload = {
+      ...editing,
+      price_min, price_max,
+      specs: nextSpecs,
+      category_label: editing.category_label || catLabel(editing.category),
+    };
     const { error } = editing.id
       ? await supabase.from("projects").update(payload).eq("id", editing.id)
       : await supabase.from("projects").insert(payload);
