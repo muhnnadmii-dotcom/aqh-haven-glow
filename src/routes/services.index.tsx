@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
@@ -18,6 +18,14 @@ export const Route = createFileRoute("/services/")({
     ],
     links: [{ rel: "canonical", href: "/services" }],
   }),
+  loader: async () => {
+    const { data } = await supabase.from("services").select("*").eq("published", true).order("sort_order");
+    const list = ((data ?? []) as any[]).map((r) => ({
+      ...r,
+      features: Array.isArray(r.features) ? r.features : [],
+    })) as Svc[];
+    return { list };
+  },
   component: ServicesIndex,
 });
 
