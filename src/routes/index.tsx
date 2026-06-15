@@ -77,6 +77,7 @@ function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [sections, setSections] = useState<Sections>(EMPTY_SECTIONS);
   const [articles, setArticles] = useState<FeaturedArticle[]>([]);
+  const [projects, setProjects] = useState<FeaturedProject[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -92,6 +93,12 @@ function HomePage() {
       .eq("published", true).eq("visible", true).eq("featured_on_home", true)
       .order("home_order", { ascending: true }).limit(3)
       .then(({ data }) => { if (alive) setArticles((data ?? []) as unknown as FeaturedArticle[]); });
+    supabase.from("projects").select("slug, title, category_label, location, description, cover_path, cover, specs")
+      .eq("published", true)
+      .order("featured", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .limit(6)
+      .then(({ data }) => { if (alive) setProjects((data ?? []) as unknown as FeaturedProject[]); });
     return () => { alive = false; };
   }, []);
 
