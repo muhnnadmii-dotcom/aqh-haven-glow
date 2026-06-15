@@ -99,7 +99,7 @@ const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq",
 
 
 function HomePage() {
-  const initial = Route.useLoaderData();
+  const initial = Route.useLoaderData() as { sections: Sections; articles: FeaturedArticle[]; projects: FeaturedProject[]; dbServices: FeaturedService[] };
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const sections = initial.sections;
   const articles = initial.articles;
