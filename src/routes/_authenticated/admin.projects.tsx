@@ -72,12 +72,25 @@ const blank: Project = {
 
 function ProjectsAdmin() {
   const [list, setList] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<CategoryOpt[]>(FALLBACK_CATEGORIES);
   const [editing, setEditing] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "published" | "draft">("all");
+
+  const catLabel = (v: string) => catLabelFrom(categories, v);
+
+  const loadCategories = async () => {
+    const { data } = await (supabase as any)
+      .from("project_categories").select("slug,label,published")
+      .order("sort_order").order("label");
+    const rows = (data ?? []) as { slug: string; label: string; published: boolean }[];
+    if (rows.length > 0) {
+      setCategories(rows.map((r) => ({ value: r.slug, label: r.label })));
+    }
+  };
 
   const load = async () => {
     setLoading(true); setError(null);
@@ -87,7 +100,8 @@ function ProjectsAdmin() {
     setList((data ?? []) as unknown as Project[]);
     setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadCategories(); }, []);
+
 
   const save = async () => {
     if (!editing) return;
