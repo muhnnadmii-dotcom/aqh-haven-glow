@@ -80,17 +80,8 @@ const processSteps = [
 ];
 
 function ServicesIndex() {
-  const [list, setList] = useState<Svc[] | null>(null);
+  const list = Route.useLoaderData().list as Svc[];
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-
-  useEffect(() => {
-    supabase.from("services").select("*").eq("published", true).order("sort_order").then(({ data }) => {
-      setList(((data ?? []) as any[]).map((r) => ({
-        ...r,
-        features: Array.isArray(r.features) ? r.features : [],
-      })) as Svc[]);
-    });
-  }, []);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
