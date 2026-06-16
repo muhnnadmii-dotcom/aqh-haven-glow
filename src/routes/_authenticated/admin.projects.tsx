@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Search, Eye, EyeOff, Home as HomeIcon, Upload, Loader2, Star, X as XIcon } from "lucide-react";
+import { Plus, Trash2, Save, Search, Eye, EyeOff, Home as HomeIcon, Upload, Loader2, Star, X as XIcon, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { publicUrl, uploadMedia, deleteMedia, onImageError } from "@/lib/storage";
 
 
@@ -30,6 +30,7 @@ type Project = {
   images: string[];
   image_paths: string[];
   cover_path: string | null;
+  media_order: string[];
   specs: Record<string, string>;
   equipment: Record<string, string>;
   water_system: string[] | null;
@@ -74,7 +75,7 @@ const blank: Project = {
   slug: "", title: "", category: "planted", category_label: "نباتي",
   featured: false, featured_on_home: false, home_order: 0,
   published: true, location: "", year: "", duration: "", description: "", cover: "",
-  images: [], image_paths: [], cover_path: null,
+  images: [], image_paths: [], cover_path: null, media_order: [],
   specs: { dimensions: "", volumeLiters: "", systemType: "" }, equipment: { filter: "", lighting: "" },
   water_system: [], add_ons: [], service_packages: [], livestock_warranty: "",
   equipment_warranty_enabled: false, equipment_warranty_text: "",
@@ -511,18 +512,60 @@ function Field({ label, children, full }: { label: string; children: React.React
   );
 }
 
+type MediaItem = { token: string; kind: "new" | "old"; src: string; ref: string };
+
+function buildOrderedItems(value: Project): MediaItem[] {
+  const paths = value.image_paths ?? [];
+  const urls = value.images ?? [];
+  const order = (value.media_order ?? []).filter((t) => {
+    if (t.startsWith("p:")) return paths.includes(t.slice(2));
+    if (t.startsWith("u:")) return urls.includes(t.slice(2));
+    return false;
+  });
+  // Append any items missing from media_order at the end (paths first, then urls)
+  for (const p of paths) {
+    const t = `p:${p}`;
+    if (!order.includes(t)) order.push(t);
+  }
+  for (const u of urls) {
+    const t = `u:${u}`;
+    if (!order.includes(t)) order.push(t);
+  }
+  return order.map((token) => {
+    if (token.startsWith("p:")) {
+      const ref = token.slice(2);
+      return { token, kind: "new" as const, src: publicUrl(ref), ref };
+    }
+    const ref = token.slice(2);
+    return { token, kind: "old" as const, src: ref, ref };
+  });
+}
+
 function ProjectImagesManager({ value, onChange }: { value: Project; onChange: (v: Project) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [urlInput, setUrlInput] = useState("");
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
 
-  const paths = value.image_paths ?? [];
-  const urls = value.images ?? [];
+  const items = buildOrderedItems(value);
   const coverPath = value.cover_path ?? null;
   const coverUrl = value.cover ?? "";
 
-  const isCoverPath = (p: string) => coverPath === p;
-  const isCoverUrl = (u: string) => !coverPath && coverUrl === u;
+  const isCover = (it: MediaItem) =>
+    (it.kind === "new" && coverPath === it.ref) ||
+    (it.kind === "old" && !coverPath && coverUrl === it.ref);
+
+  const applyOrder = (next: MediaItem[]) => {
+    onChange({ ...value, media_order: next.map((i) => i.token) });
+  };
+
+  const move = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= items.length) return;
+    const next = items.slice();
+    const [m] = next.splice(from, 1);
+    next.splice(to, 0, m);
+    applyOrder(next);
+  };
 
   const addFiles = async (files: FileList) => {
     setBusy(true);
@@ -532,47 +575,60 @@ function ProjectImagesManager({ value, onChange }: { value: Project; onChange: (
         const p = await uploadMedia(f, `projects/${value.slug || "new"}`);
         added.push(p);
       }
-      const nextPaths = [...paths, ...added];
+      const nextPaths = [...(value.image_paths ?? []), ...added];
+      const nextOrder = [...items.map((i) => i.token), ...added.map((p) => `p:${p}`)];
       const nextCoverPath = coverPath ?? (coverUrl ? null : added[0] ?? null);
-      onChange({ ...value, image_paths: nextPaths, cover_path: nextCoverPath });
+      onChange({ ...value, image_paths: nextPaths, cover_path: nextCoverPath, media_order: nextOrder });
     } catch (e: any) {
       toast.error(e?.message ?? "تعذر الرفع");
     } finally { setBusy(false); }
-  };
-
-  const removePath = async (p: string) => {
-    if (!confirm("حذف هذه الصورة نهائيًا؟")) return;
-    deleteMedia(p).catch(() => {});
-    const next = paths.filter((x) => x !== p);
-    const nextCover = coverPath === p ? (next[0] ?? null) : coverPath;
-    onChange({ ...value, image_paths: next, cover_path: nextCover });
-  };
-
-  const removeUrl = (u: string) => {
-    if (!confirm("حذف هذه الصورة من القائمة؟ (لن يتم حذف الملف الأصلي)")) return;
-    const next = urls.filter((x) => x !== u);
-    const nextCoverUrl = coverUrl === u ? "" : coverUrl;
-    onChange({ ...value, images: next, cover: nextCoverUrl });
-  };
-
-  const setCoverFromPath = (p: string) => {
-    onChange({ ...value, cover_path: p, cover: "" });
-  };
-  const setCoverFromUrl = (u: string) => {
-    onChange({ ...value, cover_path: null, cover: u });
   };
 
   const addUrl = () => {
     const u = urlInput.trim();
     if (!u) return;
     if (!/^https?:\/\//i.test(u)) { toast.error("الرابط يجب أن يبدأ بـ http(s)://"); return; }
+    const urls = value.images ?? [];
     if (urls.includes(u)) { toast.error("الرابط موجود مسبقًا"); return; }
-    const next = [...urls, u];
-    onChange({ ...value, images: next, cover: coverUrl || (!coverPath ? u : "") });
+    const nextUrls = [...urls, u];
+    const nextOrder = [...items.map((i) => i.token), `u:${u}`];
+    onChange({
+      ...value,
+      images: nextUrls,
+      cover: coverUrl || (!coverPath ? u : ""),
+      media_order: nextOrder,
+    });
     setUrlInput("");
   };
 
-  const total = paths.length + urls.length;
+  const removeItem = async (it: MediaItem) => {
+    if (items.length === 1) {
+      if (!confirm("هذه آخر صورة. هل تريد حذفها فعلًا؟")) return;
+    } else {
+      if (!confirm("حذف هذه الصورة؟")) return;
+    }
+    if (it.kind === "new") {
+      deleteMedia(it.ref).catch(() => {});
+      const nextPaths = (value.image_paths ?? []).filter((p) => p !== it.ref);
+      const nextOrder = items.filter((x) => x.token !== it.token).map((x) => x.token);
+      const nextCoverPath = coverPath === it.ref
+        ? (nextPaths[0] ?? null)
+        : coverPath;
+      onChange({ ...value, image_paths: nextPaths, cover_path: nextCoverPath, media_order: nextOrder });
+    } else {
+      const nextUrls = (value.images ?? []).filter((u) => u !== it.ref);
+      const nextOrder = items.filter((x) => x.token !== it.token).map((x) => x.token);
+      const nextCoverUrl = coverUrl === it.ref ? "" : coverUrl;
+      onChange({ ...value, images: nextUrls, cover: nextCoverUrl, media_order: nextOrder });
+    }
+  };
+
+  const setAsCover = (it: MediaItem) => {
+    if (it.kind === "new") onChange({ ...value, cover_path: it.ref, cover: "" });
+    else onChange({ ...value, cover_path: null, cover: it.ref });
+  };
+
+  const total = items.length;
 
   return (
     <div className="space-y-3">
@@ -600,43 +656,66 @@ function ProjectImagesManager({ value, onChange }: { value: Project; onChange: (
           لا توجد صور بعد. ارفع صورًا جديدة أو أضف روابط خارجية.
         </div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-          {paths.map((p) => (
-            <ImageTile key={`p:${p}`} src={publicUrl(p)} isCover={isCoverPath(p)} kind="new"
-              onCover={() => setCoverFromPath(p)} onRemove={() => removePath(p)} />
-          ))}
-          {urls.map((u) => (
-            <ImageTile key={`u:${u}`} src={u} isCover={isCoverUrl(u)} kind="old"
-              onCover={() => setCoverFromUrl(u)} onRemove={() => removeUrl(u)} />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {items.map((it, idx) => (
+            <div
+              key={it.token}
+              draggable
+              onDragStart={() => setDragIdx(idx)}
+              onDragOver={(e) => { e.preventDefault(); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragIdx !== null && dragIdx !== idx) move(dragIdx, idx);
+                setDragIdx(null);
+              }}
+              onDragEnd={() => setDragIdx(null)}
+              className={`relative rounded-xl overflow-hidden border-2 ${isCover(it) ? "border-gold" : "border-white/10"} ${dragIdx === idx ? "opacity-50" : ""}`}
+            >
+              <div className="aspect-square relative">
+                <img src={it.src} alt="" loading="lazy" onError={onImageError} className="h-full w-full object-cover" />
+                {isCover(it) && (
+                  <span className="absolute top-1 left-1 bg-gold text-black text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    رئيسية
+                  </span>
+                )}
+                <span className={`absolute bottom-1 right-1 text-[9px] px-1.5 py-0.5 rounded-full ${it.kind === "old" ? "bg-amber-500/80 text-black" : "bg-emerald-500/80 text-black"}`}>
+                  {it.kind === "old" ? "قديم" : "جديد"}
+                </span>
+                <span className="absolute top-1 right-1 bg-black/70 rounded-full px-1.5 py-0.5 text-[10px] text-white">
+                  {idx + 1}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-1 bg-black/60 px-1 py-1">
+                <button type="button" onClick={() => move(idx, idx - 1)} disabled={idx === 0}
+                  title="للأعلى" className="p-1 rounded hover:bg-white/10 disabled:opacity-30">
+                  <ChevronUp size={14} />
+                </button>
+                <button type="button" onClick={() => move(idx, idx + 1)} disabled={idx === items.length - 1}
+                  title="للأسفل" className="p-1 rounded hover:bg-white/10 disabled:opacity-30">
+                  <ChevronDown size={14} />
+                </button>
+                <span className="opacity-60 cursor-grab" title="اسحب للترتيب">
+                  <GripVertical size={14} />
+                </span>
+                <button type="button" onClick={() => setAsCover(it)} title="اجعلها الرئيسية"
+                  className="p-1 rounded text-gold hover:bg-gold hover:text-black">
+                  <Star size={14} fill={isCover(it) ? "currentColor" : "none"} />
+                </button>
+                <button type="button" onClick={() => removeItem(it)} title="حذف"
+                  className="p-1 rounded text-white hover:bg-red-500">
+                  <XIcon size={14} />
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}
 
       <p className="text-xs text-muted-foreground">
-        انقر النجمة لاختيار الصورة الرئيسية. اضغط ✕ للحذف. شارة «قديم» تعني صورة بالرابط، و«جديد» تعني صورة مرفوعة.
+        رتّب الصور بالسحب والإفلات أو بأزرار الأسهم. اضغط النجمة لتعيين الصورة الرئيسية، ✕ للحذف. «قديم» = صورة برابط، «جديد» = صورة مرفوعة.
       </p>
     </div>
   );
 }
 
-function ImageTile({ src, isCover, kind, onCover, onRemove }: {
-  src: string; isCover: boolean; kind: "new" | "old"; onCover: () => void; onRemove: () => void;
-}) {
-  return (
-    <div className={`relative aspect-square rounded-xl overflow-hidden border-2 ${isCover ? "border-gold" : "border-white/10"}`}>
-      <img src={src} alt="" loading="lazy" onError={onImageError} className="h-full w-full object-cover" />
-      <span className={`absolute bottom-1 right-1 text-[9px] px-1.5 py-0.5 rounded-full ${kind === "old" ? "bg-amber-500/80 text-black" : "bg-emerald-500/80 text-black"}`}>
-        {kind === "old" ? "قديم" : "جديد"}
-      </span>
-      <button type="button" onClick={onCover} title="اجعلها الرئيسية"
-        className="absolute top-1 right-1 bg-black/70 rounded-full p-1 text-gold hover:bg-gold hover:text-black">
-        <Star size={12} fill={isCover ? "currentColor" : "none"} />
-      </button>
-      <button type="button" onClick={onRemove} title="حذف"
-        className="absolute top-1 left-1 bg-black/70 rounded-full p-1 text-white hover:bg-red-500">
-        <XIcon size={12} />
-      </button>
-    </div>
-  );
-}
 

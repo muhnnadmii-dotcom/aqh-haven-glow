@@ -555,6 +555,7 @@ export type Database = {
           livestock_warranty_enabled: boolean
           livestock_warranty_text: string | null
           location: string | null
+          media_order: string[]
           price_max: number | null
           price_min: number | null
           price_type: string
@@ -596,6 +597,7 @@ export type Database = {
           livestock_warranty_enabled?: boolean
           livestock_warranty_text?: string | null
           location?: string | null
+          media_order?: string[]
           price_max?: number | null
           price_min?: number | null
           price_type?: string
@@ -637,6 +639,7 @@ export type Database = {
           livestock_warranty_enabled?: boolean
           livestock_warranty_text?: string | null
           location?: string | null
+          media_order?: string[]
           price_max?: number | null
           price_min?: number | null
           price_type?: string

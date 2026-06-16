@@ -79,15 +79,27 @@ const DEFAULT_TABS: { id: Cat; label: string }[] = [
 ];
 
 function adapt(r: any): Project {
+  const paths: string[] = (r.image_paths ?? []) as string[];
+  const urls: string[] = (r.images ?? []) as string[];
+  const order: string[] = (r.media_order ?? []) as string[];
+  const seen = new Set<string>();
   const imgs: string[] = [];
-  for (const p of (r.image_paths ?? []) as string[]) {
-    const u = publicUrl(p); if (u) imgs.push(u);
+  const pushPath = (p: string) => { const u = publicUrl(p); if (u && !seen.has(u)) { seen.add(u); imgs.push(u); } };
+  const pushUrl = (u: string) => { if (u && !seen.has(u)) { seen.add(u); imgs.push(u); } };
+  for (const t of order) {
+    if (t.startsWith("p:") && paths.includes(t.slice(2))) pushPath(t.slice(2));
+    else if (t.startsWith("u:") && urls.includes(t.slice(2))) pushUrl(t.slice(2));
   }
-  for (const u of (r.images ?? []) as string[]) {
-    if (u && !imgs.includes(u)) imgs.push(u);
-  }
+  for (const p of paths) pushPath(p);
+  for (const u of urls) pushUrl(u);
   const cover = publicUrl(r.cover_path) || r.cover || imgs[0] || "";
-  if (imgs.length === 0 && cover) imgs.push(cover);
+  if (cover) {
+    if (!seen.has(cover)) imgs.unshift(cover);
+    else {
+      const idx = imgs.indexOf(cover);
+      if (idx > 0) { imgs.splice(idx, 1); imgs.unshift(cover); }
+    }
+  }
   // Prefer new structured columns, fall back to legacy specs jsonb
   const specs = { ...(r.specs ?? {}) };
   if (r.length_cm && r.width_cm && r.height_cm) {
