@@ -30,6 +30,7 @@ type Project = {
   images: string[];
   image_paths: string[];
   cover_path: string | null;
+  media_order: string[];
   specs: Record<string, string>;
   equipment: Record<string, string>;
   water_system: string[] | null;
@@ -74,7 +75,7 @@ const blank: Project = {
   slug: "", title: "", category: "planted", category_label: "نباتي",
   featured: false, featured_on_home: false, home_order: 0,
   published: true, location: "", year: "", duration: "", description: "", cover: "",
-  images: [], image_paths: [], cover_path: null,
+  images: [], image_paths: [], cover_path: null, media_order: [],
   specs: { dimensions: "", volumeLiters: "", systemType: "" }, equipment: { filter: "", lighting: "" },
   water_system: [], add_ons: [], service_packages: [], livestock_warranty: "",
   equipment_warranty_enabled: false, equipment_warranty_text: "",
