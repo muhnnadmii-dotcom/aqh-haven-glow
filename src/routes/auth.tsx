@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Reveal } from "@/components/Reveal";
@@ -31,8 +32,14 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("aqh_remember_me");
+      if (saved !== null) setRememberMe(saved === "1");
+    } catch {}
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: safeRedirect as any, replace: true });
     });
@@ -63,6 +70,13 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        try {
+          localStorage.setItem("aqh_remember_me", rememberMe ? "1" : "0");
+          if (!rememberMe) {
+            const signOutOnExit = () => { supabase.auth.signOut(); };
+            window.addEventListener("pagehide", signOutOnExit, { once: true });
+          }
+        } catch {}
         toast.success("تم تسجيل الدخول");
         navigate({ to: safeRedirect as any, replace: true });
       }
@@ -118,9 +132,37 @@ function AuthPage() {
             </div>
             <div>
               <label className="block text-sm mb-2">كلمة المرور</label>
-              <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60" />
+              <div className="relative">
+                <input
+                  required
+                  type={showPassword ? "text" : "password"}
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 ps-12 focus:outline-none focus:border-gold/60"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                  className="absolute inset-y-0 start-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
+            {mode === "signin" && (
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-white/20 bg-white/5 accent-[hsl(var(--gold,45_70%_55%))]"
+                />
+                <span>تذكرني وابقني مسجلاً</span>
+              </label>
+            )}
             <button disabled={busy} className="btn-gold w-full rounded-xl px-6 py-3 text-sm">
               {busy ? "..." : mode === "signin" ? "دخول" : "إنشاء حساب"}
             </button>
