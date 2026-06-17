@@ -24,6 +24,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as KnowledgeIndexRouteImport } from './routes/knowledge.index'
+import { Route as ServicesCustomAquariumsRouteImport } from './routes/services.custom-aquariums'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as KnowledgeSlugRouteImport } from './routes/knowledge.$slug'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -125,6 +126,11 @@ const KnowledgeIndexRoute = KnowledgeIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => KnowledgeRoute,
+} as any)
+const ServicesCustomAquariumsRoute = ServicesCustomAquariumsRouteImport.update({
+  id: '/custom-aquariums',
+  path: '/custom-aquariums',
+  getParentRoute: () => ServicesRoute,
 } as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/$slug',
@@ -298,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/services/custom-aquariums': typeof ServicesCustomAquariumsRoute
   '/knowledge/': typeof KnowledgeIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
@@ -337,6 +344,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/services/custom-aquariums': typeof ServicesCustomAquariumsRoute
   '/knowledge': typeof KnowledgeIndexRoute
   '/services': typeof ServicesIndexRoute
   '/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/knowledge/$slug': typeof KnowledgeSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/services/custom-aquariums': typeof ServicesCustomAquariumsRoute
   '/knowledge/': typeof KnowledgeIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/_authenticated/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
@@ -425,6 +434,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/knowledge/$slug'
     | '/services/$slug'
+    | '/services/custom-aquariums'
     | '/knowledge/'
     | '/services/'
     | '/account/appointments'
@@ -464,6 +474,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/knowledge/$slug'
     | '/services/$slug'
+    | '/services/custom-aquariums'
     | '/knowledge'
     | '/services'
     | '/account/appointments'
@@ -506,6 +517,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/knowledge/$slug'
     | '/services/$slug'
+    | '/services/custom-aquariums'
     | '/knowledge/'
     | '/services/'
     | '/_authenticated/account/appointments'
@@ -655,6 +667,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/knowledge/'
       preLoaderRoute: typeof KnowledgeIndexRouteImport
       parentRoute: typeof KnowledgeRoute
+    }
+    '/services/custom-aquariums': {
+      id: '/services/custom-aquariums'
+      path: '/custom-aquariums'
+      fullPath: '/services/custom-aquariums'
+      preLoaderRoute: typeof ServicesCustomAquariumsRouteImport
+      parentRoute: typeof ServicesRoute
     }
     '/services/$slug': {
       id: '/services/$slug'
@@ -980,11 +999,13 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
 
 interface ServicesRouteChildren {
   ServicesSlugRoute: typeof ServicesSlugRoute
+  ServicesCustomAquariumsRoute: typeof ServicesCustomAquariumsRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
 }
 
 const ServicesRouteChildren: ServicesRouteChildren = {
   ServicesSlugRoute: ServicesSlugRoute,
+  ServicesCustomAquariumsRoute: ServicesCustomAquariumsRoute,
   ServicesIndexRoute: ServicesIndexRoute,
 }
 
