@@ -70,6 +70,13 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        try {
+          localStorage.setItem("aqh_remember_me", rememberMe ? "1" : "0");
+          if (!rememberMe) {
+            const signOutOnExit = () => { supabase.auth.signOut(); };
+            window.addEventListener("pagehide", signOutOnExit, { once: true });
+          }
+        } catch {}
         toast.success("تم تسجيل الدخول");
         navigate({ to: safeRedirect as any, replace: true });
       }
