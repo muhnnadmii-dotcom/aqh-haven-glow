@@ -66,7 +66,7 @@ function AdminHome() {
       ] = await Promise.all([
         supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
         supabase.from("service_requests").select("id", { count: "exact", head: true })
-          .in("status", ["in_review", "contacted", "scheduled", "in_progress", "proposal_sent"]),
+          .in("status", ["in_review", "contacted", "scheduled", "proposal_sent"]),
         supabase.from("appointments").select("id", { count: "exact", head: true })
           .in("status", ["new", "confirmed"]).gte("preferred_date", nowIso),
         supabase.from("customer_tanks").select("id", { count: "exact", head: true }),
