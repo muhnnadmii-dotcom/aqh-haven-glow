@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -152,15 +153,18 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+
   return (
     <QueryClientProvider client={queryClient}>
-      <ScrollProgress />
-      <Navbar />
-      <main id="main" className="pt-24">
+      {!isAdmin && <ScrollProgress />}
+      {!isAdmin && <Navbar />}
+      <main id="main" className={isAdmin ? "" : "pt-24"}>
         <Outlet />
       </main>
-      <Footer />
-      <WhatsAppFloating />
+      {!isAdmin && <Footer />}
+      {!isAdmin && <WhatsAppFloating />}
       <Toaster richColors position="top-center" />
     </QueryClientProvider>
   );
