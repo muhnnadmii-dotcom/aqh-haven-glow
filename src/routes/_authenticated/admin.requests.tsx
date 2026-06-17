@@ -237,3 +237,29 @@ function MarineCard({ tank }: { tank: TankRef }) {
     </div>
   );
 }
+
+function DetailsBlock({ details }: { details: Record<string, any> }) {
+  const entries = Object.entries(details).filter(
+    ([, v]) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0)
+  );
+  if (!entries.length) return null;
+  const render = (v: any) => {
+    if (Array.isArray(v)) return v.join("، ");
+    if (typeof v === "object") return JSON.stringify(v);
+    if (typeof v === "boolean") return v ? "نعم" : "لا";
+    return String(v);
+  };
+  return (
+    <div className="text-xs bg-white/5 rounded-xl p-3 space-y-1">
+      <div className="font-bold mb-1">تفاصيل الطلب</div>
+      <div className="grid sm:grid-cols-2 gap-1">
+        {entries.map(([k, v]) => (
+          <div key={k}>
+            <b className="text-muted-foreground">{DETAILS_LABELS[k] ?? k}:</b>{" "}
+            <span className="whitespace-pre-wrap">{render(v)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
