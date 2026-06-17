@@ -979,6 +979,8 @@ export type Database = {
         | "scheduled"
         | "completed"
         | "cancelled"
+        | "proposal_sent"
+        | "approved"
       service_request_type: "design" | "visit" | "consultation" | "maintenance"
     }
     CompositeTypes: {
@@ -1117,6 +1119,8 @@ export const Constants = {
         "scheduled",
         "completed",
         "cancelled",
+        "proposal_sent",
+        "approved",
       ],
       service_request_type: ["design", "visit", "consultation", "maintenance"],
     },

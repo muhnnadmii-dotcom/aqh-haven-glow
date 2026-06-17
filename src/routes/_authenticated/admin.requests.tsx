@@ -6,7 +6,8 @@ import { publicUrl } from "@/lib/storage";
 import { Phone, Search } from "lucide-react";
 import {
   REQUEST_TYPE_LABEL, REQUEST_STATUS_LABEL, REQUEST_STATUS_COLOR,
-  ALL_TYPES, ALL_STATUSES, type RequestType, type RequestStatus,
+  ALL_TYPES, ALL_STATUSES, DETAILS_LABELS,
+  type RequestType, type RequestStatus,
 } from "@/lib/service-requests";
 
 export const Route = createFileRoute("/_authenticated/admin/requests")({
@@ -128,10 +129,15 @@ function AdminRequestsPage() {
               )}
 
               {Object.keys(r.details ?? {}).length > 0 && (
-                <div className="text-xs grid sm:grid-cols-2 gap-1">
-                  {Object.entries(r.details).map(([k, v]) => v ? (
-                    <div key={k}><b className="text-muted-foreground">{k}:</b> {String(v)}</div>
-                  ) : null)}
+                <DetailsBlock details={r.details} />
+              )}
+
+              {r.phone && (
+                <div className="flex gap-2 flex-wrap text-xs">
+                  <a href={`https://wa.me/${r.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"
+                    className="px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25">واتساب</a>
+                  <button onClick={() => { navigator.clipboard.writeText(r.phone); toast.success("تم نسخ الرقم"); }}
+                    className="px-2 py-1 rounded-md bg-white/5 hover:bg-white/10">نسخ الرقم</button>
                 </div>
               )}
 
