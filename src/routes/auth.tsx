@@ -32,8 +32,14 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("aqh_remember_me");
+      if (saved !== null) setRememberMe(saved === "1");
+    } catch {}
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: safeRedirect as any, replace: true });
     });
