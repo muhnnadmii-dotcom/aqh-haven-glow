@@ -132,11 +132,6 @@ function AuthPage() {
             </div>
             <div>
               <label className="block text-sm mb-2">كلمة المرور</label>
-              <input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60" />
-            </div>
-            <div>
-              <label className="block text-sm mb-2">كلمة المرور</label>
               <div className="relative">
                 <input
                   required
