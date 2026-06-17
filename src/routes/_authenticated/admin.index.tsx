@@ -76,7 +76,7 @@ function AdminHome() {
         supabase.from("testimonials").select("id", { count: "exact", head: true }),
         supabase.from("service_requests")
           .select("id,name,phone,city,type,status,created_at")
-          .or(`status.eq.new,status.eq.in_review,and(status.in.(contacted,scheduled,in_progress),updated_at.lt.${tenDaysAgo})`)
+          .or(`status.eq.new,status.eq.in_review,and(status.in.(contacted,scheduled),updated_at.lt.${tenDaysAgo})`)
           .order("created_at", { ascending: false }).limit(6),
         supabase.from("service_requests")
           .select("id,name,phone,city,type,status,created_at")
