@@ -60,7 +60,8 @@ function AdminTanksPage() {
             const owner = owners.get(t.user_id);
             const img = t.primary_image || t.image_path;
             return (
-              <div key={t.id} className="glass rounded-2xl p-4 flex gap-3">
+              <Link key={t.id} to="/admin/tanks/$id" params={{ id: t.id }}
+                className="glass rounded-2xl p-4 flex gap-3 hover:bg-white/5 transition">
                 {img ? (
                   <img src={getImageUrl(img)} onError={onImageError} alt={t.name} loading="lazy"
                     className="h-20 w-20 rounded-xl object-cover shrink-0" />
@@ -77,7 +78,7 @@ function AdminTanksPage() {
                   </div>
                   {t.city && <div className="text-[11px] text-muted-foreground mt-0.5">{t.city}</div>}
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
