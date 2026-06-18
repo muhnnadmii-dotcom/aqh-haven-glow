@@ -1,60 +1,104 @@
-## نطاق العمل
+# Admin Operations System — Plan
 
-تطوير صفحة `/services/custom-aquariums` فقط لتصبح صفحة مبيعات كاملة مع نموذج طلب متعدد الخطوات مرتبط بلوحة الإدارة. لن أعدّل الهيدر/الفوتر/الصفحة الرئيسية/باقي الخدمات.
+Scope: admin pages only. No changes to visitor UI, home, services, projects, or articles. No data deletion. Preserve current RLS/roles.
 
-## ما سيتم بناؤه
+## 1. Database additions (one migration)
 
-### 1) الصفحة الجديدة `src/routes/services.custom-aquariums.tsx`
-صفحة SSR مستقلة تحلّ محل التوجيه الحالي للخدمة (مع الإبقاء على سجل قاعدة البيانات للخدمة كما هو). الأقسام:
+New tables:
 
-1. **Hero**: عنوان، وصف، زرّان (ابدأ طلب التصميم / شاهد أعمال مشابهة)، شريط ثقة.
-2. **الفكرة ببساطة** — 3 بطاقات.
-3. **لمن هذه الخدمة؟** — 6 بطاقات بأيقونات.
-4. **ماذا تشمل الخدمة؟** — قائمة منظّمة.
-5. **أنواع الأحواض** — 6 كروت، كل كرت بزر "أطلب هذا النوع" يعبّي `tank_type` في الفورم.
-6. **طريقة العمل** — Timeline 7 خطوات.
-7. **ماذا نحتاج منك؟** — قائمة تجهيزية.
-8. **أعمال مشابهة** — يُحمَّل من جدول `projects` (آخر 6 مشاريع)، زر "أبغى مثل هذا" يعبّي `reference_project`.
-9. **FAQ** — Accordion.
-10. **CTA قبل الفورم**.
-11. **نموذج الطلب متعدد الخطوات** (انظر أدناه).
+- `request_notes` — internal notes per service_request
+  - `request_id` (fk service_requests), `author_id` (fk auth.users), `body` text
+- `request_status_history` — audit trail of status changes
+  - `request_id`, `from_status`, `to_status`, `changed_by`, `note`
+- `customer_notes` — internal notes per customer (profile)
+  - `profile_id`, `author_id`, `body`
 
-كل المحتوى الأساسي يُرسَّم SSR (لا يعتمد على JS). meta title/description وSchema (Service + FAQPage) مضافة عبر `head()`.
+Modifications:
+- `appointments`: add `service_request_id uuid` nullable (link appointment ↔ request). Do not remove existing columns.
 
-### 2) نموذج الطلب متعدد الخطوات (مكوّن داخل نفس الصفحة)
-10 خطوات + شاشة مراجعة + شاشة نجاح:
-- بيانات تواصل، نوع المكان، نوع الحوض، المقاسات (مع حساب اللترات تلقائيًا: L×W×H/1000)، الميزانية، حوض حالي + صور، صور المكان، وصف الفكرة (textarea يسمح بالمسافات والأسطر، Enter لا يُرسل)، الصيانة، وقت التواصل.
-- شريط تقدّم، أزرار "السابق/التالي"، الاحتفاظ بالبيانات عند الرجوع، Validation تحت كل حقل.
-- صورة المكان وصور الحوض الحالي تُرفع إلى bucket `media` تحت `service-requests/custom-aquariums/<timestamp>/`.
-- زرّ إرسال واحد محميّ من النقر المزدوج، حالة loading واضحة.
-- شاشة نجاح: رسالة + 3 أزرار (واتساب برسالة جاهزة تحوي ملخص الطلب / العودة للخدمات / أعمالنا).
+RLS: admin + staff can read/write all rows; service_role full. No anon access. GRANTs to authenticated + service_role.
 
-### 3) قاعدة البيانات
-استخدام جدول `service_requests` الموجود + إضافة عمود واحد `details jsonb` (إن لم يكن موجودًا) لتخزين كل تفاصيل الطلب المخصّص بدون كسر باقي أنواع الطلبات. حقول الجدول الأساسية (الاسم، الجوال، المدينة، نوع الطلب = `custom_aquarium_design`، المصدر، الحالة، الملاحظات الإدارية) تبقى كما هي.
+## 2. Requests page (`/admin/requests`)
 
-`details` يحوي: الحي، طريقة التواصل، نوع المكان، نوع الحوض، الطول/العرض/الارتفاع/اللترات، الميزانية، حوض حالي + وصفه، صور المكان (مسارات Storage)، صور الحوض الحالي، وصف الفكرة، الصيانة، وقت التواصل، مرجع من الأعمال.
+Rebuilt as an operations center:
 
-سياسات الـ RLS الحالية تسمح بإنشاء الطلب (anon insert موجود لباقي نماذج الطلبات في المشروع — سأتحقّق وأستخدم نفس النمط).
+- Filters bar: search (name/phone), type, status, city, date range, sort newest.
+- Status counter chips: جديد / تم التواصل / بانتظار معلومات / تم إرسال عرض / تم الاعتماد / مكتمل / ملغي.
+- Desktop: dense table (name, phone, type, city, source, status, created, updated, actions).
+- Mobile: compact cards (not large).
+- Quick actions per row: عرض / واتساب / تغيير حالة (dropdown).
+- Empty/null values display "غير محدد".
 
-### 4) لوحة الإدارة `src/routes/_authenticated/admin.requests.tsx`
-تطوير صفحة الطلبات الموجودة لتعرض:
-- قائمة الطلبات مع فلتر حسب النوع (إضافة فلتر `custom_aquarium_design`).
-- نافذة تفاصيل الطلب تعرض كل حقول `details` بشكل مرتّب (معلومات العميل، تفاصيل المشروع، المقاسات، الميزانية، الصور كمعرض قابل للفتح، وصف الفكرة، الصيانة، الملاحظات).
-- أزرار سريعة: تواصل واتساب، نسخ الرقم، تغيير الحالة (جديد / تم التواصل / بانتظار معلومات / تم إرسال عرض / تم الاعتماد / مكتمل / ملغي).
-- لا تُعرض الحقول الفارغة كـ null/undefined.
+Status enum already supports needed values — will add missing ones if any (e.g. `awaiting_info`, `contacted`, `completed`, `cancelled`) without removing existing values.
 
-## الملفات
+## 3. Request details page (`/admin/requests/$id`)
 
-- **جديد**: `src/routes/services.custom-aquariums.tsx` (الصفحة + الفورم متعدد الخطوات).
-- **تعديل**: `src/routes/_authenticated/admin.requests.tsx` (عرض التفاصيل الموسّع + الفلاتر).
-- **migration**: إضافة عمود `details jsonb` لـ `service_requests` + قيمة افتراضية حالة جديدة، وتوسيع enum/CHECK الخاص بـ `status` إن وُجد.
-- **تعديل بسيط**: `src/routes/services.$slug.tsx` — تخطّي slug `custom-aquariums` (redirect إلى الصفحة المخصّصة) حتى لا يتعارض مع السجل في جدول `services`.
+New route. Sections:
 
-## ملاحظات تقنية
+- **معلومات العميل**: name, phone, city, neighborhood, preferred contact method.
+- **تفاصيل الطلب**: type, source, description, tank type, place type, budget, dimensions, liters, has existing tank, wants maintenance, preferred contact time.
+- **الصور والمرفقات**: gallery with lightbox; broken images hidden.
+- **الإدارة الداخلية**: status, internal notes log, status history, created/updated, assigned staff (if exists).
+- **أزرار سريعة**: WhatsApp, copy phone, copy summary, change status, add note, schedule appointment.
 
-- SSR: المحتوى الثابت + قائمة الأعمال المشابهة تُحمَّل في `loader` عبر Supabase publishable client. الفورم تفاعلي (`use client` بالمعنى React 19) ويُرسَّم بعد hydration.
-- الـ schema validation عبر `zod` لكل خطوة.
-- رفع الصور عبر `supabase.storage.from('media').upload(...)` ثم تخزين المسارات داخل `details`.
-- لا تعديل على `client.ts` ولا على ملفات التكامل الذاتية.
+WhatsApp message: pre-filled greeting with customer name + request type. Disabled with tooltip if phone missing.
 
-هل أبدأ التنفيذ؟
+Copy summary: formatted Arabic text, "غير محدد" for missing fields.
+
+Add note: textarea + save → inserts into `request_notes`; full log shown with timestamps; never overwrites.
+
+Status change: dropdown with confirm; writes to `service_requests.status` + `request_status_history`; disables button while saving; toast on success.
+
+Schedule appointment: modal with date, time, type (معاينة/صيانة/تركيب/اتصال), notes. Saves to `appointments` with `service_request_id` linking back. Appears in appointments page and inside request details.
+
+## 4. Appointments page (`/admin/appointments`)
+
+Rebuilt:
+- Tabs: قادمة / سابقة.
+- Filters: date, type, status, search (name/phone).
+- Card/table per appointment: customer name, type, date, time, city, status, linked request, WhatsApp, edit, cancel.
+- Statuses: مجدول / تم التأكيد / مكتمل / ملغي / لم يتم.
+
+## 5. Customers page (`/admin/customers`)
+
+New list page (built from `profiles` + aggregates):
+- Search by name/phone, filter by city.
+- Per row: name, phone, city, request count, tank count, view, WhatsApp.
+
+## 6. Customer details page (`/admin/customers/$id`)
+
+New route:
+- **بيانات العميل**: name, phone, email, city, neighborhood, created.
+- **أحواض العميل**: list with view + add tank.
+- **طلبات العميل**: all linked requests with status + view.
+- **مواعيد العميل**: upcoming + past.
+- **ملاحظات داخلية**: list + add (from `customer_notes`).
+- **أزرار سريعة**: WhatsApp, create request, schedule appointment, add tank.
+
+## 7. Mobile UX
+
+- No giant cards, no horizontal scroll, readable typography.
+- Visitor WhatsApp floating button already hidden in admin (existing).
+- Images sized & lazy; broken images replaced with placeholder.
+
+## 8. Permissions (unchanged behavior)
+
+- admin: full.
+- staff: manage requests, appointments, customers, notes.
+- editor/viewer/customer: no access (existing `_authenticated` + role guard on admin layout).
+- Will reuse existing `has_role` checks; no role schema change.
+
+## Technical notes
+
+- Server functions in `src/lib/admin-ops.functions.ts` using `requireSupabaseAuth` middleware + role check via `has_role`.
+- Helpers in `src/lib/format.ts` (`displayOrFallback`, `formatSummary`, `waLink`).
+- New routes: `_authenticated/admin.requests.$id.tsx`, `_authenticated/admin.customers.tsx`, `_authenticated/admin.customers.$id.tsx`. Existing `admin.requests.tsx` and `admin.appointments.tsx` rebuilt in place.
+- All Supabase reads via TanStack Query (`ensureQueryData` + `useSuspenseQuery`).
+- All mutations via `useMutation` → invalidate keys.
+
+## Out of scope
+
+- Email notifications.
+- Visitor site changes.
+- New roles / permission schema rewrite.
+- Bulk operations.
