@@ -36,7 +36,15 @@ function ContactAdmin() {
 
   const save = async () => {
     setSaving(true);
-    try { await saveSitePage("contact", c, "تواصل معنا"); toast.success("تم الحفظ"); }
+    try {
+      const cleaned: ContactContent = {
+        ...c,
+        request_types: (c.request_types ?? []).map((s) => s.trim()).filter(Boolean),
+      };
+      await saveSitePage("contact", cleaned, "تواصل معنا");
+      setC(cleaned);
+      toast.success("تم الحفظ");
+    }
     catch (e: any) { toast.error(e?.message ?? "فشل الحفظ"); }
     finally { setSaving(false); }
   };
