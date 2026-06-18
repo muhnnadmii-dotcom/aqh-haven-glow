@@ -351,7 +351,7 @@ function RequestDetail() {
 
       {tab === "timeline" && (
         <Section title="سجل النشاط الكامل">
-          {history.length === 0 && appointments.length === 0 && reports.length === 0 && (
+          {history.length === 0 && appointments.length === 0 && reports.length === 0 && events.length === 0 && (
             <p className="text-xs text-muted-foreground">لا يوجد نشاط بعد.</p>
           )}
           <div className="space-y-1.5">
