@@ -30,21 +30,22 @@ const quickRequests: { kind: RequestType; label: string; icon: any }[] = [
 
 function AccountLayout() {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [isStaff, setIsStaff] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const close = () => setOpen(false);
 
   useEffect(() => {
     let alive = true;
     const loadUnread = async () => {
-      const user = await getSessionUser();
-      if (!user) return;
+      const u = await getSessionUser();
+      if (!u) return;
       const { count } = await supabase
         .from("notifications" as any)
         .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
+        .eq("user_id", u.id)
         .eq("is_read", false);
       if (alive) setUnread(count ?? 0);
     };
@@ -52,6 +53,16 @@ function AccountLayout() {
     const t = setInterval(loadUnread, 30000);
     return () => { alive = false; clearInterval(t); };
   }, [pathname]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!user) { if (alive) setIsStaff(false); return; }
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "staff").maybeSingle();
+      if (alive) setIsStaff(!!data);
+    })();
+    return () => { alive = false; };
+  }, [user]);
 
   const currentLabel =
     [...navItems].reverse().find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "حسابي";
