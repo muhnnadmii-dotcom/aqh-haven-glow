@@ -312,6 +312,8 @@ function PortfolioPage() {
           </div>
         </Reveal>
       </section>
+        </>
+      )}
 
       {open && <ProjectModal project={open} onClose={() => setOpen(null)} />}
     </div>
