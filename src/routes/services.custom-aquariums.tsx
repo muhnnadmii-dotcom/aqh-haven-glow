@@ -587,6 +587,12 @@ function DesignRequestForm({ prefill }: { prefill: FormPrefill }) {
 
       const { data: sess } = await supabase.auth.getSession();
       const user_id = sess.session?.user?.id ?? null;
+      if (!user_id) {
+        toast.error("يرجى تسجيل الدخول لإرسال الطلب.");
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/auth?next=${next}`;
+        return;
+      }
 
       const { error } = await supabase.from("service_requests").insert({
         type: "design",
