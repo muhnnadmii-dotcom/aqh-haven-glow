@@ -17,6 +17,7 @@ type Props = {
 export function OrderedImagesEditor({ images, onChange, folder = "gallery" }: Props) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [cropPath, setCropPath] = useState<string | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
   const addFiles = async (files: FileList) => {
