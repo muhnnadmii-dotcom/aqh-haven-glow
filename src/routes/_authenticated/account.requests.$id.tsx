@@ -28,6 +28,8 @@ type Req = {
   details: Record<string, any> | null;
   customer_notes: string | null;
   preferred_times: string | null; attachments: string[];
+  assignment_status: "unassigned" | "assigned" | "accepted" | "transferred";
+  assigned_to_staff_id: string | null;
   created_at: string; updated_at: string;
 };
 type PublicNote = { id: string; body: string; created_at: string; author_id: string | null; visibility: string };
@@ -59,6 +61,8 @@ function CustomerRequestDetail() {
   const [tab, setTab] = useState<Tab>("summary");
   const [lightbox, setLightbox] = useState<string | null>(null);
 
+  const [assignedDisplayName, setAssignedDisplayName] = useState<string | null>(null);
+
   const load = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -66,7 +70,8 @@ function CustomerRequestDetail() {
 
     const r = await supabase.from("service_requests").select("*").eq("id", id).eq("user_id", user.id).maybeSingle();
     if (!r.data) { setNotFound(true); setLoading(false); return; }
-    setReq(r.data as unknown as Req);
+    const reqRow = r.data as unknown as Req;
+    setReq(reqRow);
 
     const [c, rep, a, h, at] = await Promise.all([
       supabase.from("request_notes").select("*").eq("request_id", id).eq("visibility", "public").order("created_at", { ascending: true }),
@@ -80,6 +85,17 @@ function CustomerRequestDetail() {
     setAppointments((a.data ?? []) as any);
     setHistory((h.data ?? []) as any);
     setAttachments((at.data ?? []) as any);
+
+    if (reqRow.assigned_to_staff_id && reqRow.assignment_status === "accepted") {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("display_name_for_customer" as any)
+        .eq("id", reqRow.assigned_to_staff_id)
+        .maybeSingle();
+      setAssignedDisplayName(((prof as any)?.display_name_for_customer ?? null) || null);
+    } else {
+      setAssignedDisplayName(null);
+    }
     setLoading(false);
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
@@ -121,6 +137,10 @@ function CustomerRequestDetail() {
           {req.updated_at !== req.created_at && <> · آخر تحديث {new Date(req.updated_at).toLocaleString("ar-SA")}</>}
         </div>
       </div>
+
+      {/* Follow-up status */}
+      <FollowUpBox status={req.assignment_status} displayName={assignedDisplayName} />
+
 
       {/* Tabs */}
       <div className="glass rounded-2xl p-1 flex gap-1 overflow-x-auto">
@@ -382,3 +402,31 @@ function CustomerAttachmentsPanel({ requestId, attachments, onChanged, onOpen }:
     </div>
   );
 }
+
+function FollowUpBox({ status, displayName }: { status: Req["assignment_status"]; displayName: string | null }) {
+  let title = "";
+  let body = "";
+  let tone = "border-white/10 bg-white/5";
+  if (status === "unassigned") {
+    title = "تم استلام طلبك";
+    body = "لم يتم تعيين مسؤول المتابعة بعد. سيتم تعيين أحد أعضاء فريق Aqua Haven لمتابعة طلبك قريبًا.";
+    tone = "border-amber-500/30 bg-amber-500/5";
+  } else if (status === "assigned" || status === "transferred") {
+    title = "تم تعيين مسؤول لمتابعة طلبك";
+    body = "سيتم تحديثك قريبًا بآخر المستجدات.";
+    tone = "border-blue-500/30 bg-blue-500/5";
+  } else if (status === "accepted") {
+    title = "تم استلام طلبك من فريق Aqua Haven";
+    body = displayName
+      ? `${displayName} من فريق Aqua Haven يتابع طلبك.`
+      : "فريق Aqua Haven يتابع طلبك الآن.";
+    tone = "border-emerald-500/30 bg-emerald-500/5";
+  }
+  return (
+    <div className={`rounded-2xl p-4 border ${tone}`}>
+      <div className="text-sm font-bold mb-1">{title}</div>
+      <div className="text-xs text-muted-foreground">{body}</div>
+    </div>
+  );
+}
+
