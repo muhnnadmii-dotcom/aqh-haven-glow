@@ -630,21 +630,73 @@ function IssueForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
     { v: "other", l: "أخرى" },
   ];
   const save = async () => {
-    const u = await uid(); if (!u) return;
+    const u = await uid(); if (!u) { toast.error("يلزم تسجيل الدخول"); return; }
     setBusy(true);
     try {
       const paths: string[] = [];
       for (const f of files) paths.push(await uploadMedia(f, `tank-${tank.id}/issues`));
-      const { error } = await supabase.from("aquarium_issues").insert({
+      const { data: issue, error } = await supabase.from("aquarium_issues").insert({
         tank_id: tank.id, user_id: u, issue_type: type,
         description: desc || null, status: "open",
         wants_followup: followup, image_paths: paths.length ? paths : null,
-      });
+      }).select().single();
       if (error) throw error;
-      toast.success("تم تسجيل المشكلة.");
-      if (followup) toast("سيتم ربطها بطلب متابعة في المرحلة القادمة.");
+
+      if (followup && issue) {
+        // Build summary from latest tank state for the support request.
+        const [profRes, logRes, readRes] = await Promise.all([
+          supabase.from("profiles").select("full_name, phone").eq("id", u).maybeSingle(),
+          supabase.from("aquarium_care_logs").select("*").eq("tank_id", tank.id).order("created_at", { ascending: false }).limit(20),
+          supabase.from("aquarium_readings").select("*").eq("tank_id", tank.id).order("reading_date", { ascending: false }).limit(1),
+        ]);
+        const prof = (profRes.data ?? {}) as any;
+        const lastWC = (logRes.data ?? []).find((l: any) => l.log_type === "water_change");
+        const lastStat = (logRes.data ?? []).find((l: any) => l.log_type === "status_update" && l.status);
+        const lastR = (readRes.data ?? [])[0] as any;
+        const issueLabel = (types.find((x) => x.v === type)?.l) ?? type;
+        const summary = [
+          `حوض: ${tank.name}`,
+          `نوع المشكلة: ${issueLabel}`,
+          desc ? `وصف العميل: ${desc}` : null,
+          lastStat ? `آخر حالة سجلها العميل: ${lastStat.status}` : null,
+          lastWC ? `آخر تغيير ماء: ${new Date(lastWC.created_at).toLocaleDateString("ar-SA")}${lastWC.water_change_percentage ? ` (${lastWC.water_change_percentage}%)` : ""}` : null,
+          lastR ? `آخر قراءة (${new Date(lastR.reading_date).toLocaleDateString("ar-SA")}): ${[
+            lastR.ph != null && `pH ${lastR.ph}`,
+            lastR.nitrate != null && `NO3 ${lastR.nitrate}`,
+            lastR.ammonia != null && `NH3 ${lastR.ammonia}`,
+            lastR.temperature != null && `${lastR.temperature}°C`,
+          ].filter(Boolean).join(" · ")}` : null,
+        ].filter(Boolean).join("\n");
+
+        const { data: reqRow, error: reqErr } = await supabase.from("service_requests").insert({
+          user_id: u,
+          type: "maintenance",
+          tank_id: tank.id,
+          name: prof.full_name || "عميل",
+          phone: prof.phone || "—",
+          details: { source: "aquarium_assistant", issue_id: issue.id, issue_type: type, issue_label: issueLabel, tank_name: tank.name },
+          customer_notes: summary,
+          attachments: paths,
+        }).select().single();
+
+        if (reqErr) {
+          console.error("[Issue followup] request create failed", reqErr);
+          toast.success("تم حفظ المشكلة");
+          toast.error("تعذر إنشاء طلب الدعم، حاول لاحقًا أو تواصل معنا.");
+        } else if (reqRow) {
+          await supabase.from("aquarium_issues").update({ service_request_id: reqRow.id }).eq("id", issue.id);
+          toast.success("تم تسجيل المشكلة وفتح طلب متابعة لدى Aqua Haven ✅", {
+            action: { label: "عرض الطلب", onClick: () => { window.location.href = `/account/requests/${reqRow.id}`; } },
+          });
+        }
+      } else {
+        toast.success("تم تسجيل المشكلة في سجل الحوض.");
+      }
       onDone();
-    } catch (e: any) { toast.error(e?.message ?? "تعذر الحفظ"); }
+    } catch (e: any) {
+      console.error("[Issue] save failed", e);
+      toast.error(e?.message ?? "تعذر الحفظ");
+    }
     finally { setBusy(false); }
   };
   return (
