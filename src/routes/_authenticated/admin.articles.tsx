@@ -111,7 +111,7 @@ function ArticlesAdmin() {
               onChange={(e) => set("tags", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} />
           </Field>
           <Field label="صورة الغلاف" full>
-            <ImageUploader value={v.cover_path || null} onChange={(p) => set("cover_path", p ?? "")} folder="articles" />
+            <ImageUploader value={v.cover_path || null} onChange={(p) => set("cover_path", p ?? "")} folder="articles" cropAspect={16/9} />
           </Field>
           <Field label="الوصف المختصر" full>
             <textarea rows={2} className={ta} value={v.excerpt ?? ""} onChange={(e) => set("excerpt", e.target.value)} />
