@@ -52,7 +52,10 @@ const blank: S = {
 
 const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm focus:outline-none focus:border-gold/60";
 const lines = (arr: any) => Array.isArray(arr) ? arr.join("\n") : "";
-const toLines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+// Live-editing: keep raw newlines and spaces. Cleanup happens at save time.
+const toLines = (s: string) => s.split("\n");
+const cleanLines = (a: string[] | null | undefined) =>
+  (a ?? []).map((x) => x.trim()).filter(Boolean);
 
 function ServicesAdmin() {
   const [list, setList] = useState<S[]>([]);
@@ -81,6 +84,10 @@ function ServicesAdmin() {
     if (!editing.slug || !editing.title) { toast.error("العنوان وslug مطلوبان"); return; }
     const payload: any = { ...editing };
     delete payload.id;
+    payload.features = cleanLines(payload.features);
+    payload.includes = cleanLines(payload.includes);
+    payload.suitable_for = cleanLines(payload.suitable_for);
+    payload.process_steps = cleanLines(payload.process_steps);
     if (!payload.starting_price) payload.starting_price = null;
     const { error } = editing.id
       ? await supabase.from("services").update(payload).eq("id", editing.id)
