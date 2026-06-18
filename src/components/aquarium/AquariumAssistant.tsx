@@ -26,8 +26,15 @@ type Reading = {
 type Issue = {
   id: string; created_at: string; issue_type: string;
   description: string | null; status: string; image_paths: string[] | null;
+  service_request_id: string | null; wants_followup: boolean;
 };
 type Task = { id: string; task_type: string; title: string; due_date: string | null; status: string };
+
+const ISSUE_TYPE_LABEL: Record<string, string> = {
+  water_clarity: "عكارة في الماء", sick_fish: "سمكة تعبانة", algae: "طحالب",
+  smell: "رائحة", equipment: "فلتر / جهاز", death: "موت كائنات", other: "أخرى",
+};
+const ISSUE_OPEN = (s: string) => s === "open" || s === "in_review";
 
 function daysSince(iso: string | null | undefined): number | null {
   if (!iso) return null;
