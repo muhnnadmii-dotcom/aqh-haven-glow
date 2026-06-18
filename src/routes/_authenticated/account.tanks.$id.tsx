@@ -83,6 +83,8 @@ function TankDetail() {
         </div>
       </div>
 
+      {user && <AquariumAssistant tankId={tank.id} userId={user.id} tankType={tank.tank_type} />}
+
       {others.length > 0 && (
         <section className="glass rounded-2xl p-5">
           <h2 className="font-bold mb-3 text-sm">معرض الصور</h2>
