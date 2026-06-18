@@ -55,6 +55,7 @@ import { Route as AuthenticatedAdminDesignContactRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminDesignAboutRouteImport } from './routes/_authenticated/admin.design.about'
 import { Route as AuthenticatedAccountTanksIdRouteImport } from './routes/_authenticated/account.tanks.$id'
 import { Route as AuthenticatedAccountRequestsNewRouteImport } from './routes/_authenticated/account.requests.new'
+import { Route as AuthenticatedAccountRequestsIdRouteImport } from './routes/_authenticated/account.requests.$id'
 
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
@@ -306,6 +307,12 @@ const AuthenticatedAccountRequestsNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedAccountRequestsRoute,
   } as any)
+const AuthenticatedAccountRequestsIdRoute =
+  AuthenticatedAccountRequestsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAccountRequestsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/account/': typeof AuthenticatedAccountIndexRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/account/requests/$id': typeof AuthenticatedAccountRequestsIdRoute
   '/account/requests/new': typeof AuthenticatedAccountRequestsNewRoute
   '/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
@@ -386,6 +394,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/account': typeof AuthenticatedAccountIndexRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/account/requests/$id': typeof AuthenticatedAccountRequestsIdRoute
   '/account/requests/new': typeof AuthenticatedAccountRequestsNewRoute
   '/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
@@ -435,6 +444,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/_authenticated/account/': typeof AuthenticatedAccountIndexRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/account/requests/$id': typeof AuthenticatedAccountRequestsIdRoute
   '/_authenticated/account/requests/new': typeof AuthenticatedAccountRequestsNewRoute
   '/_authenticated/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
   '/_authenticated/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
@@ -484,6 +494,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/account/'
     | '/admin/'
+    | '/account/requests/$id'
     | '/account/requests/new'
     | '/account/tanks/$id'
     | '/admin/design/about'
@@ -525,6 +536,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/account'
     | '/admin'
+    | '/account/requests/$id'
     | '/account/requests/new'
     | '/account/tanks/$id'
     | '/admin/design/about'
@@ -573,6 +585,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users'
     | '/_authenticated/account/'
     | '/_authenticated/admin/'
+    | '/_authenticated/account/requests/$id'
     | '/_authenticated/account/requests/new'
     | '/_authenticated/account/tanks/$id'
     | '/_authenticated/admin/design/about'
@@ -924,16 +937,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRequestsNewRouteImport
       parentRoute: typeof AuthenticatedAccountRequestsRoute
     }
+    '/_authenticated/account/requests/$id': {
+      id: '/_authenticated/account/requests/$id'
+      path: '/$id'
+      fullPath: '/account/requests/$id'
+      preLoaderRoute: typeof AuthenticatedAccountRequestsIdRouteImport
+      parentRoute: typeof AuthenticatedAccountRequestsRoute
+    }
   }
 }
 
 interface AuthenticatedAccountRequestsRouteChildren {
+  AuthenticatedAccountRequestsIdRoute: typeof AuthenticatedAccountRequestsIdRoute
   AuthenticatedAccountRequestsNewRoute: typeof AuthenticatedAccountRequestsNewRoute
   AuthenticatedAccountRequestsIndexRoute: typeof AuthenticatedAccountRequestsIndexRoute
 }
 
 const AuthenticatedAccountRequestsRouteChildren: AuthenticatedAccountRequestsRouteChildren =
   {
+    AuthenticatedAccountRequestsIdRoute: AuthenticatedAccountRequestsIdRoute,
     AuthenticatedAccountRequestsNewRoute: AuthenticatedAccountRequestsNewRoute,
     AuthenticatedAccountRequestsIndexRoute:
       AuthenticatedAccountRequestsIndexRoute,

@@ -59,15 +59,19 @@ function RequestsPage() {
 
       <ul className="space-y-3">
         {list.map((r) => (
-          <li key={r.id} className="glass rounded-2xl p-4">
-            <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
-              <div className="font-bold text-sm">{REQUEST_TYPE_LABEL[r.type]}</div>
-              <span className={`px-2 py-0.5 rounded-md text-xs ${REQUEST_STATUS_COLOR[r.status]}`}>
-                {REQUEST_STATUS_LABEL[r.status]}
-              </span>
-            </div>
-            <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("ar-SA")}</div>
-            {r.customer_notes && <p className="text-sm mt-2 text-muted-foreground">{r.customer_notes}</p>}
+          <li key={r.id}>
+            <Link to="/account/requests/$id" params={{ id: r.id }}
+              className="block glass rounded-2xl p-4 hover:bg-white/5 transition">
+              <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                <div className="font-bold text-sm">{REQUEST_TYPE_LABEL[r.type]}</div>
+                <span className={`px-2 py-0.5 rounded-md text-xs ${REQUEST_STATUS_COLOR[r.status]}`}>
+                  {REQUEST_STATUS_LABEL[r.status]}
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("ar-SA")}</div>
+              {r.customer_notes && <p className="text-sm mt-2 text-muted-foreground line-clamp-2">{r.customer_notes}</p>}
+              <div className="text-[11px] text-gold mt-2">عرض التفاصيل ←</div>
+            </Link>
           </li>
         ))}
       </ul>
