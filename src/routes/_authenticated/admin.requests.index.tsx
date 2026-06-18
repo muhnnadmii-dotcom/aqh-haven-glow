@@ -9,7 +9,7 @@ import {
 import { display, waLink, waGreeting, NA } from "@/lib/admin-ops";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/admin/requests")({
+export const Route = createFileRoute("/_authenticated/admin/requests/")({
   component: AdminRequestsPage,
 });
 
