@@ -267,7 +267,7 @@ async function uid() {
   return data.user?.id ?? null;
 }
 
-function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
+export function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
   const [status, setStatus] = useState<Status>("stable");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -296,20 +296,28 @@ function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () => void 
     onDone();
   };
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        {opts.map((o) => (
-          <button key={o.v} type="button" onClick={() => setStatus(o.v)}
-            className={`rounded-xl p-3 text-sm border ${status === o.v ? "border-gold bg-gold/10" : "border-white/10 hover:bg-white/5"}`}>
-            <div className="text-lg">{o.e}</div>{o.l}
-          </button>
-        ))}
+    <div className="space-y-4">
+      <div>
+        <div className="text-xs text-muted-foreground mb-2">اختر حالة الحوض</div>
+        <div className="grid grid-cols-2 gap-2">
+          {opts.map((o) => (
+            <button key={o.v} type="button" onClick={() => setStatus(o.v)}
+              className={`rounded-xl p-3 text-sm border transition ${status === o.v ? "border-gold bg-gold/10" : "border-white/10 hover:bg-white/5"}`}>
+              <div className="text-xl leading-none mb-1">{o.e}</div>{o.l}
+            </button>
+          ))}
+        </div>
       </div>
-      <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة اختيارية"
-        className="w-full glass rounded-xl p-3 text-sm bg-transparent" rows={3} />
-      <button disabled={busy} onClick={save} className="btn-gold rounded-xl w-full py-2.5 text-sm flex items-center justify-center gap-2">
-        {busy && <Loader2 size={16} className="animate-spin" />} حفظ التحديث
-      </button>
+      <div>
+        <div className="text-xs text-muted-foreground mb-2">ملاحظة (اختياري)</div>
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="اكتب ملاحظة اختيارية…"
+          className="w-full glass rounded-xl p-3 text-sm bg-transparent resize-none" rows={3} />
+      </div>
+      <div className="sticky bottom-0 -mx-5 -mb-4 px-5 pt-3 pb-4 bg-[hsl(var(--card))]/95 backdrop-blur border-t border-white/10">
+        <button disabled={busy} onClick={save} className="btn-gold rounded-xl w-full py-3 text-sm flex items-center justify-center gap-2">
+          {busy && <Loader2 size={16} className="animate-spin" />} حفظ التحديث
+        </button>
+      </div>
     </div>
   );
 }
