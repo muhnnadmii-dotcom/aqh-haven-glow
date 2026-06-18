@@ -36,6 +36,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/admin/design", label: "الصفحة الرئيسية", icon: Palette, exact: true },
       { to: "/admin/projects", label: "أعمالنا / الأحواض", icon: Fish },
+      { to: "/admin/gallery", label: "لقطات من أعمالنا", icon: Images },
       { to: "/admin/project-categories", label: "تصنيفات الأحواض", icon: Tags },
       { to: "/admin/services", label: "خدماتنا", icon: Wrench },
       { to: "/admin/articles", label: "المقالات", icon: BookOpen },
