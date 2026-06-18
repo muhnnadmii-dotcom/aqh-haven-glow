@@ -65,12 +65,12 @@ function readingOutOfRange(r: Reading): boolean {
   return false;
 }
 
-type Status = "excellent" | "stable" | "watch" | "issue";
+type Status = "excellent" | "normal" | "needs_attention" | "problem";
 const STATUS_META: Record<Status, { label: string; color: string; emoji: string }> = {
-  excellent: { label: "ممتاز", color: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30", emoji: "🌿" },
-  stable:    { label: "مستقر", color: "bg-sky-500/15 text-sky-300 border-sky-400/30", emoji: "💧" },
-  watch:     { label: "يحتاج متابعة", color: "bg-amber-500/15 text-amber-300 border-amber-400/30", emoji: "⚠️" },
-  issue:     { label: "توجد مشكلة", color: "bg-rose-500/15 text-rose-300 border-rose-400/30", emoji: "🚨" },
+  excellent:       { label: "ممتاز", color: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30", emoji: "🌿" },
+  normal:          { label: "مستقر", color: "bg-sky-500/15 text-sky-300 border-sky-400/30", emoji: "💧" },
+  needs_attention: { label: "يحتاج متابعة", color: "bg-amber-500/15 text-amber-300 border-amber-400/30", emoji: "⚠️" },
+  problem:         { label: "توجد مشكلة", color: "bg-rose-500/15 text-rose-300 border-rose-400/30", emoji: "🚨" },
 };
 
 type Modal =
