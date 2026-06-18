@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { X, Filter as FilterIcon, Sparkles, ArrowLeft, ExternalLink } from "lucide-react";
+import { X, Filter as FilterIcon, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl, onImageError } from "@/lib/storage";
 import {
   TANK_TYPE_OPTIONS, SIZE_OPTIONS, STYLE_OPTIONS, CARE_OPTIONS, SUITABLE_FOR_OPTIONS,
-  TANK_TYPE_LABELS, SIZE_LABELS, STYLE_LABELS, CARE_LABELS, SUITABLE_FOR_LABELS,
-  label, type WorkGalleryItem,
+  TANK_TYPE_LABELS, label, type WorkGalleryItem,
 } from "@/lib/work-gallery";
+import { GalleryLightbox } from "./GalleryLightbox";
 
 type Filters = {
   tank_type: string;
@@ -150,7 +149,11 @@ export function GalleryTab() {
 
       {/* Lightbox */}
       {open && (
-        <Lightbox item={open} projectSlug={open.linked_project_id ? projectSlugs[open.linked_project_id] ?? null : null} onClose={() => setOpen(null)} />
+        <GalleryLightbox
+          item={open}
+          projectSlug={open.linked_project_id ? projectSlugs[open.linked_project_id] ?? null : null}
+          onClose={() => setOpen(null)}
+        />
       )}
     </div>
   );
@@ -176,97 +179,4 @@ function FilterSelect({ label, value, options, onChange, block }: {
       </select>
     </div>
   );
-}
-
-function Lightbox({ item, projectSlug, onClose }: { item: WorkGalleryItem; projectSlug: string | null; onClose: () => void }) {
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    const k = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", k);
-    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", k); };
-  }, [onClose]);
-
-  const tags: { label: string; value: string | null }[] = [
-    { label: "نوع الحوض", value: label_(TANK_TYPE_LABELS, item.tank_type) },
-    { label: "الحجم", value: label_(SIZE_LABELS, item.size_category) },
-    { label: "الستايل", value: label_(STYLE_LABELS, item.style) },
-    { label: "مستوى العناية", value: label_(CARE_LABELS, item.care_level) },
-  ].filter((t) => t.value);
-
-  const refParams = new URLSearchParams();
-  refParams.set("ref_gallery", item.id);
-  if (item.title) refParams.set("ref_title", item.title);
-  if (item.tank_type) refParams.set("tank_type", mapTankTypeToForm(item.tank_type));
-  const requestHref = `/services/custom-aquariums?${refParams.toString()}#request-form`;
-
-  return (
-    <div onClick={onClose} className="fixed inset-0 z-50 bg-background/90 backdrop-blur-md overflow-y-auto p-3 sm:p-6">
-      <div className="min-h-full flex items-start justify-center">
-        <div onClick={(e) => e.stopPropagation()} className="glass rounded-3xl max-w-4xl w-full overflow-hidden relative">
-          <button onClick={onClose} className="absolute top-3 left-3 z-10 grid place-items-center h-9 w-9 rounded-full glass-gold" aria-label="إغلاق">
-            <X size={18} />
-          </button>
-          <div className="relative bg-black">
-            <img src={publicUrl(item.image_path) || ""} alt={item.title ?? ""} onError={onImageError}
-              className="w-full max-h-[70vh] object-contain" />
-          </div>
-          <div className="p-5 sm:p-7 space-y-5">
-            {item.title && <h3 className="text-xl sm:text-2xl font-bold">{item.title}</h3>}
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((t) => (
-                  <span key={t.label} className="glass-gold px-3 py-1.5 rounded-full text-xs">
-                    <span className="text-muted-foreground">{t.label}:</span> <b>{t.value}</b>
-                  </span>
-                ))}
-                {(item.suitable_for ?? []).map((s) => (
-                  <span key={s} className="px-3 py-1.5 rounded-full text-xs bg-white/5 border border-white/10">
-                    {label_(SUITABLE_FOR_LABELS, s)}
-                  </span>
-                ))}
-              </div>
-            )}
-            {item.extra_images?.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {item.extra_images.map((p) => (
-                  <img key={p} src={publicUrl(p) || ""} onError={onImageError} alt="" className="aspect-square w-full object-cover rounded-lg" />
-                ))}
-              </div>
-            )}
-            <div className="flex flex-wrap gap-3 pt-2">
-              <a href={requestHref} className="btn-gold rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2">
-                <Sparkles size={14} /> أبغى مثل هذا
-              </a>
-              {projectSlug && item.linked_project_id && (
-                <Link
-                  to="/portfolio"
-                  className="rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10"
-                >
-                  <ExternalLink size={14} /> عرض المشروع الكامل <ArrowLeft size={14} />
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function label_(map: Record<string, string>, key: string | null): string | null {
-  if (!key) return null;
-  return map[key] ?? key;
-}
-
-// Map gallery tank_type to custom-aquariums form values (best-effort)
-function mapTankTypeToForm(t: string): string {
-  const m: Record<string, string> = {
-    river: "freshwater",
-    marine: "saltwater",
-    planted: "planted",
-    nano: "nano",
-    aquascape: "planted",
-    before_after: "freshwater",
-  };
-  return m[t] ?? t;
 }
