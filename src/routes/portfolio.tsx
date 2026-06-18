@@ -139,6 +139,7 @@ function adapt(r: any): Project {
 
 function PortfolioPage() {
   const initial = Route.useLoaderData();
+  const [view, setView] = useState<"projects" | "gallery">("projects");
   const [cat, setCat] = useState<Cat>("all");
   const [open, setOpen] = useState<Project | null>(null);
   const projects = initial.projects as Project[];
