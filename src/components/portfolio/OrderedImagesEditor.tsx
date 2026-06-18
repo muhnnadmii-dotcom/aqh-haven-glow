@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
-import { Upload, X, Loader2, Star, ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
+import { Upload, X, Loader2, Star, ChevronLeft, ChevronRight, GripVertical, Crop as CropIcon } from "lucide-react";
 import { uploadMedia, publicUrl, deleteMedia, onImageError } from "@/lib/storage";
+import { ImageCropperDialog } from "@/components/ImageCropperDialog";
 import { toast } from "sonner";
 
 type Props = {
