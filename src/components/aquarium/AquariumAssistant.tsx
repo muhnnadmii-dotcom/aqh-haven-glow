@@ -234,16 +234,27 @@ function Action({ icon, label, onClick, primary }: { icon: React.ReactNode; labe
   );
 }
 
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm grid sm:place-items-center" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}
-        className="glass w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl p-5 max-h-[92vh] overflow-y-auto absolute sm:relative bottom-0 sm:bottom-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded-md hover:bg-white/10"><X size={18} /></button>
+    <div
+      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="glass w-full sm:max-w-[560px] sm:rounded-2xl rounded-t-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] shadow-2xl border border-white/10"
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
+          <h3 className="font-bold text-base">{title}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-white/10" aria-label="إغلاق">
+            <X size={18} />
+          </button>
         </div>
-        {children}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -256,7 +267,7 @@ async function uid() {
   return data.user?.id ?? null;
 }
 
-function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
+export function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
   const [status, setStatus] = useState<Status>("stable");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -285,20 +296,28 @@ function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () => void 
     onDone();
   };
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        {opts.map((o) => (
-          <button key={o.v} type="button" onClick={() => setStatus(o.v)}
-            className={`rounded-xl p-3 text-sm border ${status === o.v ? "border-gold bg-gold/10" : "border-white/10 hover:bg-white/5"}`}>
-            <div className="text-lg">{o.e}</div>{o.l}
-          </button>
-        ))}
+    <div className="space-y-4">
+      <div>
+        <div className="text-xs text-muted-foreground mb-2">اختر حالة الحوض</div>
+        <div className="grid grid-cols-2 gap-2">
+          {opts.map((o) => (
+            <button key={o.v} type="button" onClick={() => setStatus(o.v)}
+              className={`rounded-xl p-3 text-sm border transition ${status === o.v ? "border-gold bg-gold/10" : "border-white/10 hover:bg-white/5"}`}>
+              <div className="text-xl leading-none mb-1">{o.e}</div>{o.l}
+            </button>
+          ))}
+        </div>
       </div>
-      <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة اختيارية"
-        className="w-full glass rounded-xl p-3 text-sm bg-transparent" rows={3} />
-      <button disabled={busy} onClick={save} className="btn-gold rounded-xl w-full py-2.5 text-sm flex items-center justify-center gap-2">
-        {busy && <Loader2 size={16} className="animate-spin" />} حفظ التحديث
-      </button>
+      <div>
+        <div className="text-xs text-muted-foreground mb-2">ملاحظة (اختياري)</div>
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="اكتب ملاحظة اختيارية…"
+          className="w-full glass rounded-xl p-3 text-sm bg-transparent resize-none" rows={3} />
+      </div>
+      <div className="sticky bottom-0 -mx-5 -mb-4 px-5 pt-3 pb-4 bg-background/95 backdrop-blur border-t border-white/10">
+        <button disabled={busy} onClick={save} className="btn-gold rounded-xl w-full py-3 text-sm flex items-center justify-center gap-2">
+          {busy && <Loader2 size={16} className="animate-spin" />} حفظ التحديث
+        </button>
+      </div>
     </div>
   );
 }
