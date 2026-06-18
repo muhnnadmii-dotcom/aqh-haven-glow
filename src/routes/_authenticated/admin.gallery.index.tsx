@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl, onImageError } from "@/lib/storage";
-import { ImageUploader, MultiImageUploader } from "@/components/ImageUploader";
+import { OrderedImagesEditor } from "@/components/portfolio/OrderedImagesEditor";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, Eye, EyeOff, X, Save, Sparkles } from "lucide-react";
 import {
@@ -180,16 +180,16 @@ function GalleryEditor({ initial, projects, onClose, onSaved }: {
         </div>
 
         <div>
-          <label className="block text-xs text-muted-foreground mb-1.5">الصورة الرئيسية *</label>
-          <ImageUploader value={form.image_path ?? null} onChange={(p) => set("image_path", p)} folder="gallery" />
-        </div>
-
-        <div>
-          <label className="block text-xs text-muted-foreground mb-1.5">صور إضافية (اختياري)</label>
-          <MultiImageUploader
-            values={form.extra_images ?? []}
-            cover={null}
-            onChange={(vals) => set("extra_images", vals)}
+          <label className="block text-xs text-muted-foreground mb-1.5">صور اللقطة *</label>
+          <OrderedImagesEditor
+            images={[
+              ...(form.image_path ? [form.image_path] : []),
+              ...((form.extra_images ?? []) as string[]).filter((p) => p && p !== form.image_path),
+            ]}
+            onChange={(next) => {
+              set("image_path", next[0] ?? null);
+              set("extra_images", next.slice(1));
+            }}
             folder="gallery"
           />
         </div>
