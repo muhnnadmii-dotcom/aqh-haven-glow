@@ -22,6 +22,7 @@ type Test = { id: string; test_date: string; ph: number | null; ammonia: number 
 
 function TankDetail() {
   const { id } = Route.useParams();
+  const { user } = useAuth();
   const [tank, setTank] = useState<Tank | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [tests, setTests] = useState<Test[]>([]);
