@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
 import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
-  Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings,
+  Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings, Images,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({

@@ -50,6 +50,7 @@ import { Route as AuthenticatedAccountProfileRouteImport } from './routes/_authe
 import { Route as AuthenticatedAccountNotificationsRouteImport } from './routes/_authenticated/account.notifications'
 import { Route as AuthenticatedAccountAppointmentsRouteImport } from './routes/_authenticated/account.appointments'
 import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin.requests.index'
+import { Route as AuthenticatedAdminGalleryIndexRouteImport } from './routes/_authenticated/admin.gallery.index'
 import { Route as AuthenticatedAdminDesignIndexRouteImport } from './routes/_authenticated/admin.design.index'
 import { Route as AuthenticatedAccountRequestsIndexRouteImport } from './routes/_authenticated/account.requests.index'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
@@ -280,6 +281,12 @@ const AuthenticatedAdminRequestsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAdminRequestsRoute,
   } as any)
+const AuthenticatedAdminGalleryIndexRoute =
+  AuthenticatedAdminGalleryIndexRouteImport.update({
+    id: '/gallery/',
+    path: '/gallery/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminDesignIndexRoute =
   AuthenticatedAdminDesignIndexRouteImport.update({
     id: '/',
@@ -384,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/account/requests/': typeof AuthenticatedAccountRequestsIndexRoute
   '/admin/design/': typeof AuthenticatedAdminDesignIndexRoute
+  '/admin/gallery/': typeof AuthenticatedAdminGalleryIndexRoute
   '/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -428,6 +436,7 @@ export interface FileRoutesByTo {
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/account/requests': typeof AuthenticatedAccountRequestsIndexRoute
   '/admin/design': typeof AuthenticatedAdminDesignIndexRoute
+  '/admin/gallery': typeof AuthenticatedAdminGalleryIndexRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsIndexRoute
 }
 export interface FileRoutesById {
@@ -481,6 +490,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/_authenticated/account/requests/': typeof AuthenticatedAccountRequestsIndexRoute
   '/_authenticated/admin/design/': typeof AuthenticatedAdminDesignIndexRoute
+  '/_authenticated/admin/gallery/': typeof AuthenticatedAdminGalleryIndexRoute
   '/_authenticated/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -534,6 +544,7 @@ export interface FileRouteTypes {
     | '/admin/users/$id'
     | '/account/requests/'
     | '/admin/design/'
+    | '/admin/gallery/'
     | '/admin/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -578,6 +589,7 @@ export interface FileRouteTypes {
     | '/admin/users/$id'
     | '/account/requests'
     | '/admin/design'
+    | '/admin/gallery'
     | '/admin/requests'
   id:
     | '__root__'
@@ -630,6 +642,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users/$id'
     | '/_authenticated/account/requests/'
     | '/_authenticated/admin/design/'
+    | '/_authenticated/admin/gallery/'
     | '/_authenticated/admin/requests/'
   fileRoutesById: FileRoutesById
 }
@@ -939,6 +952,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRequestsRoute
     }
+    '/_authenticated/admin/gallery/': {
+      id: '/_authenticated/admin/gallery/'
+      path: '/gallery'
+      fullPath: '/admin/gallery/'
+      preLoaderRoute: typeof AuthenticatedAdminGalleryIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/design/': {
       id: '/_authenticated/admin/design/'
       path: '/'
@@ -1124,6 +1144,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminTestimonialsRoute: typeof AuthenticatedAdminTestimonialsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminGalleryIndexRoute: typeof AuthenticatedAdminGalleryIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -1140,6 +1161,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminTestimonialsRoute: AuthenticatedAdminTestimonialsRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminGalleryIndexRoute: AuthenticatedAdminGalleryIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
