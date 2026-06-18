@@ -115,7 +115,7 @@ export default function AquariumAssistant({ tank }: { tank: TankLite }) {
     }
     return null;
   }, [logs]);
-  const lastStatusLog = logs.find((x) => x.log_type === "status" && x.status);
+  const lastStatusLog = logs.find((x) => x.log_type === "status_update" && x.status);
   const lastNote = logs.find((x) => x.log_type === "note" || x.note);
   const openIssue = issues.find((x) => x.status === "open");
   const nextTask = tasks[0] ?? null;
