@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { LayoutDashboard, Wrench, Plus, Fish, Calendar, Inbox, ArrowLeft } from "lucide-react";
+import { AquariumAssistantShortcut } from "./aquarium/AquariumAssistantShortcut";
 
 type Snapshot = {
   name: string;
