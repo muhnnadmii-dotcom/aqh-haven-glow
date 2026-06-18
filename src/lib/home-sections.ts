@@ -29,7 +29,14 @@ export type HeroContent = {
   stats?: StatItem[];
 };
 
-export type PartnerItem = { id: string; label: string; order: number; visible: boolean };
+export type PartnerItem = {
+  id: string;
+  label: string;
+  order: number;
+  visible: boolean;
+  display_type?: "text" | "image";
+  logo_path?: string | null;
+};
 export type PartnersContent = { title: string; items: PartnerItem[] };
 
 export type ExploreItem = {
