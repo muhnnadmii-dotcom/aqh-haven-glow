@@ -249,7 +249,7 @@ function RequestDetail() {
             t.key === "internal" ? internalNotes.length :
             t.key === "reports" ? reports.length :
             t.key === "attachments" ? attachments.length :
-            t.key === "timeline" ? history.length + appointments.length : 0;
+            t.key === "timeline" ? history.length + appointments.length + events.length : 0;
           const active = tab === t.key;
           return (
             <button key={t.key} onClick={() => setTab(t.key)}
