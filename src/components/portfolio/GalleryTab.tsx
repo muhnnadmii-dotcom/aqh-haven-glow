@@ -234,13 +234,12 @@ function Lightbox({ item, projectSlug, onClose }: { item: WorkGalleryItem; proje
               </div>
             )}
             <div className="flex flex-wrap gap-3 pt-2">
-              <Link to={requestHref as any} className="btn-gold rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2">
+              <a href={requestHref} className="btn-gold rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2">
                 <Sparkles size={14} /> أبغى مثل هذا
-              </Link>
+              </a>
               {projectSlug && item.linked_project_id && (
                 <Link
                   to="/portfolio"
-                  search={{ project: projectSlug } as any}
                   className="rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10"
                 >
                   <ExternalLink size={14} /> عرض المشروع الكامل <ArrowLeft size={14} />
