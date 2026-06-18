@@ -268,29 +268,33 @@ async function uid() {
 }
 
 export function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
-  const [status, setStatus] = useState<Status>("stable");
+  const [status, setStatus] = useState<Status>("normal");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const opts: { v: Status; l: string; e: string }[] = [
     { v: "excellent", l: "ممتاز", e: "🌿" },
-    { v: "stable", l: "طبيعي", e: "💧" },
-    { v: "watch", l: "يحتاج متابعة", e: "⚠️" },
-    { v: "issue", l: "فيه مشكلة", e: "🚨" },
+    { v: "normal", l: "طبيعي", e: "💧" },
+    { v: "needs_attention", l: "يحتاج متابعة", e: "⚠️" },
+    { v: "problem", l: "فيه مشكلة", e: "🚨" },
   ];
   const tip: Record<Status, string> = {
     excellent: "ممتاز، استمر على نفس روتين العناية.",
-    stable: "تم تسجيل الحالة، تابع الحوض خلال الأيام القادمة.",
-    watch: "تم تسجيل الحالة، يفضل إضافة صورة أو قراءة لمتابعة الوضع.",
-    issue: "تم تسجيل المشكلة، يمكنك فتح طلب متابعة إذا احتجت مساعدة.",
+    normal: "تم تسجيل الحالة، تابع الحوض خلال الأيام القادمة.",
+    needs_attention: "تم تسجيل الحالة، يفضل إضافة صورة أو قراءة لمتابعة الوضع.",
+    problem: "تم تسجيل المشكلة، يمكنك فتح طلب متابعة إذا احتجت مساعدة.",
   };
   const save = async () => {
-    const u = await uid(); if (!u) return;
+    const u = await uid(); if (!u) { toast.error("يلزم تسجيل الدخول"); return; }
     setBusy(true);
     const { error } = await supabase.from("aquarium_care_logs").insert({
-      tank_id: tank.id, user_id: u, log_type: "status", status, note: note || null,
+      tank_id: tank.id, user_id: u, log_type: "status_update", status, note: note || null,
     });
     setBusy(false);
-    if (error) { toast.error("تعذر الحفظ"); return; }
+    if (error) {
+      console.error("[QuickUpdate] insert failed", error);
+      toast.error(error.message || "تعذر الحفظ");
+      return;
+    }
     toast.success("تم حفظ تحديث الحوض ✅");
     toast(tip[status]);
     onDone();
