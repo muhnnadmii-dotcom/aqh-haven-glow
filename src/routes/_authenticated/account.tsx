@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { LayoutDashboard, Fish, Calendar, Inbox, User, LogOut, Sparkles, Wrench, Menu, X, Shield } from "lucide-react";
+import { LayoutDashboard, Fish, Calendar, Inbox, User, LogOut, Sparkles, Wrench, Menu, Shield, FileText, Bell } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { getSessionUser } from "@/lib/client-auth";
 import type { RequestType } from "@/lib/service-requests";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -15,6 +16,8 @@ const navItems = [
   { to: "/account/tanks", label: "أحواضي", icon: Fish, exact: false },
   { to: "/account/appointments", label: "مواعيدي", icon: Calendar, exact: false },
   { to: "/account/requests", label: "طلباتي", icon: Inbox, exact: false },
+  { to: "/account/reports", label: "تقاريري", icon: FileText, exact: false },
+  { to: "/account/notifications", label: "الإشعارات", icon: Bell, exact: false },
   { to: "/account/profile", label: "ملفي الشخصي", icon: User, exact: false },
 ] as const;
 
@@ -29,11 +32,30 @@ function AccountLayout() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const close = () => setOpen(false);
 
+  useEffect(() => {
+    let alive = true;
+    const loadUnread = async () => {
+      const user = await getSessionUser();
+      if (!user) return;
+      const { count } = await supabase
+        .from("notifications" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      if (alive) setUnread(count ?? 0);
+    };
+    loadUnread();
+    const t = setInterval(loadUnread, 30000);
+    return () => { alive = false; clearInterval(t); };
+  }, [pathname]);
+
   const currentLabel =
     [...navItems].reverse().find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "حسابي";
+
 
   const logout = async () => {
     close();
@@ -46,18 +68,25 @@ function AccountLayout() {
       <div>
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-2 mb-2">حسابي</div>
         <nav className="flex flex-col gap-0.5">
-          {navItems.map((n) => (
-            <Link
-              key={n.to}
-              to={n.to}
-              activeOptions={{ exact: n.exact }}
-              onClick={close}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5"
-              activeProps={{ className: "flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm bg-white/10 font-semibold" }}
-            >
-              <n.icon size={16} /> {n.label}
-            </Link>
-          ))}
+          {navItems.map((n) => {
+            const isBell = n.to === "/account/notifications";
+            return (
+              <Link
+                key={n.to}
+                to={n.to}
+                activeOptions={{ exact: n.exact }}
+                onClick={close}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5"
+                activeProps={{ className: "flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm bg-white/10 font-semibold" }}
+              >
+                <n.icon size={16} />
+                <span className="flex-1">{n.label}</span>
+                {isBell && unread > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gold text-background font-bold">{unread > 99 ? "99+" : unread}</span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
       </div>
       <div>
@@ -101,13 +130,27 @@ function AccountLayout() {
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">حسابي</div>
           <div className="truncate text-base font-semibold">{currentLabel}</div>
         </div>
-        <button
-          onClick={() => setOpen(true)}
-          className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-xl glass text-sm"
-          aria-label="فتح قائمة الحساب"
-        >
-          <Menu size={16} /> القائمة
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            to="/account/notifications"
+            className="relative inline-flex items-center justify-center w-10 h-10 rounded-xl glass"
+            aria-label="الإشعارات"
+          >
+            <Bell size={16} />
+            {unread > 0 && (
+              <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-bold grid place-items-center">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
+          </Link>
+          <button
+            onClick={() => setOpen(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass text-sm"
+            aria-label="فتح قائمة الحساب"
+          >
+            <Menu size={16} /> القائمة
+          </button>
+        </div>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>

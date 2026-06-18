@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Fish, Calendar, Inbox, Sparkles, Wrench, Plus, ChevronLeft } from "lucide-react";
+import { Fish, Calendar, Inbox, Sparkles, Wrench, Plus, ChevronLeft, FileText } from "lucide-react";
 import { getSessionUser } from "@/lib/client-auth";
 import { publicUrl } from "@/lib/storage";
 import {
@@ -21,7 +21,7 @@ type ReqRow = { id: string; type: RequestType; status: RequestStatus; created_at
 type ApptRow = { id: string; kind: string; status: string; preferred_date: string | null };
 
 function AccountHome() {
-  const [stats, setStats] = useState({ tanks: 0, appts: 0, requests: 0 });
+  const [stats, setStats] = useState({ tanks: 0, appts: 0, requests: 0, reports: 0 });
   const [name, setName] = useState("");
   const [tanks, setTanks] = useState<TankRow[]>([]);
   const [requests, setRequests] = useState<ReqRow[]>([]);
@@ -34,12 +34,16 @@ function AccountHome() {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
       setName(prof?.full_name ?? "");
 
-      const [t, a, sr, cr, cs, recentTanks, recentReqs, upcoming] = await Promise.all([
+      const [t, a, sr, cr, cs, rp, recentTanks, recentReqs, upcoming] = await Promise.all([
         supabase.from("customer_tanks").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("appointments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("contact_requests").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("consultation_requests").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("request_reports")
+          .select("id,service_requests!inner(user_id)", { count: "exact", head: true })
+          .eq("is_visible_to_customer", true)
+          .eq("service_requests.user_id", user.id),
         supabase.from("customer_tanks")
           .select("id,name,tank_type,volume_liters,primary_image,image_paths")
           .eq("user_id", user.id).order("created_at", { ascending: false }).limit(3),
@@ -58,6 +62,7 @@ function AccountHome() {
         tanks: t.count ?? 0,
         appts: a.count ?? 0,
         requests: (sr.count ?? 0) + (cr.count ?? 0) + (cs.count ?? 0),
+        reports: rp.count ?? 0,
       });
       setTanks((recentTanks.data ?? []) as TankRow[]);
       setRequests((recentReqs.data ?? []) as ReqRow[]);
@@ -69,6 +74,7 @@ function AccountHome() {
     { label: "أحواضي", value: stats.tanks, icon: Fish, to: "/account/tanks" as const },
     { label: "المواعيد", value: stats.appts, icon: Calendar, to: "/account/appointments" as const },
     { label: "طلباتي", value: stats.requests, icon: Inbox, to: "/account/requests" as const },
+    { label: "تقاريري", value: stats.reports, icon: FileText, to: "/account/reports" as const },
   ];
 
   const quick = [
@@ -88,7 +94,7 @@ function AccountHome() {
       </div>
 
       {/* Compact stats */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {cards.map((c) => (
           <Link
             key={c.label}

@@ -45,7 +45,9 @@ import { Route as AuthenticatedAdminArticlesRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminAppointmentsRouteImport } from './routes/_authenticated/admin.appointments'
 import { Route as AuthenticatedAccountTanksRouteImport } from './routes/_authenticated/account.tanks'
 import { Route as AuthenticatedAccountRequestsRouteImport } from './routes/_authenticated/account.requests'
+import { Route as AuthenticatedAccountReportsRouteImport } from './routes/_authenticated/account.reports'
 import { Route as AuthenticatedAccountProfileRouteImport } from './routes/_authenticated/account.profile'
+import { Route as AuthenticatedAccountNotificationsRouteImport } from './routes/_authenticated/account.notifications'
 import { Route as AuthenticatedAccountAppointmentsRouteImport } from './routes/_authenticated/account.appointments'
 import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin.requests.index'
 import { Route as AuthenticatedAdminDesignIndexRouteImport } from './routes/_authenticated/admin.design.index'
@@ -248,10 +250,22 @@ const AuthenticatedAccountRequestsRoute =
     path: '/requests',
     getParentRoute: () => AuthenticatedAccountRoute,
   } as any)
+const AuthenticatedAccountReportsRoute =
+  AuthenticatedAccountReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedAccountRoute,
+  } as any)
 const AuthenticatedAccountProfileRoute =
   AuthenticatedAccountProfileRouteImport.update({
     id: '/profile',
     path: '/profile',
+    getParentRoute: () => AuthenticatedAccountRoute,
+  } as any)
+const AuthenticatedAccountNotificationsRoute =
+  AuthenticatedAccountNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => AuthenticatedAccountRoute,
   } as any)
 const AuthenticatedAccountAppointmentsRoute =
@@ -343,7 +357,9 @@ export interface FileRoutesByFullPath {
   '/knowledge/': typeof KnowledgeIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
+  '/account/notifications': typeof AuthenticatedAccountNotificationsRoute
   '/account/profile': typeof AuthenticatedAccountProfileRoute
+  '/account/reports': typeof AuthenticatedAccountReportsRoute
   '/account/requests': typeof AuthenticatedAccountRequestsRouteWithChildren
   '/account/tanks': typeof AuthenticatedAccountTanksRouteWithChildren
   '/admin/appointments': typeof AuthenticatedAdminAppointmentsRoute
@@ -388,7 +404,9 @@ export interface FileRoutesByTo {
   '/knowledge': typeof KnowledgeIndexRoute
   '/services': typeof ServicesIndexRoute
   '/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
+  '/account/notifications': typeof AuthenticatedAccountNotificationsRoute
   '/account/profile': typeof AuthenticatedAccountProfileRoute
+  '/account/reports': typeof AuthenticatedAccountReportsRoute
   '/account/tanks': typeof AuthenticatedAccountTanksRouteWithChildren
   '/admin/appointments': typeof AuthenticatedAdminAppointmentsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
@@ -436,7 +454,9 @@ export interface FileRoutesById {
   '/knowledge/': typeof KnowledgeIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/_authenticated/account/appointments': typeof AuthenticatedAccountAppointmentsRoute
+  '/_authenticated/account/notifications': typeof AuthenticatedAccountNotificationsRoute
   '/_authenticated/account/profile': typeof AuthenticatedAccountProfileRoute
+  '/_authenticated/account/reports': typeof AuthenticatedAccountReportsRoute
   '/_authenticated/account/requests': typeof AuthenticatedAccountRequestsRouteWithChildren
   '/_authenticated/account/tanks': typeof AuthenticatedAccountTanksRouteWithChildren
   '/_authenticated/admin/appointments': typeof AuthenticatedAdminAppointmentsRoute
@@ -487,7 +507,9 @@ export interface FileRouteTypes {
     | '/knowledge/'
     | '/services/'
     | '/account/appointments'
+    | '/account/notifications'
     | '/account/profile'
+    | '/account/reports'
     | '/account/requests'
     | '/account/tanks'
     | '/admin/appointments'
@@ -532,7 +554,9 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/services'
     | '/account/appointments'
+    | '/account/notifications'
     | '/account/profile'
+    | '/account/reports'
     | '/account/tanks'
     | '/admin/appointments'
     | '/admin/articles'
@@ -579,7 +603,9 @@ export interface FileRouteTypes {
     | '/knowledge/'
     | '/services/'
     | '/_authenticated/account/appointments'
+    | '/_authenticated/account/notifications'
     | '/_authenticated/account/profile'
+    | '/_authenticated/account/reports'
     | '/_authenticated/account/requests'
     | '/_authenticated/account/tanks'
     | '/_authenticated/admin/appointments'
@@ -878,11 +904,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRequestsRouteImport
       parentRoute: typeof AuthenticatedAccountRoute
     }
+    '/_authenticated/account/reports': {
+      id: '/_authenticated/account/reports'
+      path: '/reports'
+      fullPath: '/account/reports'
+      preLoaderRoute: typeof AuthenticatedAccountReportsRouteImport
+      parentRoute: typeof AuthenticatedAccountRoute
+    }
     '/_authenticated/account/profile': {
       id: '/_authenticated/account/profile'
       path: '/profile'
       fullPath: '/account/profile'
       preLoaderRoute: typeof AuthenticatedAccountProfileRouteImport
+      parentRoute: typeof AuthenticatedAccountRoute
+    }
+    '/_authenticated/account/notifications': {
+      id: '/_authenticated/account/notifications'
+      path: '/notifications'
+      fullPath: '/account/notifications'
+      preLoaderRoute: typeof AuthenticatedAccountNotificationsRouteImport
       parentRoute: typeof AuthenticatedAccountRoute
     }
     '/_authenticated/account/appointments': {
@@ -1000,7 +1040,9 @@ const AuthenticatedAccountTanksRouteWithChildren =
 
 interface AuthenticatedAccountRouteChildren {
   AuthenticatedAccountAppointmentsRoute: typeof AuthenticatedAccountAppointmentsRoute
+  AuthenticatedAccountNotificationsRoute: typeof AuthenticatedAccountNotificationsRoute
   AuthenticatedAccountProfileRoute: typeof AuthenticatedAccountProfileRoute
+  AuthenticatedAccountReportsRoute: typeof AuthenticatedAccountReportsRoute
   AuthenticatedAccountRequestsRoute: typeof AuthenticatedAccountRequestsRouteWithChildren
   AuthenticatedAccountTanksRoute: typeof AuthenticatedAccountTanksRouteWithChildren
   AuthenticatedAccountIndexRoute: typeof AuthenticatedAccountIndexRoute
@@ -1008,7 +1050,10 @@ interface AuthenticatedAccountRouteChildren {
 
 const AuthenticatedAccountRouteChildren: AuthenticatedAccountRouteChildren = {
   AuthenticatedAccountAppointmentsRoute: AuthenticatedAccountAppointmentsRoute,
+  AuthenticatedAccountNotificationsRoute:
+    AuthenticatedAccountNotificationsRoute,
   AuthenticatedAccountProfileRoute: AuthenticatedAccountProfileRoute,
+  AuthenticatedAccountReportsRoute: AuthenticatedAccountReportsRoute,
   AuthenticatedAccountRequestsRoute:
     AuthenticatedAccountRequestsRouteWithChildren,
   AuthenticatedAccountTanksRoute: AuthenticatedAccountTanksRouteWithChildren,
@@ -1162,13 +1207,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
