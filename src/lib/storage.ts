@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
+import { compressImage } from "@/lib/image-compress";
 
 export const MEDIA_BUCKET = "media";
 
@@ -40,6 +41,15 @@ export async function uploadMedia(file: File, folder = "uploads"): Promise<strin
   if (!uid) throw new Error("يجب تسجيل الدخول لرفع الملفات");
   if (!file || file.size === 0) {
     throw new Error("الملف فارغ أو غير صالح");
+  }
+  // Compress images in the browser before any size/type validation.
+  // Non-images or unsupported types are returned unchanged by compressImage.
+  if (file.type.startsWith("image/")) {
+    try {
+      file = await compressImage(file);
+    } catch {
+      // fall through with original file
+    }
   }
   if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
     throw new Error(`حجم الصورة كبير. الحد الأقصى ${MAX_IMAGE_MB} ميجابايت`);
