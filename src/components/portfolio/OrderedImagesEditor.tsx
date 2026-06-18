@@ -123,6 +123,10 @@ export function OrderedImagesEditor({ images, onChange, folder = "gallery" }: Pr
                     </button>
                   </div>
                   <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => setCropPath(p)}
+                      className="bg-black/70 hover:bg-gold hover:text-black rounded p-1 text-gold" title="تعديل القص">
+                      <CropIcon size={12} />
+                    </button>
                     {!isPrimary && (
                       <button type="button" onClick={() => setPrimary(i)}
                         className="bg-black/70 hover:bg-gold hover:text-black rounded p-1 text-gold" title="تعيين كرئيسية">
@@ -140,6 +144,26 @@ export function OrderedImagesEditor({ images, onChange, folder = "gallery" }: Pr
           })}
         </div>
       )}
+
+      <ImageCropperDialog
+        open={!!cropPath}
+        source={cropPath ? publicUrl(cropPath) : null}
+        defaultAspect={1}
+        onCancel={() => setCropPath(null)}
+        onCropped={async (file) => {
+          if (!cropPath) return;
+          try {
+            const newPath = await uploadMedia(file, folder);
+            const next = images.map((p) => (p === cropPath ? newPath : p));
+            deleteMedia(cropPath).catch(() => {});
+            onChange(next);
+          } catch (e: any) {
+            toast.error(e?.message ?? "تعذر حفظ الصورة المقصوصة");
+          } finally {
+            setCropPath(null);
+          }
+        }}
+      />
     </div>
   );
 }
