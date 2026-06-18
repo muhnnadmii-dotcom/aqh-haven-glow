@@ -200,6 +200,23 @@ function CustomAquariumsPage() {
   const [prefill, setPrefill] = useState<FormPrefill>({});
   const formRef = useRef<HTMLDivElement>(null);
 
+  // Prefill from URL (e.g. coming from gallery "أبغى مثل هذا")
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const ref_title = sp.get("ref_title");
+    const tank_type = sp.get("tank_type");
+    const extra: FormPrefill = {};
+    if (ref_title) extra.reference_project = ref_title;
+    if (tank_type) extra.tank_type = tank_type;
+    if (Object.keys(extra).length) {
+      setPrefill((p) => ({ ...p, ...extra }));
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    } else if (window.location.hash === "#request-form") {
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    }
+  }, []);
+
   const scrollToForm = (extra?: FormPrefill) => {
     if (extra) setPrefill((p) => ({ ...p, ...extra }));
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
