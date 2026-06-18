@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { LayoutDashboard, Fish, Calendar, Inbox, User, LogOut, Sparkles, Wrench, Menu, X, Shield } from "lucide-react";
+import { LayoutDashboard, Fish, Calendar, Inbox, User, LogOut, Sparkles, Wrench, Menu, Shield, FileText, Bell } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { getSessionUser } from "@/lib/client-auth";
 import type { RequestType } from "@/lib/service-requests";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -15,6 +16,8 @@ const navItems = [
   { to: "/account/tanks", label: "أحواضي", icon: Fish, exact: false },
   { to: "/account/appointments", label: "مواعيدي", icon: Calendar, exact: false },
   { to: "/account/requests", label: "طلباتي", icon: Inbox, exact: false },
+  { to: "/account/reports", label: "تقاريري", icon: FileText, exact: false },
+  { to: "/account/notifications", label: "الإشعارات", icon: Bell, exact: false },
   { to: "/account/profile", label: "ملفي الشخصي", icon: User, exact: false },
 ] as const;
 
