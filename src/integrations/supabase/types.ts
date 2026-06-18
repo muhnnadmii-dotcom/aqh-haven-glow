@@ -699,6 +699,56 @@ export type Database = {
         }
         Relationships: []
       }
+      request_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          is_visible_to_customer: boolean
+          related_id: string | null
+          related_type: string
+          request_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_visible_to_customer?: boolean
+          related_id?: string | null
+          related_type?: string
+          request_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_visible_to_customer?: boolean
+          related_id?: string | null
+          related_type?: string
+          request_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_notes: {
         Row: {
           author_id: string | null
@@ -706,6 +756,8 @@ export type Database = {
           created_at: string
           id: string
           request_id: string
+          updated_at: string
+          visibility: string
         }
         Insert: {
           author_id?: string | null
@@ -713,6 +765,8 @@ export type Database = {
           created_at?: string
           id?: string
           request_id: string
+          updated_at?: string
+          visibility?: string
         }
         Update: {
           author_id?: string | null
@@ -720,10 +774,56 @@ export type Database = {
           created_at?: string
           id?: string
           request_id?: string
+          updated_at?: string
+          visibility?: string
         }
         Relationships: [
           {
             foreignKeyName: "request_notes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_reports: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_visible_to_customer: boolean
+          report_type: string
+          request_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_visible_to_customer?: boolean
+          report_type?: string
+          request_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_visible_to_customer?: boolean
+          report_type?: string
+          request_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_reports_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: false
             referencedRelation: "service_requests"
@@ -737,6 +837,7 @@ export type Database = {
           created_at: string
           from_status: string | null
           id: string
+          is_visible_to_customer: boolean
           note: string | null
           request_id: string
           to_status: string
@@ -746,6 +847,7 @@ export type Database = {
           created_at?: string
           from_status?: string | null
           id?: string
+          is_visible_to_customer?: boolean
           note?: string | null
           request_id: string
           to_status: string
@@ -755,6 +857,7 @@ export type Database = {
           created_at?: string
           from_status?: string | null
           id?: string
+          is_visible_to_customer?: boolean
           note?: string | null
           request_id?: string
           to_status?: string
@@ -772,6 +875,7 @@ export type Database = {
       service_requests: {
         Row: {
           admin_notes: string | null
+          assigned_to: string | null
           attachments: string[]
           city: string | null
           created_at: string
@@ -789,6 +893,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          assigned_to?: string | null
           attachments?: string[]
           city?: string | null
           created_at?: string
@@ -806,6 +911,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          assigned_to?: string | null
           attachments?: string[]
           city?: string | null
           created_at?: string

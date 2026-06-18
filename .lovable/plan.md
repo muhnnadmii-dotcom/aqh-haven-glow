@@ -1,73 +1,122 @@
-# Admin Content Management — Phased Plan
+# نظام تذاكر الطلبات — Aqua Haven
 
-The request covers ~10 large admin areas. Most schema and image infrastructure already exists in the codebase (DnD reorder, primary image, delete, mixed old/new image rendering, price types, warranty fields, home_sections table, services with FAQs/features/CTA types, etc.). The actual user-visible pain is concentrated in a few places.
+## ملاحظة مهمة قبل البدء
 
-I'll deliver this in **5 phases**. Each phase is one turn; you tell me which to do first or do them in order.
+قمت بفحص الكود الحالي:
 
----
+- مسار صفحة تفاصيل الطلب في الإدارة موجود فعلًا: `/admin/requests/$id` وملفه `src/routes/_authenticated/admin.requests.$id.tsx`.
+- زر "عرض" في صفحة الطلبات يستخدم `<Link to="/admin/requests/$id">` بشكل صحيح.
+- لذلك زر العرض **يفتح الصفحة**. ما هو ناقص فعلًا: صفحة العميل لتفاصيل الطلب، التعليقات المشتركة، التقارير، المرفقات، وسجل النشاط الكامل.
 
-## Phase 1 — Bug fixes (critical, fast)
+سأبني كل ذلك. لن أغيّر اسم المسارات إلى `/admin/orders/:id` لأن نظامك مبني على كلمة `requests` ويوجد ربط مع الجداول الحالية (`service_requests`, `request_notes`, `request_status_history`). تغيير الاسم يكسر روابط قديمة بدون فائدة. سأبقي:
 
-The "can't type Space / Enter" complaint is real and reproducible:
+- إدارة: `/admin/requests/$id`
+- عميل: `/account/requests/$id` (جديدة)
 
-- `admin/services` textareas (features, includes, suitable_for, process_steps) call `split("\n").map(trim).filter(Boolean)` on **every keystroke**, so trailing spaces and empty lines are stripped while typing.
-- `admin/design/contact` `request_types` textarea has the same bug.
-
-**Fix**: store the raw textarea string in local state, only convert to array on save. Apply pattern across all line-list textareas. Also audit every input/textarea in `/admin/*` for `onKeyDown` Enter handlers that submit forms inside textareas — none found yet, but I'll sweep.
-
-Also: replace any `Enter`-blocks on forms with explicit submit buttons, ensure RTL `dir="auto"` on free-text fields, add `inputMode` where useful.
-
-## Phase 2 — Permissions: editor + viewer roles
-
-Today the `app_role` enum only has `admin/staff/customer`. To match the spec:
-
-- Add `editor` and `viewer` values to the `app_role` enum (Postgres `ALTER TYPE`).
-- RLS / route gates:
-  - `admin/staff` keep current full access (operations).
-  - `editor` gets write access to: projects, project_categories, services, articles, testimonials, home_sections, site_pages.
-  - `viewer` gets read-only access to all admin pages.
-  - `customer` blocked from `/admin/*`.
-- Update the admin layout `beforeLoad` to accept `admin|staff|editor|viewer`.
-- Add a `useAdminRole()` hook that returns the highest role, plus `canEdit()` / `canDelete()` helpers, and wire them into every admin page (disable save/delete buttons for viewers).
-- Update RLS policies on the content tables (projects, articles, services, testimonials, home_sections, site_pages, project_categories) so editor + admin can write, viewer + others cannot.
-- Update `admin/staff` page so admin can assign any of the 4 roles.
-
-## Phase 3 — Projects (أعمالنا) polish
-
-`admin/projects.tsx` already has 90% of the spec (price_type, warranty checkbox+text, liters auto-calc field, DnD images, primary image, delete, mixed legacy/new). Remaining gaps:
-
-- Verify auto-liters formula triggers on every dimension change (currently does — confirm).
-- Add list-view toggle (cards ↔ table) on top, plus filters: search, category, city, published, featured-on-home.
-- Add bulk publish/unpublish/feature toggles on each row.
-- Ensure "ضمان مخفي للزائر" path on detail page when toggles off (visitor page, minimal touch).
-
-## Phase 4 — Categories + Testimonials + Services + Articles polish
-
-- Categories: delete-guard. Count projects per category, block delete if in use, offer "move projects to: غير مصنف" before delete.
-- Testimonials: add featured-on-home toggle UI if missing, plus image upload (current has just text).
-- Services: rebuild line-list textareas with the Phase 1 pattern; add list reorder up/down/DnD.
-- Articles: same textarea fix; verify cover image picker + tags work; verify category dropdown sourced from existing articles' distinct categories.
-
-## Phase 5 — Home page editor + site pages
-
-The `home_sections` table already exists with `section_key + enabled + content jsonb + sort_order`. Today `admin/design/index.tsx` is 669 lines (already comprehensive). Remaining work:
-
-- Audit each section type and ensure it has a panel: hero, stats, services, projects, articles, testimonials, FAQ, CTA.
-- Section-level enable/disable toggle that surfaces on the visitor home page.
-- Section reorder (sort_order).
-- "Featured" selectors that pick from existing rows (projects/services/articles/testimonials) instead of free text.
-- `admin/design/about` and `admin/design/contact` finish: SEO fields, social links list with the Phase 1 textarea pattern.
+إذا تصرّ على كلمة "orders" أخبرني وسأضيف alias.
 
 ---
 
-## Out of scope (will surface if discovered, won't fix here)
+## المرحلة 1 — قاعدة البيانات (migration واحدة آمنة)
 
-- Rebuilding the visitor site or changing brand/identity.
-- Migrating to a different rich-text editor (current is plain textarea — adequate for Arabic RTL once Enter/Space bugs are fixed).
-- Email notifications for content changes.
+لن أحذف أي جدول. سأضيف فقط:
+
+**1. توسيع `service_requests`:**
+- `assigned_to uuid` — الموظف المسؤول
+- (الباقي موجود)
+
+**2. توسيع `request_notes`:**
+- `visibility text default 'internal'` — `internal` أو `public`
+- (تغيير افتراضي للسجلات القديمة: `internal` — العميل لن يرى أي ملاحظة قديمة)
+
+**3. جدول جديد `request_reports`:**
+- `id, request_id, title, report_type, body, created_by, is_visible_to_customer, created_at, updated_at`
+
+**4. جدول جديد `request_attachments`:**
+- `id, request_id, related_type (request|note|report), related_id, file_path, file_name, file_type, file_size, uploaded_by, is_visible_to_customer, created_at`
+
+**5. توسيع `request_status_history`:**
+- `is_visible_to_customer boolean default true` — حتى نتحكم بما يظهر في تايملاين العميل
+
+**RLS:**
+- العميل يقرأ طلباته فقط (مطبق حاليًا، سيتم تمديده للجداول الجديدة).
+- العميل يقرأ من `request_notes` فقط عندما `visibility = 'public'` ويملك الطلب.
+- العميل يكتب تعليق `public` فقط على طلباته.
+- العميل يقرأ من `request_reports` و `request_attachments` فقط عندما `is_visible_to_customer = true` ويملك الطلب.
+- العميل يرفع مرفقات على طلباته (تُحفظ كـ `is_visible_to_customer = true`).
+- staff/admin: قراءة وكتابة كاملة.
+
+**GRANTs** على كل جدول جديد لـ `authenticated` و `service_role`.
 
 ---
 
-## Which order?
+## المرحلة 2 — صفحة العميل `/account/requests/$id`
 
-Recommend executing in numbered order — Phase 1 (typing bug) is the smallest and most painful for daily use. Reply with a phase number (or "all in order") and I'll start.
+ملف جديد: `src/routes/_authenticated/account.requests.$id.tsx`
+
+أقسام (Tabs على الديسكتوب، Accordion على الجوال):
+1. **ملخص** — رقم الطلب، النوع، الحالة، التواريخ، تفاصيل الطلب التي أرسلها العميل.
+2. **التحديثات (Timeline)** — أحداث `is_visible_to_customer = true` + التعليقات العامة + التقارير + تغييرات الحالة المرئية.
+3. **التعليقات** — يضيف العميل تعليقًا (public فقط). يرى ردود الإدارة العامة.
+4. **التقارير** — قائمة التقارير المرئية له + معاينة PDF/نص.
+5. **المرفقات** — يرى مرفقات `is_visible_to_customer = true`. يستطيع رفع صورة/PDF (حجم ≤ 5MB).
+6. **المواعيد** — المواعيد المرتبطة بالطلب الظاهرة له.
+
+العميل **لا يرى**: الملاحظات الداخلية، الموظف المسؤول، أي مرفق داخلي.
+
+تحقق من الملكية في الـ loader — لو الطلب ليس له، يظهر "الطلب غير موجود".
+
+---
+
+## المرحلة 3 — تطوير صفحة الإدارة `/admin/requests/$id`
+
+تعديل الملف الحالي ليصبح بنظام Tabs:
+
+1. **التفاصيل** (موجود — تنظيف فقط)
+2. **المحادثة** — تعليقات public (إدارة + عميل) في خيط واحد، إضافة تعليق مع اختيار `public` افتراضيًا.
+3. **ملاحظات داخلية** — الـ `internal` فقط، بلون مميز.
+4. **التقارير** — قائمة + زر "إنشاء تقرير" (modal: عنوان، نوع، نص طويل، مرفقات، toggle "ظاهر للعميل").
+5. **المرفقات** — رفع مع toggle داخلي/عام، عرض كصور/روابط تحميل.
+6. **المواعيد** — موجود، إضافة toggle "ظاهر للعميل".
+7. **سجل النشاط** — كل الأحداث (status changes, comments, reports, attachments, appointments) مرتبة زمنيًا.
+
+أزرار سريعة في الهيدر (موجودة): واتساب، نسخ الرقم، نسخ الملخص، تغيير الحالة، **+ تعيين مسؤول** (dropdown يقرأ من `user_roles` للأدوار staff/admin).
+
+---
+
+## المرحلة 4 — التخزين
+
+استخدام bucket `media` الموجود. مسار: `request-attachments/{request_id}/{uuid}-{filename}`.
+
+أنواع مسموحة: `image/*, application/pdf`. الحد الأقصى: 5MB.
+
+تحقق على الكلاينت + RLS على `storage.objects` (مكتوبة سابقًا للـ media bucket).
+
+---
+
+## المرحلة 5 — الإصلاحات
+
+- التحقق أن الطلب غير الموجود يظهر "الطلب غير موجود" (موجود حاليًا — سيتم التأكد).
+- ربط زر "عرض الطلب" في صفحة `/account/requests` (الحالية) ليفتح التفاصيل الجديدة (حاليًا لا يوجد رابط).
+- إضافة badge "تحديث جديد" في صفحة الإدارة لو آخر تعليق من العميل.
+
+---
+
+## ما لن أعمله (خارج النطاق)
+
+- لن أنشئ جداول `orders`, `order_comments`, `order_events`, `order_reports` بأسماء جديدة. سأمدد الجداول الحالية (`service_requests`, `request_notes`, `request_status_history`) وأضيف `request_reports`, `request_attachments`. الأسماء الموحدة (`request_*`) تحافظ على البيانات والكود الحالي.
+- لن ألمس صفحة الواجهة الرئيسية، الخدمات، أعمالنا، المقالات.
+- لن أضيف إشعارات push/email — فقط badge بصري داخل الإدارة لو وقت سمح.
+
+---
+
+## تنفيذ بالترتيب
+
+1. migration (يحتاج موافقتك في خطوة منفصلة).
+2. صفحة العميل `/account/requests/$id` + ربط زر العرض.
+3. تطوير صفحة الإدارة بـ tabs + تقارير + مرفقات.
+4. اختبار يدوي شامل.
+
+---
+
+**هل أبدأ بالمرحلة 1 (migration)؟** أو تريد تعديل أي شيء في الخطة (مثلًا توحيد الـ tabs، تغيير حد حجم الملفات، إضافة "تعيين مسؤول" بشكل مختلف)؟
