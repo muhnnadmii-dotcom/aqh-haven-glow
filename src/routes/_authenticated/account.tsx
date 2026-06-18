@@ -32,11 +32,30 @@ function AccountLayout() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const close = () => setOpen(false);
 
+  useEffect(() => {
+    let alive = true;
+    const loadUnread = async () => {
+      const user = await getSessionUser();
+      if (!user) return;
+      const { count } = await supabase
+        .from("notifications" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      if (alive) setUnread(count ?? 0);
+    };
+    loadUnread();
+    const t = setInterval(loadUnread, 30000);
+    return () => { alive = false; clearInterval(t); };
+  }, [pathname]);
+
   const currentLabel =
     [...navItems].reverse().find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "حسابي";
+
 
   const logout = async () => {
     close();
