@@ -1,92 +1,118 @@
-# نظام إسناد الطلبات للموظفين (Staff Assignment)
 
-نظام مستقل تمامًا عن حالة الطلب الحالية. حالة الطلب `status` تبقى كما هي ولا تُمس.
+# تطوير صفحة أعمالنا — قسمان داخل نفس الصفحة
 
-## 1. قاعدة البيانات
+## الهدف
+إضافة قسم جديد "لقطات من أعمالنا" داخل صفحة أعمالنا، **بدون أي مساس بنظام المشاريع الحالي**. النظام الحالي يبقى كما هو تمامًا.
 
-### إضافة دور `staff` إن لم يكن موجودًا
-- التحقق من `app_role` enum وإضافة `'staff'` إن لزم.
+---
 
-### تعديل `profiles`
-- إضافة `display_name_for_customer text` — الاسم اللطيف الظاهر للعميل.
+## 1) قاعدة البيانات
 
-### تعديل `service_requests` (الطلبات)
-حقول جديدة، كلها اختيارية، لا تمس `status`:
-- `assigned_to_staff_id uuid` (FK → auth.users)
-- `assigned_by uuid`
-- `assigned_at timestamptz`
-- `assignment_status` enum جديد: `unassigned | assigned | accepted | transferred` (افتراضي `unassigned`)
-- `accepted_by_staff_at timestamptz`
-- `assignment_department text` (تصميم/صيانة/استشارة/مبيعات/دعم)
-- `assignment_note text`
+### جدول جديد: `work_gallery_items`
+لا أعدّل `projects` ولا `project_categories`. جدول مستقل خفيف:
 
-### جدول جديد `request_assignment_events`
-سجل أحداث الإسناد المستقل عن `request_status_history`:
-- `id, request_id, event_type, from_staff_id, to_staff_id, actor_id, note, department, visible_to_customer bool, created_at`
-- أنواع: `assigned | accepted | transferred | unassigned`
+- `id` uuid PK
+- `title` text (اختياري)
+- `image_url` text (الصورة الرئيسية، إجبارية)
+- `extra_images` text[] (صور إضافية اختيارية)
+- `tank_type` text — نهري/بحري/نباتي/نانو/أكواسكب/قبل-بعد
+- `size_category` text — small/medium/large
+- `style` text — natural/luxury/minimal/rocky/planted/marine/modern
+- `care_level` text — easy/medium/advanced
+- `suitable_for` text[] — home/office/majlis/cafe/restaurant/reception
+- `linked_project_id` uuid REFERENCES projects(id) ON DELETE SET NULL
+- `is_published` bool default true
+- `is_featured` bool default false
+- `display_order` int default 0
+- `created_at`, `updated_at`
 
-### تحديث RLS
-- `service_requests`: السماح لـ `staff` بقراءة الطلبات المسندة له فقط، و`admin` بقراءة الكل.
-- `staff` يستطيع UPDATE على حقول الإسناد فقط لطلباته (للضغط على "استلام").
-- `admin` يستطيع الإسناد/التحويل لأي طلب.
+### الصلاحيات و RLS
+- `GRANT SELECT TO anon, authenticated` (محتوى عام مثل projects)
+- `GRANT ALL TO authenticated` للأدمن عبر سياسة `has_role(admin)`
+- سياسة قراءة عامة: `is_published = true`
+- سياسة كتابة: admin فقط
 
-### Triggers
-- `notify_on_assignment`: عند تغيّر `assignment_status` إلى `assigned` أو `accepted` → إشعار للعميل (نصوص لطيفة) + إشعار للموظف.
-- إدراج تلقائي في `request_assignment_events` عند تغيّر `assigned_to_staff_id` أو `assignment_status`.
+---
 
-## 2. لوحة الإدارة
+## 2) صفحة أعمالنا للعميل
 
-### `admin.requests.index.tsx`
-- إضافة عمود "المسؤول" + شارة حالة الإسناد + القسم.
-- فلاتر جديدة: غير مسندة / مسندة / تم استلامها / طلباتي / حسب الموظف / حسب القسم.
-- شارة "غير مسند" بارزة (أحمر) للطلبات بدون موظف.
+ملف: `src/routes/portfolio.tsx` (أو الصفحة الحالية للأعمال) — أضيف تبويبات:
 
-### `admin.index.tsx` (Dashboard)
-- كرت "طلبات غير مسندة"
-- كرت "مسندة لم تُستلم"
-- كرت "طلباتي" (للموظف الحالي)
+- **تبويب 1: مشاريع منفذة** → يعرض المحتوى الحالي كما هو (نفس الكروت، نفس الفلاتر، نفس الفتح)
+- **تبويب 2: لقطات من أعمالنا** → الجديد
 
-### `admin.requests.$id.tsx`
-قسم جديد "إسناد الطلب" يعرض كل بيانات الإسناد + أزرار:
-- إسناد / تغيير الموظف / إزالة الإسناد / تحويل
-- نموذج Dialog لاختيار الموظف من قائمة `staff` + قسم + ملاحظة
-- زر "استلام الطلب" يظهر للموظف المسؤول فقط
+### قسم اللقطات
+- شبكة مربعة (Pinterest/Instagram-style): `aspect-square`, `object-cover`
+- 2 أعمدة موبايل / 3 تابلت / 4 ديسكتوب
+- فلاتر علوية: نوع الحوض، الحجم، الستايل، مستوى العناية، مناسب لـ
+  - ديسكتوب: شريط فلاتر أفقي
+  - موبايل: زر "فلترة" يفتح Drawer/Sheet
+- الضغط على لقطة → Dialog بصورة كبيرة + الوسوم + زرّان:
+  - "أبغى مثل هذا" → ينقل إلى `/services/custom-aquariums?ref_gallery=<id>&ref_title=...&tank_type=...`
+  - "عرض المشروع الكامل" → فقط إذا `linked_project_id` موجود
+- بدون نجوم/تقييم. وسوم فقط.
 
-### Timeline الإدارة
-دمج `request_assignment_events` مع timeline الموجود (status_history + notes + reports).
+### تمرير المرجع لفورم الطلب المخصص
+في صفحة `custom-aquariums` أقرأ `searchParams` وأملأ حقل "التصميم المرجعي" تلقائيًا.
 
-## 3. صفحة الموظف
-- `account.tsx`: إذا الدور `staff`، إضافة عنصر تنقل "طلباتي (Staff)" → `/admin/requests?mine=1`.
-- صفحات الإدارة يصل لها `staff` لكن RLS يحصرها على المسند إليه.
+---
 
-## 4. صفحة العميل `account.requests.$id.tsx`
-قسم جديد "متابعة الطلب" بنصوص مهذبة بحسب `assignment_status`:
-- `unassigned`: "تم استلام طلبك، ولم يتم تعيين مسؤول المتابعة بعد..."
-- `assigned`: "تم تعيين مسؤول لمتابعة طلبك..."
-- `accepted`: "[display_name_for_customer] من فريق Aqua Haven يتابع طلبك" — أو "فريق Aqua Haven يتابع طلبك" إذا لا يوجد اسم لطيف.
+## 3) لوحة الإدارة
 
-**لا يُعرض للعميل**: رقم/إيميل/role الموظف. فقط `display_name_for_customer`.
+ملف جديد: `src/routes/_authenticated/admin.gallery.index.tsx`
+- جدول باللقطات: صورة مصغّرة، العنوان، النوع، منشور، ترتيب
+- زر "إضافة لقطة" → Dialog/Sheet:
+  - رفع صورة رئيسية (ImageUploader للـ bucket `media`)
+  - صور إضافية اختيارية
+  - عنوان قصير
+  - selects للنوع/الحجم/الستايل/العناية
+  - multi-select لـ "مناسب لـ"
+  - select لربط بمشروع موجود (اختياري) — يجلب من `projects`
+  - نشر/إخفاء، ترتيب
+- تعديل/حذف لكل سطر
 
-## 5. الصلاحيات (RLS باختصار)
-- admin: كل شيء
-- staff: قراءة/تحديث الإسناد لطلباته فقط
-- customer: قراءة طلباته فقط بدون أي بيانات موظف داخلية
+أضيف رابط "لقطات الأعمال" في `admin.tsx` بجوار "المشاريع" بدون لمس المشاريع.
 
-## 6. ما لا يتغيّر
-- `status` و `REQUEST_STATUS_LABEL` و `request_status_history` تبقى كما هي.
-- جميع الواجهات الحالية للحالة (Chips, dropdowns) لا تتأثر.
-- لا تعديل على الجداول الموجودة عدا إضافة حقول جديدة nullable.
+---
 
-## ملفات سيتم تعديلها/إنشاؤها
-- migration واحدة كاملة (enums + columns + جدول events + RLS + triggers)
-- `src/lib/staff-assignment.ts` (جديد — labels, helpers, types)
-- `src/routes/_authenticated/admin.requests.index.tsx` (فلاتر + عمود)
-- `src/routes/_authenticated/admin.requests.$id.tsx` (قسم الإسناد + أزرار)
-- `src/routes/_authenticated/admin.index.tsx` (كروت الداشبورد)
-- `src/routes/_authenticated/account.requests.$id.tsx` (قسم "متابعة الطلب")
-- `src/routes/_authenticated/account.tsx` (عنصر "طلباتي" للموظف)
+## 4) الملفات الجديدة/المعدّلة
 
-## أسئلة قبل البدء
-1. هل تريد إنشاء صفحة منفصلة `/staff` للموظفين، أم يكفي إعادة استخدام صفحات الإدارة مع تقييد RLS؟ (مقترح: الثاني — أسرع وأبسط)
-2. الإشعارات: هل ترسل إشعار للموظف عند الإسناد بالإضافة لإشعار العميل؟ (مقترح: نعم)
-3. حذف الإسناد (unassign): هل يلزم سبب إجباري؟ (مقترح: ملاحظة اختيارية)
+**جديد:**
+- migration: `work_gallery_items` + RLS + grants
+- `src/lib/work-gallery.ts` — types + helpers (labels عربية للفلاتر)
+- `src/routes/_authenticated/admin.gallery.index.tsx`
+- `src/components/portfolio/GalleryTab.tsx`
+- `src/components/portfolio/GalleryFilters.tsx`
+- `src/components/portfolio/GalleryLightbox.tsx`
+
+**معدّل (إضافة فقط، بدون كسر):**
+- صفحة الأعمال الحالية: لف المحتوى الحالي في Tabs وأضف التبويب الثاني
+- `src/routes/_authenticated/admin.tsx`: عنصر تنقّل جديد
+- `src/routes/services.custom-aquariums.tsx` (أو المسار الفعلي): قراءة `ref_*` من search params وتعبئة الفورم
+- `src/integrations/supabase/types.ts`: يتحدّث تلقائيًا بعد المايجريشن
+
+---
+
+## 5) ضمانات عدم الكسر
+- صفر تعديل على جدول `projects` أو على مكوّنات/صفحات المشاريع الحالية
+- اللقطة المرتبطة بمشروع = سجل مستقل يخزّن `linked_project_id` فقط؛ حذف مشروع → السجل يبقى مع `linked_project_id = NULL`
+- لا تكرار للصور: اللقطة تخزن `image_url` خاص بها (قد يكون نفس رابط صورة من مشروع، لكن السجل مستقل)
+
+---
+
+## 6) خطة الاختبار
+1. المشاريع القديمة تظهر في تبويب "مشاريع منفذة" بنفس الشكل
+2. فتح تفاصيل مشروع يعمل كما كان
+3. إضافة لقطة جديدة من الأدمن (مع/بدون ربط مشروع)
+4. الفلاتر في "لقطات من أعمالنا" تعمل
+5. زر "أبغى مثل هذا" يفتح فورم الطلب المخصص مع مرجع معبّأ
+6. زر "عرض المشروع الكامل" يظهر فقط للمرتبطة
+7. شبكة الصور مربعة على الجوال والديسكتوب
+8. RLS: زائر يرى المنشور فقط، الأدمن يدير الكل
+
+---
+
+## ملاحظات للتأكيد
+- **اسم صفحة الأعمال الحالية**: سأكتشفه أوتوماتيكيًا من `src/routes/` (غالبًا `portfolio.tsx` أو `our-work.tsx`)
+- **bucket التخزين**: سأستخدم `media` الموجود
+- **فورم الطلب المخصص**: سأمرر البيانات عبر search params لتجنّب أي تعديل في منطق الفورم نفسه
