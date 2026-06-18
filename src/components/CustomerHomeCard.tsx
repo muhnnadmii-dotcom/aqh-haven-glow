@@ -114,6 +114,8 @@ export function CustomerHomeCard() {
             </div>
           )}
 
+          <AquariumAssistantShortcut />
+
           {/* Quick actions */}
           <div className="mt-5 flex flex-wrap gap-2">
             <Link
