@@ -91,7 +91,9 @@ function AdminLayout() {
     router.navigate({ to: "/auth", replace: true });
   };
 
-  const title = TITLES[pathname] || "لوحة الإدارة";
+  let title = TITLES[pathname] || "لوحة الإدارة";
+  if (pathname.startsWith("/admin/requests/")) title = "تفاصيل الطلب";
+  else if (pathname.startsWith("/admin/users/")) title = "تفاصيل العميل";
 
   return (
     <div className="min-h-screen bg-background">
