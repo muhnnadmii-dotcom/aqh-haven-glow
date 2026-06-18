@@ -1,104 +1,73 @@
-# Admin Operations System — Plan
+# Admin Content Management — Phased Plan
 
-Scope: admin pages only. No changes to visitor UI, home, services, projects, or articles. No data deletion. Preserve current RLS/roles.
+The request covers ~10 large admin areas. Most schema and image infrastructure already exists in the codebase (DnD reorder, primary image, delete, mixed old/new image rendering, price types, warranty fields, home_sections table, services with FAQs/features/CTA types, etc.). The actual user-visible pain is concentrated in a few places.
 
-## 1. Database additions (one migration)
+I'll deliver this in **5 phases**. Each phase is one turn; you tell me which to do first or do them in order.
 
-New tables:
+---
 
-- `request_notes` — internal notes per service_request
-  - `request_id` (fk service_requests), `author_id` (fk auth.users), `body` text
-- `request_status_history` — audit trail of status changes
-  - `request_id`, `from_status`, `to_status`, `changed_by`, `note`
-- `customer_notes` — internal notes per customer (profile)
-  - `profile_id`, `author_id`, `body`
+## Phase 1 — Bug fixes (critical, fast)
 
-Modifications:
-- `appointments`: add `service_request_id uuid` nullable (link appointment ↔ request). Do not remove existing columns.
+The "can't type Space / Enter" complaint is real and reproducible:
 
-RLS: admin + staff can read/write all rows; service_role full. No anon access. GRANTs to authenticated + service_role.
+- `admin/services` textareas (features, includes, suitable_for, process_steps) call `split("\n").map(trim).filter(Boolean)` on **every keystroke**, so trailing spaces and empty lines are stripped while typing.
+- `admin/design/contact` `request_types` textarea has the same bug.
 
-## 2. Requests page (`/admin/requests`)
+**Fix**: store the raw textarea string in local state, only convert to array on save. Apply pattern across all line-list textareas. Also audit every input/textarea in `/admin/*` for `onKeyDown` Enter handlers that submit forms inside textareas — none found yet, but I'll sweep.
 
-Rebuilt as an operations center:
+Also: replace any `Enter`-blocks on forms with explicit submit buttons, ensure RTL `dir="auto"` on free-text fields, add `inputMode` where useful.
 
-- Filters bar: search (name/phone), type, status, city, date range, sort newest.
-- Status counter chips: جديد / تم التواصل / بانتظار معلومات / تم إرسال عرض / تم الاعتماد / مكتمل / ملغي.
-- Desktop: dense table (name, phone, type, city, source, status, created, updated, actions).
-- Mobile: compact cards (not large).
-- Quick actions per row: عرض / واتساب / تغيير حالة (dropdown).
-- Empty/null values display "غير محدد".
+## Phase 2 — Permissions: editor + viewer roles
 
-Status enum already supports needed values — will add missing ones if any (e.g. `awaiting_info`, `contacted`, `completed`, `cancelled`) without removing existing values.
+Today the `app_role` enum only has `admin/staff/customer`. To match the spec:
 
-## 3. Request details page (`/admin/requests/$id`)
+- Add `editor` and `viewer` values to the `app_role` enum (Postgres `ALTER TYPE`).
+- RLS / route gates:
+  - `admin/staff` keep current full access (operations).
+  - `editor` gets write access to: projects, project_categories, services, articles, testimonials, home_sections, site_pages.
+  - `viewer` gets read-only access to all admin pages.
+  - `customer` blocked from `/admin/*`.
+- Update the admin layout `beforeLoad` to accept `admin|staff|editor|viewer`.
+- Add a `useAdminRole()` hook that returns the highest role, plus `canEdit()` / `canDelete()` helpers, and wire them into every admin page (disable save/delete buttons for viewers).
+- Update RLS policies on the content tables (projects, articles, services, testimonials, home_sections, site_pages, project_categories) so editor + admin can write, viewer + others cannot.
+- Update `admin/staff` page so admin can assign any of the 4 roles.
 
-New route. Sections:
+## Phase 3 — Projects (أعمالنا) polish
 
-- **معلومات العميل**: name, phone, city, neighborhood, preferred contact method.
-- **تفاصيل الطلب**: type, source, description, tank type, place type, budget, dimensions, liters, has existing tank, wants maintenance, preferred contact time.
-- **الصور والمرفقات**: gallery with lightbox; broken images hidden.
-- **الإدارة الداخلية**: status, internal notes log, status history, created/updated, assigned staff (if exists).
-- **أزرار سريعة**: WhatsApp, copy phone, copy summary, change status, add note, schedule appointment.
+`admin/projects.tsx` already has 90% of the spec (price_type, warranty checkbox+text, liters auto-calc field, DnD images, primary image, delete, mixed legacy/new). Remaining gaps:
 
-WhatsApp message: pre-filled greeting with customer name + request type. Disabled with tooltip if phone missing.
+- Verify auto-liters formula triggers on every dimension change (currently does — confirm).
+- Add list-view toggle (cards ↔ table) on top, plus filters: search, category, city, published, featured-on-home.
+- Add bulk publish/unpublish/feature toggles on each row.
+- Ensure "ضمان مخفي للزائر" path on detail page when toggles off (visitor page, minimal touch).
 
-Copy summary: formatted Arabic text, "غير محدد" for missing fields.
+## Phase 4 — Categories + Testimonials + Services + Articles polish
 
-Add note: textarea + save → inserts into `request_notes`; full log shown with timestamps; never overwrites.
+- Categories: delete-guard. Count projects per category, block delete if in use, offer "move projects to: غير مصنف" before delete.
+- Testimonials: add featured-on-home toggle UI if missing, plus image upload (current has just text).
+- Services: rebuild line-list textareas with the Phase 1 pattern; add list reorder up/down/DnD.
+- Articles: same textarea fix; verify cover image picker + tags work; verify category dropdown sourced from existing articles' distinct categories.
 
-Status change: dropdown with confirm; writes to `service_requests.status` + `request_status_history`; disables button while saving; toast on success.
+## Phase 5 — Home page editor + site pages
 
-Schedule appointment: modal with date, time, type (معاينة/صيانة/تركيب/اتصال), notes. Saves to `appointments` with `service_request_id` linking back. Appears in appointments page and inside request details.
+The `home_sections` table already exists with `section_key + enabled + content jsonb + sort_order`. Today `admin/design/index.tsx` is 669 lines (already comprehensive). Remaining work:
 
-## 4. Appointments page (`/admin/appointments`)
+- Audit each section type and ensure it has a panel: hero, stats, services, projects, articles, testimonials, FAQ, CTA.
+- Section-level enable/disable toggle that surfaces on the visitor home page.
+- Section reorder (sort_order).
+- "Featured" selectors that pick from existing rows (projects/services/articles/testimonials) instead of free text.
+- `admin/design/about` and `admin/design/contact` finish: SEO fields, social links list with the Phase 1 textarea pattern.
 
-Rebuilt:
-- Tabs: قادمة / سابقة.
-- Filters: date, type, status, search (name/phone).
-- Card/table per appointment: customer name, type, date, time, city, status, linked request, WhatsApp, edit, cancel.
-- Statuses: مجدول / تم التأكيد / مكتمل / ملغي / لم يتم.
+---
 
-## 5. Customers page (`/admin/customers`)
+## Out of scope (will surface if discovered, won't fix here)
 
-New list page (built from `profiles` + aggregates):
-- Search by name/phone, filter by city.
-- Per row: name, phone, city, request count, tank count, view, WhatsApp.
+- Rebuilding the visitor site or changing brand/identity.
+- Migrating to a different rich-text editor (current is plain textarea — adequate for Arabic RTL once Enter/Space bugs are fixed).
+- Email notifications for content changes.
 
-## 6. Customer details page (`/admin/customers/$id`)
+---
 
-New route:
-- **بيانات العميل**: name, phone, email, city, neighborhood, created.
-- **أحواض العميل**: list with view + add tank.
-- **طلبات العميل**: all linked requests with status + view.
-- **مواعيد العميل**: upcoming + past.
-- **ملاحظات داخلية**: list + add (from `customer_notes`).
-- **أزرار سريعة**: WhatsApp, create request, schedule appointment, add tank.
+## Which order?
 
-## 7. Mobile UX
-
-- No giant cards, no horizontal scroll, readable typography.
-- Visitor WhatsApp floating button already hidden in admin (existing).
-- Images sized & lazy; broken images replaced with placeholder.
-
-## 8. Permissions (unchanged behavior)
-
-- admin: full.
-- staff: manage requests, appointments, customers, notes.
-- editor/viewer/customer: no access (existing `_authenticated` + role guard on admin layout).
-- Will reuse existing `has_role` checks; no role schema change.
-
-## Technical notes
-
-- Server functions in `src/lib/admin-ops.functions.ts` using `requireSupabaseAuth` middleware + role check via `has_role`.
-- Helpers in `src/lib/format.ts` (`displayOrFallback`, `formatSummary`, `waLink`).
-- New routes: `_authenticated/admin.requests.$id.tsx`, `_authenticated/admin.customers.tsx`, `_authenticated/admin.customers.$id.tsx`. Existing `admin.requests.tsx` and `admin.appointments.tsx` rebuilt in place.
-- All Supabase reads via TanStack Query (`ensureQueryData` + `useSuspenseQuery`).
-- All mutations via `useMutation` → invalidate keys.
-
-## Out of scope
-
-- Email notifications.
-- Visitor site changes.
-- New roles / permission schema rewrite.
-- Bulk operations.
+Recommend executing in numbered order — Phase 1 (typing bug) is the smallest and most painful for daily use. Reply with a phase number (or "all in order") and I'll start.
