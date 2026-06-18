@@ -275,10 +275,22 @@ function HomePage() {
       {partnersEnabled && partnerItems.length > 0 && (
         <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
           {partnersC?.title && <div className="text-center text-sm text-muted-foreground mb-6 leading-loose">{partnersC.title}</div>}
-          <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none">
-            {[...partnerItems, ...partnerItems].map((p, i) => (
-              <span key={`${p.id}-${i}`} className="whitespace-nowrap" dir="ltr">{p.label}</span>
-            ))}
+          <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none items-center">
+            {[...partnerItems, ...partnerItems].map((p, i) => {
+              const isImage = (p.display_type ?? (p.logo_path ? "image" : "text")) === "image" && p.logo_path;
+              return isImage ? (
+                <img
+                  key={`${p.id}-${i}`}
+                  src={publicUrl(p.logo_path!)}
+                  alt={p.label}
+                  loading="lazy"
+                  onError={onImageError}
+                  className="h-12 md:h-14 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
+                />
+              ) : (
+                <span key={`${p.id}-${i}`} className="whitespace-nowrap" dir="ltr">{p.label}</span>
+              );
+            })}
           </div>
         </section>
       )}

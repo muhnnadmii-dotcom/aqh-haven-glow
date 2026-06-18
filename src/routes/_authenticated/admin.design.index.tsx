@@ -602,7 +602,7 @@ function PartnersEditor({ value, onChange }: { value: { enabled: boolean; conten
   const updateItem = (id: string, patch: Partial<PartnerItem>) => setC({ ...c, items: c.items.map((it) => it.id === id ? { ...it, ...patch } : it) });
   const remove = (id: string) => setC({ ...c, items: c.items.filter((it) => it.id !== id) });
   const move = (id: string, dir: -1 | 1) => moveOrdered(c.items, id, dir, (items) => setC({ ...c, items }));
-  const add = () => setC({ ...c, items: [...c.items, { id: genId(), label: "BRAND", order: nextOrder(c.items), visible: true }] });
+  const add = () => setC({ ...c, items: [...c.items, { id: genId(), label: "BRAND", order: nextOrder(c.items), visible: true, display_type: "text", logo_path: null }] });
   const sorted = [...c.items].sort((a, b) => a.order - b.order);
   return (
     <div className="space-y-4">
@@ -611,19 +611,37 @@ function PartnersEditor({ value, onChange }: { value: { enabled: boolean; conten
         <Field label="عنوان القسم"><input className={inp} value={c.title} onChange={(e) => setC({ ...c, title: e.target.value })} /></Field>
       </div>
       <ItemsHeader count={sorted.length} onAdd={add} label="شعار" />
-      <div className="grid gap-2">
-        {sorted.map((it) => (
-          <div key={it.id} className="glass rounded-xl p-3 grid gap-2 sm:grid-cols-[1fr_80px_auto] items-end">
-            <Field label="اسم العلامة"><input dir="ltr" className={inp} value={it.label} onChange={(e) => updateItem(it.id, { label: e.target.value })} /></Field>
-            <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
-            <div className="flex gap-1">
-              <IconBtn onClick={() => move(it.id, -1)}><ArrowUp size={14} /></IconBtn>
-              <IconBtn onClick={() => move(it.id, 1)}><ArrowDown size={14} /></IconBtn>
-              <IconBtn onClick={() => updateItem(it.id, { visible: !it.visible })}>{it.visible ? <Eye size={14} /> : <EyeOff size={14} />}</IconBtn>
-              <IconBtn onClick={() => remove(it.id)} danger><Trash2 size={14} /></IconBtn>
+      <div className="grid gap-3">
+        {sorted.map((it) => {
+          const mode = it.display_type ?? (it.logo_path ? "image" : "text");
+          return (
+            <div key={it.id} className="glass rounded-xl p-3 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex rounded-lg overflow-hidden border border-white/10">
+                  <button type="button" onClick={() => updateItem(it.id, { display_type: "text" })}
+                    className={`px-3 py-1 text-xs ${mode === "text" ? "bg-gold text-black" : "bg-transparent text-white/70"}`}>نص</button>
+                  <button type="button" onClick={() => updateItem(it.id, { display_type: "image" })}
+                    className={`px-3 py-1 text-xs ${mode === "image" ? "bg-gold text-black" : "bg-transparent text-white/70"}`}>صورة PNG</button>
+                </div>
+                <div className="flex-1" />
+                <IconBtn onClick={() => move(it.id, -1)}><ArrowUp size={14} /></IconBtn>
+                <IconBtn onClick={() => move(it.id, 1)}><ArrowDown size={14} /></IconBtn>
+                <IconBtn onClick={() => updateItem(it.id, { visible: !it.visible })}>{it.visible ? <Eye size={14} /> : <EyeOff size={14} />}</IconBtn>
+                <IconBtn onClick={() => remove(it.id)} danger><Trash2 size={14} /></IconBtn>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[1fr_80px] items-end">
+                {mode === "image" ? (
+                  <Field label="شعار العلامة (PNG)">
+                    <ImageUploader value={it.logo_path ?? null} onChange={(path) => updateItem(it.id, { logo_path: path })} folder="partners" label="ارفع شعار" />
+                  </Field>
+                ) : (
+                  <Field label="اسم العلامة"><input dir="ltr" className={inp} value={it.label} onChange={(e) => updateItem(it.id, { label: e.target.value })} /></Field>
+                )}
+                <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {sorted.length === 0 && <EmptyHint />}
       </div>
     </div>
