@@ -657,9 +657,9 @@ function CareTimeline({ logs, readings, issues }: { logs: CareLog[]; readings: R
         a.push({ id: l.id, kind: "photo", date: l.created_at, title: "تم رفع صورة", detail: l.note ?? undefined, image: img });
       } else if (l.log_type === "note") {
         a.push({ id: l.id, kind: "note", date: l.created_at, title: "تم إضافة ملاحظة", detail: l.note ?? undefined, image: img });
-      } else if (l.log_type === "status") {
+      } else if (l.log_type === "status_update") {
         a.push({ id: l.id, kind: "status", date: l.created_at,
-          title: `تم تحديث حالة الحوض: ${STATUS_META[(l.status as Status) ?? "stable"]?.label ?? l.status}`,
+          title: `تم تحديث حالة الحوض: ${STATUS_META[(l.status as Status) ?? "normal"]?.label ?? l.status}`,
           detail: l.note ?? undefined });
       }
     }
