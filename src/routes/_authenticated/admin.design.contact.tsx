@@ -118,7 +118,8 @@ function ContactAdmin() {
           <Field label="رسالة النجاح"><input className={inp} value={c.form.success_message} onChange={(e) => setC({ ...c, form: { ...c.form, success_message: e.target.value } })} /></Field>
           <Field label="أنواع الطلبات (واحد في كل سطر)" full>
             <textarea rows={4} className={ta} value={(c.request_types ?? []).join("\n")}
-              onChange={(e) => setC({ ...c, request_types: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })} />
+              onChange={(e) => setC({ ...c, request_types: e.target.value.split("\n") })} />
+            <span className="text-[11px] text-muted-foreground block mt-1">يتم تجاهل الأسطر الفارغة عند الحفظ.</span>
           </Field>
         </Grid>
       </Section>
