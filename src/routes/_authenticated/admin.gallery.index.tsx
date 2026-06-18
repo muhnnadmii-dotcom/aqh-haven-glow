@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl, onImageError } from "@/lib/storage";
-import { ImageUploader, MultiImageUploader } from "@/components/ImageUploader";
+import { OrderedImagesEditor } from "@/components/portfolio/OrderedImagesEditor";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, Eye, EyeOff, X, Save, Sparkles } from "lucide-react";
 import {
