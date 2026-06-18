@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
 import { ArrowRight, FlaskConical, Wrench } from "lucide-react";
-import { AquariumAssistant } from "@/components/aquarium-assistant/AquariumAssistant";
-import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/account/tanks/$id")({
   component: TankDetail,
@@ -22,7 +20,6 @@ type Test = { id: string; test_date: string; ph: number | null; ammonia: number 
 
 function TankDetail() {
   const { id } = Route.useParams();
-  const { user } = useAuth();
   const [tank, setTank] = useState<Tank | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [tests, setTests] = useState<Test[]>([]);
@@ -82,8 +79,6 @@ function TankDetail() {
           </div>
         </div>
       </div>
-
-      {user && <AquariumAssistant tankId={tank.id} userId={user.id} tankType={tank.tank_type} />}
 
       {others.length > 0 && (
         <section className="glass rounded-2xl p-5">
