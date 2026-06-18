@@ -130,13 +130,27 @@ function AccountLayout() {
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">حسابي</div>
           <div className="truncate text-base font-semibold">{currentLabel}</div>
         </div>
-        <button
-          onClick={() => setOpen(true)}
-          className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-xl glass text-sm"
-          aria-label="فتح قائمة الحساب"
-        >
-          <Menu size={16} /> القائمة
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            to="/account/notifications"
+            className="relative inline-flex items-center justify-center w-10 h-10 rounded-xl glass"
+            aria-label="الإشعارات"
+          >
+            <Bell size={16} />
+            {unread > 0 && (
+              <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-background text-[10px] font-bold grid place-items-center">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
+          </Link>
+          <button
+            onClick={() => setOpen(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass text-sm"
+            aria-label="فتح قائمة الحساب"
+          >
+            <Menu size={16} /> القائمة
+          </button>
+        </div>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
