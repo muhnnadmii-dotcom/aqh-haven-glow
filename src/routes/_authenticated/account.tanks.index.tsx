@@ -7,7 +7,7 @@ import { MultiImageUploader } from "@/components/ImageUploader";
 import { publicUrl } from "@/lib/storage";
 import { getSessionUser } from "@/lib/client-auth";
 
-export const Route = createFileRoute("/_authenticated/account/tanks")({
+export const Route = createFileRoute("/_authenticated/account/tanks/")({
   component: TanksPage,
 });
 
