@@ -701,7 +701,7 @@ function FeaturedProjectsSection({ projects }: { projects: FeaturedProject[] }) 
             );
             return (
               <Reveal key={p.slug || `fb-${i}`} delay={i * 80} className="h-full">
-                {p.slug ? <Link to="/portfolio" className="block h-full">{card}</Link> : <div className="h-full">{card}</div>}
+                <div className="h-full">{card}</div>
               </Reveal>
             );
           })}
