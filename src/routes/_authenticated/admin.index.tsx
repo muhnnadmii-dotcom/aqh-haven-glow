@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 type Stats = {
   reqNew: number; reqFollow: number; apptUpcoming: number; tanks: number;
   projects: number; articles: number; services: number; testimonials: number;
+  unassigned: number; assignedPending: number; mine: number;
 };
 
 type ReqRow = {
@@ -50,6 +51,7 @@ function AdminHome() {
   const [stats, setStats] = useState<Stats>({
     reqNew: 0, reqFollow: 0, apptUpcoming: 0, tanks: 0,
     projects: 0, articles: 0, services: 0, testimonials: 0,
+    unassigned: 0, assignedPending: 0, mine: 0,
   });
   const [followUp, setFollowUp] = useState<ReqRow[]>([]);
   const [latestReq, setLatestReq] = useState<ReqRow[]>([]);
@@ -60,8 +62,11 @@ function AdminHome() {
     (async () => {
       const tenDaysAgo = new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString();
       const nowIso = new Date().toISOString();
+      const { data: { user } } = await supabase.auth.getUser();
+      const myId = user?.id;
       const [
         sNew, sFollow, sAppt, sTanks, sProj, sArt, sSvc, sTest,
+        sUnassigned, sAssignedPending, sMine,
         followRes, latestReqRes, projRes, artRes,
       ] = await Promise.all([
         supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
@@ -74,6 +79,11 @@ function AdminHome() {
         supabase.from("articles").select("id", { count: "exact", head: true }).eq("published", true),
         supabase.from("services").select("id", { count: "exact", head: true }).eq("published", true),
         supabase.from("testimonials").select("id", { count: "exact", head: true }),
+        supabase.from("service_requests").select("id", { count: "exact", head: true }).is("assigned_to_staff_id" as any, null),
+        supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("assignment_status" as any, "assigned"),
+        myId
+          ? supabase.from("service_requests").select("id", { count: "exact", head: true }).eq("assigned_to_staff_id" as any, myId)
+          : Promise.resolve({ count: 0 } as any),
         supabase.from("service_requests")
           .select("id,name,phone,city,type,status,created_at")
           .or(`status.eq.new,status.eq.in_review,and(status.in.(contacted,scheduled),updated_at.lt.${tenDaysAgo})`)
@@ -98,6 +108,9 @@ function AdminHome() {
         articles: sArt.count ?? 0,
         services: sSvc.count ?? 0,
         testimonials: sTest.count ?? 0,
+        unassigned: sUnassigned.count ?? 0,
+        assignedPending: sAssignedPending.count ?? 0,
+        mine: (sMine as any).count ?? 0,
       });
       setFollowUp((followRes.data ?? []) as ReqRow[]);
       setLatestReq((latestReqRes.data ?? []) as ReqRow[]);
@@ -112,6 +125,9 @@ function AdminHome() {
   });
 
   const statCards: { label: string; value: number; icon: any; to: string; color: string }[] = [
+    { label: "غير مسندة", value: stats.unassigned, icon: Inbox, to: "/admin/requests", color: "text-rose-300" },
+    { label: "مسندة لم تُستلم", value: stats.assignedPending, icon: Inbox, to: "/admin/requests", color: "text-amber-300" },
+    { label: "طلباتي", value: stats.mine, icon: Inbox, to: "/admin/requests", color: "text-gold" },
     { label: "طلبات جديدة", value: stats.reqNew, icon: Inbox, to: "/admin/requests", color: "text-blue-300" },
     { label: "قيد المتابعة", value: stats.reqFollow, icon: Inbox, to: "/admin/requests", color: "text-amber-300" },
     { label: "مواعيد قادمة", value: stats.apptUpcoming, icon: Calendar, to: "/admin/appointments", color: "text-cyan-300" },

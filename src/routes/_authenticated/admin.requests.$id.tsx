@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   ArrowRight, Copy, MessageCircle, Phone, Calendar, Plus, Save, X, Image as ImageIcon,
   FileText, Paperclip, MessageSquare, ListTodo, History as HistoryIcon, Lock, Upload, Trash2,
+  UserPlus, UserCheck, UserMinus, ArrowLeftRight, CheckCircle2,
 } from "lucide-react";
 import { publicUrl, onImageError, IMAGE_PLACEHOLDER } from "@/lib/storage";
 import {
@@ -18,6 +19,11 @@ import {
   uploadRequestAttachment, attachmentUrl, isImage, REPORT_TYPES, REPORT_TYPE_LABEL,
   type AttachmentRow,
 } from "@/lib/request-attachments";
+import {
+  ASSIGNMENT_STATUS_LABEL, ASSIGNMENT_STATUS_COLOR, DEPARTMENTS,
+  fetchStaffMembers, staffLabel, type AssignmentStatus, type AssignmentEvent, type StaffMember,
+} from "@/lib/staff-assignment";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin/requests/$id")({
   component: RequestDetail,
@@ -28,6 +34,13 @@ type Req = {
   name: string; phone: string | null; city: string | null;
   user_id: string | null; tank_id: string | null;
   assigned_to: string | null;
+  assigned_to_staff_id: string | null;
+  assigned_by: string | null;
+  assigned_at: string | null;
+  assignment_status: AssignmentStatus;
+  accepted_by_staff_at: string | null;
+  assignment_department: string | null;
+  assignment_note: string | null;
   details: Record<string, any> | null;
   customer_notes: string | null; admin_notes: string | null;
   preferred_times: string | null; attachments: string[];
@@ -69,16 +82,22 @@ function RequestDetail() {
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [showAppt, setShowAppt] = useState(false);
   const [showReport, setShowReport] = useState<Report | "new" | null>(null);
+  const [showAssign, setShowAssign] = useState<null | "assign" | "transfer">(null);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [events, setEvents] = useState<AssignmentEvent[]>([]);
+  const { user: me, isAdmin } = useAuth();
 
   const load = async () => {
     setLoading(true);
-    const [r, n, h, a, rep, at] = await Promise.all([
+    const [r, n, h, a, rep, at, ev, st] = await Promise.all([
       supabase.from("service_requests").select("*").eq("id", id).maybeSingle(),
       supabase.from("request_notes").select("*").eq("request_id", id).order("created_at", { ascending: false }),
       supabase.from("request_status_history").select("*").eq("request_id", id).order("created_at", { ascending: false }),
       supabase.from("appointments").select("id,kind,status,preferred_date,notes").eq("service_request_id", id).order("preferred_date", { ascending: true }),
       supabase.from("request_reports").select("*").eq("request_id", id).order("created_at", { ascending: false }),
       supabase.from("request_attachments").select("*").eq("request_id", id).order("created_at", { ascending: false }),
+      supabase.from("request_assignment_events" as any).select("*").eq("request_id", id).order("created_at", { ascending: false }),
+      fetchStaffMembers(),
     ]);
     if (!r.data) { setNotFound(true); setLoading(false); return; }
     setReq(r.data as unknown as Req);
@@ -87,6 +106,8 @@ function RequestDetail() {
     setAppointments((a.data ?? []) as any);
     setReports((rep.data ?? []) as any);
     setAttachments((at.data ?? []) as any);
+    setEvents(((ev as any).data ?? []) as AssignmentEvent[]);
+    setStaff(st);
     setLoading(false);
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
@@ -101,6 +122,10 @@ function RequestDetail() {
       </div>
     </div>
   );
+
+  const assignedStaff = staff.find((s) => s.id === req.assigned_to_staff_id) || null;
+  const assignedByStaff = staff.find((s) => s.id === req.assigned_by) || null;
+  const isAssignedToMe = !!me && req.assigned_to_staff_id === me.id;
 
   const d = req.details ?? {};
   const wa = waLink(req.phone, waGreeting(req.name, req.type));
@@ -182,6 +207,38 @@ function RequestDetail() {
           </select>
         </div>
       </div>
+
+      {/* Assignment box */}
+      <AssignmentBox
+        req={req}
+        assignedStaff={assignedStaff}
+        assignedByStaff={assignedByStaff}
+        isAdmin={isAdmin}
+        isAssignedToMe={isAssignedToMe}
+        onAssignClick={() => setShowAssign("assign")}
+        onTransferClick={() => setShowAssign("transfer")}
+        onUnassign={async () => {
+          if (!confirm("إزالة إسناد هذا الطلب؟")) return;
+          const { error } = await supabase.from("service_requests").update({
+            assigned_to_staff_id: null,
+            assignment_status: "unassigned",
+            assignment_department: null,
+            assignment_note: null,
+            assigned_at: null,
+            accepted_by_staff_at: null,
+          } as any).eq("id", req.id);
+          if (error) toast.error(error.message);
+          else { toast.success("تم إزالة الإسناد"); load(); }
+        }}
+        onAccept={async () => {
+          const { error } = await supabase.from("service_requests").update({
+            assignment_status: "accepted",
+            accepted_by_staff_at: new Date().toISOString(),
+          } as any).eq("id", req.id);
+          if (error) toast.error(error.message);
+          else { toast.success("تم استلام الطلب"); load(); }
+        }}
+      />
 
       {/* Tabs */}
       <div className="glass rounded-2xl p-1 flex gap-1 overflow-x-auto">
@@ -324,6 +381,14 @@ function RequestDetail() {
                 <span className="ms-auto text-[10px] px-1.5 py-0.5 rounded bg-white/10">{a.status}</span>
               </div>
             ))}
+            {events.map((e) => (
+              <div key={`e-${e.id}`} className="text-xs flex items-center gap-2 bg-white/5 rounded-lg px-2.5 py-1.5">
+                <UserCheck size={12} className="text-gold" />
+                <span>{assignmentEventLabel(e, staff)}</span>
+                {!e.visible_to_customer && <span className="text-[9px] px-1 rounded bg-white/10">داخلي</span>}
+                <span className="text-muted-foreground ms-auto">{new Date(e.created_at).toLocaleString("ar-SA")}</span>
+              </div>
+            ))}
           </div>
         </Section>
       )}
@@ -349,9 +414,204 @@ function RequestDetail() {
           onSaved={() => { setShowReport(null); load(); }}
         />
       )}
+
+      {showAssign && (
+        <AssignDialog
+          mode={showAssign}
+          req={req}
+          staff={staff}
+          onClose={() => setShowAssign(null)}
+          onSaved={() => { setShowAssign(null); load(); }}
+        />
+      )}
     </div>
   );
 }
+
+function assignmentEventLabel(e: AssignmentEvent, staff: StaffMember[]): string {
+  const to = staff.find((s) => s.id === e.to_staff_id);
+  const from = staff.find((s) => s.id === e.from_staff_id);
+  switch (e.event_type) {
+    case "assigned": return `تم إسناد الطلب إلى ${staffLabel(to)}`;
+    case "accepted": return `${staffLabel(to)} استلم الطلب`;
+    case "transferred": return `تم تحويل الطلب من ${staffLabel(from)} إلى ${staffLabel(to)}`;
+    case "unassigned": return `تم إزالة المسؤول عن الطلب`;
+  }
+}
+
+function AssignmentBox({
+  req, assignedStaff, assignedByStaff, isAdmin, isAssignedToMe,
+  onAssignClick, onTransferClick, onUnassign, onAccept,
+}: {
+  req: Req;
+  assignedStaff: StaffMember | null;
+  assignedByStaff: StaffMember | null;
+  isAdmin: boolean;
+  isAssignedToMe: boolean;
+  onAssignClick: () => void;
+  onTransferClick: () => void;
+  onUnassign: () => void;
+  onAccept: () => void;
+}) {
+  const st = req.assignment_status as AssignmentStatus;
+  return (
+    <div className="glass rounded-2xl p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="text-sm font-bold text-gold flex items-center gap-1.5">
+          <UserCheck size={14} /> إسناد الطلب
+        </div>
+        <span className={`text-[11px] px-2 py-0.5 rounded-md ${ASSIGNMENT_STATUS_COLOR[st]}`}>
+          {ASSIGNMENT_STATUS_LABEL[st]}
+        </span>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-2 text-xs">
+        <div className="bg-white/5 rounded-lg p-2.5">
+          <div className="text-[10px] text-muted-foreground mb-0.5">الموظف المسؤول</div>
+          <div className="font-semibold">{staffLabel(assignedStaff)}</div>
+        </div>
+        <div className="bg-white/5 rounded-lg p-2.5">
+          <div className="text-[10px] text-muted-foreground mb-0.5">القسم</div>
+          <div>{req.assignment_department || "—"}</div>
+        </div>
+        <div className="bg-white/5 rounded-lg p-2.5">
+          <div className="text-[10px] text-muted-foreground mb-0.5">وقت الإسناد</div>
+          <div>{req.assigned_at ? new Date(req.assigned_at).toLocaleString("ar-SA") : "—"}</div>
+        </div>
+        <div className="bg-white/5 rounded-lg p-2.5">
+          <div className="text-[10px] text-muted-foreground mb-0.5">من قام بالإسناد</div>
+          <div>{staffLabel(assignedByStaff)}</div>
+        </div>
+        {req.accepted_by_staff_at && (
+          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-2.5 sm:col-span-2">
+            <div className="text-[10px] text-emerald-300 mb-0.5">وقت الاستلام</div>
+            <div className="text-emerald-200">{new Date(req.accepted_by_staff_at).toLocaleString("ar-SA")}</div>
+          </div>
+        )}
+        {req.assignment_note && (
+          <div className="bg-white/5 rounded-lg p-2.5 sm:col-span-2">
+            <div className="text-[10px] text-muted-foreground mb-0.5">ملاحظة الإسناد</div>
+            <div className="whitespace-pre-wrap" dir="auto">{req.assignment_note}</div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {isAssignedToMe && st !== "accepted" && (
+          <button onClick={onAccept}
+            className="text-xs px-3 py-1.5 rounded-md bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 inline-flex items-center gap-1">
+            <CheckCircle2 size={13} /> استلام الطلب
+          </button>
+        )}
+        {isAdmin && !req.assigned_to_staff_id && (
+          <button onClick={onAssignClick}
+            className="text-xs px-3 py-1.5 rounded-md bg-gold/20 text-gold hover:bg-gold/30 inline-flex items-center gap-1">
+            <UserPlus size={13} /> إسناد الطلب
+          </button>
+        )}
+        {isAdmin && req.assigned_to_staff_id && (
+          <>
+            <button onClick={onAssignClick}
+              className="text-xs px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 inline-flex items-center gap-1">
+              <UserPlus size={13} /> تغيير الموظف
+            </button>
+            <button onClick={onTransferClick}
+              className="text-xs px-3 py-1.5 rounded-md bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 inline-flex items-center gap-1">
+              <ArrowLeftRight size={13} /> تحويل لموظف آخر
+            </button>
+            <button onClick={onUnassign}
+              className="text-xs px-3 py-1.5 rounded-md bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 inline-flex items-center gap-1">
+              <UserMinus size={13} /> إزالة الإسناد
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AssignDialog({ mode, req, staff, onClose, onSaved }: {
+  mode: "assign" | "transfer";
+  req: Req;
+  staff: StaffMember[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [staffId, setStaffId] = useState<string>("");
+  const [dept, setDept] = useState<string>(req.assignment_department || "");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const choices = staff.filter((s) => s.id !== req.assigned_to_staff_id);
+
+  const save = async () => {
+    if (!staffId) { toast.error("اختر الموظف"); return; }
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const isTransfer = mode === "transfer";
+    const { error } = await supabase.from("service_requests").update({
+      assigned_to_staff_id: staffId,
+      assigned_by: user?.id ?? null,
+      assigned_at: new Date().toISOString(),
+      assignment_status: isTransfer ? "transferred" : "assigned",
+      assignment_department: dept || null,
+      assignment_note: note || null,
+      accepted_by_staff_at: null,
+    } as any).eq("id", req.id);
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else { toast.success(isTransfer ? "تم التحويل" : "تم إسناد الطلب"); onSaved(); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="glass rounded-2xl p-5 w-full max-w-md space-y-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold">{mode === "transfer" ? "تحويل الطلب" : "إسناد الطلب"}</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-white/10"><X size={16} /></button>
+        </div>
+
+        <label className="block">
+          <div className="text-[11px] text-muted-foreground mb-1">الموظف</div>
+          <select value={staffId} onChange={(e) => setStaffId(e.target.value)}
+            className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm">
+            <option value="" className="bg-background">— اختر موظف —</option>
+            {choices.map((s) => (
+              <option key={s.id} value={s.id} className="bg-background">
+                {staffLabel(s)} {s.role === "admin" ? "(مدير)" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="text-[11px] text-muted-foreground mb-1">القسم (اختياري)</div>
+          <select value={dept} onChange={(e) => setDept(e.target.value)}
+            className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm">
+            <option value="" className="bg-background">—</option>
+            {DEPARTMENTS.map((d) => <option key={d} value={d} className="bg-background">{d}</option>)}
+          </select>
+        </label>
+
+        <label className="block">
+          <div className="text-[11px] text-muted-foreground mb-1">
+            {mode === "transfer" ? "سبب التحويل (اختياري)" : "ملاحظة (اختياري)"}
+          </div>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3}
+            className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm resize-none" dir="auto" />
+        </label>
+
+        <div className="flex gap-2 justify-end">
+          <button onClick={onClose} className="text-xs px-3 py-1.5 rounded-md bg-white/5">إلغاء</button>
+          <button onClick={save} disabled={saving}
+            className="text-xs px-3 py-1.5 rounded-md bg-gold/20 text-gold inline-flex items-center gap-1 disabled:opacity-50">
+            <Save size={12} /> حفظ
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function Section({ title, icon, children, action }: { title: string; icon?: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
   return (

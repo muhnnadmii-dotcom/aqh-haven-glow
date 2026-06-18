@@ -550,6 +550,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          display_name_for_customer: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -558,6 +559,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          display_name_for_customer?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
@@ -566,6 +568,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          display_name_for_customer?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -731,6 +734,53 @@ export type Database = {
           year?: string | null
         }
         Relationships: []
+      }
+      request_assignment_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          department: string | null
+          event_type: string
+          from_staff_id: string | null
+          id: string
+          note: string | null
+          request_id: string
+          to_staff_id: string | null
+          visible_to_customer: boolean
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          department?: string | null
+          event_type: string
+          from_staff_id?: string | null
+          id?: string
+          note?: string | null
+          request_id: string
+          to_staff_id?: string | null
+          visible_to_customer?: boolean
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          department?: string | null
+          event_type?: string
+          from_staff_id?: string | null
+          id?: string
+          note?: string | null
+          request_id?: string
+          to_staff_id?: string | null
+          visible_to_customer?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_assignment_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       request_attachments: {
         Row: {
@@ -907,8 +957,15 @@ export type Database = {
       }
       service_requests: {
         Row: {
+          accepted_by_staff_at: string | null
           admin_notes: string | null
+          assigned_at: string | null
+          assigned_by: string | null
           assigned_to: string | null
+          assigned_to_staff_id: string | null
+          assignment_department: string | null
+          assignment_note: string | null
+          assignment_status: Database["public"]["Enums"]["assignment_status"]
           attachments: string[]
           city: string | null
           created_at: string
@@ -925,8 +982,15 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          accepted_by_staff_at?: string | null
           admin_notes?: string | null
+          assigned_at?: string | null
+          assigned_by?: string | null
           assigned_to?: string | null
+          assigned_to_staff_id?: string | null
+          assignment_department?: string | null
+          assignment_note?: string | null
+          assignment_status?: Database["public"]["Enums"]["assignment_status"]
           attachments?: string[]
           city?: string | null
           created_at?: string
@@ -943,8 +1007,15 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          accepted_by_staff_at?: string | null
           admin_notes?: string | null
+          assigned_at?: string | null
+          assigned_by?: string | null
           assigned_to?: string | null
+          assigned_to_staff_id?: string | null
+          assignment_department?: string | null
+          assignment_note?: string | null
+          assignment_status?: Database["public"]["Enums"]["assignment_status"]
           attachments?: string[]
           city?: string | null
           created_at?: string
@@ -1221,6 +1292,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "customer" | "staff"
+      assignment_status: "unassigned" | "assigned" | "accepted" | "transferred"
       request_status: "new" | "in_progress" | "closed"
       service_request_status:
         | "new"
@@ -1361,6 +1433,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "customer", "staff"],
+      assignment_status: ["unassigned", "assigned", "accepted", "transferred"],
       request_status: ["new", "in_progress", "closed"],
       service_request_status: [
         "new",
