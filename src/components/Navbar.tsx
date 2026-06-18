@@ -111,10 +111,12 @@ export function Navbar() {
               {user ? (
                 <Link
                   to="/account"
-                  className="grid place-items-center h-9 w-9 sm:h-10 sm:w-10 rounded-xl glass hover:bg-white/10 transition-colors"
-                  aria-label="حسابي"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm bg-[color:var(--gold)]/15 border border-[color:var(--gold)]/30 text-[color:var(--gold)] hover:bg-[color:var(--gold)]/25 transition-colors"
+                  title="لوحة العميل"
                 >
-                  <User size={16} />
+                  <LayoutDashboard size={14} />
+                  <span className="hidden sm:inline">لوحة العميل</span>
+                  {firstName && <span className="hidden md:inline text-foreground/80">· {firstName}</span>}
                 </Link>
               ) : (
                 <Link
