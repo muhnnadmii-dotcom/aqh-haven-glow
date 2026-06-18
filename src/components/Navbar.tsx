@@ -211,29 +211,46 @@ export function Navbar() {
             <div className="my-3 h-px bg-white/10" />
 
             {user ? (
-              <Link
-                to="/account"
-                onClick={() => setOpen(false)}
-                className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5"
-              >
-                حسابي
-              </Link>
+              <>
+                {firstName && (
+                  <div className="px-4 pt-1 pb-2 text-xs text-white/60">مرحبًا، <span className="text-[#D4A017] font-semibold">{firstName}</span></div>
+                )}
+                <Link to="/account" onClick={() => setOpen(false)}
+                  className="px-4 py-3 text-sm rounded-xl text-[#D4A017] bg-[#D4A017]/10 border border-[#D4A017]/20 inline-flex items-center gap-2 mb-1">
+                  <LayoutDashboard size={15} /> لوحة العميل
+                </Link>
+                <Link to="/account/requests" onClick={() => setOpen(false)}
+                  className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2">
+                  <Inbox size={14} /> طلباتي
+                </Link>
+                <Link to="/account/tanks" onClick={() => setOpen(false)}
+                  className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2">
+                  <Fish size={14} /> أحواضي
+                </Link>
+                <Link to="/account/appointments" onClick={() => setOpen(false)}
+                  className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2">
+                  <Calendar size={14} /> مواعيدي
+                </Link>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setOpen(false)}
+                    className="mt-2 px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2 border-t border-white/10 pt-3">
+                    <Shield size={14} /> لوحة الإدارة
+                  </Link>
+                )}
+                <button
+                  onClick={async () => { await supabase.auth.signOut(); setOpen(false); }}
+                  className="mt-2 px-4 py-3 text-sm rounded-xl text-rose-300 hover:bg-rose-500/10 inline-flex items-center gap-2 text-right"
+                >
+                  <LogOut size={14} /> تسجيل الخروج
+                </button>
+              </>
             ) : (
               <Link
                 to="/auth"
                 onClick={() => setOpen(false)}
-                className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5"
-              >
-                تسجيل دخول
-              </Link>
-            )}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={() => setOpen(false)}
                 className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2"
               >
-                <Shield size={14} /> لوحة الإدارة
+                <User size={14} /> تسجيل دخول
               </Link>
             )}
 
