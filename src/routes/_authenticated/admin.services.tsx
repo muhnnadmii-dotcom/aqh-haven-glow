@@ -84,6 +84,10 @@ function ServicesAdmin() {
     if (!editing.slug || !editing.title) { toast.error("العنوان وslug مطلوبان"); return; }
     const payload: any = { ...editing };
     delete payload.id;
+    payload.features = cleanLines(payload.features);
+    payload.includes = cleanLines(payload.includes);
+    payload.suitable_for = cleanLines(payload.suitable_for);
+    payload.process_steps = cleanLines(payload.process_steps);
     if (!payload.starting_price) payload.starting_price = null;
     const { error } = editing.id
       ? await supabase.from("services").update(payload).eq("id", editing.id)
