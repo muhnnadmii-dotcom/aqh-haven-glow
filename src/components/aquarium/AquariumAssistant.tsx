@@ -65,12 +65,12 @@ function readingOutOfRange(r: Reading): boolean {
   return false;
 }
 
-type Status = "excellent" | "stable" | "watch" | "issue";
+type Status = "excellent" | "normal" | "needs_attention" | "problem";
 const STATUS_META: Record<Status, { label: string; color: string; emoji: string }> = {
-  excellent: { label: "ممتاز", color: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30", emoji: "🌿" },
-  stable:    { label: "مستقر", color: "bg-sky-500/15 text-sky-300 border-sky-400/30", emoji: "💧" },
-  watch:     { label: "يحتاج متابعة", color: "bg-amber-500/15 text-amber-300 border-amber-400/30", emoji: "⚠️" },
-  issue:     { label: "توجد مشكلة", color: "bg-rose-500/15 text-rose-300 border-rose-400/30", emoji: "🚨" },
+  excellent:       { label: "ممتاز", color: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30", emoji: "🌿" },
+  normal:          { label: "مستقر", color: "bg-sky-500/15 text-sky-300 border-sky-400/30", emoji: "💧" },
+  needs_attention: { label: "يحتاج متابعة", color: "bg-amber-500/15 text-amber-300 border-amber-400/30", emoji: "⚠️" },
+  problem:         { label: "توجد مشكلة", color: "bg-rose-500/15 text-rose-300 border-rose-400/30", emoji: "🚨" },
 };
 
 type Modal =
@@ -115,21 +115,21 @@ export default function AquariumAssistant({ tank }: { tank: TankLite }) {
     }
     return null;
   }, [logs]);
-  const lastStatusLog = logs.find((x) => x.log_type === "status" && x.status);
+  const lastStatusLog = logs.find((x) => x.log_type === "status_update" && x.status);
   const lastNote = logs.find((x) => x.log_type === "note" || x.note);
   const openIssue = issues.find((x) => x.status === "open");
   const nextTask = tasks[0] ?? null;
 
   const computedStatus: Status = useMemo(() => {
-    if (openIssue) return "issue";
+    if (openIssue) return "problem";
     const dWater = daysSince(lastWaterChange?.created_at);
-    if (dWater != null && dWater > 14) return "watch";
-    if (lastReading && readingOutOfRange(lastReading)) return "watch";
+    if (dWater != null && dWater > 14) return "needs_attention";
+    if (lastReading && readingOutOfRange(lastReading)) return "needs_attention";
     if (lastStatusLog?.status === "excellent") return "excellent";
-    if (lastStatusLog?.status === "issue") return "issue";
-    if (lastStatusLog?.status === "watch") return "watch";
-    if (logs.length > 0) return "stable";
-    return "stable";
+    if (lastStatusLog?.status === "problem") return "problem";
+    if (lastStatusLog?.status === "needs_attention") return "needs_attention";
+    if (logs.length > 0) return "normal";
+    return "normal";
   }, [openIssue, lastWaterChange, lastReading, lastStatusLog, logs.length]);
 
   const meta = STATUS_META[computedStatus];
@@ -268,29 +268,33 @@ async function uid() {
 }
 
 export function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
-  const [status, setStatus] = useState<Status>("stable");
+  const [status, setStatus] = useState<Status>("normal");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const opts: { v: Status; l: string; e: string }[] = [
     { v: "excellent", l: "ممتاز", e: "🌿" },
-    { v: "stable", l: "طبيعي", e: "💧" },
-    { v: "watch", l: "يحتاج متابعة", e: "⚠️" },
-    { v: "issue", l: "فيه مشكلة", e: "🚨" },
+    { v: "normal", l: "طبيعي", e: "💧" },
+    { v: "needs_attention", l: "يحتاج متابعة", e: "⚠️" },
+    { v: "problem", l: "فيه مشكلة", e: "🚨" },
   ];
   const tip: Record<Status, string> = {
     excellent: "ممتاز، استمر على نفس روتين العناية.",
-    stable: "تم تسجيل الحالة، تابع الحوض خلال الأيام القادمة.",
-    watch: "تم تسجيل الحالة، يفضل إضافة صورة أو قراءة لمتابعة الوضع.",
-    issue: "تم تسجيل المشكلة، يمكنك فتح طلب متابعة إذا احتجت مساعدة.",
+    normal: "تم تسجيل الحالة، تابع الحوض خلال الأيام القادمة.",
+    needs_attention: "تم تسجيل الحالة، يفضل إضافة صورة أو قراءة لمتابعة الوضع.",
+    problem: "تم تسجيل المشكلة، يمكنك فتح طلب متابعة إذا احتجت مساعدة.",
   };
   const save = async () => {
-    const u = await uid(); if (!u) return;
+    const u = await uid(); if (!u) { toast.error("يلزم تسجيل الدخول"); return; }
     setBusy(true);
     const { error } = await supabase.from("aquarium_care_logs").insert({
-      tank_id: tank.id, user_id: u, log_type: "status", status, note: note || null,
+      tank_id: tank.id, user_id: u, log_type: "status_update", status, note: note || null,
     });
     setBusy(false);
-    if (error) { toast.error("تعذر الحفظ"); return; }
+    if (error) {
+      console.error("[QuickUpdate] insert failed", error);
+      toast.error(error.message || "تعذر الحفظ");
+      return;
+    }
     toast.success("تم حفظ تحديث الحوض ✅");
     toast(tip[status]);
     onDone();
@@ -653,9 +657,9 @@ function CareTimeline({ logs, readings, issues }: { logs: CareLog[]; readings: R
         a.push({ id: l.id, kind: "photo", date: l.created_at, title: "تم رفع صورة", detail: l.note ?? undefined, image: img });
       } else if (l.log_type === "note") {
         a.push({ id: l.id, kind: "note", date: l.created_at, title: "تم إضافة ملاحظة", detail: l.note ?? undefined, image: img });
-      } else if (l.log_type === "status") {
+      } else if (l.log_type === "status_update") {
         a.push({ id: l.id, kind: "status", date: l.created_at,
-          title: `تم تحديث حالة الحوض: ${STATUS_META[(l.status as Status) ?? "stable"]?.label ?? l.status}`,
+          title: `تم تحديث حالة الحوض: ${STATUS_META[(l.status as Status) ?? "normal"]?.label ?? l.status}`,
           detail: l.note ?? undefined });
       }
     }
