@@ -128,6 +128,7 @@ export type Database = {
           id: string
           image_paths: string[] | null
           issue_type: string
+          service_request_id: string | null
           status: string
           tank_id: string
           updated_at: string
@@ -140,6 +141,7 @@ export type Database = {
           id?: string
           image_paths?: string[] | null
           issue_type: string
+          service_request_id?: string | null
           status?: string
           tank_id: string
           updated_at?: string
@@ -152,6 +154,7 @@ export type Database = {
           id?: string
           image_paths?: string[] | null
           issue_type?: string
+          service_request_id?: string | null
           status?: string
           tank_id?: string
           updated_at?: string
@@ -159,6 +162,13 @@ export type Database = {
           wants_followup?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "aquarium_issues_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "aquarium_issues_tank_id_fkey"
             columns: ["tank_id"]
