@@ -61,6 +61,7 @@ const TITLES: Record<string, string> = {
   "/admin/users": "العملاء",
   "/admin/design": "تصميم الصفحة الرئيسية",
   "/admin/projects": "أعمالنا / الأحواض",
+  "/admin/gallery": "لقطات من أعمالنا",
   "/admin/project-categories": "تصنيفات الأحواض",
   "/admin/services": "خدماتنا",
   "/admin/articles": "المقالات",
