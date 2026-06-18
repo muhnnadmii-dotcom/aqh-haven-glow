@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, X, User, Shield, MessageCircle } from "lucide-react";
+import { Menu, X, User, Shield, MessageCircle, LayoutDashboard, Inbox, Fish, Calendar, LogOut } from "lucide-react";
 import aqhLogo from "@/assets/aqh-logo.png.asset.json";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { whatsappLink } from "@/components/WhatsAppButton";
 
 const links = [
@@ -19,6 +20,21 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { user, isAdmin } = useAuth();
+  const [displayName, setDisplayName] = useState<string>("");
+
+  useEffect(() => {
+    if (!user) { setDisplayName(""); return; }
+    let active = true;
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        const fn = (data?.full_name as string) || (user.email?.split("@")[0] ?? "");
+        setDisplayName(fn);
+      });
+    return () => { active = false; };
+  }, [user]);
+
+  const firstName = displayName ? displayName.split(" ")[0] : "";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -95,10 +111,12 @@ export function Navbar() {
               {user ? (
                 <Link
                   to="/account"
-                  className="grid place-items-center h-9 w-9 sm:h-10 sm:w-10 rounded-xl glass hover:bg-white/10 transition-colors"
-                  aria-label="حسابي"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm bg-[color:var(--gold)]/15 border border-[color:var(--gold)]/30 text-[color:var(--gold)] hover:bg-[color:var(--gold)]/25 transition-colors"
+                  title="لوحة العميل"
                 >
-                  <User size={16} />
+                  <LayoutDashboard size={14} />
+                  <span className="hidden sm:inline">لوحة العميل</span>
+                  {firstName && <span className="hidden md:inline text-foreground/80">· {firstName}</span>}
                 </Link>
               ) : (
                 <Link
@@ -193,29 +211,46 @@ export function Navbar() {
             <div className="my-3 h-px bg-white/10" />
 
             {user ? (
-              <Link
-                to="/account"
-                onClick={() => setOpen(false)}
-                className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5"
-              >
-                حسابي
-              </Link>
+              <>
+                {firstName && (
+                  <div className="px-4 pt-1 pb-2 text-xs text-white/60">مرحبًا، <span className="text-[#D4A017] font-semibold">{firstName}</span></div>
+                )}
+                <Link to="/account" onClick={() => setOpen(false)}
+                  className="px-4 py-3 text-sm rounded-xl text-[#D4A017] bg-[#D4A017]/10 border border-[#D4A017]/20 inline-flex items-center gap-2 mb-1">
+                  <LayoutDashboard size={15} /> لوحة العميل
+                </Link>
+                <Link to="/account/requests" onClick={() => setOpen(false)}
+                  className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2">
+                  <Inbox size={14} /> طلباتي
+                </Link>
+                <Link to="/account/tanks" onClick={() => setOpen(false)}
+                  className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2">
+                  <Fish size={14} /> أحواضي
+                </Link>
+                <Link to="/account/appointments" onClick={() => setOpen(false)}
+                  className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2">
+                  <Calendar size={14} /> مواعيدي
+                </Link>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setOpen(false)}
+                    className="mt-2 px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2 border-t border-white/10 pt-3">
+                    <Shield size={14} /> لوحة الإدارة
+                  </Link>
+                )}
+                <button
+                  onClick={async () => { await supabase.auth.signOut(); setOpen(false); }}
+                  className="mt-2 px-4 py-3 text-sm rounded-xl text-rose-300 hover:bg-rose-500/10 inline-flex items-center gap-2 text-right"
+                >
+                  <LogOut size={14} /> تسجيل الخروج
+                </button>
+              </>
             ) : (
               <Link
                 to="/auth"
                 onClick={() => setOpen(false)}
-                className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5"
-              >
-                تسجيل دخول
-              </Link>
-            )}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={() => setOpen(false)}
                 className="px-4 py-3 text-sm rounded-xl text-white/85 hover:bg-white/5 inline-flex items-center gap-2"
               >
-                <Shield size={14} /> لوحة الإدارة
+                <User size={14} /> تسجيل دخول
               </Link>
             )}
 

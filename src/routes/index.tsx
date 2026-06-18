@@ -23,6 +23,7 @@ import {
 } from "@/lib/home-sections";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
+import { CustomerHomeCard } from "@/components/CustomerHomeCard";
 
 
 const heroFallback = livingRoomTankAsset.url;
@@ -219,7 +220,11 @@ function HomePage() {
         </section>
       )}
 
+      {/* Customer welcome card — visible only for signed-in users */}
+      <CustomerHomeCard />
+
       {/* EXPLORE CUBES */}
+
       {exploreEnabled && exploreItems.length > 0 && (
         <section className="relative py-16">
           <div className="mx-auto max-w-7xl px-6">
