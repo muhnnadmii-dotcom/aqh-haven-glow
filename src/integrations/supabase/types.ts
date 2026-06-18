@@ -1283,6 +1283,68 @@ export type Database = {
           },
         ]
       }
+      work_gallery_items: {
+        Row: {
+          care_level: string | null
+          created_at: string
+          display_order: number
+          extra_images: string[]
+          id: string
+          image_path: string
+          is_featured: boolean
+          is_published: boolean
+          linked_project_id: string | null
+          size_category: string | null
+          style: string | null
+          suitable_for: string[]
+          tank_type: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          care_level?: string | null
+          created_at?: string
+          display_order?: number
+          extra_images?: string[]
+          id?: string
+          image_path: string
+          is_featured?: boolean
+          is_published?: boolean
+          linked_project_id?: string | null
+          size_category?: string | null
+          style?: string | null
+          suitable_for?: string[]
+          tank_type?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          care_level?: string | null
+          created_at?: string
+          display_order?: number
+          extra_images?: string[]
+          id?: string
+          image_path?: string
+          is_featured?: boolean
+          is_published?: boolean
+          linked_project_id?: string | null
+          size_category?: string | null
+          style?: string | null
+          suitable_for?: string[]
+          tank_type?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_gallery_items_linked_project_id_fkey"
+            columns: ["linked_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
