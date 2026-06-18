@@ -23,6 +23,7 @@ import {
 } from "@/lib/home-sections";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
+import { CustomerHomeCard } from "@/components/CustomerHomeCard";
 
 
 const heroFallback = livingRoomTankAsset.url;
