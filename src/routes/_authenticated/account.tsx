@@ -68,18 +68,25 @@ function AccountLayout() {
       <div>
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-2 mb-2">حسابي</div>
         <nav className="flex flex-col gap-0.5">
-          {navItems.map((n) => (
-            <Link
-              key={n.to}
-              to={n.to}
-              activeOptions={{ exact: n.exact }}
-              onClick={close}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5"
-              activeProps={{ className: "flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm bg-white/10 font-semibold" }}
-            >
-              <n.icon size={16} /> {n.label}
-            </Link>
-          ))}
+          {navItems.map((n) => {
+            const isBell = n.to === "/account/notifications";
+            return (
+              <Link
+                key={n.to}
+                to={n.to}
+                activeOptions={{ exact: n.exact }}
+                onClick={close}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5"
+                activeProps={{ className: "flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm bg-white/10 font-semibold" }}
+              >
+                <n.icon size={16} />
+                <span className="flex-1">{n.label}</span>
+                {isBell && unread > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gold text-background font-bold">{unread > 99 ? "99+" : unread}</span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
       </div>
       <div>
