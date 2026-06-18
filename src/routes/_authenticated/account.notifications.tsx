@@ -41,7 +41,7 @@ function NotificationsPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(100);
-    setRows((data ?? []) as Notif[]);
+    setRows((data ?? []) as unknown as Notif[]);
     setLoading(false);
   };
 
