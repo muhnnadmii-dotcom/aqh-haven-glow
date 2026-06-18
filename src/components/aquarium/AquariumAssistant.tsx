@@ -121,15 +121,15 @@ export default function AquariumAssistant({ tank }: { tank: TankLite }) {
   const nextTask = tasks[0] ?? null;
 
   const computedStatus: Status = useMemo(() => {
-    if (openIssue) return "issue";
+    if (openIssue) return "problem";
     const dWater = daysSince(lastWaterChange?.created_at);
-    if (dWater != null && dWater > 14) return "watch";
-    if (lastReading && readingOutOfRange(lastReading)) return "watch";
+    if (dWater != null && dWater > 14) return "needs_attention";
+    if (lastReading && readingOutOfRange(lastReading)) return "needs_attention";
     if (lastStatusLog?.status === "excellent") return "excellent";
-    if (lastStatusLog?.status === "issue") return "issue";
-    if (lastStatusLog?.status === "watch") return "watch";
-    if (logs.length > 0) return "stable";
-    return "stable";
+    if (lastStatusLog?.status === "problem") return "problem";
+    if (lastStatusLog?.status === "needs_attention") return "needs_attention";
+    if (logs.length > 0) return "normal";
+    return "normal";
   }, [openIssue, lastWaterChange, lastReading, lastStatusLog, logs.length]);
 
   const meta = STATUS_META[computedStatus];
