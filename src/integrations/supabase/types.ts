@@ -71,6 +71,215 @@ export type Database = {
           },
         ]
       }
+      aquarium_care_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          image_paths: string[] | null
+          log_type: string
+          note: string | null
+          note_category: string | null
+          status: string | null
+          tank_id: string
+          user_id: string
+          water_change_percentage: number | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          image_paths?: string[] | null
+          log_type: string
+          note?: string | null
+          note_category?: string | null
+          status?: string | null
+          tank_id: string
+          user_id: string
+          water_change_percentage?: number | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          image_paths?: string[] | null
+          log_type?: string
+          note?: string | null
+          note_category?: string | null
+          status?: string | null
+          tank_id?: string
+          user_id?: string
+          water_change_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aquarium_care_logs_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aquarium_issues: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_paths: string[] | null
+          issue_type: string
+          status: string
+          tank_id: string
+          updated_at: string
+          user_id: string
+          wants_followup: boolean
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_paths?: string[] | null
+          issue_type: string
+          status?: string
+          tank_id: string
+          updated_at?: string
+          user_id: string
+          wants_followup?: boolean
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_paths?: string[] | null
+          issue_type?: string
+          status?: string
+          tank_id?: string
+          updated_at?: string
+          user_id?: string
+          wants_followup?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aquarium_issues_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aquarium_readings: {
+        Row: {
+          ammonia: number | null
+          calcium: number | null
+          created_at: string
+          id: string
+          kh: number | null
+          magnesium: number | null
+          nitrate: number | null
+          nitrite: number | null
+          note: string | null
+          ph: number | null
+          phosphate: number | null
+          reading_date: string
+          salinity: number | null
+          tank_id: string
+          tds: number | null
+          temperature: number | null
+          user_id: string
+        }
+        Insert: {
+          ammonia?: number | null
+          calcium?: number | null
+          created_at?: string
+          id?: string
+          kh?: number | null
+          magnesium?: number | null
+          nitrate?: number | null
+          nitrite?: number | null
+          note?: string | null
+          ph?: number | null
+          phosphate?: number | null
+          reading_date?: string
+          salinity?: number | null
+          tank_id: string
+          tds?: number | null
+          temperature?: number | null
+          user_id: string
+        }
+        Update: {
+          ammonia?: number | null
+          calcium?: number | null
+          created_at?: string
+          id?: string
+          kh?: number | null
+          magnesium?: number | null
+          nitrate?: number | null
+          nitrite?: number | null
+          note?: string | null
+          ph?: number | null
+          phosphate?: number | null
+          reading_date?: string
+          salinity?: number | null
+          tank_id?: string
+          tds?: number | null
+          temperature?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aquarium_readings_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aquarium_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          status: string
+          tank_id: string
+          task_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          status?: string
+          tank_id: string
+          task_type: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          status?: string
+          tank_id?: string
+          task_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aquarium_tasks_tank_id_fkey"
+            columns: ["tank_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tanks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           body: string | null
