@@ -117,13 +117,13 @@ function AccountLayout() {
         </div>
       </div>
       <div className="pt-2 border-t border-white/5 space-y-1.5">
-        {isAdmin && (
+        {(isAdmin || isStaff) && (
           <Link
-            to="/admin"
+            to="/admin/requests"
             onClick={close}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-white/5 hover:text-foreground"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-gold hover:bg-gold/10"
           >
-            <Shield size={13} /> دخول لوحة الإدارة
+            <Shield size={13} /> {isAdmin ? "دخول لوحة الإدارة" : "طلباتي (موظف)"}
           </Link>
         )}
         <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-300 hover:bg-red-500/10">
