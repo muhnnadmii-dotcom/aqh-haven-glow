@@ -20,6 +20,21 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { user, isAdmin } = useAuth();
+  const [displayName, setDisplayName] = useState<string>("");
+
+  useEffect(() => {
+    if (!user) { setDisplayName(""); return; }
+    let active = true;
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        const fn = (data?.full_name as string) || (user.email?.split("@")[0] ?? "");
+        setDisplayName(fn);
+      });
+    return () => { active = false; };
+  }, [user]);
+
+  const firstName = displayName ? displayName.split(" ")[0] : "";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
