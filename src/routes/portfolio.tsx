@@ -36,7 +36,8 @@ import {
 import { formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
-import { Briefcase, ArrowLeft as ArrowLeftIcon } from "lucide-react";
+import { Briefcase, ArrowLeft as ArrowLeftIcon, Images, Grid3x3 } from "lucide-react";
+import { GalleryTab } from "../components/portfolio/GalleryTab";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
