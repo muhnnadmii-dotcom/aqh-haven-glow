@@ -313,7 +313,7 @@ export function QuickUpdateForm({ tank, onDone }: { tank: TankLite; onDone: () =
         <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="اكتب ملاحظة اختيارية…"
           className="w-full glass rounded-xl p-3 text-sm bg-transparent resize-none" rows={3} />
       </div>
-      <div className="sticky bottom-0 -mx-5 -mb-4 px-5 pt-3 pb-4 bg-[hsl(var(--card))]/95 backdrop-blur border-t border-white/10">
+      <div className="sticky bottom-0 -mx-5 -mb-4 px-5 pt-3 pb-4 bg-background/95 backdrop-blur border-t border-white/10">
         <button disabled={busy} onClick={save} className="btn-gold rounded-xl w-full py-3 text-sm flex items-center justify-center gap-2">
           {busy && <Loader2 size={16} className="animate-spin" />} حفظ التحديث
         </button>
