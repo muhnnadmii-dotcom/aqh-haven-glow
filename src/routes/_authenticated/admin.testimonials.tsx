@@ -108,6 +108,7 @@ function TestimonialsAdmin() {
                 value={editing.image_path}
                 onChange={(p) => setEditing({ ...editing, image_path: p })}
                 folder="testimonials"
+                cropAspect={1}
               />
             </Field>
             <div className="sm:col-span-2 flex flex-wrap items-center gap-4 pt-2">

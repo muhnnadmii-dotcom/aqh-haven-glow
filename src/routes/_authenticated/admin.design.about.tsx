@@ -64,7 +64,7 @@ function AboutAdmin() {
           <Field label="العنوان"><input className={inp} value={c.hero.heading} onChange={(e) => setC({ ...c, hero: { ...c.hero, heading: e.target.value } })} /></Field>
           <Field label="الوصف" full><textarea rows={3} className={ta} value={c.hero.description} onChange={(e) => setC({ ...c, hero: { ...c.hero, description: e.target.value } })} /></Field>
           <Field label="صورة الخلفية" full>
-            <ImageUploader value={c.hero.image_path || null} onChange={(p) => setC({ ...c, hero: { ...c.hero, image_path: p ?? "" } })} folder="about/hero" />
+            <ImageUploader value={c.hero.image_path || null} onChange={(p) => setC({ ...c, hero: { ...c.hero, image_path: p ?? "" } })} folder="about/hero" cropAspect={16/9} />
           </Field>
         </Grid>
       </Section>

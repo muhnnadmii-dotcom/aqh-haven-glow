@@ -180,7 +180,7 @@ function HeroEditor({ value, onChange }: { value: { enabled: boolean; content: H
         <Field label="نص الزر الثانوي"><input className={inp} value={c.secondary_cta_label} onChange={(e) => set("secondary_cta_label", e.target.value)} /></Field>
         <Field label="رابط الزر الثانوي"><input dir="ltr" className={inp} value={c.secondary_cta_href} onChange={(e) => set("secondary_cta_href", e.target.value)} /></Field>
         <Field label="صورة البانر" full>
-          <ImageUploader value={c.image_path || null} onChange={(p) => set("image_path", p ?? "")} folder="home/hero" />
+          <ImageUploader value={c.image_path || null} onChange={(p) => set("image_path", p ?? "")} folder="home/hero" cropAspect={16/9} />
         </Field>
         <Field label="الطبقة الشفافة">
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={c.overlay_enabled} onChange={(e) => set("overlay_enabled", e.target.checked)} /> تفعيل</label>
@@ -255,7 +255,7 @@ function ExploreEditor({ value, onChange }: { value: { enabled: boolean; content
               <Field label="الرابط"><input dir="ltr" className={inp} value={it.href} onChange={(e) => updateItem(it.id, { href: e.target.value })} /></Field>
               <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
               <Field label="صورة البطاقة" full>
-                <ImageUploader value={it.image_path || null} onChange={(p) => updateItem(it.id, { image_path: p ?? "" })} folder="home/explore" />
+                <ImageUploader value={it.image_path || null} onChange={(p) => updateItem(it.id, { image_path: p ?? "" })} folder="home/explore" cropAspect={1} />
               </Field>
             </Grid>
 
@@ -327,7 +327,7 @@ function ServicesEditor({ value, onChange }: { value: { enabled: boolean; conten
               <Field label="الرابط"><input dir="ltr" className={inp} value={it.href} onChange={(e) => updateItem(it.id, { href: e.target.value })} /></Field>
               <Field label="الترتيب"><input type="number" className={inp} value={it.order} onChange={(e) => updateItem(it.id, { order: Number(e.target.value) })} /></Field>
               <Field label="الصورة" full>
-                <ImageUploader value={it.image_path || null} onChange={(p) => updateItem(it.id, { image_path: p ?? "" })} folder="home/services" />
+                <ImageUploader value={it.image_path || null} onChange={(p) => updateItem(it.id, { image_path: p ?? "" })} folder="home/services" cropAspect={16/9} />
               </Field>
             </Grid>
           </div>
@@ -632,7 +632,7 @@ function PartnersEditor({ value, onChange }: { value: { enabled: boolean; conten
               <div className="grid gap-2 sm:grid-cols-[1fr_80px] items-end">
                 {mode === "image" ? (
                   <Field label="شعار العلامة (PNG)">
-                    <ImageUploader value={it.logo_path ?? null} onChange={(path) => updateItem(it.id, { logo_path: path })} folder="partners" label="ارفع شعار" />
+                    <ImageUploader value={it.logo_path ?? null} onChange={(path) => updateItem(it.id, { logo_path: path })} folder="partners" label="ارفع شعار" cropAspect="free" />
                   </Field>
                 ) : (
                   <Field label="اسم العلامة"><input dir="ltr" className={inp} value={it.label} onChange={(e) => updateItem(it.id, { label: e.target.value })} /></Field>

@@ -155,7 +155,7 @@ function ServicesAdmin() {
             <input type="number" className={inp} value={v.sort_order} onChange={(e) => set("sort_order", Number(e.target.value))} /></label>
 
           <div className="sm:col-span-2"><span className="text-xs text-muted-foreground block mb-1">صورة الخدمة</span>
-            <ImageUploader value={v.image_path} onChange={(p) => set("image_path", p)} folder="services" />
+            <ImageUploader value={v.image_path} onChange={(p) => set("image_path", p)} folder="services" cropAspect={16/9} />
           </div>
         </div>
 
