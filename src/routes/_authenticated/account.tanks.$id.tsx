@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
 import { ArrowRight, FlaskConical, Wrench } from "lucide-react";
+import AquariumAssistant from "@/components/aquarium/AquariumAssistant";
 
 export const Route = createFileRoute("/_authenticated/account/tanks/$id")({
   component: TankDetail,
