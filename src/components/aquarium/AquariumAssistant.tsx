@@ -26,8 +26,15 @@ type Reading = {
 type Issue = {
   id: string; created_at: string; issue_type: string;
   description: string | null; status: string; image_paths: string[] | null;
+  service_request_id: string | null; wants_followup: boolean;
 };
 type Task = { id: string; task_type: string; title: string; due_date: string | null; status: string };
+
+const ISSUE_TYPE_LABEL: Record<string, string> = {
+  water_clarity: "عكارة في الماء", sick_fish: "سمكة تعبانة", algae: "طحالب",
+  smell: "رائحة", equipment: "فلتر / جهاز", death: "موت كائنات", other: "أخرى",
+};
+const ISSUE_OPEN = (s: string) => s === "open" || s === "in_review";
 
 function daysSince(iso: string | null | undefined): number | null {
   if (!iso) return null;
@@ -117,23 +124,31 @@ export default function AquariumAssistant({ tank }: { tank: TankLite }) {
   }, [logs]);
   const lastStatusLog = logs.find((x) => x.log_type === "status_update" && x.status);
   const lastNote = logs.find((x) => x.log_type === "note" || x.note);
-  const openIssue = issues.find((x) => x.status === "open");
+  const openIssues = issues.filter((x) => ISSUE_OPEN(x.status));
   const nextTask = tasks[0] ?? null;
 
+  // Current status reflects the LAST quick update the customer recorded.
+  // Open issues are surfaced as a SEPARATE alert below, so an old unresolved
+  // issue no longer locks the status as "problem" forever.
   const computedStatus: Status = useMemo(() => {
-    if (openIssue) return "problem";
+    if (lastStatusLog?.status && (STATUS_META as any)[lastStatusLog.status]) {
+      return lastStatusLog.status as Status;
+    }
     const dWater = daysSince(lastWaterChange?.created_at);
     if (dWater != null && dWater > 14) return "needs_attention";
     if (lastReading && readingOutOfRange(lastReading)) return "needs_attention";
-    if (lastStatusLog?.status === "excellent") return "excellent";
-    if (lastStatusLog?.status === "problem") return "problem";
-    if (lastStatusLog?.status === "needs_attention") return "needs_attention";
-    if (logs.length > 0) return "normal";
     return "normal";
-  }, [openIssue, lastWaterChange, lastReading, lastStatusLog, logs.length]);
+  }, [lastStatusLog, lastWaterChange, lastReading]);
 
   const meta = STATUS_META[computedStatus];
   const empty = logs.length === 0 && readings.length === 0 && issues.length === 0;
+
+  const resolveIssue = async (id: string) => {
+    const { error } = await supabase.from("aquarium_issues").update({ status: "resolved" }).eq("id", id);
+    if (error) { toast.error("تعذر تحديث المشكلة"); return; }
+    toast.success("تم إغلاق المشكلة");
+    reload();
+  };
 
   return (
     <section className="glass rounded-2xl p-5 space-y-4">
@@ -146,6 +161,31 @@ export default function AquariumAssistant({ tank }: { tank: TankLite }) {
           {meta.emoji} حالة الحوض: {meta.label}
         </span>
       </header>
+
+      {openIssues.length > 0 && (
+        <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 space-y-2">
+          <div className="flex items-center gap-2 text-sm text-amber-200">
+            <AlertTriangle size={16} />
+            <b>{openIssues.length === 1 ? "يوجد بلاغ مشكلة مفتوح" : `يوجد ${openIssues.length} بلاغات مفتوحة`}</b>
+          </div>
+          <ul className="space-y-1.5">
+            {openIssues.map((iss) => (
+              <li key={iss.id} className="text-xs flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  {ISSUE_TYPE_LABEL[iss.issue_type] ?? iss.issue_type}
+                  {iss.service_request_id && (
+                    <Link to="/account/requests/$id" params={{ id: iss.service_request_id }}
+                      className="text-gold underline mr-2">عرض الطلب المرتبط</Link>
+                  )}
+                </span>
+                <button onClick={() => resolveIssue(iss.id)}
+                  className="glass rounded-md px-2 py-1 text-[11px] hover:bg-white/10">إغلاق المشكلة</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
 
       {empty ? (
         <p className="text-sm text-muted-foreground">ابدأ بتسجيل أول تحديث لحوضك من الأزرار أدناه.</p>
@@ -590,21 +630,73 @@ function IssueForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
     { v: "other", l: "أخرى" },
   ];
   const save = async () => {
-    const u = await uid(); if (!u) return;
+    const u = await uid(); if (!u) { toast.error("يلزم تسجيل الدخول"); return; }
     setBusy(true);
     try {
       const paths: string[] = [];
       for (const f of files) paths.push(await uploadMedia(f, `tank-${tank.id}/issues`));
-      const { error } = await supabase.from("aquarium_issues").insert({
+      const { data: issue, error } = await supabase.from("aquarium_issues").insert({
         tank_id: tank.id, user_id: u, issue_type: type,
         description: desc || null, status: "open",
         wants_followup: followup, image_paths: paths.length ? paths : null,
-      });
+      }).select().single();
       if (error) throw error;
-      toast.success("تم تسجيل المشكلة.");
-      if (followup) toast("سيتم ربطها بطلب متابعة في المرحلة القادمة.");
+
+      if (followup && issue) {
+        // Build summary from latest tank state for the support request.
+        const [profRes, logRes, readRes] = await Promise.all([
+          supabase.from("profiles").select("full_name, phone").eq("id", u).maybeSingle(),
+          supabase.from("aquarium_care_logs").select("*").eq("tank_id", tank.id).order("created_at", { ascending: false }).limit(20),
+          supabase.from("aquarium_readings").select("*").eq("tank_id", tank.id).order("reading_date", { ascending: false }).limit(1),
+        ]);
+        const prof = (profRes.data ?? {}) as any;
+        const lastWC = (logRes.data ?? []).find((l: any) => l.log_type === "water_change");
+        const lastStat = (logRes.data ?? []).find((l: any) => l.log_type === "status_update" && l.status);
+        const lastR = (readRes.data ?? [])[0] as any;
+        const issueLabel = (types.find((x) => x.v === type)?.l) ?? type;
+        const summary = [
+          `حوض: ${tank.name}`,
+          `نوع المشكلة: ${issueLabel}`,
+          desc ? `وصف العميل: ${desc}` : null,
+          lastStat ? `آخر حالة سجلها العميل: ${lastStat.status}` : null,
+          lastWC ? `آخر تغيير ماء: ${new Date(lastWC.created_at).toLocaleDateString("ar-SA")}${lastWC.water_change_percentage ? ` (${lastWC.water_change_percentage}%)` : ""}` : null,
+          lastR ? `آخر قراءة (${new Date(lastR.reading_date).toLocaleDateString("ar-SA")}): ${[
+            lastR.ph != null && `pH ${lastR.ph}`,
+            lastR.nitrate != null && `NO3 ${lastR.nitrate}`,
+            lastR.ammonia != null && `NH3 ${lastR.ammonia}`,
+            lastR.temperature != null && `${lastR.temperature}°C`,
+          ].filter(Boolean).join(" · ")}` : null,
+        ].filter(Boolean).join("\n");
+
+        const { data: reqRow, error: reqErr } = await supabase.from("service_requests").insert({
+          user_id: u,
+          type: "maintenance",
+          tank_id: tank.id,
+          name: prof.full_name || "عميل",
+          phone: prof.phone || "—",
+          details: { source: "aquarium_assistant", issue_id: issue.id, issue_type: type, issue_label: issueLabel, tank_name: tank.name },
+          customer_notes: summary,
+          attachments: paths,
+        }).select().single();
+
+        if (reqErr) {
+          console.error("[Issue followup] request create failed", reqErr);
+          toast.success("تم حفظ المشكلة");
+          toast.error("تعذر إنشاء طلب الدعم، حاول لاحقًا أو تواصل معنا.");
+        } else if (reqRow) {
+          await supabase.from("aquarium_issues").update({ service_request_id: reqRow.id }).eq("id", issue.id);
+          toast.success("تم تسجيل المشكلة وفتح طلب متابعة لدى Aqua Haven ✅", {
+            action: { label: "عرض الطلب", onClick: () => { window.location.href = `/account/requests/${reqRow.id}`; } },
+          });
+        }
+      } else {
+        toast.success("تم تسجيل المشكلة في سجل الحوض.");
+      }
       onDone();
-    } catch (e: any) { toast.error(e?.message ?? "تعذر الحفظ"); }
+    } catch (e: any) {
+      console.error("[Issue] save failed", e);
+      toast.error(e?.message ?? "تعذر الحفظ");
+    }
     finally { setBusy(false); }
   };
   return (
