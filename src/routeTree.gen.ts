@@ -54,6 +54,7 @@ import { Route as AuthenticatedAdminDesignIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAccountTanksIndexRouteImport } from './routes/_authenticated/account.tanks.index'
 import { Route as AuthenticatedAccountRequestsIndexRouteImport } from './routes/_authenticated/account.requests.index'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
+import { Route as AuthenticatedAdminTanksIdRouteImport } from './routes/_authenticated/admin.tanks.$id'
 import { Route as AuthenticatedAdminRequestsIdRouteImport } from './routes/_authenticated/admin.requests.$id'
 import { Route as AuthenticatedAdminDesignContactRouteImport } from './routes/_authenticated/admin.design.contact'
 import { Route as AuthenticatedAdminDesignAboutRouteImport } from './routes/_authenticated/admin.design.about'
@@ -305,6 +306,12 @@ const AuthenticatedAdminUsersIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminUsersRoute,
   } as any)
+const AuthenticatedAdminTanksIdRoute =
+  AuthenticatedAdminTanksIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminTanksRoute,
+  } as any)
 const AuthenticatedAdminRequestsIdRoute =
   AuthenticatedAdminRequestsIdRouteImport.update({
     id: '/$id',
@@ -376,7 +383,7 @@ export interface FileRoutesByFullPath {
   '/admin/requests': typeof AuthenticatedAdminRequestsRouteWithChildren
   '/admin/services': typeof AuthenticatedAdminServicesRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
-  '/admin/tanks': typeof AuthenticatedAdminTanksRoute
+  '/admin/tanks': typeof AuthenticatedAdminTanksRouteWithChildren
   '/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/account/': typeof AuthenticatedAccountIndexRoute
@@ -387,6 +394,7 @@ export interface FileRoutesByFullPath {
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
   '/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
+  '/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/account/requests/': typeof AuthenticatedAccountRequestsIndexRoute
   '/account/tanks/': typeof AuthenticatedAccountTanksIndexRoute
@@ -421,7 +429,7 @@ export interface FileRoutesByTo {
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
-  '/admin/tanks': typeof AuthenticatedAdminTanksRoute
+  '/admin/tanks': typeof AuthenticatedAdminTanksRouteWithChildren
   '/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/account': typeof AuthenticatedAccountIndexRoute
@@ -432,6 +440,7 @@ export interface FileRoutesByTo {
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
   '/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
+  '/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/account/requests': typeof AuthenticatedAccountRequestsIndexRoute
   '/account/tanks': typeof AuthenticatedAccountTanksIndexRoute
@@ -475,7 +484,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRouteWithChildren
   '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
-  '/_authenticated/admin/tanks': typeof AuthenticatedAdminTanksRoute
+  '/_authenticated/admin/tanks': typeof AuthenticatedAdminTanksRouteWithChildren
   '/_authenticated/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/_authenticated/account/': typeof AuthenticatedAccountIndexRoute
@@ -486,6 +495,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/_authenticated/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
   '/_authenticated/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
+  '/_authenticated/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/_authenticated/account/requests/': typeof AuthenticatedAccountRequestsIndexRoute
   '/_authenticated/account/tanks/': typeof AuthenticatedAccountTanksIndexRoute
@@ -540,6 +550,7 @@ export interface FileRouteTypes {
     | '/admin/design/about'
     | '/admin/design/contact'
     | '/admin/requests/$id'
+    | '/admin/tanks/$id'
     | '/admin/users/$id'
     | '/account/requests/'
     | '/account/tanks/'
@@ -585,6 +596,7 @@ export interface FileRouteTypes {
     | '/admin/design/about'
     | '/admin/design/contact'
     | '/admin/requests/$id'
+    | '/admin/tanks/$id'
     | '/admin/users/$id'
     | '/account/requests'
     | '/account/tanks'
@@ -638,6 +650,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/design/about'
     | '/_authenticated/admin/design/contact'
     | '/_authenticated/admin/requests/$id'
+    | '/_authenticated/admin/tanks/$id'
     | '/_authenticated/admin/users/$id'
     | '/_authenticated/account/requests/'
     | '/_authenticated/account/tanks/'
@@ -980,6 +993,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsersIdRouteImport
       parentRoute: typeof AuthenticatedAdminUsersRoute
     }
+    '/_authenticated/admin/tanks/$id': {
+      id: '/_authenticated/admin/tanks/$id'
+      path: '/$id'
+      fullPath: '/admin/tanks/$id'
+      preLoaderRoute: typeof AuthenticatedAdminTanksIdRouteImport
+      parentRoute: typeof AuthenticatedAdminTanksRoute
+    }
     '/_authenticated/admin/requests/$id': {
       id: '/_authenticated/admin/requests/$id'
       path: '/$id'
@@ -1105,6 +1125,20 @@ const AuthenticatedAdminRequestsRouteWithChildren =
     AuthenticatedAdminRequestsRouteChildren,
   )
 
+interface AuthenticatedAdminTanksRouteChildren {
+  AuthenticatedAdminTanksIdRoute: typeof AuthenticatedAdminTanksIdRoute
+}
+
+const AuthenticatedAdminTanksRouteChildren: AuthenticatedAdminTanksRouteChildren =
+  {
+    AuthenticatedAdminTanksIdRoute: AuthenticatedAdminTanksIdRoute,
+  }
+
+const AuthenticatedAdminTanksRouteWithChildren =
+  AuthenticatedAdminTanksRoute._addFileChildren(
+    AuthenticatedAdminTanksRouteChildren,
+  )
+
 interface AuthenticatedAdminUsersRouteChildren {
   AuthenticatedAdminUsersIdRoute: typeof AuthenticatedAdminUsersIdRoute
 }
@@ -1128,7 +1162,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRouteWithChildren
   AuthenticatedAdminServicesRoute: typeof AuthenticatedAdminServicesRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
-  AuthenticatedAdminTanksRoute: typeof AuthenticatedAdminTanksRoute
+  AuthenticatedAdminTanksRoute: typeof AuthenticatedAdminTanksRouteWithChildren
   AuthenticatedAdminTestimonialsRoute: typeof AuthenticatedAdminTestimonialsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1145,7 +1179,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRouteWithChildren,
   AuthenticatedAdminServicesRoute: AuthenticatedAdminServicesRoute,
   AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
-  AuthenticatedAdminTanksRoute: AuthenticatedAdminTanksRoute,
+  AuthenticatedAdminTanksRoute: AuthenticatedAdminTanksRouteWithChildren,
   AuthenticatedAdminTestimonialsRoute: AuthenticatedAdminTestimonialsRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
