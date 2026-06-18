@@ -36,7 +36,8 @@ import {
 import { formatPriceFrom, formatPriceRange, type Project } from "../data/projects";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
-import { Briefcase, ArrowLeft as ArrowLeftIcon } from "lucide-react";
+import { Briefcase, ArrowLeft as ArrowLeftIcon, Images, Grid3x3 } from "lucide-react";
+import { GalleryTab } from "../components/portfolio/GalleryTab";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
@@ -138,6 +139,7 @@ function adapt(r: any): Project {
 
 function PortfolioPage() {
   const initial = Route.useLoaderData();
+  const [view, setView] = useState<"projects" | "gallery">("projects");
   const [cat, setCat] = useState<Cat>("all");
   const [open, setOpen] = useState<Project | null>(null);
   const projects = initial.projects as Project[];
@@ -193,6 +195,28 @@ function PortfolioPage() {
           </p>
         </div>
       </Reveal>
+      {/* View tabs: Projects vs Gallery */}
+      <div className="flex justify-center mb-8">
+        <div className="glass rounded-2xl p-1 inline-flex gap-1">
+          <button
+            onClick={() => setView("projects")}
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2 transition ${view === "projects" ? "btn-gold" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Grid3x3 size={15} /> مشاريع منفذة
+          </button>
+          <button
+            onClick={() => setView("gallery")}
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2 transition ${view === "gallery" ? "btn-gold" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Images size={15} /> لقطات من أعمالنا
+          </button>
+        </div>
+      </div>
+
+      {view === "gallery" ? (
+        <GalleryTab />
+      ) : (
+        <>
 
       <div className="flex flex-wrap justify-center gap-2 mb-10">
         {tabs.map((t) => (
@@ -288,6 +312,8 @@ function PortfolioPage() {
           </div>
         </Reveal>
       </section>
+        </>
+      )}
 
       {open && <ProjectModal project={open} onClose={() => setOpen(null)} />}
     </div>

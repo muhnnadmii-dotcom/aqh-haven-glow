@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
 import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
-  Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings,
+  Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings, Images,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -36,6 +36,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/admin/design", label: "الصفحة الرئيسية", icon: Palette, exact: true },
       { to: "/admin/projects", label: "أعمالنا / الأحواض", icon: Fish },
+      { to: "/admin/gallery", label: "لقطات من أعمالنا", icon: Images },
       { to: "/admin/project-categories", label: "تصنيفات الأحواض", icon: Tags },
       { to: "/admin/services", label: "خدماتنا", icon: Wrench },
       { to: "/admin/articles", label: "المقالات", icon: BookOpen },
@@ -60,6 +61,7 @@ const TITLES: Record<string, string> = {
   "/admin/users": "العملاء",
   "/admin/design": "تصميم الصفحة الرئيسية",
   "/admin/projects": "أعمالنا / الأحواض",
+  "/admin/gallery": "لقطات من أعمالنا",
   "/admin/project-categories": "تصنيفات الأحواض",
   "/admin/services": "خدماتنا",
   "/admin/articles": "المقالات",
