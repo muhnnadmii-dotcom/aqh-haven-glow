@@ -234,16 +234,27 @@ function Action({ icon, label, onClick, primary }: { icon: React.ReactNode; labe
   );
 }
 
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm grid sm:place-items-center" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}
-        className="glass w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl p-5 max-h-[92vh] overflow-y-auto absolute sm:relative bottom-0 sm:bottom-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded-md hover:bg-white/10"><X size={18} /></button>
+    <div
+      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="glass w-full sm:max-w-[560px] sm:rounded-2xl rounded-t-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] shadow-2xl border border-white/10"
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
+          <h3 className="font-bold text-base">{title}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-md hover:bg-white/10" aria-label="إغلاق">
+            <X size={18} />
+          </button>
         </div>
-        {children}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {children}
+        </div>
       </div>
     </div>
   );
