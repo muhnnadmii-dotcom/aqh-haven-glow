@@ -155,8 +155,16 @@ function AdminLayout() {
 function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onSignOut: () => void }) {
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="hidden lg:flex items-center h-16 px-5 border-b border-white/10 shrink-0">
+      <div className="hidden lg:flex items-center justify-between h-16 px-5 border-b border-white/10 shrink-0">
         <div className="text-xs tracking-[0.3em] text-gradient-gold">AQH ADMIN</div>
+        <Link
+          to="/account"
+          onClick={onNavigate}
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[11px] hover:bg-gold/25"
+          title="العودة للوحة العميل"
+        >
+          <LogOut size={12} /> خروج
+        </Link>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
