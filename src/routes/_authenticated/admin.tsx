@@ -100,17 +100,22 @@ function AdminLayout() {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile topbar */}
-      <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 h-14 border-b border-white/10 bg-background/95 backdrop-blur">
+      <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-2 px-3 h-14 border-b border-white/10 bg-background/95 backdrop-blur">
         <button
           onClick={() => setOpen(true)}
           aria-label="فتح القائمة"
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-sm"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 text-sm shrink-0"
         >
           <Menu size={18} /> القائمة
         </button>
-        <div className="text-sm font-semibold truncate">{title}</div>
-        <Link to="/" className="text-xs text-muted-foreground inline-flex items-center gap-1">
-          <ExternalLink size={14} /> الموقع
+        <div className="text-sm font-semibold truncate flex-1 text-center px-1">{title}</div>
+        <Link
+          to="/account"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-xs shrink-0"
+          aria-label="خروج من الإدارة"
+          title="العودة للوحة العميل"
+        >
+          <LogOut size={13} /> خروج
         </Link>
       </header>
 
