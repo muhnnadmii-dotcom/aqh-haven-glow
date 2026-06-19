@@ -194,6 +194,13 @@ function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onS
 
       <div className="border-t border-white/10 p-3 space-y-1 shrink-0">
         <Link
+          to="/account"
+          onClick={onNavigate}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] bg-gold/10 text-gold hover:bg-gold/20"
+        >
+          <LayoutDashboard size={15} /> لوحة العميل
+        </Link>
+        <Link
           to="/"
           onClick={onNavigate}
           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-muted-foreground hover:text-foreground hover:bg-white/5"
