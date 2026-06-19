@@ -102,10 +102,12 @@ export function Navbar() {
               {isAdmin && (
                 <Link
                   to="/admin"
-                  className="hidden sm:inline-flex items-center gap-1.5 glass rounded-xl px-3 py-2 text-xs hover:bg-white/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-2 text-xs bg-[#D4A017]/15 border border-[#D4A017]/30 text-[#D4A017] hover:bg-[#D4A017]/25 transition-colors"
                   title="لوحة الإدارة"
+                  aria-label="لوحة الإدارة"
                 >
-                  <Shield size={14} /> الإدارة
+                  <Shield size={14} />
+                  <span className="hidden sm:inline">الإدارة</span>
                 </Link>
               )}
               {user ? (

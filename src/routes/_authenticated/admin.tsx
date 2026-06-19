@@ -100,17 +100,22 @@ function AdminLayout() {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile topbar */}
-      <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 h-14 border-b border-white/10 bg-background/95 backdrop-blur">
+      <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-2 px-3 h-14 border-b border-white/10 bg-background/95 backdrop-blur">
         <button
           onClick={() => setOpen(true)}
           aria-label="فتح القائمة"
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-sm"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 text-sm shrink-0"
         >
           <Menu size={18} /> القائمة
         </button>
-        <div className="text-sm font-semibold truncate">{title}</div>
-        <Link to="/" className="text-xs text-muted-foreground inline-flex items-center gap-1">
-          <ExternalLink size={14} /> الموقع
+        <div className="text-sm font-semibold truncate flex-1 text-center px-1">{title}</div>
+        <Link
+          to="/account"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-xs shrink-0"
+          aria-label="خروج من الإدارة"
+          title="العودة للوحة العميل"
+        >
+          <LogOut size={13} /> خروج
         </Link>
       </header>
 
@@ -150,8 +155,16 @@ function AdminLayout() {
 function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onSignOut: () => void }) {
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="hidden lg:flex items-center h-16 px-5 border-b border-white/10 shrink-0">
+      <div className="hidden lg:flex items-center justify-between h-16 px-5 border-b border-white/10 shrink-0">
         <div className="text-xs tracking-[0.3em] text-gradient-gold">AQH ADMIN</div>
+        <Link
+          to="/account"
+          onClick={onNavigate}
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[11px] hover:bg-gold/25"
+          title="العودة للوحة العميل"
+        >
+          <LogOut size={12} /> خروج
+        </Link>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
@@ -180,6 +193,13 @@ function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onS
       </nav>
 
       <div className="border-t border-white/10 p-3 space-y-1 shrink-0">
+        <Link
+          to="/account"
+          onClick={onNavigate}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] bg-gold/10 text-gold hover:bg-gold/20"
+        >
+          <LayoutDashboard size={15} /> لوحة العميل
+        </Link>
         <Link
           to="/"
           onClick={onNavigate}
