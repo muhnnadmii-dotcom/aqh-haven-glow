@@ -185,8 +185,44 @@ function AdminLayout() {
   );
 }
 
+function isItemActive(pathname: string, item: NavItem): boolean {
+  if (item.exact) return pathname === item.to;
+  return pathname === item.to || pathname.startsWith(item.to + "/");
+}
+
 function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onSignOut: () => void }) {
   const { canView: canViewFinance } = useFinanceRoles();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const visibleGroups = navGroups.filter((g) => !g.financeOnly || canViewFinance);
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    for (const g of visibleGroups) {
+      if (!g.collapsible) { init[g.key] = true; continue; }
+      init[g.key] = g.items.some((i) => isItemActive(pathname, i));
+    }
+    return init;
+  });
+
+  // Keep group containing active route open
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const g of visibleGroups) {
+        if (!g.collapsible) continue;
+        if (g.items.some((i) => isItemActive(pathname, i)) && !next[g.key]) {
+          next[g.key] = true;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [pathname, canViewFinance]);
+
+  const toggle = (key: string) => setOpenGroups((p) => ({ ...p, [key]: !p[key] }));
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="hidden lg:flex items-center justify-between h-16 px-5 border-b border-white/10 shrink-0">
@@ -201,49 +237,52 @@ function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onS
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
-        {navGroups.map((g) => (
-          <div key={g.label}>
-            <div className="px-3 mb-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              {g.label}
-            </div>
-            <div className="flex flex-col gap-0.5">
-              {g.items.map((n) => (
-                <Link
-                  key={n.to}
-                  to={n.to}
-                  onClick={onNavigate}
-                  activeOptions={{ exact: n.exact }}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
-                  activeProps={{ className: "flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] bg-gold/10 text-gold font-semibold border-r-2 border-gold" }}
+      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
+        {visibleGroups.map((g) => {
+          const isOpen = openGroups[g.key] ?? true;
+          const hasActive = g.items.some((i) => isItemActive(pathname, i));
+          return (
+            <div key={g.key}>
+              {g.collapsible ? (
+                <button
+                  type="button"
+                  onClick={() => toggle(g.key)}
+                  className={`w-full flex items-center justify-between px-3 mb-1 text-[10px] uppercase tracking-[0.2em] transition ${
+                    hasActive ? "text-gold/80" : "text-muted-foreground/60 hover:text-muted-foreground"
+                  }`}
+                  aria-expanded={isOpen}
                 >
-                  <n.icon size={15} className="shrink-0" />
-                  <span className="truncate">{n.label}</span>
-                </Link>
-              ))}
+                  <span>{g.label}</span>
+                  <ChevronDown
+                    size={12}
+                    className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+              ) : (
+                <div className="px-3 mb-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                  {g.label}
+                </div>
+              )}
+              {isOpen && (
+                <div className="flex flex-col gap-0.5">
+                  {g.items.map((n) => (
+                    <Link
+                      key={n.to}
+                      to={n.to}
+                      onClick={onNavigate}
+                      activeOptions={{ exact: n.exact }}
+                      className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+                      activeProps={{ className: "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] bg-gold/10 text-gold font-semibold border-r-2 border-gold" }}
+                    >
+                      <n.icon size={14} className="shrink-0 opacity-80" />
+                      <span className="truncate">{n.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
-
-        {canViewFinance && (
-          <div>
-            <div className="px-3 mb-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              المالية
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <Link
-                to="/admin/finance"
-                onClick={onNavigate}
-                activeOptions={{ exact: false }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
-                activeProps={{ className: "flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] bg-gold/10 text-gold font-semibold border-r-2 border-gold" }}
-              >
-                <Wallet size={15} className="shrink-0" />
-                <span className="truncate">البوابة المالية</span>
-              </Link>
-            </div>
-          </div>
-        )}
+          );
+        })}
       </nav>
 
       <div className="border-t border-white/10 p-3 space-y-1 shrink-0">
