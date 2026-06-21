@@ -27,55 +27,55 @@ function FinanceDashboard() {
   const [topSups, setTopSups] = useState<{ name: string; total: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const now = new Date();
-      let dateFrom: string | null = null;
-      let dateTo: string | null = null;
-      if (period === "today") dateFrom = now.toISOString().slice(0, 10);
-      else if (period === "week") { const d = new Date(now); d.setDate(d.getDate() - 7); dateFrom = d.toISOString().slice(0, 10); }
-      else if (period === "month") dateFrom = now.toISOString().slice(0, 7) + "-01";
-      else if (period === "custom") { dateFrom = from || null; dateTo = to || null; }
+  const load = useCallback(async () => {
+    setLoading(true);
+    const now = new Date();
+    let dateFrom: string | null = null;
+    let dateTo: string | null = null;
+    if (period === "today") dateFrom = now.toISOString().slice(0, 10);
+    else if (period === "week") { const d = new Date(now); d.setDate(d.getDate() - 7); dateFrom = d.toISOString().slice(0, 10); }
+    else if (period === "month") dateFrom = now.toISOString().slice(0, 7) + "-01";
+    else if (period === "custom") { dateFrom = from || null; dateTo = to || null; }
 
-      let incQ = supabase.from("finance_incomes").select("*").order("income_date", { ascending: false });
-      let expQ = supabase.from("finance_expenses").select("*").order("expense_date", { ascending: false });
-      if (dateFrom) { incQ = incQ.gte("income_date", dateFrom); expQ = expQ.gte("expense_date", dateFrom); }
-      if (dateTo) { incQ = incQ.lte("income_date", dateTo); expQ = expQ.lte("expense_date", dateTo); }
-      const [{ data: inc }, { data: exp }, { data: cats }, { data: sups }] = await Promise.all([
-        incQ, expQ,
-        supabase.from("finance_categories").select("id, name"),
-        supabase.from("finance_suppliers").select("id, name"),
-      ]);
-      const incomes = inc ?? [];
-      const expenses = exp ?? [];
-      const sum = (arr: any[]) => arr.reduce((a, b) => a + Number(b.amount ?? 0), 0);
-      setStats({
-        income: sum(incomes),
-        expense: sum(expenses),
-        incUnreviewed: incomes.filter((x) => x.internal_review_status === "unreviewed").length,
-        expUnreviewed: expenses.filter((x) => x.internal_review_status === "unreviewed").length,
-        acctNotReviewed: incomes.filter((x) => x.accountant_status === "not_reviewed").length + expenses.filter((x) => x.accountant_status === "not_reviewed").length,
-        needsFix: incomes.filter((x) => x.accountant_status === "needs_fix").length + expenses.filter((x) => x.accountant_status === "needs_fix").length,
-        missingAttExp: expenses.filter((x) => x.attachment_status === "not_attached").length,
-        missingAttInc: incomes.filter((x) => x.attachment_status === "not_attached").length,
-      });
-      setRecentIncomes(incomes.slice(0, 5));
-      setRecentExpenses(expenses.slice(0, 5));
+    let incQ = supabase.from("finance_incomes").select("*").is("deleted_at", null).order("income_date", { ascending: false });
+    let expQ = supabase.from("finance_expenses").select("*").is("deleted_at", null).order("expense_date", { ascending: false });
+    if (dateFrom) { incQ = incQ.gte("income_date", dateFrom); expQ = expQ.gte("expense_date", dateFrom); }
+    if (dateTo) { incQ = incQ.lte("income_date", dateTo); expQ = expQ.lte("expense_date", dateTo); }
+    const [{ data: inc }, { data: exp }, { data: cats }, { data: sups }] = await Promise.all([
+      incQ, expQ,
+      supabase.from("finance_categories").select("id, name"),
+      supabase.from("finance_suppliers").select("id, name"),
+    ]);
+    const incomes = inc ?? [];
+    const expenses = exp ?? [];
+    const sum = (arr: any[]) => arr.reduce((a, b) => a + Number(b.amount ?? 0), 0);
+    setStats({
+      income: sum(incomes),
+      expense: sum(expenses),
+      incUnreviewed: incomes.filter((x) => x.internal_review_status === "unreviewed").length,
+      expUnreviewed: expenses.filter((x) => x.internal_review_status === "unreviewed").length,
+      acctNotReviewed: incomes.filter((x) => x.accountant_status === "not_reviewed").length + expenses.filter((x) => x.accountant_status === "not_reviewed").length,
+      needsFix: incomes.filter((x) => x.accountant_status === "needs_fix").length + expenses.filter((x) => x.accountant_status === "needs_fix").length,
+      missingAttExp: expenses.filter((x) => x.attachment_status === "not_attached").length,
+      missingAttInc: incomes.filter((x) => x.attachment_status === "not_attached").length,
+    });
+    setRecentIncomes(incomes.slice(0, 5));
+    setRecentExpenses(expenses.slice(0, 5));
 
-      const catName = (id: string) => (cats ?? []).find((c: any) => c.id === id)?.name ?? "—";
-      const supName = (id: string) => (sups ?? []).find((s: any) => s.id === id)?.name ?? "—";
-      const catTotals: Record<string, number> = {};
-      const supTotals: Record<string, number> = {};
-      expenses.forEach((e: any) => {
-        if (e.main_category_id) catTotals[e.main_category_id] = (catTotals[e.main_category_id] ?? 0) + Number(e.amount ?? 0);
-        if (e.supplier_id) supTotals[e.supplier_id] = (supTotals[e.supplier_id] ?? 0) + Number(e.amount ?? 0);
-      });
-      setTopCats(Object.entries(catTotals).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, total]) => ({ name: catName(id), total })));
-      setTopSups(Object.entries(supTotals).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, total]) => ({ name: supName(id), total })));
-      setLoading(false);
-    })();
+    const catName = (id: string) => (cats ?? []).find((c: any) => c.id === id)?.name ?? "—";
+    const supName = (id: string) => (sups ?? []).find((s: any) => s.id === id)?.name ?? "—";
+    const catTotals: Record<string, number> = {};
+    const supTotals: Record<string, number> = {};
+    expenses.forEach((e: any) => {
+      if (e.main_category_id) catTotals[e.main_category_id] = (catTotals[e.main_category_id] ?? 0) + Number(e.amount ?? 0);
+      if (e.supplier_id) supTotals[e.supplier_id] = (supTotals[e.supplier_id] ?? 0) + Number(e.amount ?? 0);
+    });
+    setTopCats(Object.entries(catTotals).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, total]) => ({ name: catName(id), total })));
+    setTopSups(Object.entries(supTotals).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, total]) => ({ name: supName(id), total })));
+    setLoading(false);
   }, [period, from, to]);
+
+  useEffect(() => { load(); }, [load]);
 
   const net = stats.income - stats.expense;
 
@@ -98,7 +98,13 @@ function FinanceDashboard() {
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="px-2 py-1.5 rounded-lg text-[12px] bg-white/5 border border-white/10" />
           </>
         )}
+        <button onClick={load} disabled={loading}
+          className="ms-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-50">
+          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+          تحديث البيانات
+        </button>
       </div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Card icon={TrendingUp} label="الدخل" value={fmtSAR(stats.income)} tone="text-emerald-300" />
