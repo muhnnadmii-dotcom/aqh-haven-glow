@@ -46,7 +46,7 @@ export function FinanceRowsDrawer({ spec, onClose }: { spec: DrawerSpec; onClose
         if (spec.incomeFilter?.internal) q = q.eq("internal_review_status", spec.incomeFilter.internal);
         if (spec.incomeFilter?.accountant) q = q.eq("accountant_status", spec.incomeFilter.accountant);
         if (spec.incomeFilter?.attachment) q = q.eq("attachment_status", spec.incomeFilter.attachment);
-        tasks.push(q);
+        tasks.push(Promise.resolve(q));
       } else tasks.push(Promise.resolve({ data: [] }));
 
       if (wantExpense) {
@@ -58,12 +58,12 @@ export function FinanceRowsDrawer({ spec, onClose }: { spec: DrawerSpec; onClose
         if (spec.expenseFilter?.attachment) q = q.eq("attachment_status", spec.expenseFilter.attachment);
         if (spec.expenseFilter?.supplierId) q = q.eq("supplier_id", spec.expenseFilter.supplierId);
         if (spec.expenseFilter?.mainCategoryId) q = q.eq("main_category_id", spec.expenseFilter.mainCategoryId);
-        tasks.push(q);
+        tasks.push(Promise.resolve(q));
       } else tasks.push(Promise.resolve({ data: [] }));
 
-      tasks.push(supabase.from("finance_income_sources").select("id, name"));
-      tasks.push(supabase.from("finance_suppliers").select("id, name"));
-      tasks.push(supabase.from("finance_categories").select("id, name"));
+      tasks.push(Promise.resolve(supabase.from("finance_income_sources").select("id, name")));
+      tasks.push(Promise.resolve(supabase.from("finance_suppliers").select("id, name")));
+      tasks.push(Promise.resolve(supabase.from("finance_categories").select("id, name")));
 
       const [incRes, expRes, srcRes, supRes, catRes] = await Promise.all(tasks);
       setIncomes(incRes.data ?? []);
