@@ -58,7 +58,14 @@ import { Route as AuthenticatedAccountRequestsIndexRouteImport } from './routes/
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
 import { Route as AuthenticatedAdminTanksIdRouteImport } from './routes/_authenticated/admin.tanks.$id'
 import { Route as AuthenticatedAdminRequestsIdRouteImport } from './routes/_authenticated/admin.requests.$id'
+import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
+import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
+import { Route as AuthenticatedAdminFinanceExportRouteImport } from './routes/_authenticated/admin.finance.export'
+import { Route as AuthenticatedAdminFinanceExpensesRouteImport } from './routes/_authenticated/admin.finance.expenses'
+import { Route as AuthenticatedAdminFinanceCategoriesRouteImport } from './routes/_authenticated/admin.finance.categories'
+import { Route as AuthenticatedAdminFinanceAuditRouteImport } from './routes/_authenticated/admin.finance.audit'
+import { Route as AuthenticatedAdminFinanceAttachmentsRouteImport } from './routes/_authenticated/admin.finance.attachments'
 import { Route as AuthenticatedAdminDesignContactRouteImport } from './routes/_authenticated/admin.design.contact'
 import { Route as AuthenticatedAdminDesignAboutRouteImport } from './routes/_authenticated/admin.design.about'
 import { Route as AuthenticatedAccountTanksIdRouteImport } from './routes/_authenticated/account.tanks.$id'
@@ -333,10 +340,52 @@ const AuthenticatedAdminRequestsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminRequestsRoute,
   } as any)
+const AuthenticatedAdminFinanceSuppliersRoute =
+  AuthenticatedAdminFinanceSuppliersRouteImport.update({
+    id: '/suppliers',
+    path: '/suppliers',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinanceSettingsRoute =
+  AuthenticatedAdminFinanceSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceIncomesRoute =
   AuthenticatedAdminFinanceIncomesRouteImport.update({
     id: '/incomes',
     path: '/incomes',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinanceExportRoute =
+  AuthenticatedAdminFinanceExportRouteImport.update({
+    id: '/export',
+    path: '/export',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinanceExpensesRoute =
+  AuthenticatedAdminFinanceExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinanceCategoriesRoute =
+  AuthenticatedAdminFinanceCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinanceAuditRoute =
+  AuthenticatedAdminFinanceAuditRouteImport.update({
+    id: '/audit',
+    path: '/audit',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinanceAttachmentsRoute =
+  AuthenticatedAdminFinanceAttachmentsRouteImport.update({
+    id: '/attachments',
+    path: '/attachments',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
 const AuthenticatedAdminDesignContactRoute =
@@ -415,7 +464,14 @@ export interface FileRoutesByFullPath {
   '/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
+  '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
+  '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
+  '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
+  '/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
+  '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -463,7 +519,14 @@ export interface FileRoutesByTo {
   '/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
+  '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
+  '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
+  '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
+  '/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
+  '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -521,7 +584,14 @@ export interface FileRoutesById {
   '/_authenticated/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
   '/_authenticated/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/_authenticated/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
+  '/_authenticated/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
+  '/_authenticated/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
+  '/_authenticated/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/_authenticated/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
+  '/_authenticated/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
+  '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/_authenticated/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/_authenticated/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -579,7 +649,14 @@ export interface FileRouteTypes {
     | '/account/tanks/$id'
     | '/admin/design/about'
     | '/admin/design/contact'
+    | '/admin/finance/attachments'
+    | '/admin/finance/audit'
+    | '/admin/finance/categories'
+    | '/admin/finance/expenses'
+    | '/admin/finance/export'
     | '/admin/finance/incomes'
+    | '/admin/finance/settings'
+    | '/admin/finance/suppliers'
     | '/admin/requests/$id'
     | '/admin/tanks/$id'
     | '/admin/users/$id'
@@ -627,7 +704,14 @@ export interface FileRouteTypes {
     | '/account/tanks/$id'
     | '/admin/design/about'
     | '/admin/design/contact'
+    | '/admin/finance/attachments'
+    | '/admin/finance/audit'
+    | '/admin/finance/categories'
+    | '/admin/finance/expenses'
+    | '/admin/finance/export'
     | '/admin/finance/incomes'
+    | '/admin/finance/settings'
+    | '/admin/finance/suppliers'
     | '/admin/requests/$id'
     | '/admin/tanks/$id'
     | '/admin/users/$id'
@@ -684,7 +768,14 @@ export interface FileRouteTypes {
     | '/_authenticated/account/tanks/$id'
     | '/_authenticated/admin/design/about'
     | '/_authenticated/admin/design/contact'
+    | '/_authenticated/admin/finance/attachments'
+    | '/_authenticated/admin/finance/audit'
+    | '/_authenticated/admin/finance/categories'
+    | '/_authenticated/admin/finance/expenses'
+    | '/_authenticated/admin/finance/export'
     | '/_authenticated/admin/finance/incomes'
+    | '/_authenticated/admin/finance/settings'
+    | '/_authenticated/admin/finance/suppliers'
     | '/_authenticated/admin/requests/$id'
     | '/_authenticated/admin/tanks/$id'
     | '/_authenticated/admin/users/$id'
@@ -1058,11 +1149,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsIdRouteImport
       parentRoute: typeof AuthenticatedAdminRequestsRoute
     }
+    '/_authenticated/admin/finance/suppliers': {
+      id: '/_authenticated/admin/finance/suppliers'
+      path: '/suppliers'
+      fullPath: '/admin/finance/suppliers'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceSuppliersRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/settings': {
+      id: '/_authenticated/admin/finance/settings'
+      path: '/settings'
+      fullPath: '/admin/finance/settings'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/incomes': {
       id: '/_authenticated/admin/finance/incomes'
       path: '/incomes'
       fullPath: '/admin/finance/incomes'
       preLoaderRoute: typeof AuthenticatedAdminFinanceIncomesRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/export': {
+      id: '/_authenticated/admin/finance/export'
+      path: '/export'
+      fullPath: '/admin/finance/export'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceExportRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/expenses': {
+      id: '/_authenticated/admin/finance/expenses'
+      path: '/expenses'
+      fullPath: '/admin/finance/expenses'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceExpensesRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/categories': {
+      id: '/_authenticated/admin/finance/categories'
+      path: '/categories'
+      fullPath: '/admin/finance/categories'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceCategoriesRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/audit': {
+      id: '/_authenticated/admin/finance/audit'
+      path: '/audit'
+      fullPath: '/admin/finance/audit'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceAuditRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/attachments': {
+      id: '/_authenticated/admin/finance/attachments'
+      path: '/attachments'
+      fullPath: '/admin/finance/attachments'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceAttachmentsRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
     '/_authenticated/admin/design/contact': {
@@ -1168,14 +1308,33 @@ const AuthenticatedAdminDesignRouteWithChildren =
   )
 
 interface AuthenticatedAdminFinanceRouteChildren {
+  AuthenticatedAdminFinanceAttachmentsRoute: typeof AuthenticatedAdminFinanceAttachmentsRoute
+  AuthenticatedAdminFinanceAuditRoute: typeof AuthenticatedAdminFinanceAuditRoute
+  AuthenticatedAdminFinanceCategoriesRoute: typeof AuthenticatedAdminFinanceCategoriesRoute
+  AuthenticatedAdminFinanceExpensesRoute: typeof AuthenticatedAdminFinanceExpensesRoute
+  AuthenticatedAdminFinanceExportRoute: typeof AuthenticatedAdminFinanceExportRoute
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
+  AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
+  AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
   AuthenticatedAdminFinanceIndexRoute: typeof AuthenticatedAdminFinanceIndexRoute
 }
 
 const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChildren =
   {
+    AuthenticatedAdminFinanceAttachmentsRoute:
+      AuthenticatedAdminFinanceAttachmentsRoute,
+    AuthenticatedAdminFinanceAuditRoute: AuthenticatedAdminFinanceAuditRoute,
+    AuthenticatedAdminFinanceCategoriesRoute:
+      AuthenticatedAdminFinanceCategoriesRoute,
+    AuthenticatedAdminFinanceExpensesRoute:
+      AuthenticatedAdminFinanceExpensesRoute,
+    AuthenticatedAdminFinanceExportRoute: AuthenticatedAdminFinanceExportRoute,
     AuthenticatedAdminFinanceIncomesRoute:
       AuthenticatedAdminFinanceIncomesRoute,
+    AuthenticatedAdminFinanceSettingsRoute:
+      AuthenticatedAdminFinanceSettingsRoute,
+    AuthenticatedAdminFinanceSuppliersRoute:
+      AuthenticatedAdminFinanceSuppliersRoute,
     AuthenticatedAdminFinanceIndexRoute: AuthenticatedAdminFinanceIndexRoute,
   }
 

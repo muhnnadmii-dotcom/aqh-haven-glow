@@ -147,12 +147,12 @@ function ExpensesPage() {
   );
 }
 
-function Badge({ tone, children }: any) { return <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border whitespace-nowrap ${tone}`}>{children}</span>; }
-function Select({ v, onChange, ph, opts }: any) {
+function Badge({ tone, children }: { tone: string; children: React.ReactNode }) { return <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border whitespace-nowrap ${tone}`}>{children}</span>; }
+function Select({ v, onChange, ph, opts }: { v: string; onChange: (s: string) => void; ph: string; opts: { value: string; label: string }[] }) {
   return (
     <select value={v} onChange={(e) => onChange(e.target.value)} className="w-full px-2 py-1.5 rounded-lg bg-background/60 border border-white/10 text-[12px]">
       <option value="">{ph}</option>
-      {opts.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
   );
 }
