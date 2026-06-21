@@ -364,7 +364,7 @@ function ImportPage() {
           newSupplier, newMain, newSub,
           errors, warnings, duplicate: false,
         };
-        if (date && amount != null && item) {
+        if (date && amount != null) {
           row.duplicate = existingExpenses.some(
             (e) =>
               e.expense_date === date &&
