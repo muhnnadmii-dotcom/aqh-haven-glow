@@ -873,6 +873,9 @@ export type Database = {
       }
       finance_import_logs: {
         Row: {
+          archive_reason: string | null
+          archived_at: string | null
+          archived_by: string | null
           created_at: string
           duplicate_rows: number
           error_rows: number
@@ -883,10 +886,14 @@ export type Database = {
           imported_rows: number
           sheet_name: string | null
           skipped_rows: number
+          status: string
           summary_json: Json | null
           total_rows: number
         }
         Insert: {
+          archive_reason?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           created_at?: string
           duplicate_rows?: number
           error_rows?: number
@@ -897,10 +904,14 @@ export type Database = {
           imported_rows?: number
           sheet_name?: string | null
           skipped_rows?: number
+          status?: string
           summary_json?: Json | null
           total_rows?: number
         }
         Update: {
+          archive_reason?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           created_at?: string
           duplicate_rows?: number
           error_rows?: number
@@ -911,6 +922,7 @@ export type Database = {
           imported_rows?: number
           sheet_name?: string | null
           skipped_rows?: number
+          status?: string
           summary_json?: Json | null
           total_rows?: number
         }
@@ -1973,7 +1985,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      finance_archive_import_batch: {
+        Args: { p_batch_id: string; p_reason: string }
+        Returns: Json
+      }
+      finance_restore_import_batch: {
+        Args: { p_batch_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role:
