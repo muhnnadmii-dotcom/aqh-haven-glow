@@ -332,7 +332,9 @@ function ImportPage() {
           const m = mainCats.find((x) => normStr(x.name) === normStr(catName));
           if (m) main_category_id = m.id;
           else if (createCats) { newMain = true; warnings.push(`تصنيف رئيسي جديد: ${catName}`); }
-          else errors.push(`تصنيف رئيسي غير معروف: ${catName}`);
+          else warnings.push(`تصنيف رئيسي غير معروف: ${catName}`);
+        } else {
+          warnings.push("لا يوجد تصنيف لهذا المصروف");
         }
         const subRaw = get("sub");
         const subName = subRaw == null ? null : String(subRaw).trim() || null;
