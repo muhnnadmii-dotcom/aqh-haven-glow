@@ -28,6 +28,7 @@ function ExportPage() {
   const [internal, setInternal] = useState("");
   const [acct, setAcct] = useState("");
   const [att, setAtt] = useState("");
+  const [includeArchived, setIncludeArchived] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const [sources, setSources] = useState<any[]>([]);
@@ -70,6 +71,7 @@ function ExportPage() {
 
   async function getIncomes() {
     let q = supabase.from("finance_incomes").select("*").order("income_date");
+    if (!includeArchived) q = q.is("deleted_at", null);
     if (from) q = q.gte("income_date", from);
     if (to) q = q.lte("income_date", to);
     if (month) q = q.eq("month", month);
@@ -84,6 +86,7 @@ function ExportPage() {
   }
   async function getExpenses() {
     let q = supabase.from("finance_expenses").select("*").order("expense_date");
+    if (!includeArchived) q = q.is("deleted_at", null);
     if (from) q = q.gte("expense_date", from);
     if (to) q = q.lte("expense_date", to);
     if (month) q = q.eq("month", month);
@@ -199,8 +202,8 @@ function ExportPage() {
 
   const exportNeedsFix = () => run(async () => {
     const [{ data: inc }, { data: exp }] = await Promise.all([
-      supabase.from("finance_incomes").select("*").eq("accountant_status", "needs_fix"),
-      supabase.from("finance_expenses").select("*").eq("accountant_status", "needs_fix"),
+      supabase.from("finance_incomes").select("*").eq("accountant_status", "needs_fix").is("deleted_at", null),
+      supabase.from("finance_expenses").select("*").eq("accountant_status", "needs_fix").is("deleted_at", null),
     ]);
     const ia = await loadAttachmentsMap("income", (inc ?? []).map((x) => x.id));
     const ea = await loadAttachmentsMap("expense", (exp ?? []).map((x) => x.id));
@@ -213,8 +216,8 @@ function ExportPage() {
 
   const exportUnreviewed = () => run(async () => {
     const [{ data: inc }, { data: exp }] = await Promise.all([
-      supabase.from("finance_incomes").select("*").eq("accountant_status", "not_reviewed"),
-      supabase.from("finance_expenses").select("*").eq("accountant_status", "not_reviewed"),
+      supabase.from("finance_incomes").select("*").eq("accountant_status", "not_reviewed").is("deleted_at", null),
+      supabase.from("finance_expenses").select("*").eq("accountant_status", "not_reviewed").is("deleted_at", null),
     ]);
     const ia = await loadAttachmentsMap("income", (inc ?? []).map((x) => x.id));
     const ea = await loadAttachmentsMap("expense", (exp ?? []).map((x) => x.id));
@@ -227,10 +230,10 @@ function ExportPage() {
 
   const exportNoAttachments = (type: "income" | "expense") => run(async () => {
     if (type === "income") {
-      const { data } = await supabase.from("finance_incomes").select("*").eq("attachment_status", "not_attached");
+      const { data } = await supabase.from("finance_incomes").select("*").eq("attachment_status", "not_attached").is("deleted_at", null);
       exportXLSX(`incomes_no_attachments_${Date.now()}.xlsx`, [{ name: "Incomes", headers: INC_HEADERS, rows: incRows(data ?? [], {}) }]);
     } else {
-      const { data } = await supabase.from("finance_expenses").select("*").eq("attachment_status", "not_attached");
+      const { data } = await supabase.from("finance_expenses").select("*").eq("attachment_status", "not_attached").is("deleted_at", null);
       exportXLSX(`expenses_no_attachments_${Date.now()}.xlsx`, [{ name: "Expenses", headers: EXP_HEADERS, rows: expRows(data ?? [], {}) }]);
     }
     toast.success("تم التصدير");
@@ -239,7 +242,7 @@ function ExportPage() {
   const exportSuppliers = () => run(async () => {
     const [{ data: sups }, { data: exps }] = await Promise.all([
       supabase.from("finance_suppliers").select("*").order("name"),
-      supabase.from("finance_expenses").select("supplier_id, amount"),
+      supabase.from("finance_expenses").select("supplier_id, amount").is("deleted_at", null),
     ]);
     const totals: Record<string, { sum: number; count: number }> = {};
     (exps ?? []).forEach((e: any) => {
@@ -277,7 +280,12 @@ function ExportPage() {
           <Fld label="حالة المحاسب"><select value={acct} onChange={(e) => setAcct(e.target.value)} className="inp"><option value="">الكل</option>{ACCOUNTANT_STATUS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}</select></Fld>
           <Fld label="حالة المرفق"><select value={att} onChange={(e) => setAtt(e.target.value)} className="inp"><option value="">الكل</option>{ATTACHMENT_STATUS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}</select></Fld>
         </div>
+        <label className="flex items-center gap-2 text-[12px] text-muted-foreground pt-2 border-t border-white/5">
+          <input type="checkbox" checked={includeArchived} onChange={(e) => setIncludeArchived(e.target.checked)} />
+          تضمين العمليات المؤرشفة (محذوفة soft delete)
+        </label>
       </div>
+
 
       <Section title="تصدير الدخل والمصروفات (يحترم الفلاتر)">
         <Btn onClick={() => exportIncomes("csv")} disabled={busy} icon={FileText}>دخل CSV</Btn>
