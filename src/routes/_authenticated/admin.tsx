@@ -5,9 +5,11 @@ import { getSessionUser } from "@/lib/client-auth";
 import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
   Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings as Cog, Images, Wallet,
-  ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive,
+  ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive, Shield, ShieldOff,
 } from "lucide-react";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
+import { useAllowedPages } from "@/lib/use-allowed-pages";
+import { ADMIN_PAGES } from "@/lib/admin-pages";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
