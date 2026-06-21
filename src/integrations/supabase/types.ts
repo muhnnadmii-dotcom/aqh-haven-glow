@@ -788,6 +788,7 @@ export type Database = {
           deleted_by: string | null
           expense_date: string
           id: string
+          import_batch_id: string | null
           internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
           item_name: string
           main_category_id: string | null
@@ -811,6 +812,7 @@ export type Database = {
           deleted_by?: string | null
           expense_date: string
           id?: string
+          import_batch_id?: string | null
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           item_name: string
           main_category_id?: string | null
@@ -834,6 +836,7 @@ export type Database = {
           deleted_by?: string | null
           expense_date?: string
           id?: string
+          import_batch_id?: string | null
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           item_name?: string
           main_category_id?: string | null
@@ -867,6 +870,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      finance_import_logs: {
+        Row: {
+          created_at: string
+          duplicate_rows: number
+          error_rows: number
+          file_name: string
+          id: string
+          import_type: string
+          imported_by: string | null
+          imported_rows: number
+          sheet_name: string | null
+          skipped_rows: number
+          summary_json: Json | null
+          total_rows: number
+        }
+        Insert: {
+          created_at?: string
+          duplicate_rows?: number
+          error_rows?: number
+          file_name: string
+          id?: string
+          import_type: string
+          imported_by?: string | null
+          imported_rows?: number
+          sheet_name?: string | null
+          skipped_rows?: number
+          summary_json?: Json | null
+          total_rows?: number
+        }
+        Update: {
+          created_at?: string
+          duplicate_rows?: number
+          error_rows?: number
+          file_name?: string
+          id?: string
+          import_type?: string
+          imported_by?: string | null
+          imported_rows?: number
+          sheet_name?: string | null
+          skipped_rows?: number
+          summary_json?: Json | null
+          total_rows?: number
+        }
+        Relationships: []
       }
       finance_income_sources: {
         Row: {
@@ -908,6 +956,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           id: string
+          import_batch_id: string | null
           income_date: string
           income_source_id: string | null
           internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
@@ -927,6 +976,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           id?: string
+          import_batch_id?: string | null
           income_date: string
           income_source_id?: string | null
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
@@ -946,6 +996,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           id?: string
+          import_batch_id?: string | null
           income_date?: string
           income_source_id?: string | null
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
