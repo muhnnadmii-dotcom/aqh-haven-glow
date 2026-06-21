@@ -249,7 +249,7 @@ function ImportPage() {
   const parsePreview = () => {
     if (!aoa.length) return;
     if (missingRequired.length) {
-      toast.error("لم يتم التعرف على أعمدة التاريخ أو المبلغ أو المصدر. تأكد من اختيار صف العناوين الصحيح.");
+      toast.error(`الأعمدة المطلوبة غير محددة: ${missingRequired.join(" · ")}`);
       setParsed([]);
       return;
     }
