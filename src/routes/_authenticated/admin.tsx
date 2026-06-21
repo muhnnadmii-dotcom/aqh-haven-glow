@@ -4,15 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
 import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
-  Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings, Images,
+  Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings, Images, Wallet,
 } from "lucide-react";
+import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
   beforeLoad: async () => {
     const user = await getSessionUser();
     if (!user) throw redirect({ to: "/auth" });
-    const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", user.id).in("role", ["admin", "staff"]).limit(1).maybeSingle();
+    const { data: r } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .in("role", ["admin", "staff", "finance_view", "finance_manage", "finance_accountant", "finance_export", "finance_settings"])
+      .limit(1)
+      .maybeSingle();
     if (!r) throw redirect({ to: "/account" });
   },
   component: AdminLayout,
