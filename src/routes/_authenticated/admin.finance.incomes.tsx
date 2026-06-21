@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
-import { Plus, Search, X, Paperclip, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive } from "lucide-react";
 import { toast } from "sonner";
-import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
+import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
 import { AuditPanel } from "@/components/finance/AuditPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/incomes")({
@@ -22,8 +22,8 @@ function IncomesPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Income | null>(null);
   const [creating, setCreating] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
 
-  // filters
   const [q, setQ] = useState("");
   const [fMonth, setFMonth] = useState("");
   const [fSource, setFSource] = useState("");
@@ -46,6 +46,8 @@ function IncomesPage() {
 
   const sourceName = (id: string | null) => sources.find((s) => s.id === id)?.name ?? "—";
   const filtered = useMemo(() => rows.filter((r) => {
+    if (!showDeleted && r.deleted_at) return false;
+    if (showDeleted && !r.deleted_at) return false;
     if (q && !(r.note ?? "").toLowerCase().includes(q.toLowerCase()) && !sourceName(r.income_source_id).toLowerCase().includes(q.toLowerCase())) return false;
     if (fMonth && r.month !== fMonth) return false;
     if (fSource && r.income_source_id !== fSource) return false;
@@ -54,21 +56,50 @@ function IncomesPage() {
     if (fAcct && r.accountant_status !== fAcct) return false;
     if (fAtt && r.attachment_status !== fAtt) return false;
     return true;
-  }), [rows, q, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, sources]);
+  }), [rows, q, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, sources, showDeleted]);
 
   const months = useMemo(() => Array.from(new Set(rows.map((r) => r.month).filter(Boolean))).sort().reverse(), [rows]);
-
   const total = filtered.reduce((a, b) => a + Number(b.amount ?? 0), 0);
+  const deletedCount = rows.filter((r) => r.deleted_at).length;
+
+  const softDelete = async (r: Income) => {
+    const reason = window.prompt("سبب الحذف (اختياري):", "") ?? "";
+    if (!confirm("هل أنت متأكد من حذف هذه العملية؟ سيتم إخفاؤها من الجداول مع الاحتفاظ بها في سجل النظام.")) return;
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase.from("finance_incomes").update({
+      deleted_at: new Date().toISOString(),
+      deleted_by: u.user?.id ?? null,
+      delete_reason: reason || null,
+    }).eq("id", r.id);
+    if (error) toast.error("تعذر الحذف: " + error.message);
+    else { toast.success("تمت الأرشفة"); load(); }
+  };
+
+  const restore = async (r: Income) => {
+    if (!confirm("استعادة هذه العملية إلى الجدول الافتراضي؟")) return;
+    const { error } = await supabase.from("finance_incomes").update({
+      deleted_at: null, deleted_by: null, delete_reason: null,
+    }).eq("id", r.id);
+    if (error) toast.error("تعذر الاستعادة: " + error.message);
+    else { toast.success("تمت الاستعادة"); load(); }
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">الدخل / التحصيلات</h2>
-        {roles.canManage && (
-          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[12px] hover:bg-gold/25">
-            <Plus size={14} /> إضافة دخل
-          </button>
-        )}
+        <h2 className="text-base font-semibold">الدخل / التحصيلات {showDeleted && <span className="text-amber-300 text-[12px]">(المؤرشفة)</span>}</h2>
+        <div className="flex items-center gap-2">
+          {roles.canManage && deletedCount > 0 && (
+            <button onClick={() => setShowDeleted(!showDeleted)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] ${showDeleted ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : "bg-white/5 border-white/10 hover:bg-white/10"}`}>
+              <Archive size={13} /> {showDeleted ? "إخفاء المؤرشفة" : `عرض المؤرشفة (${deletedCount})`}
+            </button>
+          )}
+          {roles.canManage && (
+            <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[12px] hover:bg-gold/25">
+              <Plus size={14} /> إضافة دخل
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
@@ -100,7 +131,7 @@ function IncomesPage() {
           </thead>
           <tbody>
             {filtered.map((r) => (
-              <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+              <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 ${r.deleted_at ? "opacity-60" : ""}`}>
                 <td className="px-3 py-2 whitespace-nowrap">{r.income_date}</td>
                 <td className="px-3 py-2 font-mono">{fmtSAR(r.amount)}</td>
                 <td className="px-3 py-2">{sourceName(r.income_source_id)}</td>
@@ -109,9 +140,21 @@ function IncomesPage() {
                 <td className="px-3 py-2"><Badge tone={toneOf(ACCOUNTANT_STATUS, r.accountant_status)}>{labelOf(ACCOUNTANT_STATUS, r.accountant_status)}</Badge></td>
                 <td className="px-3 py-2"><Badge tone={toneOf(ATTACHMENT_STATUS, r.attachment_status)}>{labelOf(ATTACHMENT_STATUS, r.attachment_status)}</Badge></td>
                 <td className="px-3 py-2">
-                  <button onClick={() => setEditing(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px]">
-                    <Pencil size={11} /> فتح
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setEditing(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px]">
+                      <Pencil size={11} /> فتح
+                    </button>
+                    {roles.canManage && !r.deleted_at && (
+                      <button onClick={() => softDelete(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-300 text-[11px]" title="أرشفة / حذف">
+                        <Trash2 size={11} />
+                      </button>
+                    )}
+                    {roles.canManage && r.deleted_at && (
+                      <button onClick={() => restore(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-[11px]" title="استعادة">
+                        <RotateCcw size={11} /> استعادة
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -165,21 +208,34 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     attachment_status: row?.attachment_status ?? "not_attached",
   });
   const [saving, setSaving] = useState(false);
+  const [pending, setPending] = useState<PendingAttachment[]>([]);
 
   const save = async () => {
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       if (isNew) {
-        const { error } = await supabase.from("finance_incomes").insert({
+        // If user picked files, default attachment_status to attached; uploader+trigger will normalize.
+        const status = pending.length > 0 ? "attached" : f.attachment_status;
+        const { data: inserted, error } = await supabase.from("finance_incomes").insert({
           ...f,
+          attachment_status: status,
           amount: Number(f.amount),
           income_source_id: f.income_source_id || null,
           month: f.income_date.slice(0, 7),
           created_by: u.user?.id ?? null,
-        });
+        }).select("id").single();
         if (error) throw error;
-        toast.success("تم إنشاء العملية");
+        if (pending.length > 0 && inserted?.id) {
+          const { failed } = await uploadPendingAttachments("income", inserted.id, pending);
+          if (failed > 0) {
+            toast.warning(`تم حفظ العملية، لكن تعذر رفع ${failed} مرفق. يمكنك رفعها من تفاصيل العملية.`);
+          } else {
+            toast.success("تم إنشاء العملية مع المرفقات");
+          }
+        } else {
+          toast.success("تم إنشاء العملية");
+        }
       } else {
         const patch: any = accountantOnly
           ? { accountant_status: f.accountant_status, accountant_note: f.accountant_note }
@@ -202,6 +258,11 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
           <button onClick={onClose} className="p-1.5 hover:bg-white/5 rounded"><X size={16} /></button>
         </div>
         <div className="p-4 space-y-3">
+          {row?.deleted_at && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-200 text-[11px] p-2">
+              عملية مؤرشفة بتاريخ {new Date(row.deleted_at).toLocaleString("ar")}{row.delete_reason ? ` · السبب: ${row.delete_reason}` : ""}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <Field label="التاريخ"><input type="date" disabled={accountantOnly} value={f.income_date} onChange={(e) => setF({ ...f, income_date: e.target.value })} className="inp" /></Field>
             <Field label="المبلغ"><input type="number" step="0.01" disabled={accountantOnly} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value as any })} className="inp" /></Field>
@@ -234,6 +295,10 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
           </div>
           <Field label="الملاحظة"><textarea disabled={accountantOnly} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} className="inp min-h-[60px]" /></Field>
           <Field label="ملاحظة المحاسب"><textarea value={f.accountant_note} onChange={(e) => setF({ ...f, accountant_note: e.target.value })} className="inp min-h-[60px]" /></Field>
+
+          {isNew && roles.canManage && (
+            <PendingAttachmentsPicker items={pending} setItems={setPending} />
+          )}
 
           {!isNew && (
             <>
