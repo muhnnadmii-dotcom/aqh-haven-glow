@@ -1,76 +1,117 @@
-# إضافة خاصية قص الصور في لوحة الإدارة
+## البوابة المالية الداخلية — Aqua Haven
 
-## النهج المختار
+بوابة مالية شخصية داخل لوحة الإدارة، بديلة للإكسل، بدون أي تكامل خارجي. مقسّمة على مراحل قابلة للتنفيذ والمراجعة.
 
-سأبني محرر قص خفيف يعمل داخل المتصفح فقط، باستخدام مكتبة `react-easy-crop` (خفيفة، تدعم اللمس، التكبير، السحب) + ضغط الصور الحالي الموجود في `src/lib/image-compress.ts`. القص يتم على الـ Canvas ثم تُرفع النسخة المقصوصة كصورة جديدة عبر `uploadMedia` الحالي (مع الضغط التلقائي إلى WebP). لا تغييرات في قاعدة البيانات.
+---
 
-### لماذا بدون أعمدة قاعدة بيانات جديدة
+### المرحلة 1 — قاعدة البيانات والصلاحيات (Migration واحد)
 
-النظام الحالي يخزن مسار صورة واحد لكل سجل (`image_path`, `cover_image`, ...). إضافة `original_image_url` + `cropped_image_url` لكل جدول (مشاريع، لقطات، مقالات، خدمات، أقسام الهوم) = هجرة كبيرة + تعديل كل القراءات. بدلًا من ذلك:
+**Enums جديدة:**
+- `finance_account_type`: `business`, `personal`
+- `finance_internal_review`: `unreviewed`, `reviewed`
+- `finance_accountant_status`: `not_reviewed`, `reviewed`, `posted_to_qoyod`, `needs_fix`
+- `finance_attachment_status`: `attached`, `not_attached`, `not_required`
+- `finance_category_type`: `main`, `sub`
+- توسيع `app_role` بـ: `finance_view`, `finance_manage`, `finance_accountant`, `finance_export`, `finance_settings`
 
-- **الصورة المقصوصة تُرفع كملف جديد** في `media` bucket وتحل محل المسار الحالي.
-- **الصورة الأصلية تبقى** في الـ bucket (لا تُحذف عند القص) — يمكن استرجاعها لاحقًا يدويًا إذا لزم، لكن لن نضيف زر "استعادة الأصل" في هذه المرحلة (يحتاج عمود إضافي). 
-- النتيجة: تجربة الزائر لا تتغير، وكل واجهات الإدارة الحالية تستمر بالعمل.
+**جداول جديدة (كلها في `public` مع GRANT + RLS):**
+- `finance_income_sources` (name, is_active, display_order) — مع بذرة: Salla, Tabby, Tamara, Bank
+- `finance_categories` (name, type, parent_id, is_active, display_order) — مع بذرة لكل التصنيفات الرئيسية والفرعية المذكورة
+- `finance_suppliers` (name, company_name, phone, email, city, country, supplier_type, notes, is_active)
+- `finance_incomes` (income_date, amount, income_source_id, month, account_type, note, internal_review_status, accountant_status, accountant_note, attachment_status, created_by)
+- `finance_expenses` (expense_date, amount, item_name, supplier_id, supplier_name, main_category_id, sub_category_id, month, account_type, note, internal_review_status, accountant_status, accountant_note, attachment_status, created_by)
+- `finance_attachments` (related_type, related_id, file_url, file_name, file_type, attachment_type, uploaded_by)
+- `finance_audit_logs` (related_type, related_id, action, field_name, old_value, new_value, changed_by, changed_at, note) — append-only
 
-> ملاحظة: ميزة "استعادة الأصل" + علامة "تم قصها" تتطلب عمودًا لتخزين مسار الأصل. أستطيع إضافتها كهجرة منفصلة لاحقًا إذا أردت — قل لي بعد التطبيق وسأضيفها.
+**Triggers:**
+- حساب `month` تلقائيًا من التاريخ (`YYYY-MM`)
+- تحديث `attachment_status` تلقائيًا عند رفع/حذف مرفق (إلا إذا `not_required`)
+- كتابة `finance_audit_logs` على كل INSERT/UPDATE/DELETE للجداول المالية
+- منع حذف تصنيف/مورد مستخدم في عملية
 
-## الملفات الجديدة
+**RLS:**
+- العملاء: ممنوع كليًا (لا anon ولا authenticated عاديين)
+- `has_role(uid, 'admin')` → كل شيء
+- `has_role(uid, 'finance_view')` → SELECT
+- `has_role(uid, 'finance_manage')` → INSERT/UPDATE/DELETE على incomes/expenses/suppliers/attachments
+- `has_role(uid, 'finance_accountant')` → UPDATE فقط على `main_category_id`, `sub_category_id`, `accountant_status`, `accountant_note` (عبر column-level GRANT + policy)
+- `has_role(uid, 'finance_settings')` → إدارة categories + income_sources
+- `finance_audit_logs`: قراءة فقط لمن لديه صلاحية مالية، الكتابة عبر trigger فقط
 
-1. **`src/components/ImageCropperDialog.tsx`** — Modal فيه:
-   - معاينة `react-easy-crop` بحجم مناسب للجوال والديسكتوب.
-   - أزرار نِسَب: 1:1، 16:9، 4:3، 4:5، حر.
-   - شريط Zoom (0.5x → 3x).
-   - أزرار: تطبيق / إلغاء.
-   - يستقبل `File` أو URL ويُرجع `File` مقصوصًا (WebP 0.9).
+**Storage:**
+- bucket خاص: `finance-attachments` (خاص، غير عام) مع policies للصلاحيات المالية فقط
 
-2. **`src/lib/image-crop.ts`** — `cropImageToFile(src, cropPixels, opts)` يرسم على Canvas ويُرجع `File` (يدعم URL أو File كمدخل، يمر على `compressImage` تلقائيًا بسبب pipeline الحالي في `uploadMedia`).
+---
 
-## الملفات المعدلة
+### المرحلة 2 — الهيكل والتنقل
 
-3. **`src/components/ImageUploader.tsx`** (المُستخدم في معظم نماذج الإدارة) — أضف:
-   - prop `cropAspect?: number | "free"` و `enableCrop?: boolean` (افتراضي `true` في الإدارة).
-   - بعد اختيار الملف وقبل الرفع → افتح `ImageCropperDialog` تلقائيًا.
-   - زر "تعديل القص" بجانب المعاينة بعد الرفع → يفتح Cropper على URL الصورة الحالية ويرفع نسخة جديدة عند الحفظ.
+- مسار رئيسي: `/admin/finance` مع layout مستقل وقائمة جانبية فرعية
+- إخفاء رابط "المالية" في `admin.tsx` إن لم يملك المستخدم أي صلاحية مالية
+- حارس `beforeLoad` على `/admin/finance/*` يتحقق من الصلاحية ويعيد التوجيه
 
-4. **`src/components/portfolio/OrderedImagesEditor.tsx`** — أضف زر قص (أيقونة Crop) لكل صورة، بنسبة افتراضية 1:1 (للقطات).
+الصفحات:
+- `/admin/finance` — Dashboard
+- `/admin/finance/incomes`
+- `/admin/finance/expenses`
+- `/admin/finance/suppliers`
+- `/admin/finance/categories`
+- `/admin/finance/attachments`
+- `/admin/finance/export`
+- `/admin/finance/audit`
+- `/admin/finance/settings`
 
-5. **استدعاءات `ImageUploader` في صفحات الإدارة** — أمرر النسبة الافتراضية المناسبة لكل سياق:
-   - `admin.projects.tsx`: cover = 16:9، gallery = 1:1
-   - `admin.gallery.index.tsx`: 1:1 (already via OrderedImagesEditor)
-   - `admin.articles.tsx`: 16:9
-   - `admin.services.tsx`: 16:9
-   - `admin.design.*` (هوم/about/contact): 16:9 للهيرو
-   - `admin.testimonials.tsx`, `admin.staff.tsx` (صور شخصية): 1:1
+---
 
-## التبعيات
+### المرحلة 3 — الواجهات
 
-```
-bun add react-easy-crop
-```
+**Dashboard:** بطاقات (دخل/مصروف الشهر، الصافي، عدّادات المراجعات الناقصة، المصروفات بدون مرفق) + آخر 5 لكل نوع + فلاتر زمنية.
 
-(مكتبة صغيرة ~20KB، تدعم اللمس والـ pinch-zoom جاهزًا.)
+**Incomes & Expenses:**
+- جدول مع بحث + فلاتر (شهر، مصدر/مورد، تصنيف، نوع حساب، حالات مراجعة، حالة مرفق)
+- Drawer/Dialog لإضافة وتعديل
+- التصنيف الفرعي يتفلتر حسب الرئيسي
+- شارات ملونة للحالات
+- صفحة تفاصيل بها: المرفقات + سجل التعديلات
 
-## الجودة والأمان
+**Suppliers:** جدول + صفحة مورد بإحصائياته ومصروفاته.
 
-- النسخة المقصوصة تخرج بصيغة WebP بجودة 0.92 من Canvas، ثم تمر على `compressImage` (الموجود) لضمان حجم نهائي ≤ ~500KB غالبًا.
-- نفس قيود `uploadMedia` الحالية (5MB، jpg/png/webp فقط) تبقى فعّالة.
-- عند فشل القص أو الرفع → toast واضح، الصورة الأصلية في النموذج لا تتغير.
+**Categories:** شجرة قابلة للإضافة/الإخفاء/الترتيب.
 
-## السلوك للزائر
+**Attachments:** عرض موحّد لكل المرفقات مع فلتر حسب النوع/المرتبط بـ.
 
-لا تغيير على الإطلاق. الزائر يرى نفس عمود الصورة المخزن، الذي يحتوي الآن على النسخة المقصوصة المختارة من الإدارة.
+**Export:** نماذج تصدير CSV/XLSX مع كل الفلاتر المطلوبة (مكتبة `xlsx`).
 
-## الاختبار اليدوي بعد التطبيق
+**Audit Log:** جدول للقراءة فقط مع فلاتر.
 
-- رفع صورة جديدة في "لقطات من أعمالنا" → Cropper يفتح تلقائيًا بـ 1:1 → حفظ → تظهر مقصوصة في الكرت.
-- زر "تعديل القص" على صورة موجودة في كرت مشروع → فتح المحرر → تغيير النسبة → حفظ → التحديث ينعكس فورًا.
-- اختبار على الجوال (السحب + التكبير بإصبعين).
-- التأكد أن الصور القديمة (التي لم تُقص) تظل تعمل بشكل طبيعي.
+**Settings:** إدارة مصادر الدخل + تفعيل/تعطيل التصنيفات.
 
-## ما لن يتم في هذه المرحلة (لتجنب التعقيد الزائد)
+---
 
-- لن نضيف أعمدة `original_image_url` / `cropped_image_url` في DB.
-- لن نضيف زر "استعادة الأصل" (يحتاج العمود أعلاه).
-- لن نضيف شارة "تم قصها" مرئية في الإدارة (يحتاج تتبع في DB).
+### تفاصيل تقنية
 
-أبلغني إذا أردت إضافة هذه الميزات الثلاث في مرحلة ثانية وسأنفذها كهجرة منفصلة + تعديل القراءات.
+- Server functions في `src/lib/finance/*.functions.ts` مع `requireSupabaseAuth` + فحص دور
+- رفع المرفقات: server function تتحقق من الصلاحية ثم تستخدم `supabaseAdmin` للرفع على البكت الخاص
+- التصدير: server function ترجع buffer XLSX
+- كل التغييرات على الجداول المالية تمر عبر server functions حتى نستطيع تطبيق قواعد المحاسب على مستوى الحقول
+- RTL + IBM Plex Sans Arabic (نظام التصميم الحالي)
+
+---
+
+### ما لن يتم لمسه
+
+- صفحة الطلبات وحالاتها
+- صفحة العملاء وأحواضهم
+- الصفحة الرئيسية
+- نظام المساعد
+- أي جدول موجود
+
+---
+
+### خطة التنفيذ المقترحة
+
+أقترح تنفيذها على دفعتين لتسهيل المراجعة:
+
+1. **الدفعة الأولى:** Migration كامل (جداول + RLS + بذور + bucket) + هيكل التنقل + صفحات Dashboard/Incomes/Expenses الأساسية.
+2. **الدفعة الثانية:** Suppliers + Categories + Attachments + Export + Audit + Settings + تشطيبات.
+
+هل تريد البدء بالدفعة الأولى الآن؟
