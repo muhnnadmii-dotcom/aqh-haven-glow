@@ -216,8 +216,8 @@ function ExportPage() {
 
   const exportUnreviewed = () => run(async () => {
     const [{ data: inc }, { data: exp }] = await Promise.all([
-      supabase.from("finance_incomes").select("*").eq("accountant_status", "not_reviewed"),
-      supabase.from("finance_expenses").select("*").eq("accountant_status", "not_reviewed"),
+      supabase.from("finance_incomes").select("*").eq("accountant_status", "not_reviewed").is("deleted_at", null),
+      supabase.from("finance_expenses").select("*").eq("accountant_status", "not_reviewed").is("deleted_at", null),
     ]);
     const ia = await loadAttachmentsMap("income", (inc ?? []).map((x) => x.id));
     const ea = await loadAttachmentsMap("expense", (exp ?? []).map((x) => x.id));
