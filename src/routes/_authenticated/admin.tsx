@@ -4,15 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
 import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
-  Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings, Images,
+  Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings, Images, Wallet,
 } from "lucide-react";
+import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
   beforeLoad: async () => {
     const user = await getSessionUser();
     if (!user) throw redirect({ to: "/auth" });
-    const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", user.id).in("role", ["admin", "staff"]).limit(1).maybeSingle();
+    const { data: r } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .in("role", ["admin", "staff", "finance_view", "finance_manage", "finance_accountant", "finance_export", "finance_settings"])
+      .limit(1)
+      .maybeSingle();
     if (!r) throw redirect({ to: "/account" });
   },
   component: AdminLayout,
@@ -153,6 +160,7 @@ function AdminLayout() {
 }
 
 function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onSignOut: () => void }) {
+  const { canView: canViewFinance } = useFinanceRoles();
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="hidden lg:flex items-center justify-between h-16 px-5 border-b border-white/10 shrink-0">
@@ -190,6 +198,26 @@ function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onS
             </div>
           </div>
         ))}
+
+        {canViewFinance && (
+          <div>
+            <div className="px-3 mb-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              المالية
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <Link
+                to="/admin/finance"
+                onClick={onNavigate}
+                activeOptions={{ exact: false }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+                activeProps={{ className: "flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] bg-gold/10 text-gold font-semibold border-r-2 border-gold" }}
+              >
+                <Wallet size={15} className="shrink-0" />
+                <span className="truncate">البوابة المالية</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="border-t border-white/10 p-3 space-y-1 shrink-0">

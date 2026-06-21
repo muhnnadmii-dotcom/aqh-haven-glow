@@ -1,0 +1,158 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
+import { Plus, X, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { fmtSAR } from "@/lib/finance/constants";
+
+export const Route = createFileRoute("/_authenticated/admin/finance/suppliers")({
+  ssr: false,
+  component: SuppliersPage,
+});
+
+function SuppliersPage() {
+  const roles = useFinanceRoles();
+  const [rows, setRows] = useState<any[]>([]);
+  const [totals, setTotals] = useState<Record<string, { total: number; count: number }>>({});
+  const [editing, setEditing] = useState<any>(null);
+  const [creating, setCreating] = useState(false);
+  const [q, setQ] = useState("");
+
+  const load = async () => {
+    const [{ data: sups }, { data: exps }] = await Promise.all([
+      supabase.from("finance_suppliers").select("*").order("name"),
+      supabase.from("finance_expenses").select("supplier_id, amount"),
+    ]);
+    setRows(sups ?? []);
+    const t: Record<string, { total: number; count: number }> = {};
+    (exps ?? []).forEach((e: any) => {
+      if (!e.supplier_id) return;
+      t[e.supplier_id] = t[e.supplier_id] || { total: 0, count: 0 };
+      t[e.supplier_id].total += Number(e.amount ?? 0);
+      t[e.supplier_id].count += 1;
+    });
+    setTotals(t);
+  };
+  useEffect(() => { load(); }, []);
+
+  const del = async (s: any) => {
+    if (!confirm(`حذف المورد "${s.name}"؟ لن يكون ممكنًا إذا مرتبط بمصروفات.`)) return;
+    const { error } = await supabase.from("finance_suppliers").delete().eq("id", s.id);
+    if (error) toast.error(error.message); else { toast.success("تم الحذف"); load(); }
+  };
+
+  const filtered = rows.filter((r) => !q || (r.name + " " + (r.company_name ?? "") + " " + (r.phone ?? "")).toLowerCase().includes(q.toLowerCase()));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-semibold">الموردين</h2>
+        {roles.canManage && (
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[12px] hover:bg-gold/25"><Plus size={14} /> إضافة مورد</button>
+        )}
+      </div>
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث…" className="w-full max-w-sm px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[12px]" />
+
+      <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+        <table className="w-full text-[12px]">
+          <thead className="bg-white/5 text-muted-foreground">
+            <tr>
+              <th className="text-start px-3 py-2">الاسم</th>
+              <th className="text-start px-3 py-2">الشركة</th>
+              <th className="text-start px-3 py-2">الجوال</th>
+              <th className="text-start px-3 py-2">النوع</th>
+              <th className="text-start px-3 py-2">عدد العمليات</th>
+              <th className="text-start px-3 py-2">إجمالي المصروفات</th>
+              <th className="text-start px-3 py-2">نشط</th>
+              <th className="text-start px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((r) => (
+              <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+                <td className="px-3 py-2">{r.name}</td>
+                <td className="px-3 py-2">{r.company_name || "—"}</td>
+                <td className="px-3 py-2">{r.phone || "—"}</td>
+                <td className="px-3 py-2">{r.supplier_type || "—"}</td>
+                <td className="px-3 py-2">{totals[r.id]?.count ?? 0}</td>
+                <td className="px-3 py-2 font-mono">{fmtSAR(totals[r.id]?.total ?? 0)}</td>
+                <td className="px-3 py-2">{r.is_active ? "نعم" : "لا"}</td>
+                <td className="px-3 py-2 flex gap-1">
+                  {roles.canManage && <button onClick={() => setEditing(r)} className="p-1.5 rounded bg-white/5 hover:bg-white/10"><Pencil size={11} /></button>}
+                  {roles.canManage && <button onClick={() => del(r)} className="p-1.5 rounded bg-red-500/10 text-red-300 hover:bg-red-500/20"><Trash2 size={11} /></button>}
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 && <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">لا يوجد موردين</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      {(editing || creating) && (
+        <SupplierDialog row={editing} onClose={() => { setEditing(null); setCreating(false); }} onSaved={() => { setEditing(null); setCreating(false); load(); }} />
+      )}
+    </div>
+  );
+}
+
+function SupplierDialog({ row, onClose, onSaved }: any) {
+  const isNew = !row;
+  const [f, setF] = useState({
+    name: row?.name ?? "",
+    company_name: row?.company_name ?? "",
+    phone: row?.phone ?? "",
+    email: row?.email ?? "",
+    city: row?.city ?? "",
+    country: row?.country ?? "",
+    supplier_type: row?.supplier_type ?? "",
+    notes: row?.notes ?? "",
+    is_active: row?.is_active ?? true,
+  });
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    setSaving(true);
+    try {
+      if (!f.name.trim()) throw new Error("الاسم مطلوب");
+      const { data: u } = await supabase.auth.getUser();
+      const payload: any = { ...f };
+      if (isNew) payload.created_by = u.user?.id ?? null;
+      const q = isNew
+        ? supabase.from("finance_suppliers").insert(payload)
+        : supabase.from("finance_suppliers").update(payload).eq("id", row.id);
+      const { error } = await q;
+      if (error) throw error;
+      toast.success("تم الحفظ");
+      onSaved();
+    } catch (e: any) { toast.error("تعذر الحفظ: " + e.message); }
+    finally { setSaving(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-2xl bg-background border border-white/10" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <div className="font-semibold">{isNew ? "مورد جديد" : "تعديل المورد"}</div>
+          <button onClick={onClose} className="p-1.5 hover:bg-white/5 rounded"><X size={16} /></button>
+        </div>
+        <div className="p-4 grid grid-cols-2 gap-3">
+          {[
+            ["الاسم *", "name"], ["اسم الشركة", "company_name"], ["الجوال", "phone"], ["الإيميل", "email"],
+            ["المدينة", "city"], ["الدولة", "country"], ["نوع المورد", "supplier_type"],
+          ].map(([l, k]) => (
+            <label key={k} className="block"><div className="text-[11px] text-muted-foreground mb-1">{l}</div>
+              <input value={(f as any)[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px]" /></label>
+          ))}
+          <label className="col-span-2 block"><div className="text-[11px] text-muted-foreground mb-1">ملاحظات</div>
+            <textarea value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px] min-h-[60px]" /></label>
+          <label className="col-span-2 inline-flex items-center gap-2 text-[12px]">
+            <input type="checkbox" checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} /> نشط
+          </label>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-white/10">
+          <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] bg-white/5 hover:bg-white/10">إلغاء</button>
+          <button disabled={saving} onClick={save} className="px-4 py-1.5 rounded-lg text-[12px] bg-gold/20 border border-gold/40 text-gold hover:bg-gold/30">{saving ? "..." : "حفظ"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
