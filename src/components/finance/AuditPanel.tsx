@@ -4,6 +4,8 @@ import { History } from "lucide-react";
 
 export function AuditPanel({ relatedType, relatedId }: { relatedType: string; relatedId: string }) {
   const [rows, setRows] = useState<any[]>([]);
+  const [actors, setActors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -13,7 +15,15 @@ export function AuditPanel({ relatedType, relatedId }: { relatedType: string; re
         .eq("related_id", relatedId)
         .order("changed_at", { ascending: false })
         .limit(50);
-      setRows(data ?? []);
+      const list = data ?? [];
+      setRows(list);
+      const ids = Array.from(new Set(list.map((r: any) => r.changed_by).filter(Boolean)));
+      if (ids.length > 0) {
+        const { data: names } = await supabase.rpc("finance_get_actor_names", { ids });
+        const map: Record<string, string> = {};
+        (names ?? []).forEach((n: any) => { map[n.id] = n.name; });
+        setActors(map);
+      }
     })();
   }, [relatedType, relatedId]);
 
@@ -26,8 +36,9 @@ export function AuditPanel({ relatedType, relatedId }: { relatedType: string; re
         <div className="space-y-1.5 max-h-60 overflow-y-auto">
           {rows.map((r) => (
             <div key={r.id} className="text-[11px] border-b border-white/5 pb-1.5">
-              <div className="flex items-center justify-between text-muted-foreground">
+              <div className="flex items-center justify-between text-muted-foreground gap-2">
                 <span>{actionLabel(r.action)}{r.field_name ? ` · ${r.field_name}` : ""}</span>
+                <span className="text-foreground/80">{r.changed_by ? (actors[r.changed_by] ?? "—") : "—"}</span>
                 <span>{new Date(r.changed_at).toLocaleString("ar-SA")}</span>
               </div>
               {r.field_name && (
