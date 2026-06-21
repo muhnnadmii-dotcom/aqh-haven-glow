@@ -230,9 +230,13 @@ function isItemActive(pathname: string, item: NavItem): boolean {
 
 function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onSignOut: () => void }) {
   const { canView: canViewFinance } = useFinanceRoles();
+  const { canSee } = useAllowedPages();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const visibleGroups = navGroups.filter((g) => !g.financeOnly || canViewFinance);
+  const visibleGroups = navGroups
+    .filter((g) => !g.financeOnly || canViewFinance)
+    .map((g) => ({ ...g, items: g.items.filter((i) => canSee(i.to)) }))
+    .filter((g) => g.items.length > 0);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
