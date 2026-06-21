@@ -148,7 +148,7 @@ function ImportPage() {
   const [sources, setSources] = useState<{ id: string; name: string }[]>([]);
   const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
   const [mainCats, setMainCats] = useState<{ id: string; name: string }[]>([]);
-  const [subCats, setSubCats] = useState<{ id: string; name: string; parent_id: string }[]>([]);
+  const [subCats, setSubCats] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
   const [existingIncomes, setExistingIncomes] = useState<any[]>([]);
   const [existingExpenses, setExistingExpenses] = useState<any[]>([]);
 
