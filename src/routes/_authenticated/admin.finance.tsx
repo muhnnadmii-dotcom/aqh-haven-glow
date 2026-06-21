@@ -1,5 +1,5 @@
 import { Link, Outlet, useRouterState, createFileRoute, redirect } from "@tanstack/react-router";
-import { LayoutDashboard, TrendingUp, TrendingDown, Truck, Tags, Paperclip, History, Download, Settings as Cog } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, Truck, Tags, Paperclip, History, Download, Settings as Cog, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
 
@@ -29,6 +29,7 @@ const tabs = [
   { to: "/admin/finance/attachments", label: "المرفقات", icon: Paperclip },
   { to: "/admin/finance/audit", label: "سجل التعديلات", icon: History },
   { to: "/admin/finance/export", label: "التصدير", icon: Download },
+  { to: "/admin/finance/import", label: "استيراد Excel", icon: Upload },
   { to: "/admin/finance/settings", label: "الإعدادات", icon: Cog },
 ];
 
