@@ -7,6 +7,7 @@ import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive } from "lucide-reac
 import { toast } from "sonner";
 import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
 import { AuditPanel } from "@/components/finance/AuditPanel";
+import { RowAttachmentControl } from "@/components/finance/RowAttachmentControl";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/expenses")({
   ssr: false,
