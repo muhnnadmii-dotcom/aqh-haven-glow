@@ -280,7 +280,12 @@ function ExportPage() {
           <Fld label="حالة المحاسب"><select value={acct} onChange={(e) => setAcct(e.target.value)} className="inp"><option value="">الكل</option>{ACCOUNTANT_STATUS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}</select></Fld>
           <Fld label="حالة المرفق"><select value={att} onChange={(e) => setAtt(e.target.value)} className="inp"><option value="">الكل</option>{ATTACHMENT_STATUS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}</select></Fld>
         </div>
+        <label className="flex items-center gap-2 text-[12px] text-muted-foreground pt-2 border-t border-white/5">
+          <input type="checkbox" checked={includeArchived} onChange={(e) => setIncludeArchived(e.target.checked)} />
+          تضمين العمليات المؤرشفة (محذوفة soft delete)
+        </label>
       </div>
+
 
       <Section title="تصدير الدخل والمصروفات (يحترم الفلاتر)">
         <Btn onClick={() => exportIncomes("csv")} disabled={busy} icon={FileText}>دخل CSV</Btn>
