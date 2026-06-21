@@ -682,9 +682,14 @@ function ImportPage() {
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
           <div className="text-sm font-medium">خيارات الاستيراد</div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={createSources} onChange={(e) => setCreateSources(e.target.checked)} /> إنشاء مصادر دخل جديدة</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={createSuppliers} onChange={(e) => setCreateSuppliers(e.target.checked)} /> إنشاء موردين جدد</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={createCats} onChange={(e) => setCreateCats(e.target.checked)} /> إنشاء تصنيفات جديدة</label>
+            {importType === "incomes" ? (
+              <label className="flex items-center gap-2"><input type="checkbox" checked={createSources} onChange={(e) => setCreateSources(e.target.checked)} /> إنشاء مصادر دخل جديدة</label>
+            ) : (
+              <>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={createSuppliers} onChange={(e) => setCreateSuppliers(e.target.checked)} /> إنشاء موردين جدد</label>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={createCats} onChange={(e) => setCreateCats(e.target.checked)} /> إنشاء تصنيفات جديدة</label>
+              </>
+            )}
             <label className="flex items-center gap-2"><input type="checkbox" checked={skipDuplicates} onChange={(e) => setSkipDuplicates(e.target.checked)} /> تخطي المكررات</label>
           </div>
         </div>
