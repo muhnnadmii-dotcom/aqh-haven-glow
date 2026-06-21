@@ -180,12 +180,47 @@ function AdminLayout() {
         {/* Main content */}
         <main className="flex-1 lg:mr-64 min-w-0">
           <div className="px-4 sm:px-6 lg:px-8 py-5 lg:py-8 max-w-6xl mx-auto">
-            <Outlet />
+            <RouteAccessGate pathname={pathname}>
+              <Outlet />
+            </RouteAccessGate>
           </div>
         </main>
       </div>
     </div>
   );
+}
+
+function matchPageKey(pathname: string): string | null {
+  let best: string | null = null;
+  for (const p of ADMIN_PAGES) {
+    if (pathname === p.key || pathname.startsWith(p.key + "/")) {
+      if (!best || p.key.length > best.length) best = p.key;
+    }
+  }
+  return best;
+}
+
+function RouteAccessGate({ pathname, children }: { pathname: string; children: React.ReactNode }) {
+  const { loading, canSee } = useAllowedPages();
+  const pageKey = matchPageKey(pathname);
+  if (loading) return <div className="py-16 text-center text-sm text-muted-foreground">جارٍ التحقق…</div>;
+  // Unknown admin path => allow (e.g. dynamic detail pages already inherit parent prefix)
+  if (!pageKey) return <>{children}</>;
+  if (!canSee(pageKey)) {
+    return (
+      <div className="max-w-md mx-auto py-16 text-center space-y-4">
+        <div className="mx-auto w-14 h-14 rounded-full bg-red-500/10 text-red-300 flex items-center justify-center">
+          <ShieldOff size={26} />
+        </div>
+        <h2 className="text-lg font-semibold">لا تملك صلاحية الدخول لهذه الصفحة</h2>
+        <p className="text-sm text-muted-foreground">تواصل مع مدير النظام لإضافة هذه الصفحة إلى دورك الوظيفي.</p>
+        <Link to="/admin" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold/15 border border-gold/30 text-gold text-sm">
+          العودة للوحة الإدارة
+        </Link>
+      </div>
+    );
+  }
+  return <>{children}</>;
 }
 
 function isItemActive(pathname: string, item: NavItem): boolean {
