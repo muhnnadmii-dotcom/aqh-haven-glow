@@ -86,6 +86,7 @@ function ExportPage() {
   }
   async function getExpenses() {
     let q = supabase.from("finance_expenses").select("*").order("expense_date");
+    if (!includeArchived) q = q.is("deleted_at", null);
     if (from) q = q.gte("expense_date", from);
     if (to) q = q.lte("expense_date", to);
     if (month) q = q.eq("month", month);
