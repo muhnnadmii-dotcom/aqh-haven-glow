@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
 import { AuditPanel } from "@/components/finance/AuditPanel";
 import { RowAttachmentControl } from "@/components/finance/RowAttachmentControl";
+import { ReviewStatusEditor } from "@/components/finance/ReviewStatusEditor";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/incomes")({
   ssr: false,
