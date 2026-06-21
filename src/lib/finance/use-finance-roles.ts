@@ -29,7 +29,7 @@ async function fetchRoles(uid: string): Promise<FinanceRole[]> {
       .from("user_roles")
       .select("role")
       .eq("user_id", uid)
-      .in("role", FINANCE_ROLES as unknown as string[]);
+      .in("role", FINANCE_ROLES);
     const roles = ((data ?? []).map((r) => r.role) as FinanceRole[]) ?? [];
     cache = { uid, roles };
     inflight = null;
