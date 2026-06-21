@@ -230,10 +230,10 @@ function ExportPage() {
 
   const exportNoAttachments = (type: "income" | "expense") => run(async () => {
     if (type === "income") {
-      const { data } = await supabase.from("finance_incomes").select("*").eq("attachment_status", "not_attached");
+      const { data } = await supabase.from("finance_incomes").select("*").eq("attachment_status", "not_attached").is("deleted_at", null);
       exportXLSX(`incomes_no_attachments_${Date.now()}.xlsx`, [{ name: "Incomes", headers: INC_HEADERS, rows: incRows(data ?? [], {}) }]);
     } else {
-      const { data } = await supabase.from("finance_expenses").select("*").eq("attachment_status", "not_attached");
+      const { data } = await supabase.from("finance_expenses").select("*").eq("attachment_status", "not_attached").is("deleted_at", null);
       exportXLSX(`expenses_no_attachments_${Date.now()}.xlsx`, [{ name: "Expenses", headers: EXP_HEADERS, rows: expRows(data ?? [], {}) }]);
     }
     toast.success("تم التصدير");
