@@ -18,6 +18,7 @@ const RELATED_LABEL: Record<string, string> = {
 
 function AuditPage() {
   const [rows, setRows] = useState<any[]>([]);
+  const [actors, setActors] = useState<Record<string, string>>({});
   const [related, setRelated] = useState("");
   const [action, setAction] = useState("");
   const [field, setField] = useState("");
@@ -31,7 +32,15 @@ function AuditPage() {
         .select("*")
         .order("changed_at", { ascending: false })
         .limit(1000);
-      setRows(data ?? []);
+      const list = data ?? [];
+      setRows(list);
+      const ids = Array.from(new Set(list.map((r: any) => r.changed_by).filter(Boolean)));
+      if (ids.length > 0) {
+        const { data: names } = await supabase.rpc("finance_get_actor_names", { ids });
+        const map: Record<string, string> = {};
+        (names ?? []).forEach((n: any) => { map[n.id] = n.name; });
+        setActors(map);
+      }
     })();
   }, []);
 
@@ -63,6 +72,7 @@ function AuditPage() {
           <thead className="bg-white/5 text-muted-foreground">
             <tr>
               <th className="text-start px-3 py-2">الوقت</th>
+              <th className="text-start px-3 py-2">بواسطة</th>
               <th className="text-start px-3 py-2">الجدول</th>
               <th className="text-start px-3 py-2">الإجراء</th>
               <th className="text-start px-3 py-2">الحقل</th>
@@ -74,6 +84,7 @@ function AuditPage() {
             {filtered.map((r) => (
               <tr key={r.id} className="border-t border-white/5">
                 <td className="px-3 py-2 whitespace-nowrap">{new Date(r.changed_at).toLocaleString("ar-SA")}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{r.changed_by ? (actors[r.changed_by] ?? "—") : "—"}</td>
                 <td className="px-3 py-2">{RELATED_LABEL[r.related_type] ?? r.related_type}</td>
                 <td className="px-3 py-2">{r.action}</td>
                 <td className="px-3 py-2">{r.field_name ?? "—"}</td>
@@ -81,7 +92,7 @@ function AuditPage() {
                 <td className="px-3 py-2 max-w-[200px] truncate text-emerald-300/80">{r.new_value ?? "—"}</td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">لا توجد سجلات</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">لا توجد سجلات</td></tr>}
           </tbody>
         </table>
       </div>

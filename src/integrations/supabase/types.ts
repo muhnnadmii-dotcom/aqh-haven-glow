@@ -1989,6 +1989,13 @@ export type Database = {
         Args: { p_batch_id: string; p_reason: string }
         Returns: Json
       }
+      finance_get_actor_names: {
+        Args: { ids: string[] }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       finance_restore_import_batch: {
         Args: { p_batch_id: string }
         Returns: Json
