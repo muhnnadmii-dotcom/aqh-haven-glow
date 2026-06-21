@@ -5,9 +5,11 @@ import { getSessionUser } from "@/lib/client-auth";
 import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
   Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings as Cog, Images, Wallet,
-  ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive,
+  ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive, Shield, ShieldOff,
 } from "lucide-react";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
+import { useAllowedPages } from "@/lib/use-allowed-pages";
+import { ADMIN_PAGES } from "@/lib/admin-pages";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
@@ -82,6 +84,7 @@ const navGroups: NavGroup[] = [
     collapsible: true,
     items: [
       { to: "/admin/staff", label: "الموظفين", icon: UserCog },
+      { to: "/admin/roles", label: "إدارة الصلاحيات", icon: Shield },
     ],
   },
 ];
@@ -177,12 +180,47 @@ function AdminLayout() {
         {/* Main content */}
         <main className="flex-1 lg:mr-64 min-w-0">
           <div className="px-4 sm:px-6 lg:px-8 py-5 lg:py-8 max-w-6xl mx-auto">
-            <Outlet />
+            <RouteAccessGate pathname={pathname}>
+              <Outlet />
+            </RouteAccessGate>
           </div>
         </main>
       </div>
     </div>
   );
+}
+
+function matchPageKey(pathname: string): string | null {
+  let best: string | null = null;
+  for (const p of ADMIN_PAGES) {
+    if (pathname === p.key || pathname.startsWith(p.key + "/")) {
+      if (!best || p.key.length > best.length) best = p.key;
+    }
+  }
+  return best;
+}
+
+function RouteAccessGate({ pathname, children }: { pathname: string; children: React.ReactNode }) {
+  const { loading, canSee } = useAllowedPages();
+  const pageKey = matchPageKey(pathname);
+  if (loading) return <div className="py-16 text-center text-sm text-muted-foreground">جارٍ التحقق…</div>;
+  // Unknown admin path => allow (e.g. dynamic detail pages already inherit parent prefix)
+  if (!pageKey) return <>{children}</>;
+  if (!canSee(pageKey)) {
+    return (
+      <div className="max-w-md mx-auto py-16 text-center space-y-4">
+        <div className="mx-auto w-14 h-14 rounded-full bg-red-500/10 text-red-300 flex items-center justify-center">
+          <ShieldOff size={26} />
+        </div>
+        <h2 className="text-lg font-semibold">لا تملك صلاحية الدخول لهذه الصفحة</h2>
+        <p className="text-sm text-muted-foreground">تواصل مع مدير النظام لإضافة هذه الصفحة إلى دورك الوظيفي.</p>
+        <Link to="/admin" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold/15 border border-gold/30 text-gold text-sm">
+          العودة للوحة الإدارة
+        </Link>
+      </div>
+    );
+  }
+  return <>{children}</>;
 }
 
 function isItemActive(pathname: string, item: NavItem): boolean {
@@ -192,9 +230,13 @@ function isItemActive(pathname: string, item: NavItem): boolean {
 
 function SidebarContent({ onNavigate, onSignOut }: { onNavigate: () => void; onSignOut: () => void }) {
   const { canView: canViewFinance } = useFinanceRoles();
+  const { canSee } = useAllowedPages();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const visibleGroups = navGroups.filter((g) => !g.financeOnly || canViewFinance);
+  const visibleGroups = navGroups
+    .filter((g) => !g.financeOnly || canViewFinance)
+    .map((g) => ({ ...g, items: g.items.filter((i) => canSee(i.to)) }))
+    .filter((g) => g.items.length > 0);
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};

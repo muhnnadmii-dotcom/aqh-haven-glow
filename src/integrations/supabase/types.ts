@@ -437,6 +437,62 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_role_pages: {
+        Row: {
+          created_at: string
+          id: string
+          page_key: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_key: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_key?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_role_pages_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_roles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_notes: {
         Row: {
           author_id: string | null
@@ -1838,6 +1894,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_custom_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_custom_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2000,6 +2085,13 @@ export type Database = {
         Args: { p_batch_id: string }
         Returns: Json
       }
+      get_my_custom_allowed_pages: {
+        Args: never
+        Returns: {
+          page_key: string
+        }[]
+      }
+      i_have_any_custom_role: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role:

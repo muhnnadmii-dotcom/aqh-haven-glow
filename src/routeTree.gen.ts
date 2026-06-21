@@ -37,6 +37,7 @@ import { Route as AuthenticatedAdminTestimonialsRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminTanksRouteImport } from './routes/_authenticated/admin.tanks'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin.staff'
 import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authenticated/admin.services'
+import { Route as AuthenticatedAdminRolesRouteImport } from './routes/_authenticated/admin.roles'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
 import { Route as AuthenticatedAdminProjectsRouteImport } from './routes/_authenticated/admin.projects'
 import { Route as AuthenticatedAdminProjectCategoriesRouteImport } from './routes/_authenticated/admin.project-categories'
@@ -216,6 +217,11 @@ const AuthenticatedAdminServicesRoute =
     path: '/services',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminRolesRoute = AuthenticatedAdminRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminRequestsRoute =
   AuthenticatedAdminRequestsRouteImport.update({
     id: '/requests',
@@ -466,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRouteWithChildren
+  '/admin/roles': typeof AuthenticatedAdminRolesRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/tanks': typeof AuthenticatedAdminTanksRouteWithChildren
@@ -523,6 +530,7 @@ export interface FileRoutesByTo {
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
+  '/admin/roles': typeof AuthenticatedAdminRolesRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/tanks': typeof AuthenticatedAdminTanksRouteWithChildren
@@ -590,6 +598,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/_authenticated/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRouteWithChildren
+  '/_authenticated/admin/roles': typeof AuthenticatedAdminRolesRoute
   '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/admin/tanks': typeof AuthenticatedAdminTanksRouteWithChildren
@@ -657,6 +666,7 @@ export interface FileRouteTypes {
     | '/admin/project-categories'
     | '/admin/projects'
     | '/admin/requests'
+    | '/admin/roles'
     | '/admin/services'
     | '/admin/staff'
     | '/admin/tanks'
@@ -714,6 +724,7 @@ export interface FileRouteTypes {
     | '/admin/articles'
     | '/admin/project-categories'
     | '/admin/projects'
+    | '/admin/roles'
     | '/admin/services'
     | '/admin/staff'
     | '/admin/tanks'
@@ -780,6 +791,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/project-categories'
     | '/_authenticated/admin/projects'
     | '/_authenticated/admin/requests'
+    | '/_authenticated/admin/roles'
     | '/_authenticated/admin/services'
     | '/_authenticated/admin/staff'
     | '/_authenticated/admin/tanks'
@@ -1026,6 +1038,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/admin/services'
       preLoaderRoute: typeof AuthenticatedAdminServicesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/roles': {
+      id: '/_authenticated/admin/roles'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AuthenticatedAdminRolesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/requests': {
@@ -1440,6 +1459,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminProjectCategoriesRoute: typeof AuthenticatedAdminProjectCategoriesRoute
   AuthenticatedAdminProjectsRoute: typeof AuthenticatedAdminProjectsRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRouteWithChildren
+  AuthenticatedAdminRolesRoute: typeof AuthenticatedAdminRolesRoute
   AuthenticatedAdminServicesRoute: typeof AuthenticatedAdminServicesRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminTanksRoute: typeof AuthenticatedAdminTanksRouteWithChildren
@@ -1458,6 +1478,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
     AuthenticatedAdminProjectCategoriesRoute,
   AuthenticatedAdminProjectsRoute: AuthenticatedAdminProjectsRoute,
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRouteWithChildren,
+  AuthenticatedAdminRolesRoute: AuthenticatedAdminRolesRoute,
   AuthenticatedAdminServicesRoute: AuthenticatedAdminServicesRoute,
   AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
   AuthenticatedAdminTanksRoute: AuthenticatedAdminTanksRouteWithChildren,
@@ -1532,13 +1553,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

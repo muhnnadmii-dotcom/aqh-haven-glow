@@ -1,117 +1,44 @@
-## البوابة المالية الداخلية — Aqua Haven
 
-بوابة مالية شخصية داخل لوحة الإدارة، بديلة للإكسل، بدون أي تكامل خارجي. مقسّمة على مراحل قابلة للتنفيذ والمراجعة.
+## الهدف
+صفحة `/admin/roles` تسمح للأدمن بإنشاء أدوار وظيفية مخصصة (مثل: "مشرف معرض"، "محرر محتوى")، واختيار أي صفحات لوحة الإدارة يستطيع كل دور رؤيتها والدخول إليها.
 
----
+> ملاحظة مهمة: الأدوار الأساسية في النظام (admin / staff / finance_* / customer) ستبقى كما هي بدون أي مساس بـ RLS أو صلاحيات قاعدة البيانات. الأدوار المخصصة تعمل **فوق** هذه الطبقة وتتحكم فقط بإظهار الصفحات في القائمة الجانبية ومنع الدخول للمسار.
 
-### المرحلة 1 — قاعدة البيانات والصلاحيات (Migration واحد)
+## قاعدة البيانات (جداول جديدة فقط — بدون لمس الجداول الحالية)
 
-**Enums جديدة:**
-- `finance_account_type`: `business`, `personal`
-- `finance_internal_review`: `unreviewed`, `reviewed`
-- `finance_accountant_status`: `not_reviewed`, `reviewed`, `posted_to_qoyod`, `needs_fix`
-- `finance_attachment_status`: `attached`, `not_attached`, `not_required`
-- `finance_category_type`: `main`, `sub`
-- توسيع `app_role` بـ: `finance_view`, `finance_manage`, `finance_accountant`, `finance_export`, `finance_settings`
+1. `custom_roles` — تعريف الأدوار:
+   - `name`, `description`, `created_at`, `updated_at`, `created_by`
+2. `custom_role_pages` — الصفحات المسموحة لكل دور:
+   - `role_id`, `page_key` (مثل `admin.finance.incomes`)
+3. `user_custom_roles` — ربط المستخدم بالأدوار المخصصة:
+   - `user_id`, `role_id`
 
-**جداول جديدة (كلها في `public` مع GRANT + RLS):**
-- `finance_income_sources` (name, is_active, display_order) — مع بذرة: Salla, Tabby, Tamara, Bank
-- `finance_categories` (name, type, parent_id, is_active, display_order) — مع بذرة لكل التصنيفات الرئيسية والفرعية المذكورة
-- `finance_suppliers` (name, company_name, phone, email, city, country, supplier_type, notes, is_active)
-- `finance_incomes` (income_date, amount, income_source_id, month, account_type, note, internal_review_status, accountant_status, accountant_note, attachment_status, created_by)
-- `finance_expenses` (expense_date, amount, item_name, supplier_id, supplier_name, main_category_id, sub_category_id, month, account_type, note, internal_review_status, accountant_status, accountant_note, attachment_status, created_by)
-- `finance_attachments` (related_type, related_id, file_url, file_name, file_type, attachment_type, uploaded_by)
-- `finance_audit_logs` (related_type, related_id, action, field_name, old_value, new_value, changed_by, changed_at, note) — append-only
+سياسات RLS:
+- القراءة/الكتابة على الجداول الثلاثة محصورة في `admin` فقط (عبر `has_role`).
+- المستخدم العادي يستطيع قراءة صفحاته المسموحة فقط عبر دالة `get_my_allowed_pages()` (security definer).
 
-**Triggers:**
-- حساب `month` تلقائيًا من التاريخ (`YYYY-MM`)
-- تحديث `attachment_status` تلقائيًا عند رفع/حذف مرفق (إلا إذا `not_required`)
-- كتابة `finance_audit_logs` على كل INSERT/UPDATE/DELETE للجداول المالية
-- منع حذف تصنيف/مورد مستخدم في عملية
+## الواجهة
 
-**RLS:**
-- العملاء: ممنوع كليًا (لا anon ولا authenticated عاديين)
-- `has_role(uid, 'admin')` → كل شيء
-- `has_role(uid, 'finance_view')` → SELECT
-- `has_role(uid, 'finance_manage')` → INSERT/UPDATE/DELETE على incomes/expenses/suppliers/attachments
-- `has_role(uid, 'finance_accountant')` → UPDATE فقط على `main_category_id`, `sub_category_id`, `accountant_status`, `accountant_note` (عبر column-level GRANT + policy)
-- `has_role(uid, 'finance_settings')` → إدارة categories + income_sources
-- `finance_audit_logs`: قراءة فقط لمن لديه صلاحية مالية، الكتابة عبر trigger فقط
+### صفحة `/admin/roles` (للأدمن فقط)
+- قائمة الأدوار المخصصة + زر "إنشاء دور جديد".
+- عند فتح/تعديل دور:
+  - الاسم + الوصف.
+  - **شجرة الصفحات** مقسّمة حسب مجموعات السايدبار (التشغيل، محتوى الموقع، المالية، الإدارة) مع checkbox لكل صفحة.
+  - تبويب "المستخدمون": إضافة/إزالة أعضاء الدور.
+- زر حذف الدور.
 
-**Storage:**
-- bucket خاص: `finance-attachments` (خاص، غير عام) مع policies للصلاحيات المالية فقط
+### تطبيق الصلاحيات
+- Hook جديد: `useAllowedPages()` يقرأ:
+  - إذا كان `admin` → كل الصفحات مسموحة.
+  - وإلا → دمج الصفحات الافتراضية للأدوار الأساسية (staff / finance_*) + الصفحات الممنوحة عبر الأدوار المخصصة.
+- **القائمة الجانبية** (`admin.tsx`): تستخدم الـ hook لإخفاء أي عنصر غير مسموح.
+- **حماية المسار**: مكوّن `<PageGuard pageKey="...">` يلتف حول محتوى كل صفحة إدارة. إذا غير مسموح → رسالة "لا تملك صلاحية" + زر رجوع للوحة.
 
----
+## ما **لن** يتغير
+- جداول `user_roles` و `app_role` enum والـ RLS الحالي.
+- الأدوار الأساسية (admin/staff/finance_*) ومنطقها.
+- صلاحيات المالية والصفحات نفسها — الأدوار المخصصة لا تستطيع منح وصول لصفحة محمية بـ `finance_*` لمستخدم لا يملك ذلك الدور أصلاً (لأن RLS لقاعدة البيانات سيرفض البيانات).
+- واجهة العميل، البيانات، التخزين.
 
-### المرحلة 2 — الهيكل والتنقل
-
-- مسار رئيسي: `/admin/finance` مع layout مستقل وقائمة جانبية فرعية
-- إخفاء رابط "المالية" في `admin.tsx` إن لم يملك المستخدم أي صلاحية مالية
-- حارس `beforeLoad` على `/admin/finance/*` يتحقق من الصلاحية ويعيد التوجيه
-
-الصفحات:
-- `/admin/finance` — Dashboard
-- `/admin/finance/incomes`
-- `/admin/finance/expenses`
-- `/admin/finance/suppliers`
-- `/admin/finance/categories`
-- `/admin/finance/attachments`
-- `/admin/finance/export`
-- `/admin/finance/audit`
-- `/admin/finance/settings`
-
----
-
-### المرحلة 3 — الواجهات
-
-**Dashboard:** بطاقات (دخل/مصروف الشهر، الصافي، عدّادات المراجعات الناقصة، المصروفات بدون مرفق) + آخر 5 لكل نوع + فلاتر زمنية.
-
-**Incomes & Expenses:**
-- جدول مع بحث + فلاتر (شهر، مصدر/مورد، تصنيف، نوع حساب، حالات مراجعة، حالة مرفق)
-- Drawer/Dialog لإضافة وتعديل
-- التصنيف الفرعي يتفلتر حسب الرئيسي
-- شارات ملونة للحالات
-- صفحة تفاصيل بها: المرفقات + سجل التعديلات
-
-**Suppliers:** جدول + صفحة مورد بإحصائياته ومصروفاته.
-
-**Categories:** شجرة قابلة للإضافة/الإخفاء/الترتيب.
-
-**Attachments:** عرض موحّد لكل المرفقات مع فلتر حسب النوع/المرتبط بـ.
-
-**Export:** نماذج تصدير CSV/XLSX مع كل الفلاتر المطلوبة (مكتبة `xlsx`).
-
-**Audit Log:** جدول للقراءة فقط مع فلاتر.
-
-**Settings:** إدارة مصادر الدخل + تفعيل/تعطيل التصنيفات.
-
----
-
-### تفاصيل تقنية
-
-- Server functions في `src/lib/finance/*.functions.ts` مع `requireSupabaseAuth` + فحص دور
-- رفع المرفقات: server function تتحقق من الصلاحية ثم تستخدم `supabaseAdmin` للرفع على البكت الخاص
-- التصدير: server function ترجع buffer XLSX
-- كل التغييرات على الجداول المالية تمر عبر server functions حتى نستطيع تطبيق قواعد المحاسب على مستوى الحقول
-- RTL + IBM Plex Sans Arabic (نظام التصميم الحالي)
-
----
-
-### ما لن يتم لمسه
-
-- صفحة الطلبات وحالاتها
-- صفحة العملاء وأحواضهم
-- الصفحة الرئيسية
-- نظام المساعد
-- أي جدول موجود
-
----
-
-### خطة التنفيذ المقترحة
-
-أقترح تنفيذها على دفعتين لتسهيل المراجعة:
-
-1. **الدفعة الأولى:** Migration كامل (جداول + RLS + بذور + bucket) + هيكل التنقل + صفحات Dashboard/Incomes/Expenses الأساسية.
-2. **الدفعة الثانية:** Suppliers + Categories + Attachments + Export + Audit + Settings + تشطيبات.
-
-هل تريد البدء بالدفعة الأولى الآن؟
+## تنبيه
+الأدوار المخصصة طبقة **UI/Route gating** فقط. الحماية الأمنية الحقيقية للبيانات تبقى عبر RLS وأدوار النظام الأساسية. مثلاً: لو منحت دور مخصص وصول لصفحة "المصروفات" لمستخدم لا يملك دور مالي → يدخل الصفحة لكن لن يرى أي بيانات (RLS يرفض).
