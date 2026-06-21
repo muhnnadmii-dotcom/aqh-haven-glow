@@ -71,6 +71,7 @@ function ExportPage() {
 
   async function getIncomes() {
     let q = supabase.from("finance_incomes").select("*").order("income_date");
+    if (!includeArchived) q = q.is("deleted_at", null);
     if (from) q = q.gte("income_date", from);
     if (to) q = q.lte("income_date", to);
     if (month) q = q.eq("month", month);
