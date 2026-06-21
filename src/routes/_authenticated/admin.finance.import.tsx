@@ -54,7 +54,7 @@ const INCOME_FIELDS = [
 const EXPENSE_FIELDS = [
   { key: "date", label: "التاريخ", aliases: ["date", "التاريخ", "تاريخ"], required: true },
   { key: "amount", label: "المبلغ", aliases: ["amount", "المبلغ", "مبلغ"], required: true },
-  { key: "item", label: "البيان", aliases: ["item", "name", "البيان", "الصنف", "description", "وصف"], required: true },
+  { key: "item", label: "البيان", aliases: ["item", "name", "البيان", "الصنف", "description", "وصف"], required: false },
   { key: "vendor", label: "المورد", aliases: ["vendor", "supplier", "المورد", "البائع"], required: false },
   { key: "category", label: "التصنيف الرئيسي", aliases: ["category", "التصنيف", "main category", "التصنيف الرئيسي"], required: false },
   { key: "sub", label: "التصنيف الفرعي", aliases: ["sub-category", "sub_category", "subcategory", "التصنيف الفرعي", "فرعي"], required: false },
@@ -249,7 +249,7 @@ function ImportPage() {
   const parsePreview = () => {
     if (!aoa.length) return;
     if (missingRequired.length) {
-      toast.error("لم يتم التعرف على أعمدة التاريخ أو المبلغ أو المصدر. تأكد من اختيار صف العناوين الصحيح.");
+      toast.error(`الأعمدة المطلوبة غير محددة: ${missingRequired.join(" · ")}`);
       setParsed([]);
       return;
     }
@@ -273,8 +273,8 @@ function ImportPage() {
       if (!date) errors.push("تاريخ غير صالح");
       const amount = parseAmount(get("amount"));
       if (amount == null || amount < 0) errors.push("مبلغ غير صالح");
-      const acct = parseAccountType(get("account_type"));
-      if (!acct) errors.push("نوع حساب غير معروف");
+      let acct = parseAccountType(get("account_type"));
+      if (!acct) { acct = "business"; warnings.push("نوع الحساب فارغ، تم افتراض Business Account"); }
       const monthRaw = get("month");
       const month = monthRaw ? String(monthRaw).slice(0, 7) : date ? date.slice(0, 7) : null;
       const confirmed = parseBool(get("confirmed"));
@@ -314,7 +314,7 @@ function ImportPage() {
       } else {
         const itemRaw = get("item");
         const item = itemRaw == null ? null : String(itemRaw).trim() || null;
-        if (!item) errors.push("اسم الصنف/البيان مفقود");
+        if (!item) warnings.push("البيان فارغ");
         const vendorRaw = get("vendor");
         const vendor = vendorRaw == null ? null : String(vendorRaw).trim() || null;
         let supplier_id: string | null = null;
@@ -332,7 +332,9 @@ function ImportPage() {
           const m = mainCats.find((x) => normStr(x.name) === normStr(catName));
           if (m) main_category_id = m.id;
           else if (createCats) { newMain = true; warnings.push(`تصنيف رئيسي جديد: ${catName}`); }
-          else errors.push(`تصنيف رئيسي غير معروف: ${catName}`);
+          else warnings.push(`تصنيف رئيسي غير معروف: ${catName}`);
+        } else {
+          warnings.push("لا يوجد تصنيف لهذا المصروف");
         }
         const subRaw = get("sub");
         const subName = subRaw == null ? null : String(subRaw).trim() || null;
@@ -362,7 +364,7 @@ function ImportPage() {
           newSupplier, newMain, newSub,
           errors, warnings, duplicate: false,
         };
-        if (date && amount != null && item) {
+        if (date && amount != null) {
           row.duplicate = existingExpenses.some(
             (e) =>
               e.expense_date === date &&
@@ -487,7 +489,7 @@ function ImportPage() {
             }
           }
           const { error } = await supabase.from("finance_expenses").insert({
-            expense_date: r.date!, amount: r.amount!, item_name: r.item_name!,
+            expense_date: r.date!, amount: r.amount!, item_name: r.item_name ?? "مصروف بدون بيان",
             supplier_id, supplier_name: supplier_id ? null : r.supplier_name,
             main_category_id: main_id, sub_category_id: sub_id,
             month: r.month!, account_type: r.account_type!,
@@ -680,9 +682,14 @@ function ImportPage() {
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
           <div className="text-sm font-medium">خيارات الاستيراد</div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={createSources} onChange={(e) => setCreateSources(e.target.checked)} /> إنشاء مصادر دخل جديدة</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={createSuppliers} onChange={(e) => setCreateSuppliers(e.target.checked)} /> إنشاء موردين جدد</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={createCats} onChange={(e) => setCreateCats(e.target.checked)} /> إنشاء تصنيفات جديدة</label>
+            {importType === "incomes" ? (
+              <label className="flex items-center gap-2"><input type="checkbox" checked={createSources} onChange={(e) => setCreateSources(e.target.checked)} /> إنشاء مصادر دخل جديدة</label>
+            ) : (
+              <>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={createSuppliers} onChange={(e) => setCreateSuppliers(e.target.checked)} /> إنشاء موردين جدد</label>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={createCats} onChange={(e) => setCreateCats(e.target.checked)} /> إنشاء تصنيفات جديدة</label>
+              </>
+            )}
             <label className="flex items-center gap-2"><input type="checkbox" checked={skipDuplicates} onChange={(e) => setSkipDuplicates(e.target.checked)} /> تخطي المكررات</label>
           </div>
         </div>
