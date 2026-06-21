@@ -783,6 +783,9 @@ export type Database = {
           attachment_status: Database["public"]["Enums"]["finance_attachment_status"]
           created_at: string
           created_by: string | null
+          delete_reason: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           expense_date: string
           id: string
           internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
@@ -803,6 +806,9 @@ export type Database = {
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
           created_at?: string
           created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           expense_date: string
           id?: string
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
@@ -823,6 +829,9 @@ export type Database = {
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
           created_at?: string
           created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           expense_date?: string
           id?: string
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
@@ -895,6 +904,9 @@ export type Database = {
           attachment_status: Database["public"]["Enums"]["finance_attachment_status"]
           created_at: string
           created_by: string | null
+          delete_reason: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           income_date: string
           income_source_id: string | null
@@ -911,6 +923,9 @@ export type Database = {
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
           created_at?: string
           created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           income_date: string
           income_source_id?: string | null
@@ -927,6 +942,9 @@ export type Database = {
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
           created_at?: string
           created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           income_date?: string
           income_source_id?: string | null
