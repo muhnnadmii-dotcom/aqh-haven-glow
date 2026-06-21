@@ -658,6 +658,341 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_attachments: {
+        Row: {
+          attachment_type: string | null
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          related_id: string
+          related_type: Database["public"]["Enums"]["finance_related_type"]
+          uploaded_by: string | null
+        }
+        Insert: {
+          attachment_type?: string | null
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          related_id: string
+          related_type: Database["public"]["Enums"]["finance_related_type"]
+          uploaded_by?: string | null
+        }
+        Update: {
+          attachment_type?: string | null
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          related_id?: string
+          related_type?: Database["public"]["Enums"]["finance_related_type"]
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      finance_audit_logs: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          field_name: string | null
+          id: string
+          new_value: string | null
+          note: string | null
+          old_value: string | null
+          related_id: string | null
+          related_type: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          field_name?: string | null
+          id?: string
+          new_value?: string | null
+          note?: string | null
+          old_value?: string | null
+          related_id?: string | null
+          related_type: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          field_name?: string | null
+          id?: string
+          new_value?: string | null
+          note?: string | null
+          old_value?: string | null
+          related_id?: string | null
+          related_type?: string
+        }
+        Relationships: []
+      }
+      finance_categories: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          kind: Database["public"]["Enums"]["finance_category_kind"]
+          name: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          kind: Database["public"]["Enums"]["finance_category_kind"]
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["finance_category_kind"]
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_expenses: {
+        Row: {
+          account_type: Database["public"]["Enums"]["finance_account_type"]
+          accountant_note: string | null
+          accountant_status: Database["public"]["Enums"]["finance_accountant_status"]
+          amount: number
+          attachment_status: Database["public"]["Enums"]["finance_attachment_status"]
+          created_at: string
+          created_by: string | null
+          expense_date: string
+          id: string
+          internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
+          item_name: string
+          main_category_id: string | null
+          month: string
+          note: string | null
+          sub_category_id: string | null
+          supplier_id: string | null
+          supplier_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["finance_account_type"]
+          accountant_note?: string | null
+          accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
+          amount: number
+          attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
+          created_at?: string
+          created_by?: string | null
+          expense_date: string
+          id?: string
+          internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
+          item_name: string
+          main_category_id?: string | null
+          month: string
+          note?: string | null
+          sub_category_id?: string | null
+          supplier_id?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["finance_account_type"]
+          accountant_note?: string | null
+          accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
+          amount?: number
+          attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
+          created_at?: string
+          created_by?: string | null
+          expense_date?: string
+          id?: string
+          internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
+          item_name?: string
+          main_category_id?: string | null
+          month?: string
+          note?: string | null
+          sub_category_id?: string | null
+          supplier_id?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_expenses_main_category_id_fkey"
+            columns: ["main_category_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_sub_category_id_fkey"
+            columns: ["sub_category_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "finance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_income_sources: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      finance_incomes: {
+        Row: {
+          account_type: Database["public"]["Enums"]["finance_account_type"]
+          accountant_note: string | null
+          accountant_status: Database["public"]["Enums"]["finance_accountant_status"]
+          amount: number
+          attachment_status: Database["public"]["Enums"]["finance_attachment_status"]
+          created_at: string
+          created_by: string | null
+          id: string
+          income_date: string
+          income_source_id: string | null
+          internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
+          month: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["finance_account_type"]
+          accountant_note?: string | null
+          accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
+          amount: number
+          attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          income_date: string
+          income_source_id?: string | null
+          internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
+          month: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["finance_account_type"]
+          accountant_note?: string | null
+          accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
+          amount?: number
+          attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          income_date?: string
+          income_source_id?: string | null
+          internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
+          month?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_incomes_income_source_id_fkey"
+            columns: ["income_source_id"]
+            isOneToOne: false
+            referencedRelation: "finance_income_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_suppliers: {
+        Row: {
+          city: string | null
+          company_name: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          supplier_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          company_name?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          supplier_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          company_name?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          supplier_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       home_sections: {
         Row: {
           content: Json
@@ -1582,6 +1917,16 @@ export type Database = {
         | "finance_export"
         | "finance_settings"
       assignment_status: "unassigned" | "assigned" | "accepted" | "transferred"
+      finance_account_type: "business" | "personal"
+      finance_accountant_status:
+        | "not_reviewed"
+        | "reviewed"
+        | "posted_to_qoyod"
+        | "needs_fix"
+      finance_attachment_status: "attached" | "not_attached" | "not_required"
+      finance_category_kind: "main" | "sub"
+      finance_internal_review: "unreviewed" | "reviewed"
+      finance_related_type: "income" | "expense" | "supplier"
       request_status: "new" | "in_progress" | "closed"
       service_request_status:
         | "new"
@@ -1732,6 +2077,17 @@ export const Constants = {
         "finance_settings",
       ],
       assignment_status: ["unassigned", "assigned", "accepted", "transferred"],
+      finance_account_type: ["business", "personal"],
+      finance_accountant_status: [
+        "not_reviewed",
+        "reviewed",
+        "posted_to_qoyod",
+        "needs_fix",
+      ],
+      finance_attachment_status: ["attached", "not_attached", "not_required"],
+      finance_category_kind: ["main", "sub"],
+      finance_internal_review: ["unreviewed", "reviewed"],
+      finance_related_type: ["income", "expense", "supplier"],
       request_status: ["new", "in_progress", "closed"],
       service_request_status: [
         "new",
