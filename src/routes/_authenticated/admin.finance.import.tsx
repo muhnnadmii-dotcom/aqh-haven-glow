@@ -489,7 +489,7 @@ function ImportPage() {
             }
           }
           const { error } = await supabase.from("finance_expenses").insert({
-            expense_date: r.date!, amount: r.amount!, item_name: r.item_name!,
+            expense_date: r.date!, amount: r.amount!, item_name: r.item_name ?? "مصروف بدون بيان",
             supplier_id, supplier_name: supplier_id ? null : r.supplier_name,
             main_category_id: main_id, sub_category_id: sub_id,
             month: r.month!, account_type: r.account_type!,
