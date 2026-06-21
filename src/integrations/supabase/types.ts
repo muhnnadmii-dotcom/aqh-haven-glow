@@ -1572,7 +1572,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "customer" | "staff"
+      app_role:
+        | "admin"
+        | "customer"
+        | "staff"
+        | "finance_view"
+        | "finance_manage"
+        | "finance_accountant"
+        | "finance_export"
+        | "finance_settings"
       assignment_status: "unassigned" | "assigned" | "accepted" | "transferred"
       request_status: "new" | "in_progress" | "closed"
       service_request_status:
@@ -1713,7 +1721,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "customer", "staff"],
+      app_role: [
+        "admin",
+        "customer",
+        "staff",
+        "finance_view",
+        "finance_manage",
+        "finance_accountant",
+        "finance_export",
+        "finance_settings",
+      ],
       assignment_status: ["unassigned", "assigned", "accepted", "transferred"],
       request_status: ["new", "in_progress", "closed"],
       service_request_status: [
