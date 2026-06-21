@@ -314,7 +314,7 @@ function ImportPage() {
       } else {
         const itemRaw = get("item");
         const item = itemRaw == null ? null : String(itemRaw).trim() || null;
-        if (!item) errors.push("اسم الصنف/البيان مفقود");
+        if (!item) warnings.push("البيان فارغ");
         const vendorRaw = get("vendor");
         const vendor = vendorRaw == null ? null : String(vendorRaw).trim() || null;
         let supplier_id: string | null = null;
