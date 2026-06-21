@@ -273,8 +273,8 @@ function ImportPage() {
       if (!date) errors.push("تاريخ غير صالح");
       const amount = parseAmount(get("amount"));
       if (amount == null || amount < 0) errors.push("مبلغ غير صالح");
-      const acct = parseAccountType(get("account_type"));
-      if (!acct) errors.push("نوع حساب غير معروف");
+      let acct = parseAccountType(get("account_type"));
+      if (!acct) { acct = "business"; warnings.push("نوع الحساب فارغ، تم افتراض Business Account"); }
       const monthRaw = get("month");
       const month = monthRaw ? String(monthRaw).slice(0, 7) : date ? date.slice(0, 7) : null;
       const confirmed = parseBool(get("confirmed"));
