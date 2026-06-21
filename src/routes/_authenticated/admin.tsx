@@ -27,9 +27,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 type NavItem = { to: string; label: string; icon: any; exact?: boolean };
+type NavGroup = { key: string; label: string; items: NavItem[]; collapsible?: boolean; financeOnly?: boolean };
 
-const navGroups: { label: string; items: NavItem[] }[] = [
+const navGroups: NavGroup[] = [
   {
+    key: "ops",
     label: "التشغيل",
     items: [
       { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
@@ -40,7 +42,9 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
+    key: "content",
     label: "محتوى الموقع",
+    collapsible: true,
     items: [
       { to: "/admin/design", label: "الصفحة الرئيسية", icon: Palette, exact: true },
       { to: "/admin/projects", label: "أعمالنا / الأحواض", icon: Fish },
@@ -54,7 +58,28 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
+    key: "finance",
+    label: "المالية",
+    collapsible: true,
+    financeOnly: true,
+    items: [
+      { to: "/admin/finance", label: "لوحة المالية", icon: LayoutDashboard, exact: true },
+      { to: "/admin/finance/incomes", label: "الدخل", icon: TrendingUp },
+      { to: "/admin/finance/expenses", label: "المصروفات", icon: TrendingDown },
+      { to: "/admin/finance/suppliers", label: "الموردين", icon: Truck },
+      { to: "/admin/finance/categories", label: "التصنيفات", icon: Tags },
+      { to: "/admin/finance/attachments", label: "المرفقات", icon: Paperclip },
+      { to: "/admin/finance/export", label: "التصدير", icon: Download },
+      { to: "/admin/finance/import", label: "استيراد Excel", icon: Upload },
+      { to: "/admin/finance/import-batches", label: "دفعات الاستيراد", icon: Archive },
+      { to: "/admin/finance/audit", label: "سجل التعديلات", icon: History },
+      { to: "/admin/finance/settings", label: "الإعدادات", icon: Cog },
+    ],
+  },
+  {
+    key: "admin",
     label: "الإدارة",
+    collapsible: true,
     items: [
       { to: "/admin/staff", label: "الموظفين", icon: UserCog },
     ],
