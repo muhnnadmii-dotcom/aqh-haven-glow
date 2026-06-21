@@ -139,7 +139,16 @@ function IncomesPage() {
                 <td className="px-3 py-2">{labelOf(ACCOUNT_TYPES, r.account_type)}</td>
                 <td className="px-3 py-2"><Badge tone={toneOf(INTERNAL_REVIEW, r.internal_review_status)}>{labelOf(INTERNAL_REVIEW, r.internal_review_status)}</Badge></td>
                 <td className="px-3 py-2"><Badge tone={toneOf(ACCOUNTANT_STATUS, r.accountant_status)}>{labelOf(ACCOUNTANT_STATUS, r.accountant_status)}</Badge></td>
-                <td className="px-3 py-2"><Badge tone={toneOf(ATTACHMENT_STATUS, r.attachment_status)}>{labelOf(ATTACHMENT_STATUS, r.attachment_status)}</Badge></td>
+                <td className="px-3 py-2">
+                  <RowAttachmentControl
+                    relatedType="income"
+                    relatedId={r.id}
+                    status={r.attachment_status}
+                    canManage={roles.canManage}
+                    canDelete={roles.canManage}
+                    onChanged={(s) => setRows((prev) => prev.map((x) => x.id === r.id ? { ...x, attachment_status: s } : x))}
+                  />
+                </td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-1">
                     <button onClick={() => setEditing(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px]">
