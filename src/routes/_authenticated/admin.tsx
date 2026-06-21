@@ -84,6 +84,7 @@ const navGroups: NavGroup[] = [
     collapsible: true,
     items: [
       { to: "/admin/staff", label: "الموظفين", icon: UserCog },
+      { to: "/admin/roles", label: "إدارة الصلاحيات", icon: Shield },
     ],
   },
 ];
