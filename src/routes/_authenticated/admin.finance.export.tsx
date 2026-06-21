@@ -242,7 +242,7 @@ function ExportPage() {
   const exportSuppliers = () => run(async () => {
     const [{ data: sups }, { data: exps }] = await Promise.all([
       supabase.from("finance_suppliers").select("*").order("name"),
-      supabase.from("finance_expenses").select("supplier_id, amount"),
+      supabase.from("finance_expenses").select("supplier_id, amount").is("deleted_at", null),
     ]);
     const totals: Record<string, { sum: number; count: number }> = {};
     (exps ?? []).forEach((e: any) => {
