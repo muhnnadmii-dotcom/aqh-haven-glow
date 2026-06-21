@@ -28,6 +28,7 @@ function ExportPage() {
   const [internal, setInternal] = useState("");
   const [acct, setAcct] = useState("");
   const [att, setAtt] = useState("");
+  const [includeArchived, setIncludeArchived] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const [sources, setSources] = useState<any[]>([]);
