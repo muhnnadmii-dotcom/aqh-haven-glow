@@ -138,8 +138,27 @@ function IncomesPage() {
                 <td className="px-3 py-2 font-mono">{fmtSAR(r.amount)}</td>
                 <td className="px-3 py-2">{sourceName(r.income_source_id)}</td>
                 <td className="px-3 py-2">{labelOf(ACCOUNT_TYPES, r.account_type)}</td>
-                <td className="px-3 py-2"><Badge tone={toneOf(INTERNAL_REVIEW, r.internal_review_status)}>{labelOf(INTERNAL_REVIEW, r.internal_review_status)}</Badge></td>
-                <td className="px-3 py-2"><Badge tone={toneOf(ACCOUNTANT_STATUS, r.accountant_status)}>{labelOf(ACCOUNTANT_STATUS, r.accountant_status)}</Badge></td>
+                <td className="px-3 py-2">
+                  <ReviewStatusEditor
+                    table="finance_incomes"
+                    rowId={r.id}
+                    field="internal_review_status"
+                    value={r.internal_review_status}
+                    canEdit={roles.canManage && !r.deleted_at}
+                    onChanged={(v) => setRows((prev) => prev.map((x) => x.id === r.id ? { ...x, internal_review_status: v } : x))}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <ReviewStatusEditor
+                    table="finance_incomes"
+                    rowId={r.id}
+                    field="accountant_status"
+                    value={r.accountant_status}
+                    note={r.accountant_note}
+                    canEdit={(roles.canManage || roles.canAccountant) && !r.deleted_at}
+                    onChanged={(v, n) => setRows((prev) => prev.map((x) => x.id === r.id ? { ...x, accountant_status: v, ...(n !== undefined ? { accountant_note: n } : {}) } : x))}
+                  />
+                </td>
                 <td className="px-3 py-2">
                   <RowAttachmentControl
                     relatedType="income"
