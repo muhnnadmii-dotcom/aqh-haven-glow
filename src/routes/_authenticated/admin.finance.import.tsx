@@ -13,22 +13,17 @@ export const Route = createFileRoute("/_authenticated/admin/finance/import")({
 
 type ImportType = "incomes" | "expenses";
 
-type RawRow = Record<string, any>;
-
 type ParsedRow = {
   rowNo: number;
-  raw: RawRow;
-  // normalized
+  raw: any[];
   date: string | null;
   amount: number | null;
   month: string | null;
   account_type: "business" | "personal" | null;
   internal_review_status: "reviewed" | "unreviewed";
   note: string | null;
-  // income
   source_name?: string | null;
   source_id?: string | null;
-  // expense
   item_name?: string | null;
   supplier_name?: string | null;
   supplier_id?: string | null;
@@ -37,7 +32,6 @@ type ParsedRow = {
   main_category_id?: string | null;
   sub_category_id?: string | null;
   attachment_status?: "attached" | "not_attached" | "not_required";
-  // flags
   errors: string[];
   warnings: string[];
   duplicate: boolean;
@@ -47,61 +41,80 @@ type ParsedRow = {
   newSub?: boolean;
 };
 
-const INCOME_COL_MAP: Record<string, string[]> = {
-  date: ["date", "التاريخ", "تاريخ"],
-  amount: ["amount", "المبلغ", "مبلغ", "value"],
-  source: ["source", "المصدر", "مصدر"],
-  month: ["month", "الشهر"],
-  account_type: ["account type", "account_type", "نوع الحساب", "الحساب"],
-  confirmed: ["confirmed", "مؤكد", "status"],
-  note: ["note", "ملاحظة", "ملاحظات", "notes"],
-};
+const INCOME_FIELDS = [
+  { key: "date", label: "التاريخ", aliases: ["date", "التاريخ", "تاريخ"], required: true },
+  { key: "amount", label: "المبلغ", aliases: ["amount", "المبلغ", "مبلغ", "value", "القيمة"], required: true },
+  { key: "source", label: "المصدر", aliases: ["source", "المصدر", "مصدر", "income source", "مصدر الدخل"], required: true },
+  { key: "month", label: "الشهر", aliases: ["month", "الشهر"], required: false },
+  { key: "account_type", label: "نوع الحساب", aliases: ["account type", "account_type", "نوع الحساب", "الحساب"], required: false },
+  { key: "confirmed", label: "مؤكد", aliases: ["confirmed", "مؤكد", "status", "الحالة"], required: false },
+  { key: "note", label: "ملاحظة", aliases: ["note", "ملاحظة", "ملاحظات", "notes"], required: false },
+] as const;
 
-const EXPENSE_COL_MAP: Record<string, string[]> = {
-  date: ["date", "التاريخ", "تاريخ"],
-  amount: ["amount", "المبلغ", "مبلغ"],
-  item: ["item", "name", "البيان", "الشيء", "الصنف", "description", "وصف"],
-  vendor: ["vendor", "supplier", "المورد", "البائع"],
-  category: ["category", "التصنيف", "main category", "التصنيف الرئيسي"],
-  sub: ["sub-category", "sub_category", "subcategory", "التصنيف الفرعي", "فرعي"],
-  month: ["month", "الشهر"],
-  invoice: ["invoice", "فاتورة", "حالة الفاتورة"],
-  reason: ["reason", "note", "السبب", "ملاحظة", "ملاحظات"],
-  account_type: ["account type", "account_type", "نوع الحساب", "الحساب"],
-  confirmed: ["confirmed", "مؤكد"],
-  uploaded: ["uploaded", "مرفوع", "attached"],
-};
+const EXPENSE_FIELDS = [
+  { key: "date", label: "التاريخ", aliases: ["date", "التاريخ", "تاريخ"], required: true },
+  { key: "amount", label: "المبلغ", aliases: ["amount", "المبلغ", "مبلغ"], required: true },
+  { key: "item", label: "البيان", aliases: ["item", "name", "البيان", "الصنف", "description", "وصف"], required: true },
+  { key: "vendor", label: "المورد", aliases: ["vendor", "supplier", "المورد", "البائع"], required: false },
+  { key: "category", label: "التصنيف الرئيسي", aliases: ["category", "التصنيف", "main category", "التصنيف الرئيسي"], required: false },
+  { key: "sub", label: "التصنيف الفرعي", aliases: ["sub-category", "sub_category", "subcategory", "التصنيف الفرعي", "فرعي"], required: false },
+  { key: "month", label: "الشهر", aliases: ["month", "الشهر"], required: false },
+  { key: "invoice", label: "حالة الفاتورة", aliases: ["invoice", "فاتورة", "حالة الفاتورة"], required: false },
+  { key: "reason", label: "السبب/ملاحظة", aliases: ["reason", "note", "السبب", "ملاحظة", "ملاحظات"], required: false },
+  { key: "account_type", label: "نوع الحساب", aliases: ["account type", "account_type", "نوع الحساب", "الحساب"], required: false },
+  { key: "confirmed", label: "مؤكد", aliases: ["confirmed", "مؤكد"], required: false },
+  { key: "uploaded", label: "مرفوع", aliases: ["uploaded", "مرفوع", "attached"], required: false },
+] as const;
 
-function findCol(headers: string[], aliases: string[]): string | null {
-  const norm = (s: string) => s.toString().trim().toLowerCase();
+const normStr = (s: any) => (s == null ? "" : String(s)).trim().toLowerCase();
+
+function autoMatchColumn(headers: any[], aliases: readonly string[]): number {
+  const hs = headers.map(normStr);
   for (const a of aliases) {
-    const m = headers.find((h) => norm(h) === norm(a));
-    if (m) return m;
+    const i = hs.findIndex((h) => h === normStr(a));
+    if (i >= 0) return i;
   }
   for (const a of aliases) {
-    const m = headers.find((h) => norm(h).includes(norm(a)));
-    if (m) return m;
+    const i = hs.findIndex((h) => h && h.includes(normStr(a)));
+    if (i >= 0) return i;
   }
-  return null;
+  return -1;
+}
+
+function detectHeaderRow(aoa: any[][], aliasesPool: string[]): number {
+  const maxScan = Math.min(aoa.length, 30);
+  let best = 0;
+  let bestScore = 0;
+  for (let i = 0; i < maxScan; i++) {
+    const row = aoa[i] ?? [];
+    let score = 0;
+    for (const a of aliasesPool) {
+      const na = normStr(a);
+      if (row.some((c) => normStr(c) === na || (normStr(c) && normStr(c).includes(na)))) score++;
+    }
+    if (score > bestScore) { bestScore = score; best = i; }
+  }
+  return bestScore >= 2 ? best : 0;
 }
 
 function parseDate(v: any): string | null {
   if (v == null || v === "") return null;
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    return `${v.getUTCFullYear()}-${String(v.getUTCMonth() + 1).padStart(2, "0")}-${String(v.getUTCDate()).padStart(2, "0")}`;
+  }
   if (typeof v === "number") {
-    // Excel serial
     const d = XLSX.SSF.parse_date_code(v);
     if (!d) return null;
-    const mm = String(d.m).padStart(2, "0");
-    const dd = String(d.d).padStart(2, "0");
-    return `${d.y}-${mm}-${dd}`;
+    return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
   }
   const s = String(v).trim();
+  if (!s) return null;
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
   if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
   const dmy = /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/.exec(s);
   if (dmy) {
     let y = dmy[3];
-    if (y.length === 2) y = "20" + y;
+    if (y.length === 2) y = (Number(y) > 50 ? "19" : "20") + y;
     return `${y}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
   }
   const t = new Date(s);
@@ -113,6 +126,7 @@ function parseAmount(v: any): number | null {
   if (v == null || v === "") return null;
   if (typeof v === "number") return isFinite(v) ? v : null;
   const s = String(v).replace(/[, ٬]/g, "").replace(/[^\d\.\-]/g, "");
+  if (!s) return null;
   const n = Number(s);
   return isFinite(n) ? n : null;
 }
@@ -140,6 +154,9 @@ function ImportPage() {
   const [wb, setWb] = useState<XLSX.WorkBook | null>(null);
   const [sheetName, setSheetName] = useState<string>("");
   const [importType, setImportType] = useState<ImportType>("incomes");
+  const [aoa, setAoa] = useState<any[][]>([]);
+  const [headerRow, setHeaderRow] = useState<number>(1); // 1-based for UI
+  const [mapping, setMapping] = useState<Record<string, number>>({});
   const [parsed, setParsed] = useState<ParsedRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -157,9 +174,7 @@ function ImportPage() {
   const [createSuppliers, setCreateSuppliers] = useState(true);
   const [createCats, setCreateCats] = useState(false);
   const [skipDuplicates, setSkipDuplicates] = useState(true);
-  const [skipErrors, setSkipErrors] = useState(true);
 
-  // logs
   const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
@@ -188,9 +203,189 @@ function ImportPage() {
     setLogs(data ?? []);
   };
 
+  const fieldDefs = importType === "incomes" ? INCOME_FIELDS : EXPENSE_FIELDS;
+
+  // Load AoA whenever workbook/sheet changes
+  useEffect(() => {
+    if (!wb || !sheetName) { setAoa([]); return; }
+    const ws = wb.Sheets[sheetName];
+    if (!ws) { setAoa([]); return; }
+    const arr = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: null, raw: true, blankrows: false });
+    setAoa(arr);
+    // auto-detect header row
+    const pool = fieldDefs.flatMap((f) => [...f.aliases]);
+    const hr = detectHeaderRow(arr, pool);
+    setHeaderRow(hr + 1);
+    setParsed([]);
+  }, [wb, sheetName, importType]);
+
+  // Auto-remap whenever headerRow or importType changes
+  useEffect(() => {
+    if (!aoa.length) return;
+    const headers = aoa[headerRow - 1] ?? [];
+    const m: Record<string, number> = {};
+    for (const f of fieldDefs) m[f.key] = autoMatchColumn(headers, f.aliases);
+    setMapping(m);
+  }, [aoa, headerRow, importType]);
+
+  const headers: any[] = aoa[headerRow - 1] ?? [];
+  const numCols = useMemo(() => Math.max(0, ...aoa.slice(0, 30).map((r) => (r ?? []).length)), [aoa]);
+
+  const missingRequired = useMemo(
+    () => fieldDefs.filter((f) => f.required && (mapping[f.key] == null || mapping[f.key] < 0)).map((f) => f.label),
+    [fieldDefs, mapping],
+  );
+
+  const isRowEmpty = (cells: any[]) => {
+    const di = mapping.date ?? -1;
+    const ai = mapping.amount ?? -1;
+    const si = (mapping.source ?? mapping.vendor ?? mapping.item ?? -1);
+    const hasDate = di >= 0 && cells[di] != null && String(cells[di]).trim() !== "";
+    const hasAmt = ai >= 0 && cells[ai] != null && String(cells[ai]).trim() !== "";
+    const hasSrc = si >= 0 && cells[si] != null && String(cells[si]).trim() !== "";
+    return !hasDate && !hasAmt && !hasSrc;
+  };
+
+  const parsePreview = () => {
+    if (!aoa.length) return;
+    if (missingRequired.length) {
+      toast.error("لم يتم التعرف على أعمدة التاريخ أو المبلغ أو المصدر. تأكد من اختيار صف العناوين الصحيح.");
+      setParsed([]);
+      return;
+    }
+
+    const dataRows = aoa.slice(headerRow); // everything after header row
+    const out: ParsedRow[] = [];
+    let skippedEmpty = 0;
+
+    dataRows.forEach((cells, idx) => {
+      const realRow = headerRow + idx + 1; // 1-based Excel row
+      if (!cells || isRowEmpty(cells)) { skippedEmpty++; return; }
+
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      const get = (k: string) => {
+        const i = mapping[k];
+        return i != null && i >= 0 ? cells[i] : null;
+      };
+
+      const date = parseDate(get("date"));
+      if (!date) errors.push("تاريخ غير صالح");
+      const amount = parseAmount(get("amount"));
+      if (amount == null || amount < 0) errors.push("مبلغ غير صالح");
+      const acct = parseAccountType(get("account_type"));
+      if (!acct) errors.push("نوع حساب غير معروف");
+      const monthRaw = get("month");
+      const month = monthRaw ? String(monthRaw).slice(0, 7) : date ? date.slice(0, 7) : null;
+      const confirmed = parseBool(get("confirmed"));
+
+      if (importType === "incomes") {
+        const srcRaw = get("source");
+        const srcName = srcRaw == null ? null : String(srcRaw).trim() || null;
+        let source_id: string | null = null;
+        let newSource = false;
+        if (srcName) {
+          const m = sources.find((s) => normStr(s.name) === normStr(srcName));
+          if (m) source_id = m.id;
+          else { newSource = true; warnings.push(`مصدر دخل جديد: ${srcName}`); }
+        } else {
+          errors.push("مصدر الدخل مفقود");
+        }
+        const noteRaw = get("note");
+        const note = noteRaw == null ? null : String(noteRaw);
+        const row: ParsedRow = {
+          rowNo: realRow, raw: cells, date, amount, month,
+          account_type: acct, internal_review_status: confirmed ? "reviewed" : "unreviewed",
+          note, source_name: srcName, source_id, newSource,
+          errors, warnings, duplicate: false,
+        };
+        if (date && amount != null) {
+          row.duplicate = existingIncomes.some(
+            (e) =>
+              e.income_date === date &&
+              Number(e.amount) === amount &&
+              (source_id ? e.income_source_id === source_id : true) &&
+              e.account_type === acct &&
+              normStr(e.note) === normStr(note),
+          );
+          if (row.duplicate) warnings.push("مكرر محتمل");
+        }
+        out.push(row);
+      } else {
+        const itemRaw = get("item");
+        const item = itemRaw == null ? null : String(itemRaw).trim() || null;
+        if (!item) errors.push("اسم الصنف/البيان مفقود");
+        const vendorRaw = get("vendor");
+        const vendor = vendorRaw == null ? null : String(vendorRaw).trim() || null;
+        let supplier_id: string | null = null;
+        let newSupplier = false;
+        if (vendor) {
+          const m = suppliers.find((s) => normStr(s.name) === normStr(vendor));
+          if (m) supplier_id = m.id;
+          else { newSupplier = true; warnings.push(`مورد جديد: ${vendor}`); }
+        }
+        const catRaw = get("category");
+        const catName = catRaw == null ? null : String(catRaw).trim() || null;
+        let main_category_id: string | null = null;
+        let newMain = false;
+        if (catName) {
+          const m = mainCats.find((x) => normStr(x.name) === normStr(catName));
+          if (m) main_category_id = m.id;
+          else if (createCats) { newMain = true; warnings.push(`تصنيف رئيسي جديد: ${catName}`); }
+          else errors.push(`تصنيف رئيسي غير معروف: ${catName}`);
+        }
+        const subRaw = get("sub");
+        const subName = subRaw == null ? null : String(subRaw).trim() || null;
+        let sub_category_id: string | null = null;
+        let newSub = false;
+        if (subName) {
+          const m = subCats.find((x) => normStr(x.name) === normStr(subName) && (!main_category_id || x.parent_id === main_category_id));
+          if (m) sub_category_id = m.id;
+          else if (createCats) { newSub = true; warnings.push(`تصنيف فرعي جديد: ${subName}`); }
+          else warnings.push(`تصنيف فرعي غير معروف: ${subName}`);
+        }
+        const reasonRaw = get("reason");
+        const reason = reasonRaw == null ? null : String(reasonRaw);
+        const uploaded = parseBool(get("uploaded"));
+        const invVal = get("invoice");
+        const invoiceVal = invVal == null ? "" : String(invVal).toLowerCase().trim();
+        const notRequired = /not required|no invoice|بدون فاتورة|لا يحتاج/.test(invoiceVal);
+        let attachment_status: "attached" | "not_attached" | "not_required" = "not_attached";
+        if (notRequired) attachment_status = "not_required";
+        if (uploaded && !notRequired) warnings.push("الملف القديم كان مرفوع، لكن لا يوجد مرفق فعلي");
+        const row: ParsedRow = {
+          rowNo: realRow, raw: cells, date, amount, month,
+          account_type: acct, internal_review_status: confirmed ? "reviewed" : "unreviewed",
+          note: reason, item_name: item, supplier_name: vendor, supplier_id,
+          main_category_name: catName, sub_category_name: subName,
+          main_category_id, sub_category_id, attachment_status,
+          newSupplier, newMain, newSub,
+          errors, warnings, duplicate: false,
+        };
+        if (date && amount != null && item) {
+          row.duplicate = existingExpenses.some(
+            (e) =>
+              e.expense_date === date &&
+              Number(e.amount) === amount &&
+              normStr(e.item_name) === normStr(item) &&
+              e.account_type === acct &&
+              (supplier_id ? e.supplier_id === supplier_id : normStr(e.supplier_name) === normStr(vendor)) &&
+              (main_category_id ? e.main_category_id === main_category_id : true),
+          );
+          if (row.duplicate) warnings.push("مكرر محتمل");
+        }
+        out.push(row);
+      }
+    });
+
+    setParsed(out);
+    toast.success(`تم قراءة ${out.length} صف${skippedEmpty ? ` · تم تجاهل ${skippedEmpty} صف فارغ` : ""}`);
+  };
+
   const onFile = async (f: File) => {
     setFile(f);
     setParsed([]);
+    setAoa([]);
     setLoading(true);
     try {
       const buf = await f.arrayBuffer();
@@ -202,203 +397,6 @@ function ImportPage() {
       toast.error("تعذر قراءة الملف: " + e.message);
     }
     setLoading(false);
-  };
-
-  const norm = (s?: string | null) => (s ?? "").toString().trim().toLowerCase();
-
-  const parsePreview = () => {
-    if (!wb || !sheetName) return;
-    const ws = wb.Sheets[sheetName];
-    if (!ws) return;
-    const rows = XLSX.utils.sheet_to_json<RawRow>(ws, { defval: null, raw: true });
-    if (!rows.length) {
-      setParsed([]);
-      toast.warning("الشيت فارغ");
-      return;
-    }
-    const headers = Object.keys(rows[0]);
-    const out: ParsedRow[] = [];
-
-    if (importType === "incomes") {
-      const c = {
-        date: findCol(headers, INCOME_COL_MAP.date),
-        amount: findCol(headers, INCOME_COL_MAP.amount),
-        source: findCol(headers, INCOME_COL_MAP.source),
-        month: findCol(headers, INCOME_COL_MAP.month),
-        account_type: findCol(headers, INCOME_COL_MAP.account_type),
-        confirmed: findCol(headers, INCOME_COL_MAP.confirmed),
-        note: findCol(headers, INCOME_COL_MAP.note),
-      };
-      rows.forEach((r, i) => {
-        const errors: string[] = [];
-        const warnings: string[] = [];
-        const date = c.date ? parseDate(r[c.date]) : null;
-        if (!date) errors.push("تاريخ غير صالح");
-        const amount = c.amount ? parseAmount(r[c.amount]) : null;
-        if (amount == null || amount < 0) errors.push("مبلغ غير صالح");
-        const acct = c.account_type ? parseAccountType(r[c.account_type]) : "business";
-        if (!acct) errors.push("نوع حساب غير معروف");
-        const month = (c.month && r[c.month]) ? String(r[c.month]).slice(0, 7) : date ? date.slice(0, 7) : null;
-        const srcName = c.source ? (r[c.source] == null ? null : String(r[c.source]).trim()) : null;
-        let source_id: string | null = null;
-        let newSource = false;
-        if (srcName) {
-          const m = sources.find((s) => norm(s.name) === norm(srcName));
-          if (m) source_id = m.id;
-          else {
-            newSource = true;
-            warnings.push(`مصدر دخل جديد: ${srcName}`);
-          }
-        } else {
-          errors.push("مصدر الدخل مفقود");
-        }
-        const note = c.note ? (r[c.note] == null ? null : String(r[c.note])) : null;
-        const confirmed = c.confirmed ? parseBool(r[c.confirmed]) : false;
-        const row: ParsedRow = {
-          rowNo: i + 2,
-          raw: r,
-          date,
-          amount,
-          month,
-          account_type: acct,
-          internal_review_status: confirmed ? "reviewed" : "unreviewed",
-          note,
-          source_name: srcName,
-          source_id,
-          newSource,
-          errors,
-          warnings,
-          duplicate: false,
-        };
-        // duplicate detection
-        if (date && amount != null) {
-          row.duplicate = existingIncomes.some(
-            (e) =>
-              e.income_date === date &&
-              Number(e.amount) === amount &&
-              (source_id ? e.income_source_id === source_id : true) &&
-              e.account_type === acct &&
-              norm(e.note) === norm(note),
-          );
-          if (row.duplicate) warnings.push("مكرر محتمل");
-        }
-        out.push(row);
-      });
-    } else {
-      const c = {
-        date: findCol(headers, EXPENSE_COL_MAP.date),
-        amount: findCol(headers, EXPENSE_COL_MAP.amount),
-        item: findCol(headers, EXPENSE_COL_MAP.item),
-        vendor: findCol(headers, EXPENSE_COL_MAP.vendor),
-        category: findCol(headers, EXPENSE_COL_MAP.category),
-        sub: findCol(headers, EXPENSE_COL_MAP.sub),
-        month: findCol(headers, EXPENSE_COL_MAP.month),
-        invoice: findCol(headers, EXPENSE_COL_MAP.invoice),
-        reason: findCol(headers, EXPENSE_COL_MAP.reason),
-        account_type: findCol(headers, EXPENSE_COL_MAP.account_type),
-        confirmed: findCol(headers, EXPENSE_COL_MAP.confirmed),
-        uploaded: findCol(headers, EXPENSE_COL_MAP.uploaded),
-      };
-      rows.forEach((r, i) => {
-        const errors: string[] = [];
-        const warnings: string[] = [];
-        const date = c.date ? parseDate(r[c.date]) : null;
-        if (!date) errors.push("تاريخ غير صالح");
-        const amount = c.amount ? parseAmount(r[c.amount]) : null;
-        if (amount == null || amount < 0) errors.push("مبلغ غير صالح");
-        const acct = c.account_type ? parseAccountType(r[c.account_type]) : "business";
-        if (!acct) errors.push("نوع حساب غير معروف");
-        const month = (c.month && r[c.month]) ? String(r[c.month]).slice(0, 7) : date ? date.slice(0, 7) : null;
-        const item = c.item ? (r[c.item] == null ? null : String(r[c.item]).trim()) : null;
-        if (!item) errors.push("اسم الصنف/البيان مفقود");
-        const vendor = c.vendor ? (r[c.vendor] == null ? null : String(r[c.vendor]).trim()) : null;
-        let supplier_id: string | null = null;
-        let newSupplier = false;
-        if (vendor) {
-          const m = suppliers.find((s) => norm(s.name) === norm(vendor));
-          if (m) supplier_id = m.id;
-          else {
-            newSupplier = true;
-            warnings.push(`مورد جديد: ${vendor}`);
-          }
-        }
-        const catName = c.category ? (r[c.category] == null ? null : String(r[c.category]).trim()) : null;
-        let main_category_id: string | null = null;
-        let newMain = false;
-        if (catName) {
-          const m = mainCats.find((x) => norm(x.name) === norm(catName));
-          if (m) main_category_id = m.id;
-          else {
-            if (createCats) {
-              newMain = true;
-              warnings.push(`تصنيف رئيسي جديد: ${catName}`);
-            } else {
-              errors.push(`تصنيف رئيسي غير معروف: ${catName}`);
-            }
-          }
-        }
-        const subName = c.sub ? (r[c.sub] == null ? null : String(r[c.sub]).trim()) : null;
-        let sub_category_id: string | null = null;
-        let newSub = false;
-        if (subName) {
-          const m = subCats.find((x) => norm(x.name) === norm(subName) && (!main_category_id || x.parent_id === main_category_id));
-          if (m) sub_category_id = m.id;
-          else if (createCats) {
-            newSub = true;
-            warnings.push(`تصنيف فرعي جديد: ${subName}`);
-          } else {
-            warnings.push(`تصنيف فرعي غير معروف: ${subName}`);
-          }
-        }
-        const reason = c.reason ? (r[c.reason] == null ? null : String(r[c.reason])) : null;
-        const confirmed = c.confirmed ? parseBool(r[c.confirmed]) : false;
-        const uploaded = c.uploaded ? parseBool(r[c.uploaded]) : false;
-        const invoiceVal = c.invoice ? String(r[c.invoice] ?? "").toLowerCase().trim() : "";
-        const notRequired = /not required|no invoice|بدون فاتورة|لا يحتاج/.test(invoiceVal);
-        let attachment_status: "attached" | "not_attached" | "not_required" = "not_attached";
-        if (notRequired) attachment_status = "not_required";
-        if (uploaded && !notRequired) warnings.push("الملف القديم كان مرفوع، لكن لا يوجد مرفق فعلي في النظام");
-        const row: ParsedRow = {
-          rowNo: i + 2,
-          raw: r,
-          date,
-          amount,
-          month,
-          account_type: acct,
-          internal_review_status: confirmed ? "reviewed" : "unreviewed",
-          note: reason,
-          item_name: item,
-          supplier_name: vendor,
-          supplier_id,
-          main_category_name: catName,
-          sub_category_name: subName,
-          main_category_id,
-          sub_category_id,
-          attachment_status,
-          newSupplier,
-          newMain,
-          newSub,
-          errors,
-          warnings,
-          duplicate: false,
-        };
-        if (date && amount != null && item) {
-          row.duplicate = existingExpenses.some(
-            (e) =>
-              e.expense_date === date &&
-              Number(e.amount) === amount &&
-              norm(e.item_name) === norm(item) &&
-              e.account_type === acct &&
-              (supplier_id ? e.supplier_id === supplier_id : norm(e.supplier_name) === norm(vendor)) &&
-              (main_category_id ? e.main_category_id === main_category_id : true),
-          );
-          if (row.duplicate) warnings.push("مكرر محتمل");
-        }
-        out.push(row);
-      });
-    }
-    setParsed(out);
-    toast.success(`تم قراءة ${out.length} صف`);
   };
 
   const stats = useMemo(() => {
@@ -420,11 +418,10 @@ function ImportPage() {
     let skipped = 0;
     const errorsList: string[] = [];
 
-    // working copies (so multiple rows referencing same new name reuse the created row)
-    const srcMap = new Map(sources.map((s) => [norm(s.name), s.id]));
-    const supMap = new Map(suppliers.map((s) => [norm(s.name), s.id]));
-    const mainMap = new Map(mainCats.map((s) => [norm(s.name), s.id]));
-    const subMap = new Map(subCats.map((s) => [`${s.parent_id}|${norm(s.name)}`, s.id]));
+    const srcMap = new Map(sources.map((s) => [normStr(s.name), s.id]));
+    const supMap = new Map(suppliers.map((s) => [normStr(s.name), s.id]));
+    const mainMap = new Map(mainCats.map((s) => [normStr(s.name), s.id]));
+    const subMap = new Map(subCats.map((s) => [`${s.parent_id}|${normStr(s.name)}`, s.id]));
 
     for (const r of parsed) {
       if (r.errors.length) { skipped++; continue; }
@@ -433,7 +430,7 @@ function ImportPage() {
         if (importType === "incomes") {
           let source_id = r.source_id;
           if (!source_id && r.source_name) {
-            const key = norm(r.source_name);
+            const key = normStr(r.source_name);
             source_id = srcMap.get(key) ?? null;
             if (!source_id && createSources) {
               const { data, error } = await supabase.from("finance_income_sources").insert({ name: r.source_name }).select("id").single();
@@ -445,23 +442,17 @@ function ImportPage() {
           }
           if (!source_id) { skipped++; continue; }
           const { error } = await supabase.from("finance_incomes").insert({
-            income_date: r.date!,
-            amount: r.amount!,
-            income_source_id: source_id,
-            month: r.month!,
-            account_type: r.account_type!,
+            income_date: r.date!, amount: r.amount!, income_source_id: source_id,
+            month: r.month!, account_type: r.account_type!,
             internal_review_status: r.internal_review_status,
-            accountant_status: "not_reviewed",
-            attachment_status: "not_attached",
-            note: r.note,
-            created_by: uid,
-            import_batch_id: batchId,
+            accountant_status: "not_reviewed", attachment_status: "not_attached",
+            note: r.note, created_by: uid, import_batch_id: batchId,
           });
           if (error) throw error;
         } else {
           let supplier_id = r.supplier_id;
           if (!supplier_id && r.supplier_name && createSuppliers) {
-            const key = norm(r.supplier_name);
+            const key = normStr(r.supplier_name);
             supplier_id = supMap.get(key) ?? null;
             if (!supplier_id) {
               const { data, error } = await supabase.from("finance_suppliers").insert({ name: r.supplier_name }).select("id").single();
@@ -473,7 +464,7 @@ function ImportPage() {
           }
           let main_id = r.main_category_id;
           if (!main_id && r.main_category_name && createCats) {
-            const key = norm(r.main_category_name);
+            const key = normStr(r.main_category_name);
             main_id = mainMap.get(key) ?? null;
             if (!main_id) {
               const { data, error } = await supabase.from("finance_categories").insert({ name: r.main_category_name, kind: "main" }).select("id").single();
@@ -485,7 +476,7 @@ function ImportPage() {
           }
           let sub_id = r.sub_category_id;
           if (!sub_id && r.sub_category_name && createCats && main_id) {
-            const key = `${main_id}|${norm(r.sub_category_name)}`;
+            const key = `${main_id}|${normStr(r.sub_category_name)}`;
             sub_id = subMap.get(key) ?? null;
             if (!sub_id) {
               const { data, error } = await supabase.from("finance_categories").insert({ name: r.sub_category_name, kind: "sub", parent_id: main_id }).select("id").single();
@@ -496,21 +487,14 @@ function ImportPage() {
             }
           }
           const { error } = await supabase.from("finance_expenses").insert({
-            expense_date: r.date!,
-            amount: r.amount!,
-            item_name: r.item_name!,
-            supplier_id,
-            supplier_name: supplier_id ? null : r.supplier_name,
-            main_category_id: main_id,
-            sub_category_id: sub_id,
-            month: r.month!,
-            account_type: r.account_type!,
+            expense_date: r.date!, amount: r.amount!, item_name: r.item_name!,
+            supplier_id, supplier_name: supplier_id ? null : r.supplier_name,
+            main_category_id: main_id, sub_category_id: sub_id,
+            month: r.month!, account_type: r.account_type!,
             internal_review_status: r.internal_review_status,
             accountant_status: "not_reviewed",
             attachment_status: r.attachment_status ?? "not_attached",
-            note: r.note,
-            created_by: uid,
-            import_batch_id: batchId,
+            note: r.note, created_by: uid, import_batch_id: batchId,
           });
           if (error) throw error;
         }
@@ -531,7 +515,7 @@ function ImportPage() {
       error_rows: parsed.filter((r) => r.errors.length).length,
       duplicate_rows: parsed.filter((r) => r.duplicate).length,
       imported_by: uid,
-      summary_json: { batch_id: batchId, created, errors: errorsList.slice(0, 50) } as any,
+      summary_json: { batch_id: batchId, created, errors: errorsList.slice(0, 50), header_row: headerRow } as any,
     });
 
     setImporting(false);
@@ -539,11 +523,22 @@ function ImportPage() {
     setParsed([]);
     setFile(null);
     setWb(null);
+    setAoa([]);
     reloadLogs();
   };
 
   if (roles.loading) return <div className="text-sm text-muted-foreground">…</div>;
   if (!canImport) return <div className="text-sm text-muted-foreground">لا تملك صلاحية الاستيراد. يتطلب admin أو finance_manage.</div>;
+
+  const colLabel = (i: number) => {
+    // Excel-style A, B, .., Z, AA
+    let s = "";
+    let n = i;
+    while (n >= 0) { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1; }
+    return s;
+  };
+
+  const previewRows = aoa.slice(0, 15);
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -552,7 +547,7 @@ function ImportPage() {
         <p className="text-xs text-muted-foreground">رفع ملف Excel قديم لاستيراد الدخل أو المصروفات. لن يتم الحفظ قبل المعاينة والتأكيد.</p>
       </div>
 
-      {/* Step 1: file */}
+      {/* Step 1 */}
       <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm font-medium"><Upload size={14} /> 1) رفع الملف</div>
         <input
@@ -564,7 +559,7 @@ function ImportPage() {
         {file && <div className="text-xs text-muted-foreground">{file.name}</div>}
       </div>
 
-      {/* Step 2+3 */}
+      {/* Step 2 */}
       {wb && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium"><FileSpreadsheet size={14} /> 2) نوع الاستيراد والشيت</div>
@@ -582,11 +577,100 @@ function ImportPage() {
                 {wb.SheetNames.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
-            <div className="flex items-end">
-              <button onClick={parsePreview} disabled={loading} className="w-full px-3 py-1.5 rounded bg-gold/15 border border-gold/30 text-gold text-xs hover:bg-gold/25">
-                قراءة ومعاينة
-              </button>
+            <label className="text-xs space-y-1">
+              <div>صف العناوين (Header Row)</div>
+              <input
+                type="number"
+                min={1}
+                max={Math.max(1, aoa.length)}
+                value={headerRow}
+                onChange={(e) => setHeaderRow(Math.max(1, Number(e.target.value) || 1))}
+                className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-xs"
+              />
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Raw preview */}
+      {aoa.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+          <div className="text-sm font-medium">3) معاينة خام (أول 15 صف)</div>
+          <p className="text-[11px] text-muted-foreground">الصف المحدد باللون الذهبي هو صف العناوين الحالي. غيّر الرقم في الأعلى إذا كانت العناوين في صف مختلف.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px] border-collapse">
+              <thead>
+                <tr className="bg-white/5">
+                  <th className="p-1.5 text-right border border-white/10 sticky right-0 bg-white/5">#</th>
+                  {Array.from({ length: numCols }).map((_, i) => (
+                    <th key={i} className="p-1.5 border border-white/10 text-center text-muted-foreground">{colLabel(i)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {previewRows.map((row, i) => {
+                  const realRow = i + 1;
+                  const isHeader = realRow === headerRow;
+                  return (
+                    <tr key={i} className={isHeader ? "bg-gold/15" : ""}>
+                      <td className="p-1.5 border border-white/10 sticky right-0 bg-inherit text-muted-foreground">
+                        <button onClick={() => setHeaderRow(realRow)} className="hover:text-gold">{realRow}</button>
+                      </td>
+                      {Array.from({ length: numCols }).map((_, c) => (
+                        <td key={c} className="p-1.5 border border-white/10 whitespace-nowrap max-w-[180px] truncate">
+                          {row?.[c] == null ? "" : String(row[c])}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Mapping */}
+      {aoa.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+          <div className="text-sm font-medium">4) مطابقة الأعمدة</div>
+          <p className="text-[11px] text-muted-foreground">تم اقتراح المطابقة تلقائيًا من صف العناوين. عدّلها إذا لزم.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {fieldDefs.map((f) => (
+              <label key={f.key} className="text-xs space-y-1">
+                <div className="flex items-center gap-1">
+                  <span>{f.label}</span>
+                  {f.required && <span className="text-red-300">*</span>}
+                </div>
+                <select
+                  value={mapping[f.key] ?? -1}
+                  onChange={(e) => setMapping({ ...mapping, [f.key]: Number(e.target.value) })}
+                  className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-xs"
+                >
+                  <option value={-1}>— غير مطابق —</option>
+                  {Array.from({ length: numCols }).map((_, i) => (
+                    <option key={i} value={i}>
+                      {colLabel(i)} — {headers[i] == null || String(headers[i]).trim() === "" ? "(فارغ)" : String(headers[i])}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+          {missingRequired.length > 0 && (
+            <div className="text-[11px] text-red-300 flex items-center gap-1">
+              <AlertTriangle size={12} /> الأعمدة المطلوبة غير محددة: {missingRequired.join(" · ")}
             </div>
+          )}
+          <div className="flex flex-wrap gap-2 items-center pt-1">
+            <button
+              onClick={parsePreview}
+              disabled={loading || missingRequired.length > 0}
+              className="px-3 py-1.5 rounded bg-gold/15 border border-gold/30 text-gold text-xs hover:bg-gold/25 disabled:opacity-40"
+            >
+              معاينة البيانات
+            </button>
+            <span className="text-[11px] text-muted-foreground">سيتم تجاهل الصفوف الفارغة تلقائيًا.</span>
           </div>
         </div>
       )}
@@ -600,9 +684,7 @@ function ImportPage() {
             <label className="flex items-center gap-2"><input type="checkbox" checked={createSuppliers} onChange={(e) => setCreateSuppliers(e.target.checked)} /> إنشاء موردين جدد</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={createCats} onChange={(e) => setCreateCats(e.target.checked)} /> إنشاء تصنيفات جديدة</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={skipDuplicates} onChange={(e) => setSkipDuplicates(e.target.checked)} /> تخطي المكررات</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={skipErrors} onChange={(e) => setSkipErrors(e.target.checked)} /> تخطي الصفوف فيها أخطاء</label>
           </div>
-          <button onClick={() => parsePreview()} className="text-[11px] text-gold hover:underline">إعادة التحقق</button>
         </div>
       )}
 
