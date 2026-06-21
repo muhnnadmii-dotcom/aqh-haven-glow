@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
-import { Plus, Eye, EyeOff, X } from "lucide-react";
+import { Plus, Eye, EyeOff, X, ArrowUp, ArrowDown, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { ACCOUNT_TYPES } from "@/lib/finance/constants";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settings")({
   ssr: false,
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/settings")({
 function SettingsPage() {
   const roles = useFinanceRoles();
   const [sources, setSources] = useState<any[]>([]);
+  const [editing, setEditing] = useState<any>(null);
   const [creating, setCreating] = useState(false);
   if (!roles.canSettings) return <div className="text-sm text-muted-foreground">لا تملك صلاحية إدارة الإعدادات.</div>;
 
@@ -27,39 +29,74 @@ function SettingsPage() {
     if (error) toast.error(error.message); else load();
   };
 
+  const move = async (s: any, dir: -1 | 1) => {
+    const idx = sources.findIndex((x) => x.id === s.id);
+    const other = sources[idx + dir];
+    if (!other) return;
+    await Promise.all([
+      supabase.from("finance_income_sources").update({ display_order: other.display_order }).eq("id", s.id),
+      supabase.from("finance_income_sources").update({ display_order: s.display_order }).eq("id", other.id),
+    ]);
+    load();
+  };
+
   return (
-    <div className="space-y-4 max-w-2xl">
+    <div className="space-y-5 max-w-2xl">
       <h2 className="text-base font-semibold">إعدادات المالية</h2>
+
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-semibold">مصادر الدخل</div>
           <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[11px]"><Plus size={11} /> إضافة</button>
         </div>
         <div className="space-y-1.5">
-          {sources.map((s) => (
+          {sources.map((s, i) => (
             <div key={s.id} className="flex items-center justify-between px-3 py-2 rounded bg-white/5 text-[12px]">
               <span className={s.is_active ? "" : "text-muted-foreground line-through"}>{s.name}</span>
-              <button onClick={() => toggle(s)} className="p-1 hover:bg-white/10 rounded">{s.is_active ? <EyeOff size={12} /> : <Eye size={12} />}</button>
+              <div className="flex items-center gap-1">
+                <button disabled={i === 0} onClick={() => move(s, -1)} className="p-1 hover:bg-white/10 rounded disabled:opacity-30"><ArrowUp size={12} /></button>
+                <button disabled={i === sources.length - 1} onClick={() => move(s, 1)} className="p-1 hover:bg-white/10 rounded disabled:opacity-30"><ArrowDown size={12} /></button>
+                <button onClick={() => setEditing(s)} className="p-1 hover:bg-white/10 rounded"><Pencil size={12} /></button>
+                <button onClick={() => toggle(s)} className="p-1 hover:bg-white/10 rounded">{s.is_active ? <EyeOff size={12} /> : <Eye size={12} />}</button>
+              </div>
             </div>
           ))}
         </div>
+        <div className="mt-3 text-[11px] text-muted-foreground">المصدر المعطل لا يظهر في الإضافة الجديدة، لكنه يبقى في العمليات القديمة.</div>
       </div>
-      {creating && <NewSourceDialog onClose={() => setCreating(false)} onSaved={() => { setCreating(false); load(); }} />}
+
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+        <div className="text-sm font-semibold mb-2">أنواع الحسابات المسموحة</div>
+        <div className="flex flex-wrap gap-2">
+          {ACCOUNT_TYPES.map((a) => (
+            <span key={a.value} className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[12px]">{a.label}</span>
+          ))}
+        </div>
+        <div className="mt-2 text-[11px] text-muted-foreground">للعرض فقط — لا يمكن حذفها حاليًا.</div>
+      </div>
+
+      {(creating || editing) && (
+        <SourceDialog row={editing} onClose={() => { setCreating(false); setEditing(null); }} onSaved={() => { setCreating(false); setEditing(null); load(); }} />
+      )}
     </div>
   );
 }
 
-function NewSourceDialog({ onClose, onSaved }: any) {
-  const [name, setName] = useState("");
+function SourceDialog({ row, onClose, onSaved }: any) {
+  const isNew = !row;
+  const [name, setName] = useState(row?.name ?? "");
   const save = async () => {
     if (!name.trim()) return;
-    const { error } = await supabase.from("finance_income_sources").insert({ name: name.trim(), display_order: 999 });
-    if (error) toast.error(error.message); else { toast.success("تمت الإضافة"); onSaved(); }
+    const q = isNew
+      ? supabase.from("finance_income_sources").insert({ name: name.trim(), display_order: 999 })
+      : supabase.from("finance_income_sources").update({ name: name.trim() }).eq("id", row.id);
+    const { error } = await q;
+    if (error) toast.error(error.message); else { toast.success("تم الحفظ"); onSaved(); }
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" onClick={onClose}>
       <div className="w-full max-w-sm rounded-2xl bg-background border border-white/10 p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between"><div className="font-semibold text-sm">مصدر دخل جديد</div><button onClick={onClose}><X size={16} /></button></div>
+        <div className="flex items-center justify-between"><div className="font-semibold text-sm">{isNew ? "مصدر دخل جديد" : "تعديل المصدر"}</div><button onClick={onClose}><X size={16} /></button></div>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم" className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px]" />
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] bg-white/5">إلغاء</button>
