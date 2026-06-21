@@ -54,7 +54,7 @@ const INCOME_FIELDS = [
 const EXPENSE_FIELDS = [
   { key: "date", label: "التاريخ", aliases: ["date", "التاريخ", "تاريخ"], required: true },
   { key: "amount", label: "المبلغ", aliases: ["amount", "المبلغ", "مبلغ"], required: true },
-  { key: "item", label: "البيان", aliases: ["item", "name", "البيان", "الصنف", "description", "وصف"], required: true },
+  { key: "item", label: "البيان", aliases: ["item", "name", "البيان", "الصنف", "description", "وصف"], required: false },
   { key: "vendor", label: "المورد", aliases: ["vendor", "supplier", "المورد", "البائع"], required: false },
   { key: "category", label: "التصنيف الرئيسي", aliases: ["category", "التصنيف", "main category", "التصنيف الرئيسي"], required: false },
   { key: "sub", label: "التصنيف الفرعي", aliases: ["sub-category", "sub_category", "subcategory", "التصنيف الفرعي", "فرعي"], required: false },
