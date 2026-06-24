@@ -197,9 +197,6 @@ function HomePage() {
               <div className="flex flex-wrap justify-center gap-3 mb-10 sm:mb-12">
                 <CTAButton href={hero?.primary_cta_href || "/contact"} variant="gold">{hero?.primary_cta_label || "اطلب مشروعك"}</CTAButton>
                 <CTAButton href={hero?.secondary_cta_href || "/portfolio"} variant="outline">{hero?.secondary_cta_label || "شاهد أعمالنا"}</CTAButton>
-                <CTAButton href={whatsappLink()} variant="outline">
-                  <MessageCircle size={16} className="ml-1" /> واتساب
-                </CTAButton>
               </div>
             </Reveal>
             {heroStats.length > 0 && (
