@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import seedRows from "./seed/aqh-products-seed.json";
 
 type SeedRow = {
   sku: string;
