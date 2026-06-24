@@ -154,3 +154,88 @@ function StatRow({ icon: Icon, text, cta, to }: { icon: any; text: string; cta: 
     </div>
   );
 }
+
+function GuestCustomerBanner() {
+  return (
+    <section className="relative py-8 sm:py-10">
+      <div className="mx-auto max-w-5xl px-5 sm:px-6">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl glass-gold border border-[color:var(--gold)]/25 shadow-xl p-6 sm:p-8">
+          {/* decorative glow */}
+          <div aria-hidden className="pointer-events-none absolute -top-20 -left-20 h-56 w-56 rounded-full bg-[color:var(--gold)]/15 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 rounded-full bg-[oklch(0.45_0.12_245)]/30 blur-3xl" />
+
+          <div className="relative flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
+            {/* Text side */}
+            <div className="flex-1 min-w-0 text-center md:text-right">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--gold)]/15 border border-[color:var(--gold)]/30 px-3 py-1 text-[11px] text-[color:var(--gold)] mb-3">
+                <span aria-hidden>📱</span> جديد · لوحة العميل
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight mb-2">
+                تابع حوضك من جوالك
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl mx-auto md:mx-0">
+                سجّل حالة حوضك، قراءات الماء، وصوره — واطلب دعم Aqua Haven بضغطة.
+                كل شي عن حوضك في مكان واحد.
+              </p>
+
+              <div className="mt-5 flex flex-wrap gap-2.5 justify-center md:justify-start">
+                <Link
+                  to="/account"
+                  className="btn-gold rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2"
+                >
+                  <LayoutDashboard size={15} /> ادخل لوحتك
+                  <ArrowLeft size={14} />
+                </Link>
+                <Link
+                  to="/account/tanks"
+                  className="rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2 bg-white/5 border border-white/15 hover:bg-white/10"
+                >
+                  <Plus size={14} /> تحديث سريع للحوض
+                </Link>
+              </div>
+            </div>
+
+            {/* Visual side — mini tank status card */}
+            <div className="w-full md:w-[300px] shrink-0">
+              <div className="relative rounded-2xl bg-[oklch(0.12_0.06_245)]/70 border border-white/10 p-4 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="grid place-items-center h-9 w-9 rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--gold)]">
+                      <Fish size={16} />
+                    </span>
+                    <div className="text-xs">
+                      <div className="text-muted-foreground">حوضي الرئيسي</div>
+                      <div className="font-semibold">عرض مباشر</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">
+                    ممتاز
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <MiniStat label="الحرارة" value="25°" />
+                  <MiniStat label="pH" value="7.4" />
+                  <MiniStat label="تغيير الماء" value="٣ أيام" />
+                </div>
+
+                <div className="mt-3 text-[11px] text-muted-foreground text-center">
+                  اربط حوضك الرئيسي من الإعدادات لتظهر بياناتك هنا.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white/5 border border-white/10 px-2 py-2">
+      <div className="text-sm font-bold text-gradient-gold">{value}</div>
+      <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
+    </div>
+  );
+}
