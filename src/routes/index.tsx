@@ -171,57 +171,57 @@ function HomePage() {
       {heroEnabled && (
         <section className="relative min-h-[92dvh] overflow-hidden -mt-24 pt-24 flex flex-col">
           <div className="absolute inset-0">
-            <img src={heroImg} alt={hero?.title ?? "أكوا هيفن"} className="h-full w-full object-cover" width={1920} height={1080} />
+            <img src={heroImg} alt={hero?.title ?? "أكوا هيفن"} className="h-full w-full object-cover" style={{ opacity: overlayOn ? 1 - overlayOpacity * 0.4 : 1 }} width={1920} height={1080} />
             {overlayOn && (
-              <div className="absolute inset-x-0 bottom-0 h-2/3" style={{ background: `linear-gradient(to bottom, transparent, oklch(0.10 0.05 245 / ${overlayOpacity * 0.5}), var(--background))` }} />
+              <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, oklch(0.10 0.05 245 / ${overlayOpacity}), oklch(0.10 0.05 245 / ${overlayOpacity * 0.6}), var(--background))` }} />
             )}
           </div>
           <div className="light-rays" aria-hidden />
           <Bubbles count={22} />
 
-          <div className="relative mx-auto w-full max-w-md px-4 sm:px-6 mt-auto pb-6 sm:pb-8">
-            <Reveal delay={120}>
-              <div
-                className="rounded-[1.75rem] p-5 sm:p-7 text-right backdrop-blur-2xl border border-white/15 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]"
-                style={{ background: "linear-gradient(160deg, oklch(1 0 0 / 0.10), oklch(1 0 0 / 0.04))" }}
-              >
-                <h1 className="text-2xl sm:text-3xl font-extrabold leading-[1.15] tracking-tight">
+          <div className="relative mx-auto w-full max-w-7xl px-5 pt-12 sm:pt-16 text-center flex-1 flex flex-col">
+            <div className="my-auto">
+              <Reveal delay={120}>
+                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] mb-5 tracking-tight">
                   <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
                     {hero?.title || "عالمك المائي يبدأ من هنا"}
                   </span>
                   {hero?.subtitle && (<><br /><span className="text-foreground/95">{hero.subtitle}</span></>)}
                 </h1>
-                <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
+              </Reveal>
+              <Reveal delay={240}>
+                <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed px-2">
                   {hero?.description || "نصمم وننفذ أحواض مائية مخصصة للمنازل، المكاتب، الكافيهات والمشاريع التجارية بعناية احترافية من الفكرة حتى التشغيل."}
                 </p>
+              </Reveal>
+            </div>
 
-                <Link
-                  to="/catalog"
-                  className="mt-5 w-full inline-flex items-center justify-center rounded-full px-8 py-3.5 text-base font-semibold bg-foreground text-background hover:opacity-90 transition shadow-[0_10px_30px_-10px_oklch(0_0_0/0.5)]"
-                >
-                  المتجر الإلكتروني
-                </Link>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-      )}
 
-      {heroEnabled && heroStats.length > 0 && (
-        <section className="relative py-10 sm:py-14">
-          <div className="mx-auto max-w-5xl px-5">
-            <div className={`grid gap-3 sm:gap-4 ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
-              {heroStats.map((s) => (
-                <div key={s.id} className="glass rounded-2xl p-5 text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
-                    <Counter to={s.value} suffix={s.suffix} />
-                  </div>
-                  <div className="text-xs md:text-sm text-muted-foreground mt-1">{s.label}</div>
+            <div className="mt-auto pt-16 sm:pt-20 pb-10 sm:pb-12">
+              <Reveal delay={360}>
+                <div className="flex flex-wrap justify-center gap-3 mb-8 sm:mb-10">
+                  <CTAButton href={hero?.primary_cta_href || "/contact"} variant="gold">{hero?.primary_cta_label || "اطلب مشروعك"}</CTAButton>
+                  <CTAButton href={hero?.secondary_cta_href || "/portfolio"} variant="outline">{hero?.secondary_cta_label || "شاهد أعمالنا"}</CTAButton>
                 </div>
-              ))}
+              </Reveal>
+              {heroStats.length > 0 && (
+                <Reveal delay={480}>
+                  <div className={`grid gap-3 sm:gap-4 max-w-3xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
+                    {heroStats.map((s) => (
+                      <div key={s.id} className="glass rounded-2xl p-4">
+                        <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
+                          <Counter to={s.value} suffix={s.suffix} />
+                        </div>
+                        <div className="text-[11px] md:text-xs text-muted-foreground mt-1">{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </Reveal>
+              )}
             </div>
           </div>
         </section>
+
       )}
 
       {/* Customer welcome card — visible only for signed-in users */}
