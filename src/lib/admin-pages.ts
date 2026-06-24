@@ -11,10 +11,11 @@ export type AdminPageDef = {
 export type AdminGroupDef = { key: string; label: string };
 
 export const ADMIN_GROUPS: AdminGroupDef[] = [
-  { key: "ops",     label: "التشغيل" },
-  { key: "content", label: "محتوى الموقع" },
-  { key: "finance", label: "المالية" },
-  { key: "admin",   label: "الإدارة" },
+  { key: "ops",       label: "التشغيل" },
+  { key: "content",   label: "محتوى الموقع" },
+  { key: "finance",   label: "المالية" },
+  { key: "inventory", label: "المخزون" },
+  { key: "admin",     label: "الإدارة" },
 ];
 
 export const ADMIN_PAGES: AdminPageDef[] = [
