@@ -180,19 +180,22 @@ function HomePage() {
           <Bubbles count={22} />
 
           <div className="relative mx-auto w-full max-w-7xl px-5 pt-12 sm:pt-16 text-center flex-1 flex flex-col">
-            <Reveal delay={120}>
-              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] mb-5 tracking-tight">
-                <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
-                  {hero?.title || "عالمك المائي يبدأ من هنا"}
-                </span>
-                {hero?.subtitle && (<><br /><span className="text-foreground/95">{hero.subtitle}</span></>)}
-              </h1>
-            </Reveal>
-            <Reveal delay={240}>
-              <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed px-2">
-                {hero?.description || "نصمم وننفذ أحواض مائية مخصصة للمنازل، المكاتب، الكافيهات والمشاريع التجارية بعناية احترافية من الفكرة حتى التشغيل."}
-              </p>
-            </Reveal>
+            <div className="my-auto">
+              <Reveal delay={120}>
+                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] mb-5 tracking-tight">
+                  <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
+                    {hero?.title || "عالمك المائي يبدأ من هنا"}
+                  </span>
+                  {hero?.subtitle && (<><br /><span className="text-foreground/95">{hero.subtitle}</span></>)}
+                </h1>
+              </Reveal>
+              <Reveal delay={240}>
+                <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed px-2">
+                  {hero?.description || "نصمم وننفذ أحواض مائية مخصصة للمنازل، المكاتب، الكافيهات والمشاريع التجارية بعناية احترافية من الفكرة حتى التشغيل."}
+                </p>
+              </Reveal>
+            </div>
+
 
             <div className="mt-auto pt-16 sm:pt-20 pb-10 sm:pb-12">
               <Reveal delay={360}>
