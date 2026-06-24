@@ -51,7 +51,8 @@ export function CustomerHomeCard() {
     return () => { active = false; };
   }, [user]);
 
-  if (loading || !user) return null;
+  if (loading) return null;
+  if (!user) return <GuestCustomerBanner />;
 
   const name = snap?.name ?? "";
   const hasAnyData = !!snap && (snap.openRequests > 0 || snap.tanks > 0 || !!snap.nextAppointment);
