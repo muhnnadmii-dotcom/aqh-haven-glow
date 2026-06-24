@@ -74,69 +74,75 @@ export type Database = {
       aqh_products: {
         Row: {
           category: string | null
-          cost: number
-          created_at: string
-          current_qty: number
+          cost: number | null
+          created_at: string | null
+          current_qty: number | null
           id: number
           image_url: string | null
-          is_active: boolean
+          is_active: boolean | null
           name_ar: string
+          restock_type: string | null
           sku: string
         }
         Insert: {
           category?: string | null
-          cost?: number
-          created_at?: string
-          current_qty?: number
+          cost?: number | null
+          created_at?: string | null
+          current_qty?: number | null
           id?: never
           image_url?: string | null
-          is_active?: boolean
+          is_active?: boolean | null
           name_ar: string
+          restock_type?: string | null
           sku: string
         }
         Update: {
           category?: string | null
-          cost?: number
-          created_at?: string
-          current_qty?: number
+          cost?: number | null
+          created_at?: string | null
+          current_qty?: number | null
           id?: never
           image_url?: string | null
-          is_active?: boolean
+          is_active?: boolean | null
           name_ar?: string
+          restock_type?: string | null
           sku?: string
         }
         Relationships: []
       }
       aqh_restock_requests: {
         Row: {
-          created_at: string
+          created_at: string | null
           created_by: string | null
           employee_name: string | null
           id: number
           items: Json
-          items_count: number
+          items_count: number | null
           notes: string | null
-          status: string
+          request_kind: string | null
+          status: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           created_by?: string | null
           employee_name?: string | null
           id?: never
           items: Json
-          items_count?: number
+          items_count?: number | null
           notes?: string | null
-          status?: string
+          request_kind?: string | null
+          status?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           created_by?: string | null
           employee_name?: string | null
           id?: never
           items?: Json
-          items_count?: number
+          items_count?: number | null
           notes?: string | null
-          status?: string
+          request_kind?: string | null
+          status?: string | null
         }
         Relationships: []
       }
