@@ -180,20 +180,31 @@ function HomePage() {
           <Bubbles count={22} />
 
           <div className="relative mx-auto w-full max-w-7xl px-5 pt-12 sm:pt-16 text-center flex-1 flex flex-col">
-            <div className="my-auto">
-              <Reveal delay={120}>
-                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] mb-5 tracking-tight">
-                  <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
-                    {hero?.title || "عالمك المائي يبدأ من هنا"}
-                  </span>
-                  {hero?.subtitle && (<><br /><span className="text-foreground/95">{hero.subtitle}</span></>)}
-                </h1>
-              </Reveal>
-              <Reveal delay={240}>
-                <p className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed px-2">
-                  {hero?.description || "نصمم وننفذ أحواض مائية مخصصة للمنازل، المكاتب، الكافيهات والمشاريع التجارية بعناية احترافية من الفكرة حتى التشغيل."}
-                </p>
-              </Reveal>
+            <div className="my-auto space-y-6">
+              {(hero?.title || hero?.subtitle) && (
+                <Reveal delay={120}>
+                  <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] tracking-tight">
+                    {hero?.title && (
+                      <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
+                        {hero.title}
+                      </span>
+                    )}
+                    {hero?.subtitle && (
+                      <>
+                        {hero?.title && <br />}
+                        <span className="text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">{hero.subtitle}</span>
+                      </>
+                    )}
+                  </h1>
+                </Reveal>
+              )}
+              {hero?.description && (
+                <Reveal delay={240}>
+                  <p className="mx-auto max-w-2xl text-base sm:text-lg md:text-xl text-white/90 leading-relaxed px-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                    {hero.description}
+                  </p>
+                </Reveal>
+              )}
             </div>
 
 
@@ -201,9 +212,9 @@ function HomePage() {
               <Reveal delay={360}>
                 <div className="flex flex-wrap justify-center gap-3 mb-8 sm:mb-10">
                   <CTAButton href={hero?.primary_cta_href || "/contact"} variant="gold">{hero?.primary_cta_label || "اطلب مشروعك"}</CTAButton>
-                  <CTAButton href={hero?.secondary_cta_href || "/portfolio"} variant="outline">{hero?.secondary_cta_label || "شاهد أعمالنا"}</CTAButton>
                 </div>
               </Reveal>
+
               {heroStats.length > 0 && (
                 <Reveal delay={480}>
                   <div className={`grid gap-3 sm:gap-4 max-w-3xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
