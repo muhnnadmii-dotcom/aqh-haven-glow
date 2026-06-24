@@ -41,6 +41,7 @@ import { Route as AuthenticatedAdminRolesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
 import { Route as AuthenticatedAdminProjectsRouteImport } from './routes/_authenticated/admin.projects'
 import { Route as AuthenticatedAdminProjectCategoriesRouteImport } from './routes/_authenticated/admin.project-categories'
+import { Route as AuthenticatedAdminInventoryRouteImport } from './routes/_authenticated/admin.inventory'
 import { Route as AuthenticatedAdminFinanceRouteImport } from './routes/_authenticated/admin.finance'
 import { Route as AuthenticatedAdminDesignRouteImport } from './routes/_authenticated/admin.design'
 import { Route as AuthenticatedAdminArticlesRouteImport } from './routes/_authenticated/admin.articles'
@@ -238,6 +239,12 @@ const AuthenticatedAdminProjectCategoriesRoute =
   AuthenticatedAdminProjectCategoriesRouteImport.update({
     id: '/project-categories',
     path: '/project-categories',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminInventoryRoute =
+  AuthenticatedAdminInventoryRouteImport.update({
+    id: '/inventory',
+    path: '/inventory',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminFinanceRoute =
@@ -469,6 +476,7 @@ export interface FileRoutesByFullPath {
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/admin/design': typeof AuthenticatedAdminDesignRouteWithChildren
   '/admin/finance': typeof AuthenticatedAdminFinanceRouteWithChildren
+  '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRouteWithChildren
@@ -528,6 +536,7 @@ export interface FileRoutesByTo {
   '/account/reports': typeof AuthenticatedAccountReportsRoute
   '/admin/appointments': typeof AuthenticatedAdminAppointmentsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
+  '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/admin/roles': typeof AuthenticatedAdminRolesRoute
@@ -595,6 +604,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/_authenticated/admin/design': typeof AuthenticatedAdminDesignRouteWithChildren
   '/_authenticated/admin/finance': typeof AuthenticatedAdminFinanceRouteWithChildren
+  '/_authenticated/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/_authenticated/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/_authenticated/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRouteWithChildren
@@ -663,6 +673,7 @@ export interface FileRouteTypes {
     | '/admin/articles'
     | '/admin/design'
     | '/admin/finance'
+    | '/admin/inventory'
     | '/admin/project-categories'
     | '/admin/projects'
     | '/admin/requests'
@@ -722,6 +733,7 @@ export interface FileRouteTypes {
     | '/account/reports'
     | '/admin/appointments'
     | '/admin/articles'
+    | '/admin/inventory'
     | '/admin/project-categories'
     | '/admin/projects'
     | '/admin/roles'
@@ -788,6 +800,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/articles'
     | '/_authenticated/admin/design'
     | '/_authenticated/admin/finance'
+    | '/_authenticated/admin/inventory'
     | '/_authenticated/admin/project-categories'
     | '/_authenticated/admin/projects'
     | '/_authenticated/admin/requests'
@@ -1066,6 +1079,13 @@ declare module '@tanstack/react-router' {
       path: '/project-categories'
       fullPath: '/admin/project-categories'
       preLoaderRoute: typeof AuthenticatedAdminProjectCategoriesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/inventory': {
+      id: '/_authenticated/admin/inventory'
+      path: '/inventory'
+      fullPath: '/admin/inventory'
+      preLoaderRoute: typeof AuthenticatedAdminInventoryRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/finance': {
@@ -1456,6 +1476,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminArticlesRoute: typeof AuthenticatedAdminArticlesRoute
   AuthenticatedAdminDesignRoute: typeof AuthenticatedAdminDesignRouteWithChildren
   AuthenticatedAdminFinanceRoute: typeof AuthenticatedAdminFinanceRouteWithChildren
+  AuthenticatedAdminInventoryRoute: typeof AuthenticatedAdminInventoryRoute
   AuthenticatedAdminProjectCategoriesRoute: typeof AuthenticatedAdminProjectCategoriesRoute
   AuthenticatedAdminProjectsRoute: typeof AuthenticatedAdminProjectsRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRouteWithChildren
@@ -1474,6 +1495,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminArticlesRoute: AuthenticatedAdminArticlesRoute,
   AuthenticatedAdminDesignRoute: AuthenticatedAdminDesignRouteWithChildren,
   AuthenticatedAdminFinanceRoute: AuthenticatedAdminFinanceRouteWithChildren,
+  AuthenticatedAdminInventoryRoute: AuthenticatedAdminInventoryRoute,
   AuthenticatedAdminProjectCategoriesRoute:
     AuthenticatedAdminProjectCategoriesRoute,
   AuthenticatedAdminProjectsRoute: AuthenticatedAdminProjectsRoute,
@@ -1553,13 +1575,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

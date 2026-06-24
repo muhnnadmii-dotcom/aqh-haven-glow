@@ -11,10 +11,11 @@ export type AdminPageDef = {
 export type AdminGroupDef = { key: string; label: string };
 
 export const ADMIN_GROUPS: AdminGroupDef[] = [
-  { key: "ops",     label: "التشغيل" },
-  { key: "content", label: "محتوى الموقع" },
-  { key: "finance", label: "المالية" },
-  { key: "admin",   label: "الإدارة" },
+  { key: "ops",       label: "التشغيل" },
+  { key: "content",   label: "محتوى الموقع" },
+  { key: "finance",   label: "المالية" },
+  { key: "inventory", label: "المخزون" },
+  { key: "admin",     label: "الإدارة" },
 ];
 
 export const ADMIN_PAGES: AdminPageDef[] = [
@@ -48,6 +49,9 @@ export const ADMIN_PAGES: AdminPageDef[] = [
   { key: "/admin/finance/import-batches",  label: "دفعات الاستيراد",   group: "finance", financeOnly: true },
   { key: "/admin/finance/audit",           label: "سجل التعديلات",     group: "finance", financeOnly: true },
   { key: "/admin/finance/settings",        label: "الإعدادات المالية", group: "finance", financeOnly: true },
+
+  // Inventory
+  { key: "/admin/inventory", label: "المخزون وإعادة التوريد", group: "inventory" },
 
   // Admin
   { key: "/admin/staff", label: "الموظفين", group: "admin" },

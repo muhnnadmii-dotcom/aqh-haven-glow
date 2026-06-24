@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
   Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings as Cog, Images, Wallet,
   ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive, Shield, ShieldOff,
+  Package,
 } from "lucide-react";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { useAllowedPages } from "@/lib/use-allowed-pages";
@@ -79,6 +80,14 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    key: "inventory",
+    label: "المخزون",
+    collapsible: true,
+    items: [
+      { to: "/admin/inventory", label: "المخزون وإعادة التوريد", icon: Package, exact: true },
+    ],
+  },
+  {
     key: "admin",
     label: "الإدارة",
     collapsible: true,
@@ -105,6 +114,7 @@ const TITLES: Record<string, string> = {
   "/admin/design/about": "من نحن",
   "/admin/design/contact": "تواصل معنا",
   "/admin/staff": "الموظفين",
+  "/admin/inventory": "المخزون وإعادة التوريد",
 };
 
 function AdminLayout() {
