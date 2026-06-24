@@ -205,24 +205,23 @@ function HomePage() {
             </Reveal>
           </div>
         </section>
+      )}
 
-        {heroEnabled && heroStats.length > 0 && (
-          <section className="relative py-10 sm:py-14">
-            <div className="mx-auto max-w-5xl px-5">
-              <div className={`grid gap-3 sm:gap-4 ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
-                {heroStats.map((s) => (
-                  <div key={s.id} className="glass rounded-2xl p-5 text-center">
-                    <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
-                      <Counter to={s.value} suffix={s.suffix} />
-                    </div>
-                    <div className="text-xs md:text-sm text-muted-foreground mt-1">{s.label}</div>
+      {heroEnabled && heroStats.length > 0 && (
+        <section className="relative py-10 sm:py-14">
+          <div className="mx-auto max-w-5xl px-5">
+            <div className={`grid gap-3 sm:gap-4 ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
+              {heroStats.map((s) => (
+                <div key={s.id} className="glass rounded-2xl p-5 text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
+                    <Counter to={s.value} suffix={s.suffix} />
                   </div>
-                ))}
-              </div>
+                  <div className="text-xs md:text-sm text-muted-foreground mt-1">{s.label}</div>
+                </div>
+              ))}
             </div>
-          </section>
-        )}
-
+          </div>
+        </section>
       )}
 
       {/* Customer welcome card — visible only for signed-in users */}
