@@ -4,7 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
 import { toast } from "sonner";
-import { Package, Search, Plus, Download, Loader2 } from "lucide-react";
+import {
+  Package, Search, Plus, Minus, Trash2, Download, Loader2, ShoppingCart, ChevronDown, ChevronUp,
+} from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,26 +40,28 @@ export const Route = createFileRoute("/_authenticated/admin/inventory")({
 });
 
 type Product = {
-  id: string;
-  sku: string | null;
+  id: number;
+  sku: string;
   name_ar: string;
-  name_en: string | null;
   category: string | null;
-  unit: string | null;
+  image_url: string | null;
+  current_qty: number;
+  cost: number;
   is_active: boolean;
 };
 
 type RestockStatus = "new" | "ordered" | "received";
 
+type RestockItem = { sku: string; name_ar: string; qty: number };
+
 type RestockRequest = {
-  id: string;
-  product_id: string;
-  qty: number;
+  id: number;
+  employee_name: string | null;
+  created_by: string | null;
   status: RestockStatus;
-  requested_by: string | null;
+  items: RestockItem[];
+  items_count: number;
   notes: string | null;
-  ordered_at: string | null;
-  received_at: string | null;
   created_at: string;
 };
 
@@ -108,28 +112,29 @@ function RequestTab() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<string>("all");
-  const [picking, setPicking] = useState<Product | null>(null);
-  const [qty, setQty] = useState("1");
+  const [cart, setCart] = useState<Record<string, RestockItem>>({});
+  const [employeeName, setEmployeeName] = useState("");
   const [notes, setNotes] = useState("");
+  const [showCart, setShowCart] = useState(false);
 
   const productsQ = useQuery({
     queryKey: ["aqh_products"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("aqh_products" as never)
-        .select("id, sku, name_ar, name_en, category, unit, is_active")
+        .from("aqh_products")
+        .select("id, sku, name_ar, category, image_url, current_qty, cost, is_active")
         .eq("is_active", true)
         .order("category", { ascending: true })
         .order("name_ar", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as unknown as Product[];
+      return (data ?? []) as Product[];
     },
   });
 
   const categories = useMemo(() => {
     const set = new Set<string>();
     (productsQ.data ?? []).forEach((p) => p.category && set.add(p.category));
-    return Array.from(set);
+    return Array.from(set).sort();
   }, [productsQ.data]);
 
   const filtered = useMemo(() => {
@@ -139,33 +144,57 @@ function RequestTab() {
       if (!text) return true;
       return (
         p.name_ar.toLowerCase().includes(text) ||
-        (p.name_en ?? "").toLowerCase().includes(text) ||
-        (p.sku ?? "").toLowerCase().includes(text)
+        p.sku.toLowerCase().includes(text)
       );
     });
   }, [productsQ.data, q, category]);
 
+  const cartItems = useMemo(() => Object.values(cart), [cart]);
+  const cartCount = cartItems.reduce((s, it) => s + (it.qty || 0), 0);
+
+  function addToCart(p: Product) {
+    setCart((prev) => {
+      const cur = prev[p.sku];
+      return { ...prev, [p.sku]: { sku: p.sku, name_ar: p.name_ar, qty: (cur?.qty ?? 0) + 1 } };
+    });
+  }
+  function setQty(sku: string, qty: number) {
+    setCart((prev) => {
+      const cur = prev[sku];
+      if (!cur) return prev;
+      if (qty <= 0) {
+        const { [sku]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [sku]: { ...cur, qty } };
+    });
+  }
+  function removeFromCart(sku: string) {
+    setCart((prev) => {
+      const { [sku]: _, ...rest } = prev;
+      return rest;
+    });
+  }
+
   const submitM = useMutation({
     mutationFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("غير مصادق");
-      if (!picking) throw new Error("لم يتم اختيار منتج");
-      const n = parseFloat(qty);
-      if (!Number.isFinite(n) || n <= 0) throw new Error("أدخل كمية صحيحة");
-      const { error } = await supabase.from("aqh_restock_requests" as never).insert({
-        product_id: picking.id,
-        qty: n,
+      const items = cartItems.filter((it) => it.qty > 0);
+      if (items.length === 0) throw new Error("أضف منتجاً واحداً على الأقل");
+      const items_count = items.reduce((s, it) => s + it.qty, 0);
+      const { error } = await supabase.from("aqh_restock_requests").insert({
+        items: items as unknown as never,
+        items_count,
+        employee_name: employeeName.trim() || null,
         notes: notes.trim() || null,
-        requested_by: u.user.id,
-      } as never);
+      });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("تم تسجيل طلب التوريد");
       qc.invalidateQueries({ queryKey: ["aqh_restock_requests"] });
-      setPicking(null);
-      setQty("1");
+      setCart({});
       setNotes("");
+      setShowCart(false);
     },
     onError: (e: any) => toast.error(e?.message ?? "فشل الإرسال"),
   });
@@ -189,6 +218,15 @@ function RequestTab() {
             {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Button
+          variant="outline"
+          onClick={() => setShowCart(true)}
+          disabled={cartItems.length === 0}
+          className="bg-gold/10 border-gold/30 text-gold hover:bg-gold/20 hover:text-gold"
+        >
+          <ShoppingCart size={14} className="ml-1" />
+          السلة ({cartItems.length}) · {cartCount}
+        </Button>
       </div>
 
       {productsQ.isLoading ? (
@@ -198,71 +236,117 @@ function RequestTab() {
       ) : filtered.length === 0 ? (
         <div className="py-10 text-center text-sm text-muted-foreground">لا توجد منتجات مطابقة.</div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              className="rounded-xl border border-white/10 bg-white/[0.02] p-3 flex flex-col gap-2"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="font-medium truncate">{p.name_ar}</div>
-                  {p.name_en && (
-                    <div className="text-[11px] text-muted-foreground truncate" dir="ltr">{p.name_en}</div>
-                  )}
+        <>
+          <div className="text-xs text-muted-foreground">عدد المنتجات: {filtered.length}</div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filtered.map((p) => {
+              const inCart = cart[p.sku];
+              const low = p.current_qty <= 2;
+              return (
+                <div
+                  key={p.id}
+                  className="rounded-xl border border-white/10 bg-white/[0.02] p-2 flex gap-2"
+                >
+                  <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-white/5 border border-white/10">
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.name_ar} loading="lazy" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <Package size={20} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col gap-1">
+                    <div className="flex items-start justify-between gap-1">
+                      <div className="font-medium text-sm leading-tight line-clamp-2">{p.name_ar}</div>
+                      <Badge variant="outline" className="shrink-0 text-[9px]" dir="ltr">{p.sku}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span className="truncate">{p.category ?? "—"}</span>
+                      <span className={low ? "text-amber-400" : ""}>المخزون: {p.current_qty}</span>
+                    </div>
+                    {inCart ? (
+                      <div className="flex items-center gap-1 mt-auto">
+                        <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => setQty(p.sku, inCart.qty - 1)}>
+                          <Minus size={12} />
+                        </Button>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={inCart.qty}
+                          onChange={(e) => setQty(p.sku, parseInt(e.target.value || "0", 10))}
+                          className="h-7 text-center px-1 text-sm"
+                        />
+                        <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => setQty(p.sku, inCart.qty + 1)}>
+                          <Plus size={12} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 mt-auto bg-gold/10 border-gold/30 text-gold hover:bg-gold/20 hover:text-gold"
+                        onClick={() => addToCart(p)}
+                      >
+                        <Plus size={12} className="ml-1" /> أضف
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                {p.sku && (
-                  <Badge variant="outline" className="shrink-0 text-[10px]" dir="ltr">{p.sku}</Badge>
-                )}
-              </div>
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>{p.category ?? "—"}</span>
-                <span>{p.unit ?? ""}</span>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-gold/10 border-gold/30 text-gold hover:bg-gold/20 hover:text-gold"
-                onClick={() => { setPicking(p); setQty("1"); setNotes(""); }}
-              >
-                <Plus size={14} className="ml-1" /> اطلب توريد
-              </Button>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
-      <Dialog open={!!picking} onOpenChange={(o) => !o && setPicking(null)}>
-        <DialogContent dir="rtl">
-          <DialogHeader><DialogTitle>طلب توريد — {picking?.name_ar}</DialogTitle></DialogHeader>
-          <div className="space-y-3">
+      <Dialog open={showCart} onOpenChange={setShowCart}>
+        <DialogContent dir="rtl" className="max-w-lg">
+          <DialogHeader><DialogTitle>سلة طلب التوريد</DialogTitle></DialogHeader>
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {cartItems.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-4 text-center">السلة فارغة</div>
+            ) : (
+              <div className="space-y-2">
+                {cartItems.map((it) => (
+                  <div key={it.sku} className="flex items-center gap-2 rounded-lg border border-white/10 p-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm truncate">{it.name_ar}</div>
+                      <div className="text-[10px] text-muted-foreground" dir="ltr">{it.sku}</div>
+                    </div>
+                    <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => setQty(it.sku, it.qty - 1)}>
+                      <Minus size={12} />
+                    </Button>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={it.qty}
+                      onChange={(e) => setQty(it.sku, parseInt(e.target.value || "0", 10))}
+                      className="h-7 w-16 text-center px-1 text-sm"
+                    />
+                    <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => setQty(it.sku, it.qty + 1)}>
+                      <Plus size={12} />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => removeFromCart(it.sku)}>
+                      <Trash2 size={12} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div>
-              <label className="text-xs text-muted-foreground">الكمية {picking?.unit ? `(${picking.unit})` : ""}</label>
-              <Input
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="any"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-                autoFocus
-              />
+              <label className="text-xs text-muted-foreground">اسم الموظف (اختياري)</label>
+              <Input value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} placeholder="اسمك…" />
             </div>
             <div>
               <label className="text-xs text-muted-foreground">ملاحظة (اختياري)</label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder="ملاحظة للموردين أو فريق الشراء…"
-              />
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="ملاحظة لفريق الشراء…" />
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setPicking(null)}>إلغاء</Button>
+            <Button variant="outline" onClick={() => setShowCart(false)}>إغلاق</Button>
             <Button
               onClick={() => submitM.mutate()}
-              disabled={submitM.isPending}
+              disabled={submitM.isPending || cartItems.length === 0}
               className="bg-gold/20 border border-gold/40 text-gold hover:bg-gold/30"
             >
               {submitM.isPending ? <Loader2 className="animate-spin" size={14} /> : "تأكيد الطلب"}
@@ -280,33 +364,27 @@ function RequestsListTab() {
   const qc = useQueryClient();
   const [status, setStatus] = useState<RestockStatus | "all">("all");
   const [q, setQ] = useState("");
-
-  const productsQ = useQuery({
-    queryKey: ["aqh_products_all"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("aqh_products" as never)
-        .select("id, sku, name_ar, name_en, category, unit, is_active");
-      if (error) throw error;
-      return (data ?? []) as unknown as Product[];
-    },
-  });
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   const requestsQ = useQuery({
     queryKey: ["aqh_restock_requests"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("aqh_restock_requests" as never)
-        .select("id, product_id, qty, status, requested_by, notes, ordered_at, received_at, created_at")
+        .from("aqh_restock_requests")
+        .select("id, employee_name, created_by, status, items, items_count, notes, created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as unknown as RestockRequest[];
+      return (data ?? []).map((r) => ({
+        ...r,
+        items: (Array.isArray(r.items) ? r.items : []) as RestockItem[],
+        status: r.status as RestockStatus,
+      })) as RestockRequest[];
     },
   });
 
   const userIds = useMemo(() => {
     const s = new Set<string>();
-    (requestsQ.data ?? []).forEach((r) => r.requested_by && s.add(r.requested_by));
+    (requestsQ.data ?? []).forEach((r) => r.created_by && s.add(r.created_by));
     return Array.from(s);
   }, [requestsQ.data]);
 
@@ -325,31 +403,21 @@ function RequestsListTab() {
     },
   });
 
-  const productMap = useMemo(() => {
-    const m = new Map<string, Product>();
-    (productsQ.data ?? []).forEach((p) => m.set(p.id, p));
-    return m;
-  }, [productsQ.data]);
-
   const filtered = useMemo(() => {
     const text = q.trim().toLowerCase();
     return (requestsQ.data ?? []).filter((r) => {
       if (status !== "all" && r.status !== status) return false;
       if (!text) return true;
-      const p = productMap.get(r.product_id);
-      const hay = `${p?.name_ar ?? ""} ${p?.name_en ?? ""} ${p?.sku ?? ""}`.toLowerCase();
+      const hay = `${r.employee_name ?? ""} ${r.items.map((i) => `${i.name_ar} ${i.sku}`).join(" ")}`.toLowerCase();
       return hay.includes(text);
     });
-  }, [requestsQ.data, status, q, productMap]);
+  }, [requestsQ.data, status, q]);
 
   const statusM = useMutation({
-    mutationFn: async (args: { id: string; next: RestockStatus }) => {
-      const patch: Record<string, unknown> = { status: args.next };
-      if (args.next === "ordered") patch.ordered_at = new Date().toISOString();
-      if (args.next === "received") patch.received_at = new Date().toISOString();
+    mutationFn: async (args: { id: number; next: RestockStatus }) => {
       const { error } = await supabase
-        .from("aqh_restock_requests" as never)
-        .update(patch as never)
+        .from("aqh_restock_requests")
+        .update({ status: args.next })
         .eq("id", args.id);
       if (error) throw error;
     },
@@ -361,22 +429,25 @@ function RequestsListTab() {
   });
 
   const exportRow = (r: RestockRequest) => {
-    const p = productMap.get(r.product_id);
-    const actor = (r.requested_by && profilesQ.data?.get(r.requested_by)) || "";
-    const headers = ["id","sku","product_ar","product_en","category","unit","qty","status","requested_by","notes","ordered_at","received_at","created_at"];
-    const row = [
-      r.id, p?.sku ?? "", p?.name_ar ?? "", p?.name_en ?? "", p?.category ?? "",
-      p?.unit ?? "", String(r.qty), STATUS_LABEL[r.status], actor,
+    const actor = (r.created_by && profilesQ.data?.get(r.created_by)) || r.employee_name || "";
+    const headers = ["request_id", "status", "employee", "notes", "created_at", "sku", "name_ar", "qty"];
+    const esc = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
+    const rows = r.items.map((it) => [
+      String(r.id),
+      STATUS_LABEL[r.status],
+      actor,
       (r.notes ?? "").replace(/\r?\n/g, " "),
-      r.ordered_at ?? "", r.received_at ?? "", r.created_at,
-    ];
-    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
-    const csv = "\uFEFF" + headers.join(",") + "\n" + row.map(esc).join(",") + "\n";
+      r.created_at,
+      it.sku,
+      it.name_ar,
+      String(it.qty),
+    ].map(esc).join(","));
+    const csv = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n") + "\n";
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `restock-${(p?.sku ?? r.id).toString()}-${r.id.slice(0,8)}.csv`;
+    a.download = `restock-${r.id}.csv`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   };
@@ -389,7 +460,7 @@ function RequestsListTab() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="ابحث باسم المنتج…"
+            placeholder="ابحث باسم المنتج أو الموظف…"
             className="pr-9"
           />
         </div>
@@ -408,66 +479,97 @@ function RequestsListTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>المنتج</TableHead>
-              <TableHead>الكمية</TableHead>
+              <TableHead>#</TableHead>
+              <TableHead>الأصناف</TableHead>
+              <TableHead>الإجمالي</TableHead>
               <TableHead>الحالة</TableHead>
-              <TableHead>طالب التوريد</TableHead>
-              <TableHead>تاريخ الطلب</TableHead>
+              <TableHead>الموظف</TableHead>
+              <TableHead>التاريخ</TableHead>
               <TableHead className="text-left">إجراء</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {requestsQ.isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-sm text-muted-foreground">
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">
                 <Loader2 className="inline animate-spin" size={14} /> جارٍ التحميل…
               </TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-sm text-muted-foreground">
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">
                 لا توجد طلبات.
               </TableCell></TableRow>
             ) : filtered.map((r) => {
-              const p = productMap.get(r.product_id);
-              const actor = (r.requested_by && profilesQ.data?.get(r.requested_by)) || "—";
+              const actor = (r.created_by && profilesQ.data?.get(r.created_by)) || r.employee_name || "—";
+              const isOpen = expanded === r.id;
               return (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{p?.name_ar ?? "—"}</div>
-                      {p?.sku && <div className="text-[11px] text-muted-foreground" dir="ltr">{p.sku}</div>}
-                    </div>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">{r.qty} {p?.unit ?? ""}</TableCell>
-                  <TableCell>
-                    <Select
-                      value={r.status}
-                      onValueChange={(v) => {
-                        const next = v as RestockStatus;
-                        if (next === r.status) return;
-                        statusM.mutate({ id: r.id, next });
-                      }}
-                    >
-                      <SelectTrigger
-                        className={`h-7 px-2 py-0 text-[11px] rounded-md ${statusBadgeClass(r.status)} border-0 focus:ring-0 w-auto min-w-[110px]`}
+                <>
+                  <TableRow key={r.id}>
+                    <TableCell className="font-mono text-xs">#{r.id}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setExpanded(isOpen ? null : r.id)}
                       >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">جديد</SelectItem>
-                        <SelectItem value="ordered" disabled={r.status === "received"}>تم الطلب</SelectItem>
-                        <SelectItem value="received" disabled={r.status === "new"}>تم الاستلام</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="text-sm">{actor}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap" dir="ltr">
-                    {new Date(r.created_at).toLocaleString("ar-SA")}
-                  </TableCell>
-                  <TableCell className="text-left">
-                    <Button size="sm" variant="outline" onClick={() => exportRow(r)} title="تصدير CSV">
-                      <Download size={13} className="ml-1" /> CSV
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                        {r.items.length} صنف
+                        {isOpen ? <ChevronUp size={12} className="mr-1" /> : <ChevronDown size={12} className="mr-1" />}
+                      </Button>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{r.items_count}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={r.status}
+                        onValueChange={(v) => {
+                          const next = v as RestockStatus;
+                          if (next === r.status) return;
+                          statusM.mutate({ id: r.id, next });
+                        }}
+                      >
+                        <SelectTrigger
+                          className={`h-7 px-2 py-0 text-[11px] rounded-md ${statusBadgeClass(r.status)} border-0 focus:ring-0 w-auto min-w-[110px]`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">جديد</SelectItem>
+                          <SelectItem value="ordered">تم الطلب</SelectItem>
+                          <SelectItem value="received">تم الاستلام</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-sm">{actor}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap" dir="ltr">
+                      {new Date(r.created_at).toLocaleString("ar-SA")}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      <Button size="sm" variant="outline" onClick={() => exportRow(r)} title="تصدير CSV">
+                        <Download size={13} className="ml-1" /> CSV
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                  {isOpen && (
+                    <TableRow key={`${r.id}-items`}>
+                      <TableCell colSpan={7} className="bg-white/[0.02]">
+                        <div className="space-y-1 py-2">
+                          {r.items.map((it, i) => (
+                            <div key={i} className="flex items-center justify-between text-xs">
+                              <div className="flex-1 truncate">
+                                <span className="font-medium">{it.name_ar}</span>
+                                <span className="text-muted-foreground ml-2" dir="ltr"> · {it.sku}</span>
+                              </div>
+                              <div className="shrink-0 text-gold">× {it.qty}</div>
+                            </div>
+                          ))}
+                          {r.notes && (
+                            <div className="text-xs text-muted-foreground border-t border-white/10 pt-2 mt-2">
+                              <span className="text-foreground">ملاحظة: </span>{r.notes}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               );
             })}
           </TableBody>

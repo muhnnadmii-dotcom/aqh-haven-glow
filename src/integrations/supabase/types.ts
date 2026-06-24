@@ -74,88 +74,71 @@ export type Database = {
       aqh_products: {
         Row: {
           category: string | null
+          cost: number
           created_at: string
-          id: string
+          current_qty: number
+          id: number
+          image_url: string | null
           is_active: boolean
           name_ar: string
-          name_en: string | null
-          notes: string | null
-          sku: string | null
-          unit: string | null
-          updated_at: string
+          sku: string
         }
         Insert: {
           category?: string | null
+          cost?: number
           created_at?: string
-          id?: string
+          current_qty?: number
+          id?: never
+          image_url?: string | null
           is_active?: boolean
           name_ar: string
-          name_en?: string | null
-          notes?: string | null
-          sku?: string | null
-          unit?: string | null
-          updated_at?: string
+          sku: string
         }
         Update: {
           category?: string | null
+          cost?: number
           created_at?: string
-          id?: string
+          current_qty?: number
+          id?: never
+          image_url?: string | null
           is_active?: boolean
           name_ar?: string
-          name_en?: string | null
-          notes?: string | null
-          sku?: string | null
-          unit?: string | null
-          updated_at?: string
+          sku?: string
         }
         Relationships: []
       }
       aqh_restock_requests: {
         Row: {
           created_at: string
-          id: string
+          created_by: string | null
+          employee_name: string | null
+          id: number
+          items: Json
+          items_count: number
           notes: string | null
-          ordered_at: string | null
-          product_id: string
-          qty: number
-          received_at: string | null
-          requested_by: string | null
           status: string
-          updated_at: string
         }
         Insert: {
           created_at?: string
-          id?: string
+          created_by?: string | null
+          employee_name?: string | null
+          id?: never
+          items: Json
+          items_count?: number
           notes?: string | null
-          ordered_at?: string | null
-          product_id: string
-          qty: number
-          received_at?: string | null
-          requested_by?: string | null
           status?: string
-          updated_at?: string
         }
         Update: {
           created_at?: string
-          id?: string
+          created_by?: string | null
+          employee_name?: string | null
+          id?: never
+          items?: Json
+          items_count?: number
           notes?: string | null
-          ordered_at?: string | null
-          product_id?: string
-          qty?: number
-          received_at?: string | null
-          requested_by?: string | null
           status?: string
-          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "aqh_restock_requests_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "aqh_products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       aquarium_care_logs: {
         Row: {
