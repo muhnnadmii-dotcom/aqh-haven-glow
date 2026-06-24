@@ -80,6 +80,14 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    key: "inventory",
+    label: "المخزون",
+    collapsible: true,
+    items: [
+      { to: "/admin/inventory", label: "المخزون وإعادة التوريد", icon: Package, exact: true },
+    ],
+  },
+  {
     key: "admin",
     label: "الإدارة",
     collapsible: true,
