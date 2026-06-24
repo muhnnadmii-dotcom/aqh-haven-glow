@@ -25,8 +25,8 @@ export const seedAqhProducts = createServerFn({ method: "POST" })
     if (!roleRow) throw new Response("Forbidden", { status: 403 });
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const rows = seedRows as SeedRow[];
+    const seedModule = await import("./seed/aqh-products-seed.json");
+    const rows = (seedModule.default ?? seedModule) as SeedRow[];
     // Insert in chunks of 200 to be safe
     let inserted = 0;
     for (let i = 0; i < rows.length; i += 200) {
