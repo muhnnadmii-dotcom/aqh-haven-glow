@@ -45,7 +45,7 @@ export const Route = createFileRoute("/")({
     links: [{ rel: "canonical", href: "/" }],
   }),
   loader: async () => {
-    const [sectionsRes, articlesRes, projectsRes, servicesRes] = await Promise.all([
+    const [sectionsRes, articlesRes, projectsRes, servicesRes, statsRes] = await Promise.all([
       supabase.from("home_sections").select("section_key, enabled, content").in("section_key", SECTION_KEYS),
       supabase.from("articles").select("slug, title, excerpt, cover_path")
         .eq("published", true).eq("visible", true).eq("featured_on_home", true)
@@ -54,14 +54,21 @@ export const Route = createFileRoute("/")({
         .eq("published", true).order("featured", { ascending: false }).order("sort_order", { ascending: true }).limit(6),
       supabase.from("services").select("id, slug, title, short_description, description, image_path, icon, linked_page_type, linked_page_url")
         .eq("published", true).eq("is_featured", true).order("sort_order").limit(6),
+      supabase.rpc("get_home_hero_stats"),
     ]);
     const m: any = { ...EMPTY_SECTIONS };
     (sectionsRes.data ?? []).forEach((r: any) => { m[r.section_key] = { enabled: r.enabled, content: r.content }; });
+    const statsRow: any = Array.isArray(statsRes.data) ? statsRes.data[0] : statsRes.data;
     return {
       sections: m as Sections,
       articles: (articlesRes.data ?? []) as unknown as FeaturedArticle[],
       projects: (projectsRes.data ?? []) as unknown as FeaturedProject[],
       dbServices: (servicesRes.data ?? []) as unknown as FeaturedService[],
+      liveStats: {
+        customers: Number(statsRow?.customers ?? 0),
+        tanks: Number(statsRow?.tanks ?? 0),
+        projects: Number(statsRow?.projects ?? 0),
+      },
     };
   },
   component: HomePage,
