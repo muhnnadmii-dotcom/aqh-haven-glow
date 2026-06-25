@@ -180,7 +180,7 @@ function HomePage() {
       {heroEnabled && (
         <section className="relative min-h-[92dvh] overflow-hidden -mt-24 pt-24 flex flex-col">
           <div className="absolute inset-0">
-            <picture>
+            <picture className="block h-full w-full">
               {heroImgMobile && <source media="(max-width: 640px)" srcSet={heroImgMobile} />}
               <img src={heroImg} alt={hero?.title ?? "أكوا هيفن"} className="h-full w-full object-cover" style={{ opacity: overlayOn ? 1 - overlayOpacity * 0.4 : 1 }} width={1920} height={1080} />
             </picture>
