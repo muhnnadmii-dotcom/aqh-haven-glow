@@ -122,6 +122,7 @@ function HomePage() {
   const hero = sections.hero?.content;
   const heroEnabled = sections.hero?.enabled ?? true;
   const heroImg = hero?.image_path ? publicUrl(hero.image_path) : heroFallback;
+  const heroImgMobile = hero?.mobile_image_enabled && hero?.image_path_mobile ? publicUrl(hero.image_path_mobile) : null;
   const overlayOn = hero?.overlay_enabled ?? true;
   const overlayOpacity = hero?.overlay_opacity ?? 0.6;
 
@@ -179,7 +180,10 @@ function HomePage() {
       {heroEnabled && (
         <section className="relative min-h-[92dvh] overflow-hidden -mt-24 pt-24 flex flex-col">
           <div className="absolute inset-0">
-            <img src={heroImg} alt={hero?.title ?? "أكوا هيفن"} className="h-full w-full object-cover" style={{ opacity: overlayOn ? 1 - overlayOpacity * 0.4 : 1 }} width={1920} height={1080} />
+            <picture className="block h-full w-full">
+              {heroImgMobile && <source media="(max-width: 640px)" srcSet={heroImgMobile} />}
+              <img src={heroImg} alt={hero?.title ?? "أكوا هيفن"} className="h-full w-full object-cover" style={{ opacity: overlayOn ? 1 - overlayOpacity * 0.4 : 1 }} width={1920} height={1080} />
+            </picture>
             {overlayOn && (
               <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, oklch(0.10 0.05 245 / ${overlayOpacity}), oklch(0.10 0.05 245 / ${overlayOpacity * 0.6}), var(--background))` }} />
             )}

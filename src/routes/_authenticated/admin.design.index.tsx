@@ -39,7 +39,7 @@ const DEFAULT_HERO: HeroContent = {
   title: "عالمك المائي", subtitle: "يبدأ من هنا",
   description: "", primary_cta_label: "", primary_cta_href: "",
   secondary_cta_label: "", secondary_cta_href: "",
-  image_path: "", overlay_enabled: true, overlay_opacity: 0.6,
+  image_path: "", image_path_mobile: "", mobile_image_enabled: false, overlay_enabled: true, overlay_opacity: 0.6,
   stats: [],
 };
 const DEFAULT_WHY: WhyUsContent = { kicker: "", heading: "", description: "", link_label: "", link_href: "", items: [] };
@@ -179,9 +179,20 @@ function HeroEditor({ value, onChange }: { value: { enabled: boolean; content: H
         <Field label="رابط الزر الأساسي"><input dir="ltr" className={inp} value={c.primary_cta_href} onChange={(e) => set("primary_cta_href", e.target.value)} /></Field>
         <Field label="نص الزر الثانوي"><input className={inp} value={c.secondary_cta_label} onChange={(e) => set("secondary_cta_label", e.target.value)} /></Field>
         <Field label="رابط الزر الثانوي"><input dir="ltr" className={inp} value={c.secondary_cta_href} onChange={(e) => set("secondary_cta_href", e.target.value)} /></Field>
-        <Field label="صورة البانر" full>
+        <Field label="صورة البانر (كمبيوتر)" full>
           <ImageUploader value={c.image_path || null} onChange={(p) => set("image_path", p ?? "")} folder="home/hero" cropAspect={16/9} />
         </Field>
+        <Field label="تفعيل صورة مخصصة للجوال">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={!!c.mobile_image_enabled} onChange={(e) => set("mobile_image_enabled", e.target.checked)} />
+            استخدام صورة منفصلة على الجوال
+          </label>
+        </Field>
+        {c.mobile_image_enabled && (
+          <Field label="صورة البانر (جوال)" full>
+            <ImageUploader value={c.image_path_mobile || null} onChange={(p) => set("image_path_mobile", p ?? "")} folder="home/hero" cropAspect={3/4} />
+          </Field>
+        )}
         <Field label="الطبقة الشفافة">
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={c.overlay_enabled} onChange={(e) => set("overlay_enabled", e.target.checked)} /> تفعيل</label>
         </Field>
