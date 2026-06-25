@@ -5,7 +5,12 @@ import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { Reveal } from "@/components/Reveal";
 import * as Icons from "lucide-react";
-import { ArrowRight, CheckCircle2, MessageCircle, ChevronDown } from "lucide-react";
+import {
+  ArrowRight, CheckCircle2, MessageCircle, ChevronDown,
+  Sparkles, Camera, Lightbulb, ShieldCheck, Clock, Award, Heart,
+  Droplets, Fish, Leaf, Wind, Stethoscope, Waves, Filter, Sun, AlertCircle,
+} from "lucide-react";
+
 
 type Svc = {
   id: string; slug: string; title: string;
