@@ -24,6 +24,8 @@ export type HeroContent = {
   secondary_cta_label: string;
   secondary_cta_href: string;
   image_path: string;
+  image_path_mobile?: string;
+  mobile_image_enabled?: boolean;
   overlay_enabled: boolean;
   overlay_opacity: number;
   stats?: StatItem[];
