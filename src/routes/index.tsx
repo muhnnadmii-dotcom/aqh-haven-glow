@@ -162,10 +162,10 @@ function HomePage() {
 
   const configuredStats = (hero?.stats ?? []).filter((s) => s && s.label);
   const heroStats = configuredStats.length > 0 ? configuredStats : [
-    { id: "s1", value: 250, suffix: "+", label: "عميل سعيد" },
+    { id: "s1", value: Math.max(liveStats.customers, 0), suffix: "+", label: "عميل مسجّل" },
     { id: "s2", value: 9, suffix: "+", label: "سنوات خبرة" },
-    { id: "s3", value: 180, suffix: "+", label: "مشروع منفذ" },
-    { id: "s4", value: 98, suffix: "%", label: "رضا العملاء" },
+    { id: "s3", value: Math.max(liveStats.projects, 0), suffix: "+", label: "مشروع منفذ" },
+    { id: "s4", value: Math.max(liveStats.tanks, 0), suffix: "+", label: "حوض مُدار" },
   ];
   const partnersC = sections.partners?.content;
   const partnersEnabled = sections.partners?.enabled ?? true;
