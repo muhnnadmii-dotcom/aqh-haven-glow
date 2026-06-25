@@ -2160,6 +2160,14 @@ export type Database = {
         Args: { p_batch_id: string }
         Returns: Json
       }
+      get_home_hero_stats: {
+        Args: never
+        Returns: {
+          customers: number
+          projects: number
+          tanks: number
+        }[]
+      }
       get_my_custom_allowed_pages: {
         Args: never
         Returns: {
