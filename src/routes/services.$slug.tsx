@@ -94,6 +94,12 @@ function ServiceDetail() {
   const img = getImageUrl(svc.image_path);
   const wa = whatsappLink(`مرحبًا Aqua Haven، أرغب بالاستفسار عن خدمة: ${svc.title}`);
 
+  if (svc.slug === "aquarium-consultation") {
+    return <ConsultationDetail svc={svc} related={related} img={img} wa={wa} />;
+  }
+
+
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
       <Link to="/services" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-gold mb-6">
