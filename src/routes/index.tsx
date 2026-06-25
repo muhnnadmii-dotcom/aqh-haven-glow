@@ -122,6 +122,7 @@ function HomePage() {
   const hero = sections.hero?.content;
   const heroEnabled = sections.hero?.enabled ?? true;
   const heroImg = hero?.image_path ? publicUrl(hero.image_path) : heroFallback;
+  const heroImgMobile = hero?.mobile_image_enabled && hero?.image_path_mobile ? publicUrl(hero.image_path_mobile) : null;
   const overlayOn = hero?.overlay_enabled ?? true;
   const overlayOpacity = hero?.overlay_opacity ?? 0.6;
 
