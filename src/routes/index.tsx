@@ -107,12 +107,13 @@ const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq",
 
 
 function HomePage() {
-  const initial = Route.useLoaderData() as { sections: Sections; articles: FeaturedArticle[]; projects: FeaturedProject[]; dbServices: FeaturedService[] };
+  const initial = Route.useLoaderData() as { sections: Sections; articles: FeaturedArticle[]; projects: FeaturedProject[]; dbServices: FeaturedService[]; liveStats: { customers: number; tanks: number; projects: number } };
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const sections = initial.sections;
   const articles = initial.articles;
   const projects = initial.projects;
   const dbServices = initial.dbServices;
+  const liveStats = initial.liveStats;
 
 
 
