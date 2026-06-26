@@ -57,12 +57,8 @@ function ConsultationPage() {
     <div className="mx-auto max-w-3xl px-6 py-16">
       <CmsSlot pageKey="consultation" />
 
-      <div>
+      <Reveal delay={120}>
 
-
-
-
-        <Reveal delay={120}>
           <form onSubmit={onSubmit} className="glass rounded-3xl p-8 space-y-5">
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
