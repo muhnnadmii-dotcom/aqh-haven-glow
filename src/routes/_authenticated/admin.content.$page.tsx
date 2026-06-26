@@ -83,6 +83,17 @@ function ContentEditor() {
             className="btn-outline-gold rounded-xl px-3 py-2 text-xs inline-flex items-center gap-1">
             <ExternalLink size={14} /> معاينة
           </a>
+          <button
+            type="button"
+            onClick={() => {
+              if (!confirm("سيتم استبدال الأقسام الحالية بالمحتوى الافتراضي للصفحة. متابعة؟")) return;
+              setDoc({ sections: meta.defaults.sections.map((s) => ({ ...s })) });
+              toast.message("تم تحميل المحتوى الافتراضي — اضغط حفظ لتثبيته");
+            }}
+            className="btn-outline-gold rounded-xl px-3 py-2 text-xs inline-flex items-center gap-1"
+            title="استرجاع المحتوى الأصلي للصفحة">
+            <RotateCcw size={14} /> تحميل المحتوى الافتراضي
+          </button>
           <button onClick={save} disabled={saving}
             className="btn-gold rounded-xl px-4 py-2 text-xs inline-flex items-center gap-1">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
