@@ -34,6 +34,7 @@ export const ADMIN_PAGES: AdminPageDef[] = [
   { key: "/admin/services",            label: "خدماتنا",           group: "content" },
   { key: "/admin/articles",            label: "المقالات",          group: "content" },
   { key: "/admin/testimonials",        label: "التقييمات",          group: "content" },
+  { key: "/admin/content",             label: "كل صفحات الموقع",    group: "content" },
   { key: "/admin/design/about",        label: "من نحن",             group: "content" },
   { key: "/admin/design/contact",      label: "تواصل معنا",         group: "content" },
 
