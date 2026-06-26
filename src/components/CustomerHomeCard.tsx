@@ -7,6 +7,9 @@ type Snapshot = {
   name: string;
   tanks: number;
   lastUpdate: string | null;
+  orderVerified: boolean;
+  hasPendingOrder: boolean;
+  freeConsultsLeft: number;
 };
 
 function timeAgoAr(iso: string | null): string {
