@@ -122,6 +122,7 @@ function GuestBlock({ consultBadge }: { consultBadge?: React.ReactNode }) {
               عندي حساب · دخول
             </Link>
           </div>
+          {consultBadge && <div className="mt-5">{consultBadge}</div>}
         </div>
       </div>
     </section>
