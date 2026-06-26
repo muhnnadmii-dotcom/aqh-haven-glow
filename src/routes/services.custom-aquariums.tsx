@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadMedia, publicUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { Reveal } from "@/components/Reveal";
+import { CmsSlot } from "@/lib/cms/PageRenderer";
 import { toast } from "sonner";
 import {
   ArrowDown, ArrowLeft, CheckCircle2, ChevronDown, MessageCircle, Loader2,
@@ -228,6 +229,10 @@ function CustomAquariumsPage() {
       <Link to="/services" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-gold mb-6">
         <ArrowLeft size={12} /> رجوع للخدمات
       </Link>
+
+      <CmsSlot pageKey="service_custom" />
+
+
 
       {/* HERO */}
       <Reveal>
