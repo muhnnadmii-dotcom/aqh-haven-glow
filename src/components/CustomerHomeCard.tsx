@@ -38,16 +38,22 @@ export function CustomerHomeCard() {
     let active = true;
     (async () => {
       const [prof, tanks] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+        supabase.from("profiles").select("full_name, salla_order_no, order_verified, free_consults_total, free_consults_used" as any).eq("id", user.id).maybeSingle(),
         supabase.from("customer_tanks").select("id, updated_at").eq("user_id", user.id)
           .order("updated_at", { ascending: false }),
       ]);
       if (!active) return;
       const rows = (tanks.data ?? []) as Array<{ id: string; updated_at: string | null }>;
+      const p = (prof.data ?? {}) as any;
+      const total = Number(p.free_consults_total ?? 0);
+      const used = Number(p.free_consults_used ?? 0);
       setSnap({
-        name: (prof.data?.full_name as string) || (user.email?.split("@")[0] ?? "صديقنا"),
+        name: (p.full_name as string) || (user.email?.split("@")[0] ?? "صديقنا"),
         tanks: rows.length,
         lastUpdate: rows[0]?.updated_at ?? null,
+        orderVerified: !!p.order_verified,
+        hasPendingOrder: !!p.salla_order_no && !p.order_verified,
+        freeConsultsLeft: Math.max(0, total - used),
       });
     })();
     return () => { active = false; };
@@ -57,8 +63,28 @@ export function CustomerHomeCard() {
 
   const isMember = !!user && !!snap && snap.tanks > 0;
 
-  if (!isMember) return <GuestBlock />;
-  return <MemberBlock name={snap!.name} tanks={snap!.tanks} lastUpdate={snap!.lastUpdate} />;
+  if (!isMember) {
+    return <GuestBlock consultBadge={snap ? <ConsultBadge snap={snap} /> : null} />;
+  }
+  return <MemberBlock snap={snap!} />;
+}
+
+function ConsultBadge({ snap }: { snap: Snapshot }) {
+  if (snap.orderVerified && snap.freeConsultsLeft > 0) {
+    return (
+      <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs bg-[color:var(--gold)]/15 border border-[color:var(--gold)]/30 text-[color:var(--gold)]">
+        ✦ لديك {snap.freeConsultsLeft} استشارات مجانية
+      </div>
+    );
+  }
+  if (snap.hasPendingOrder) {
+    return (
+      <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs bg-white/5 border border-white/10 text-muted-foreground">
+        ⏳ طلبك قيد التحقق — بنفعّل استشاراتك المجانية قريبًا
+      </div>
+    );
+  }
+  return null;
 }
 
 function GuestBlock() {
