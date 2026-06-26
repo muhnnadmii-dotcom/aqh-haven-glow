@@ -54,13 +54,11 @@ function ConsultationPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-16">
+    <div className="mx-auto max-w-3xl px-6 py-16">
       <CmsSlot pageKey="consultation" />
 
-      <div className="grid gap-8 md:grid-cols-[1fr_1.4fr]">
-        <Reveal>
-          <div className="space-y-4" />
-        </Reveal>
+      <div>
+
 
 
 
