@@ -14,8 +14,8 @@ export async function fetchPageDoc(page_key: string): Promise<PageDoc> {
   const fallback = meta?.defaults ?? { sections: [] };
   if (!data?.content) return fallback;
   const c = data.content as any;
-  if (Array.isArray(c?.sections)) return c as PageDoc;
-  // legacy/empty content → fallback
+  if (Array.isArray(c?.sections) && c.sections.length > 0) return c as PageDoc;
+  // empty sections or legacy/unknown shape → fallback to defaults
   return fallback;
 }
 
