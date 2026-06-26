@@ -55,6 +55,7 @@ import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminGalleryIndexRouteImport } from './routes/_authenticated/admin.gallery.index'
 import { Route as AuthenticatedAdminFinanceIndexRouteImport } from './routes/_authenticated/admin.finance.index'
 import { Route as AuthenticatedAdminDesignIndexRouteImport } from './routes/_authenticated/admin.design.index'
+import { Route as AuthenticatedAdminContentIndexRouteImport } from './routes/_authenticated/admin.content.index'
 import { Route as AuthenticatedAccountTanksIndexRouteImport } from './routes/_authenticated/account.tanks.index'
 import { Route as AuthenticatedAccountRequestsIndexRouteImport } from './routes/_authenticated/account.requests.index'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
@@ -72,6 +73,7 @@ import { Route as AuthenticatedAdminFinanceAuditRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminFinanceAttachmentsRouteImport } from './routes/_authenticated/admin.finance.attachments'
 import { Route as AuthenticatedAdminDesignContactRouteImport } from './routes/_authenticated/admin.design.contact'
 import { Route as AuthenticatedAdminDesignAboutRouteImport } from './routes/_authenticated/admin.design.about'
+import { Route as AuthenticatedAdminContentPageRouteImport } from './routes/_authenticated/admin.content.$page'
 import { Route as AuthenticatedAccountTanksIdRouteImport } from './routes/_authenticated/account.tanks.$id'
 import { Route as AuthenticatedAccountRequestsNewRouteImport } from './routes/_authenticated/account.requests.new'
 import { Route as AuthenticatedAccountRequestsIdRouteImport } from './routes/_authenticated/account.requests.$id'
@@ -325,6 +327,12 @@ const AuthenticatedAdminDesignIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAdminDesignRoute,
   } as any)
+const AuthenticatedAdminContentIndexRoute =
+  AuthenticatedAdminContentIndexRouteImport.update({
+    id: '/content/',
+    path: '/content/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAccountTanksIndexRoute =
   AuthenticatedAccountTanksIndexRouteImport.update({
     id: '/tanks/',
@@ -427,6 +435,12 @@ const AuthenticatedAdminDesignAboutRoute =
     path: '/about',
     getParentRoute: () => AuthenticatedAdminDesignRoute,
   } as any)
+const AuthenticatedAdminContentPageRoute =
+  AuthenticatedAdminContentPageRouteImport.update({
+    id: '/content/$page',
+    path: '/content/$page',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAccountTanksIdRoute =
   AuthenticatedAccountTanksIdRouteImport.update({
     id: '/tanks/$id',
@@ -491,6 +505,7 @@ export interface FileRoutesByFullPath {
   '/account/requests/$id': typeof AuthenticatedAccountRequestsIdRoute
   '/account/requests/new': typeof AuthenticatedAccountRequestsNewRoute
   '/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
+  '/admin/content/$page': typeof AuthenticatedAdminContentPageRoute
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
@@ -508,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/account/requests/': typeof AuthenticatedAccountRequestsIndexRoute
   '/account/tanks/': typeof AuthenticatedAccountTanksIndexRoute
+  '/admin/content/': typeof AuthenticatedAdminContentIndexRoute
   '/admin/design/': typeof AuthenticatedAdminDesignIndexRoute
   '/admin/finance/': typeof AuthenticatedAdminFinanceIndexRoute
   '/admin/gallery/': typeof AuthenticatedAdminGalleryIndexRoute
@@ -550,6 +566,7 @@ export interface FileRoutesByTo {
   '/account/requests/$id': typeof AuthenticatedAccountRequestsIdRoute
   '/account/requests/new': typeof AuthenticatedAccountRequestsNewRoute
   '/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
+  '/admin/content/$page': typeof AuthenticatedAdminContentPageRoute
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
@@ -567,6 +584,7 @@ export interface FileRoutesByTo {
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/account/requests': typeof AuthenticatedAccountRequestsIndexRoute
   '/account/tanks': typeof AuthenticatedAccountTanksIndexRoute
+  '/admin/content': typeof AuthenticatedAdminContentIndexRoute
   '/admin/design': typeof AuthenticatedAdminDesignIndexRoute
   '/admin/finance': typeof AuthenticatedAdminFinanceIndexRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryIndexRoute
@@ -619,6 +637,7 @@ export interface FileRoutesById {
   '/_authenticated/account/requests/$id': typeof AuthenticatedAccountRequestsIdRoute
   '/_authenticated/account/requests/new': typeof AuthenticatedAccountRequestsNewRoute
   '/_authenticated/account/tanks/$id': typeof AuthenticatedAccountTanksIdRoute
+  '/_authenticated/admin/content/$page': typeof AuthenticatedAdminContentPageRoute
   '/_authenticated/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/_authenticated/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
   '/_authenticated/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
@@ -636,6 +655,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/_authenticated/account/requests/': typeof AuthenticatedAccountRequestsIndexRoute
   '/_authenticated/account/tanks/': typeof AuthenticatedAccountTanksIndexRoute
+  '/_authenticated/admin/content/': typeof AuthenticatedAdminContentIndexRoute
   '/_authenticated/admin/design/': typeof AuthenticatedAdminDesignIndexRoute
   '/_authenticated/admin/finance/': typeof AuthenticatedAdminFinanceIndexRoute
   '/_authenticated/admin/gallery/': typeof AuthenticatedAdminGalleryIndexRoute
@@ -688,6 +708,7 @@ export interface FileRouteTypes {
     | '/account/requests/$id'
     | '/account/requests/new'
     | '/account/tanks/$id'
+    | '/admin/content/$page'
     | '/admin/design/about'
     | '/admin/design/contact'
     | '/admin/finance/attachments'
@@ -705,6 +726,7 @@ export interface FileRouteTypes {
     | '/admin/users/$id'
     | '/account/requests/'
     | '/account/tanks/'
+    | '/admin/content/'
     | '/admin/design/'
     | '/admin/finance/'
     | '/admin/gallery/'
@@ -747,6 +769,7 @@ export interface FileRouteTypes {
     | '/account/requests/$id'
     | '/account/requests/new'
     | '/account/tanks/$id'
+    | '/admin/content/$page'
     | '/admin/design/about'
     | '/admin/design/contact'
     | '/admin/finance/attachments'
@@ -764,6 +787,7 @@ export interface FileRouteTypes {
     | '/admin/users/$id'
     | '/account/requests'
     | '/account/tanks'
+    | '/admin/content'
     | '/admin/design'
     | '/admin/finance'
     | '/admin/gallery'
@@ -815,6 +839,7 @@ export interface FileRouteTypes {
     | '/_authenticated/account/requests/$id'
     | '/_authenticated/account/requests/new'
     | '/_authenticated/account/tanks/$id'
+    | '/_authenticated/admin/content/$page'
     | '/_authenticated/admin/design/about'
     | '/_authenticated/admin/design/contact'
     | '/_authenticated/admin/finance/attachments'
@@ -832,6 +857,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users/$id'
     | '/_authenticated/account/requests/'
     | '/_authenticated/account/tanks/'
+    | '/_authenticated/admin/content/'
     | '/_authenticated/admin/design/'
     | '/_authenticated/admin/finance/'
     | '/_authenticated/admin/gallery/'
@@ -1179,6 +1205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDesignIndexRouteImport
       parentRoute: typeof AuthenticatedAdminDesignRoute
     }
+    '/_authenticated/admin/content/': {
+      id: '/_authenticated/admin/content/'
+      path: '/content'
+      fullPath: '/admin/content/'
+      preLoaderRoute: typeof AuthenticatedAdminContentIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/account/tanks/': {
       id: '/_authenticated/account/tanks/'
       path: '/tanks'
@@ -1297,6 +1330,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/design/about'
       preLoaderRoute: typeof AuthenticatedAdminDesignAboutRouteImport
       parentRoute: typeof AuthenticatedAdminDesignRoute
+    }
+    '/_authenticated/admin/content/$page': {
+      id: '/_authenticated/admin/content/$page'
+      path: '/content/$page'
+      fullPath: '/admin/content/$page'
+      preLoaderRoute: typeof AuthenticatedAdminContentPageRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/account/tanks/$id': {
       id: '/_authenticated/account/tanks/$id'
@@ -1487,6 +1527,8 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminTestimonialsRoute: typeof AuthenticatedAdminTestimonialsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminContentPageRoute: typeof AuthenticatedAdminContentPageRoute
+  AuthenticatedAdminContentIndexRoute: typeof AuthenticatedAdminContentIndexRoute
   AuthenticatedAdminGalleryIndexRoute: typeof AuthenticatedAdminGalleryIndexRoute
 }
 
@@ -1507,6 +1549,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminTestimonialsRoute: AuthenticatedAdminTestimonialsRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminContentPageRoute: AuthenticatedAdminContentPageRoute,
+  AuthenticatedAdminContentIndexRoute: AuthenticatedAdminContentIndexRoute,
   AuthenticatedAdminGalleryIndexRoute: AuthenticatedAdminGalleryIndexRoute,
 }
 
