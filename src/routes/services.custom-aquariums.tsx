@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadMedia, publicUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { Reveal } from "@/components/Reveal";
+import { CmsSlot } from "@/lib/cms/PageRenderer";
 import { toast } from "sonner";
 import {
   ArrowDown, ArrowLeft, CheckCircle2, ChevronDown, MessageCircle, Loader2,
@@ -229,36 +230,32 @@ function CustomAquariumsPage() {
         <ArrowLeft size={12} /> رجوع للخدمات
       </Link>
 
-      {/* HERO */}
+      <CmsSlot pageKey="service_custom" />
+
+
+
+      {/* HERO actions (CTA buttons + trust badges — title/description come from CMS above) */}
       <Reveal>
-        <section className="relative overflow-hidden rounded-3xl glass-gold p-8 sm:p-12 mb-12">
-          <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-gold/10 via-transparent to-cyan-500/10 pointer-events-none" />
-          <div className="relative max-w-3xl">
-            <div className="text-xs tracking-widest text-gradient-gold mb-3">SERVICE</div>
-            <h1 className="text-3xl sm:text-5xl font-bold mb-4 leading-tight">
-              تصميم وتركيب أحواض مخصصة
-            </h1>
-            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed mb-6">
-              نصمم وننفذ أحواضًا مائية تناسب مساحتك وذوقك، من دراسة الفكرة واختيار المقاس إلى التركيب والتشغيل والتسليم النهائي.
-            </p>
-            <div className="flex flex-wrap gap-3 mb-6">
-              <button onClick={() => scrollToForm()} className="btn-gold rounded-xl px-6 py-3 text-sm inline-flex items-center gap-2">
-                <ArrowDown size={16} /> ابدأ طلب التصميم
-              </button>
-              <a href="#similar-work" className="btn-outline-gold rounded-xl px-6 py-3 text-sm inline-flex items-center gap-2">
-                شاهد أعمال مشابهة
-              </a>
-            </div>
-            <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-foreground/80">
-              {TRUST.map((t) => (
-                <li key={t} className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 size={12} className="text-gold" /> {t}
-                </li>
-              ))}
-            </ul>
+        <section className="rounded-3xl glass-gold p-6 sm:p-8 mb-12">
+          <div className="flex flex-wrap gap-3 mb-5">
+            <button onClick={() => scrollToForm()} className="btn-gold rounded-xl px-6 py-3 text-sm inline-flex items-center gap-2">
+              <ArrowDown size={16} /> ابدأ طلب التصميم
+            </button>
+            <a href="#similar-work" className="btn-outline-gold rounded-xl px-6 py-3 text-sm inline-flex items-center gap-2">
+              شاهد أعمال مشابهة
+            </a>
           </div>
+          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-foreground/80">
+            {TRUST.map((t) => (
+              <li key={t} className="inline-flex items-center gap-1.5">
+                <CheckCircle2 size={12} className="text-gold" /> {t}
+              </li>
+            ))}
+          </ul>
         </section>
       </Reveal>
+
+
 
       {/* IDEA */}
       <Reveal>

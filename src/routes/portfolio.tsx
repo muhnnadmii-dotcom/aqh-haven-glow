@@ -6,6 +6,7 @@ import { SpecCard } from "../components/SpecCard";
 import { TankDimensions } from "../components/TankDimensions";
 import { EquipmentCard } from "../components/EquipmentCard";
 import { whatsappLink } from "../components/WhatsAppButton";
+import { CmsSlot } from "@/lib/cms/PageRenderer";
 import {
   X,
   Box,
@@ -185,16 +186,8 @@ function PortfolioPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
-      <Reveal>
-        <div className="text-center mb-12">
-          <div className="text-xs tracking-widest text-gradient-gold mb-3">PORTFOLIO</div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">أعمالنا</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            مجموعة من مشاريعنا المختارة التي تجسد فلسفتنا في الجمع بين التصميم الفاخر والهندسة
-            الدقيقة. اضغط على أي مشروع لعرض المواصفات والمعدات والأسعار.
-          </p>
-        </div>
-      </Reveal>
+      <CmsSlot pageKey="portfolio_meta" />
+
       {/* View tabs: Projects vs Gallery */}
       <div className="flex justify-center mb-8">
         <div className="glass rounded-2xl p-1 inline-flex gap-1">

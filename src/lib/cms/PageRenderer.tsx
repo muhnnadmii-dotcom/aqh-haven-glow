@@ -4,6 +4,8 @@ import { CheckCircle2, MessageCircle } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { getImageUrl, onImageError } from "@/lib/storage";
+import { usePageDoc } from "./api";
+import { getPageMeta } from "./registry";
 import type { Section, PageDoc } from "./types";
 
 function Icon({ name, size = 20, className = "" }: { name: string; size?: number; className?: string }) {
@@ -11,7 +13,7 @@ function Icon({ name, size = 20, className = "" }: { name: string; size?: number
   return <Cmp size={size} className={className} />;
 }
 
-function renderSection(s: Section, idx: number) {
+function renderSection(s: Section) {
   if (!s.enabled) return null;
   switch (s.type) {
     case "hero":
@@ -148,10 +150,26 @@ function renderSection(s: Section, idx: number) {
   }
 }
 
+/** Renders sections only — no outer wrapper. For embedding inside hybrid pages. */
+export function PageSections({ doc }: { doc: PageDoc }) {
+  return <>{doc.sections.map((s) => renderSection(s))}</>;
+}
+
+/** Full-page renderer with standard wrapper. */
 export function PageRenderer({ doc }: { doc: PageDoc }) {
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
-      {doc.sections.map((s, i) => renderSection(s, i))}
+      <PageSections doc={doc} />
     </div>
   );
+}
+
+/**
+ * Hybrid slot: fetches CMS doc by pageKey and renders sections only.
+ * Used inside existing layouts to inject editable Hero/CTA/etc.
+ */
+export function CmsSlot({ pageKey }: { pageKey: string }) {
+  const { doc } = usePageDoc(pageKey);
+  const fallback = getPageMeta(pageKey)?.defaults ?? { sections: [] };
+  return <PageSections doc={doc ?? fallback} />;
 }

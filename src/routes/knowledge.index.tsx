@@ -3,6 +3,7 @@ import { Reveal } from "../components/Reveal";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
+import { CmsSlot } from "@/lib/cms/PageRenderer";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
 
 const fallbackImg = styledAquariumAsset.url;
@@ -46,15 +47,8 @@ function KnowledgePage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
-      <Reveal>
-        <div className="text-center mb-14">
-          <div className="text-xs tracking-widest text-gradient-gold mb-3">KNOWLEDGE</div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">مركز المعرفة</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            أدلة عملية مكتوبة بخبرة لمساعدتك على بناء عالم مائي مزدهر.
-          </p>
-        </div>
-      </Reveal>
+      <CmsSlot pageKey="knowledge_meta" />
+
 
       {loading && <div className="flex items-center justify-center py-12" />}
       {error && <div className="text-center text-red-400 py-8">حدث خطأ: {error}</div>}
