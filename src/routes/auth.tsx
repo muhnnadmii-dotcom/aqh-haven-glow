@@ -64,14 +64,6 @@ function AuthPage() {
     });
   }, [navigate, safeRedirect]);
 
-  const onGoogle = async () => {
-    setBusy(true);
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + safeRedirect });
-    if (res.error) {
-      toast.error("تعذر تسجيل الدخول عبر Google");
-      setBusy(false);
-    }
-  };
 
   const validateSignup = (): boolean => {
     const e: Record<string, string> = {};
