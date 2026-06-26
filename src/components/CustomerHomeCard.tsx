@@ -142,7 +142,8 @@ function FeatureRow({ icon, title, desc }: { icon: string; title: string; desc: 
   );
 }
 
-function MemberBlock({ name, tanks, lastUpdate }: { name: string; tanks: number; lastUpdate: string | null }) {
+function MemberBlock({ snap }: { snap: Snapshot }) {
+  const { name, tanks, lastUpdate } = snap;
   const tanksLabel = tanks === 1 ? "حوض مسجّل واحد" : tanks === 2 ? "حوضان مسجّلان" : `${tanks} أحواض مسجّلة`;
   return (
     <section className="relative py-8 sm:py-10 aqh-member">
