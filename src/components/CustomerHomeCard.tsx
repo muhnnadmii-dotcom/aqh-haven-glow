@@ -158,6 +158,7 @@ function MemberBlock({ snap }: { snap: Snapshot }) {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 تابع طلباتك، أحواضك، ومواعيدك من مكان واحد.
               </p>
+              <div className="mt-2"><ConsultBadge snap={snap} /></div>
             </div>
             <Link
               to="/account"
