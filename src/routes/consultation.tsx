@@ -2,10 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Reveal } from "../components/Reveal";
 import { whatsappLink } from "../components/WhatsAppButton";
-import { MessagesSquare, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getSessionUser } from "@/lib/client-auth";
+import { CmsSlot } from "@/lib/cms/PageRenderer";
 
 export const Route = createFileRoute("/consultation")({
   head: () => ({
