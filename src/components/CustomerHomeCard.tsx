@@ -87,7 +87,7 @@ function ConsultBadge({ snap }: { snap: Snapshot }) {
   return null;
 }
 
-function GuestBlock({ consultBadge }: { consultBadge?: React.ReactNode }) {
+function GuestBlock({ consultBadge }: { consultBadge?: ReactNode }) {
   return (
     <section className="relative py-8 sm:py-10 aqh-guest">
       <div className="mx-auto max-w-5xl px-5 sm:px-6">
