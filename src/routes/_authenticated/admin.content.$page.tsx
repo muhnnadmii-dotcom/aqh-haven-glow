@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Plus, Save, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowRight, Plus, Save, ExternalLink, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { fetchPageDoc, savePageDoc } from "@/lib/cms/api";
 import { getPageMeta } from "@/lib/cms/registry";
