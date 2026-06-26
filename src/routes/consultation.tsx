@@ -55,42 +55,14 @@ function ConsultationPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
-      <Reveal>
-        <div className="text-center mb-12">
-          <div className="text-xs tracking-widest text-gradient-gold mb-3">CONSULTATION</div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">احجز استشارتك</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            عبئ الحقول التالية بتفاصيل حوضك وما تحتاجه، وسيتواصل معك متخصص من فريقنا عبر واتساب.
-          </p>
-        </div>
-      </Reveal>
+      <CmsSlot pageKey="consultation" />
 
       <div className="grid gap-8 md:grid-cols-[1fr_1.4fr]">
         <Reveal>
-          <div className="space-y-4">
-            <div className="glass-gold rounded-2xl p-6">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--gold)]/15 mb-3">
-                <MessagesSquare className="text-gold" size={20} />
-              </div>
-              <div className="font-bold mb-2">استشارة من خبير</div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                نخصص لك متخصصاً يجاوبك بناءً على نوع حوضك وهدفك. كل استشارة تُعامل بسرية تامة.
-              </p>
-            </div>
-            <ul className="glass rounded-2xl p-6 space-y-3">
-              {[
-                "رد سريع خلال ساعات العمل",
-                "توصيات عملية قابلة للتنفيذ",
-                "متابعة بعد الاستشارة عند الحاجة",
-              ].map((p) => (
-                <li key={p} className="flex items-start gap-2 text-sm">
-                  <CheckCircle2 size={16} className="text-gold mt-0.5 shrink-0" />
-                  <span className="text-foreground/90">{p}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <div className="space-y-4" />
         </Reveal>
+
+
 
         <Reveal delay={120}>
           <form onSubmit={onSubmit} className="glass rounded-3xl p-8 space-y-5">
