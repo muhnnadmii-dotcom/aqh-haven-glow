@@ -1315,29 +1315,50 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birth_date: string | null
+          city: string | null
           created_at: string
           display_name_for_customer: string | null
+          email: string | null
+          free_consults_total: number
+          free_consults_used: number
           full_name: string | null
           id: string
+          order_verified: boolean
           phone: string | null
+          salla_order_no: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          birth_date?: string | null
+          city?: string | null
           created_at?: string
           display_name_for_customer?: string | null
+          email?: string | null
+          free_consults_total?: number
+          free_consults_used?: number
           full_name?: string | null
           id: string
+          order_verified?: boolean
           phone?: string | null
+          salla_order_no?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          birth_date?: string | null
+          city?: string | null
           created_at?: string
           display_name_for_customer?: string | null
+          email?: string | null
+          free_consults_total?: number
+          free_consults_used?: number
           full_name?: string | null
           id?: string
+          order_verified?: boolean
           phone?: string | null
+          salla_order_no?: string | null
           updated_at?: string
         }
         Relationships: []

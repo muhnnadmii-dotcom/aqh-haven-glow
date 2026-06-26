@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Reveal } from "@/components/Reveal";
@@ -23,6 +23,20 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+const SA_CITIES = [
+  "الرياض", "جدة", "مكة", "المدينة", "الدمام", "الخبر", "الطائف", "تبوك",
+  "أبها", "القصيم", "حائل", "نجران", "جازان", "الأحساء", "الجبيل", "ينبع",
+  "عرعر", "سكاكا", "أخرى",
+];
+
+// Accept: 05XXXXXXXX (10 digits) or +9665XXXXXXXX
+function isValidSaudiPhone(raw: string): boolean {
+  const v = raw.replace(/\s|-/g, "");
+  if (/^05\d{8}$/.test(v)) return true;
+  if (/^\+9665\d{8}$/.test(v)) return true;
+  return false;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
@@ -31,9 +45,15 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [sallaOrderNo, setSallaOrderNo] = useState("");
+  const [showOrderField, setShowOrderField] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     try {
@@ -54,15 +74,39 @@ function AuthPage() {
     }
   };
 
+  const validateSignup = (): boolean => {
+    const e: Record<string, string> = {};
+    if (!fullName.trim()) e.fullName = "الاسم مطلوب";
+    if (!email.trim()) e.email = "البريد مطلوب";
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) e.email = "بريد غير صالح";
+    if (!phone.trim()) e.phone = "رقم الجوال مطلوب";
+    else if (!isValidSaudiPhone(phone.trim())) e.phone = "صيغة الجوال غير صحيحة (05xxxxxxxx أو +9665xxxxxxxx)";
+    if (!city) e.city = "اختر المدينة";
+    if (password.length < 6) e.password = "كلمة المرور 6 أحرف على الأقل";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (mode === "signup" && !validateSignup()) return;
     setBusy(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin + safeRedirect },
+          options: {
+            data: {
+              full_name: fullName,
+              phone: phone.trim(),
+              email: email.trim(),
+              city,
+              birth_date: birthDate || null,
+              salla_order_no: sallaOrderNo.trim() || null,
+            },
+            emailRedirectTo: window.location.origin + safeRedirect,
+          },
         });
         if (error) throw error;
         toast.success("تم إنشاء الحساب! تحقق من بريدك للتأكيد ثم سجل الدخول.");
@@ -86,6 +130,9 @@ function AuthPage() {
       setBusy(false);
     }
   };
+
+  const fieldCls = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60";
+  const errCls = "text-xs text-red-400 mt-1";
 
   return (
     <div className="mx-auto max-w-md px-6 py-16">
@@ -117,29 +164,78 @@ function AuthPage() {
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-4" noValidate>
             {mode === "signup" && (
               <div>
                 <label className="block text-sm mb-2">الاسم الكامل</label>
-                <input required value={fullName} onChange={(e) => setFullName(e.target.value)}
-                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60" />
+                <input value={fullName} onChange={(e) => setFullName(e.target.value)} className={fieldCls} />
+                {errors.fullName && <div className={errCls}>{errors.fullName}</div>}
               </div>
             )}
+
+            {mode === "signup" && (
+              <div>
+                <label className="block text-sm mb-2">رقم الجوال</label>
+                <input
+                  type="tel"
+                  dir="ltr"
+                  placeholder="05XXXXXXXX"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={`${fieldCls} text-right`}
+                />
+                {errors.phone && <div className={errCls}>{errors.phone}</div>}
+              </div>
+            )}
+
             <div>
               <label className="block text-sm mb-2">البريد الإلكتروني</label>
-              <input required type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 focus:outline-none focus:border-gold/60 text-right" />
+              <input type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)}
+                className={`${fieldCls} text-right`} />
+              {errors.email && <div className={errCls}>{errors.email}</div>}
             </div>
+
+            {mode === "signup" && (
+              <div>
+                <label className="block text-sm mb-2">المدينة</label>
+                <div className="relative">
+                  <select
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className={`${fieldCls} appearance-none pe-10 bg-[#0b1424]`}
+                  >
+                    <option value="">اختر المدينة...</option>
+                    {SA_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <ChevronDown size={16} className="absolute inset-y-0 start-3 my-auto text-muted-foreground pointer-events-none" />
+                </div>
+                {errors.city && <div className={errCls}>{errors.city}</div>}
+              </div>
+            )}
+
+            {mode === "signup" && (
+              <div>
+                <label className="block text-sm mb-2">تاريخ الميلاد <span className="text-muted-foreground text-xs">(اختياري)</span></label>
+                <input
+                  type="date"
+                  dir="ltr"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  className={`${fieldCls} text-right`}
+                />
+                <div className="text-[11px] text-muted-foreground mt-1">اختياري — نستخدمه لعروض وتجربة أفضل</div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm mb-2">كلمة المرور</label>
               <div className="relative">
                 <input
-                  required
                   type={showPassword ? "text" : "password"}
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 ps-12 focus:outline-none focus:border-gold/60"
+                  className={`${fieldCls} ps-12`}
                 />
                 <button
                   type="button"
@@ -151,7 +247,35 @@ function AuthPage() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {errors.password && <div className={errCls}>{errors.password}</div>}
             </div>
+
+            {mode === "signup" && (
+              <div className="rounded-xl border border-[color:var(--gold)]/25 bg-[color:var(--gold)]/5 p-3">
+                <button
+                  type="button"
+                  onClick={() => setShowOrderField((v) => !v)}
+                  className="w-full text-right text-sm font-medium text-[color:var(--gold)] flex items-center justify-between gap-2"
+                >
+                  <span>شريت حوض جاهز من Aqua Haven؟ أضف رقم طلبك واحصل على استشارتين مجانية</span>
+                  <ChevronDown size={16} className={`transition ${showOrderField ? "rotate-180" : ""}`} />
+                </button>
+                {showOrderField && (
+                  <div className="mt-3">
+                    <input
+                      type="text"
+                      dir="ltr"
+                      placeholder="رقم الطلب من سلة"
+                      value={sallaOrderNo}
+                      onChange={(e) => setSallaOrderNo(e.target.value)}
+                      className={`${fieldCls} text-right`}
+                    />
+                    <div className="text-[11px] text-muted-foreground mt-1">سيتم التحقق منه يدويًا وتفعيل استشاراتك المجانية.</div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {mode === "signin" && (
               <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
                 <input
@@ -163,6 +287,7 @@ function AuthPage() {
                 <span>تذكرني وابقني مسجلاً</span>
               </label>
             )}
+
             <button disabled={busy} className="btn-gold w-full rounded-xl px-6 py-3 text-sm">
               {busy ? "..." : mode === "signin" ? "دخول" : "إنشاء حساب"}
             </button>
