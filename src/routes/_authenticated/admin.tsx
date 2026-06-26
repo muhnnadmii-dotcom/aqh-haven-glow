@@ -49,18 +49,19 @@ const navGroups: NavGroup[] = [
     label: "محتوى الموقع",
     collapsible: true,
     items: [
+      { to: "/admin/content", label: "كل صفحات الموقع", icon: FileText, exact: true },
       { to: "/admin/design", label: "الصفحة الرئيسية", icon: Palette, exact: true },
+      { to: "/admin/design/about", label: "من نحن", icon: FileText },
+      { to: "/admin/design/contact", label: "تواصل معنا", icon: FileText },
+      { to: "/admin/services", label: "خدماتنا", icon: Wrench },
       { to: "/admin/projects", label: "أعمالنا / الأحواض", icon: Fish },
       { to: "/admin/gallery", label: "لقطات من أعمالنا", icon: Images },
       { to: "/admin/project-categories", label: "تصنيفات الأحواض", icon: Tags },
-      { to: "/admin/services", label: "خدماتنا", icon: Wrench },
       { to: "/admin/articles", label: "المقالات", icon: BookOpen },
       { to: "/admin/testimonials", label: "التقييمات", icon: MessageSquareQuote },
-      { to: "/admin/content", label: "كل صفحات الموقع", icon: FileText, exact: true },
-      { to: "/admin/design/about", label: "من نحن", icon: FileText },
-      { to: "/admin/design/contact", label: "تواصل معنا", icon: FileText },
     ],
   },
+
   {
     key: "finance",
     label: "المالية",
