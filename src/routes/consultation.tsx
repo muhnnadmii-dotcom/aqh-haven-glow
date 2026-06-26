@@ -107,7 +107,8 @@ function ConsultationPage() {
             </button>
           </form>
         </Reveal>
-      </div>
     </div>
   );
+}
+
 }
