@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Reveal } from "../components/Reveal";
+import { CmsSlot } from "@/lib/cms/PageRenderer";
 import livingRoomTankAsset from "../assets/aqh-living-room-tank.png.asset.json";
 import marineCubeAsset from "../assets/aqh-marine-cube.png.asset.json";
 import styledAquariumAsset from "../assets/aqh-styled-aquarium.png.asset.json";
@@ -59,15 +60,8 @@ function CatalogPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
-      <Reveal>
-        <div className="text-center mb-12">
-          <div className="text-xs tracking-widest text-gradient-gold mb-3">CATALOG</div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">الكاتلوج</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            استعرض مجموعتنا. الطلب يتم مباشرة من المتجر الإلكتروني.
-          </p>
-        </div>
-      </Reveal>
+      <CmsSlot pageKey="catalog_meta" />
+
 
       <div className="flex flex-wrap justify-center gap-2 mb-10">
         {tabs.map((t) => (

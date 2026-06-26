@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { Reveal } from "@/components/Reveal";
+import { CmsSlot } from "@/lib/cms/PageRenderer";
 import * as Icons from "lucide-react";
 import { ArrowLeft, CheckCircle2, MessageCircle, ChevronDown } from "lucide-react";
 
@@ -85,15 +86,8 @@ function ServicesIndex() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
-      <Reveal>
-        <div className="text-center mb-12">
-          <div className="text-xs tracking-widest text-gradient-gold mb-3">SERVICES</div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">خدماتنا</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            من التصميم الأولي وحتى الصيانة المستمرة — حلول متكاملة لعالمك المائي.
-          </p>
-        </div>
-      </Reveal>
+      <CmsSlot pageKey="services_index" />
+
 
       {/* Cards */}
       {list.length === 0 ? null : (
