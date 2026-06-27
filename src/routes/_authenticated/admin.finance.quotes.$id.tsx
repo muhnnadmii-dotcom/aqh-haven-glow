@@ -11,7 +11,6 @@ import { ArrowRight, Plus, Trash2, Save, Printer, Loader2, Search, FileText, Spa
 import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AQH_PAYMENT_TERMS, AQH_DELIVERY_TERMS, AQH_WARRANTY_TERMS, AQH_NOTES_TEMPLATES } from "@/lib/aqh-quote-templates";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/quotes/$id")({
   ssr: false,
@@ -743,21 +742,41 @@ function QuoteBuilder() {
 }
 
 function TemplatePicker({ templates, onPick, label }: { templates: string[]; onPick: (v: string) => void; label: string }) {
+  const [open, setOpen] = useState(false);
+
+  function pickTemplate(value: string) {
+    onPick(value);
+    setOpen(false);
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" size="sm" variant="outline" className="no-print h-7 text-[11px] gap-1 px-2">
-          <ListPlus size={12} /> {label}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto w-[360px]">
+    <div className="no-print relative">
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="h-7 text-[11px] gap-1 px-2"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <ListPlus size={12} /> {label}
+      </Button>
+
+      {open && (
+        <div className="absolute end-0 top-full z-[100] mt-1 max-h-80 w-[min(90vw,420px)] overflow-y-auto rounded-md border border-slate-200 bg-white p-1 text-slate-800 shadow-2xl">
         {templates.map((t, i) => (
-          <DropdownMenuItem key={i} onClick={() => onPick(t)} className="text-xs whitespace-normal leading-relaxed cursor-pointer">
-            {t}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            <button
+              key={`${i}-${t}`}
+              type="button"
+              className="block w-full rounded-sm px-2 py-2 text-start text-xs leading-relaxed hover:bg-amber-50 focus:bg-amber-50 focus:outline-none"
+              onClick={() => pickTemplate(t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
