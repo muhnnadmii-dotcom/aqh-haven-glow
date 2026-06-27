@@ -31,7 +31,7 @@ function InventoryDashboard() {
       const [{ data: products }, { data: suppliers }, { data: cats }, { data: reqs }] =
         await Promise.all([
           supabase.from("aqh_products").select("id,current_qty,cost,is_active"),
-          supabase.from("aqh_suppliers").select("id,is_active"),
+          supabase.from("finance_suppliers").select("id,is_active"),
           supabase.from("aqh_product_categories").select("id,is_active"),
           supabase.from("aqh_restock_requests")
             .select("id,status,total,created_at,items_count,supplier_key,source,employee_name")
