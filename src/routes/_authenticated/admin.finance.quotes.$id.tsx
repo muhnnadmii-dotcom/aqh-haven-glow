@@ -576,6 +576,9 @@ function QuoteBuilder() {
             <div className="grand flex justify-between py-2 mt-1 text-base font-bold bg-slate-900 text-amber-300 px-3 rounded">
               <span>الإجمالي</span><span className="total-val font-mono" dir="ltr">{SAR(calc.grandTotal)} {currency}</span>
             </div>
+            <div className="mt-2 text-[11px] text-slate-500 text-end">
+              جميع الأسعار شاملة ضريبة القيمة المضافة 15%
+            </div>
           </div>
         </div>
 
