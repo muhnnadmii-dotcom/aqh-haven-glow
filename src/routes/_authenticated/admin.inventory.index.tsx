@@ -88,7 +88,7 @@ function InventoryDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <QuickLink to="/admin/inventory/products" icon={<Boxes size={18} />} label="المنتجات" />
         <QuickLink to="/admin/inventory/categories" icon={<FolderTree size={18} />} label="التصنيفات" />
-        <QuickLink to="/admin/inventory/suppliers" icon={<Truck size={18} />} label="الموردين" />
+        <QuickLink to="/admin/finance/suppliers" icon={<Truck size={18} />} label="الموردين" />
         <QuickLink to="/admin/inventory/catalog" icon={<BookOpen size={18} />} label="الكاتلوج" />
         <QuickLink to="/admin/inventory/requests" icon={<ClipboardList size={18} />} label="الطلبات" />
         <QuickLink to="/admin/inventory/reports" icon={<BarChart3 size={18} />} label="التقارير" />
