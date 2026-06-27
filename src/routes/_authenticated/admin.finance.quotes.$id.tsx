@@ -539,8 +539,8 @@ function QuoteBuilder() {
               <div className="flex justify-between py-1 text-red-600"><span>الخصم</span><span className="font-mono">-{SAR(calc.discountValue)}</span></div>
             )}
             <div className="flex justify-between py-1 text-slate-600"><span>ضريبة القيمة المضافة ({vatRate}%)</span><span className="font-mono">{SAR(calc.vatTotal)}</span></div>
-            <div className="flex justify-between py-2 mt-1 text-base font-bold bg-slate-900 text-amber-300 px-3 rounded">
-              <span>الإجمالي</span><span className="font-mono">{SAR(calc.grandTotal)} {currency}</span>
+            <div className="grand flex justify-between py-2 mt-1 text-base font-bold bg-slate-900 text-amber-300 px-3 rounded">
+              <span>الإجمالي</span><span className="total-val font-mono" dir="ltr">{SAR(calc.grandTotal)} {currency}</span>
             </div>
           </div>
         </div>
