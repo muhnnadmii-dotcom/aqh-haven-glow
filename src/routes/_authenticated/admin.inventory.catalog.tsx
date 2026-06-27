@@ -51,18 +51,28 @@ function SupplierCatalogPage() {
         .from("aqh_supplier_products" as any)
         .select("id,supplier_key,supplier_name,name,item_no,barcode,cost,needs_review,is_active")
         .eq("is_active", true)
+        .eq("needs_review", false)
         .order("supplier_key", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
-      return (data as unknown as SupplierProduct[]) ?? [];
+      const rows = (data as unknown as SupplierProduct[]) ?? [];
+      // Deduplicate by (supplier_key, normalized name) — keep first occurrence
+      const seen = new Set<string>();
+      return rows.filter((p) => {
+        const key = `${p.supplier_key}::${p.name.trim().toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     },
   });
 
-  const suppliers = useMemo(() => {
+  const brands = useMemo(() => {
     const m = new Map<string, string>();
     (productsQ.data ?? []).forEach((p) => m.set(p.supplier_key, p.supplier_name));
     return Array.from(m.entries()).map(([key, name]) => ({ key, name }));
   }, [productsQ.data]);
+
 
   const [supplier, setSupplier] = useState<string>("");
   const [q, setQ] = useState("");
@@ -73,7 +83,7 @@ function SupplierCatalogPage() {
   const [submitted, setSubmitted] = useState(false);
 
   // Auto-select first supplier
-  const activeSupplier = supplier || suppliers[0]?.key || "";
+  const activeSupplier = supplier || brands[0]?.key || "";
 
   const cartSupplierKey = useMemo(() => {
     const ids = Object.keys(cart).map(Number);
@@ -115,7 +125,7 @@ function SupplierCatalogPage() {
       const next = { ...prev };
       // If switching supplier and cart not empty, block via toast
       if (cartSupplierKey && cartSupplierKey !== supplierKey && qty > 0) {
-        toast.error("لا يمكن خلط منتجات من موردين مختلفين في طلب واحد");
+        toast.error("لا يمكن خلط منتجات من براندات مختلفة في طلب واحد");
         return prev;
       }
       if (qty <= 0) delete next[id];
@@ -183,17 +193,17 @@ function SupplierCatalogPage() {
           <Truck size={20} />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">كاتلوج الموردين</h1>
-          <p className="text-xs text-muted-foreground">اختر منتجات من نفس المورد ثم أنشئ طلب توريد بسعر شامل الضريبة</p>
+          <h1 className="text-xl font-semibold">كاتلوج دنيا الربيع</h1>
+          <p className="text-xs text-muted-foreground">المورد: دنيا الربيع · اختر براند ثم منتجات منه لإنشاء طلب توريد شامل الضريبة</p>
         </div>
         <Link to="/admin/inventory" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
           <ArrowRight size={12} /> المخزون
         </Link>
       </header>
 
-      {/* Supplier tabs */}
+      {/* Brand tabs */}
       <div className="flex flex-wrap gap-2">
-        {suppliers.map((s) => (
+        {brands.map((s) => (
           <button
             key={s.key}
             onClick={() => setSupplier(s.key)}
@@ -290,7 +300,7 @@ function SupplierCatalogPage() {
               <span><span className="text-gold font-semibold">{distinct}</span> منتج · <span className="text-gold font-semibold">{totalQty}</span> قطعة</span>
               {cartSupplierKey && (
                 <Badge variant="outline" className="text-[10px] border-gold/30 text-gold">
-                  {suppliers.find((s) => s.key === cartSupplierKey)?.name}
+                  {brands.find((s) => s.key === cartSupplierKey)?.name}
                 </Badge>
               )}
               <span className="text-muted-foreground">·</span>
