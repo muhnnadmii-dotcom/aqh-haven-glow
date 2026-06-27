@@ -83,7 +83,7 @@ function SupplierCatalogPage() {
   const [submitted, setSubmitted] = useState(false);
 
   // Auto-select first supplier
-  const activeSupplier = supplier || suppliers[0]?.key || "";
+  const activeSupplier = supplier || brands[0]?.key || "";
 
   const cartSupplierKey = useMemo(() => {
     const ids = Object.keys(cart).map(Number);
@@ -203,7 +203,7 @@ function SupplierCatalogPage() {
 
       {/* Supplier tabs */}
       <div className="flex flex-wrap gap-2">
-        {suppliers.map((s) => (
+        {brands.map((s) => (
           <button
             key={s.key}
             onClick={() => setSupplier(s.key)}
@@ -300,7 +300,7 @@ function SupplierCatalogPage() {
               <span><span className="text-gold font-semibold">{distinct}</span> منتج · <span className="text-gold font-semibold">{totalQty}</span> قطعة</span>
               {cartSupplierKey && (
                 <Badge variant="outline" className="text-[10px] border-gold/30 text-gold">
-                  {suppliers.find((s) => s.key === cartSupplierKey)?.name}
+                  {brands.find((s) => s.key === cartSupplierKey)?.name}
                 </Badge>
               )}
               <span className="text-muted-foreground">·</span>
