@@ -138,8 +138,8 @@ function InventoryPage() {
           <Package size={20} />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">المخزون</h1>
-          <p className="text-xs text-muted-foreground">طلبات التوريد وبلاغات نفاد المخزون</p>
+          <h1 className="text-xl font-semibold">طلبات التوريد</h1>
+          <p className="text-xs text-muted-foreground">إنشاء طلبات التوريد وبلاغات نفاد المخزون ومتابعة الطلبات</p>
         </div>
         <Link
           to="/admin/inventory/catalog"
