@@ -22,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance")({
 
 const tabs = [
   { to: "/admin/finance", label: "لوحة المالية", icon: LayoutDashboard, exact: true },
+  { to: "/admin/finance/quotes", label: "عروض الأسعار", icon: FileText },
   { to: "/admin/finance/incomes", label: "الدخل", icon: TrendingUp },
   { to: "/admin/finance/expenses", label: "المصروفات", icon: TrendingDown },
   { to: "/admin/finance/suppliers", label: "الموردين", icon: Truck },
@@ -31,7 +32,6 @@ const tabs = [
   { to: "/admin/finance/export", label: "التصدير", icon: Download },
   { to: "/admin/finance/import", label: "استيراد Excel", icon: Upload },
   { to: "/admin/finance/import-batches", label: "دفعات الاستيراد", icon: Archive },
-  { to: "/admin/finance/quotes", label: "عروض الأسعار", icon: FileText },
   { to: "/admin/finance/settings", label: "الإعدادات", icon: Cog },
 ];
 
