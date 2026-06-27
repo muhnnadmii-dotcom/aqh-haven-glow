@@ -16,9 +16,10 @@ import {
   display, NA, waLink, waGreeting, buildRequestSummary, orderedDetails,
 } from "@/lib/admin-ops";
 import {
-  uploadRequestAttachment, attachmentUrl, isImage, REPORT_TYPES, REPORT_TYPE_LABEL,
-  type AttachmentRow,
+  uploadRequestAttachment, isImage, REPORT_TYPES, REPORT_TYPE_LABEL,
+  deleteAttachmentFile, type AttachmentRow,
 } from "@/lib/request-attachments";
+import { AttachmentTile } from "@/components/AttachmentTile";
 import {
   ASSIGNMENT_STATUS_LABEL, ASSIGNMENT_STATUS_COLOR, DEPARTMENTS,
   fetchStaffMembers, staffLabel, type AssignmentStatus, type AssignmentEvent, type StaffMember,
@@ -845,7 +846,7 @@ export function AttachmentsPanel({
 
   const remove = async (a: AttachmentRow) => {
     if (!confirm("حذف المرفق؟")) return;
-    await supabase.storage.from("media").remove([a.file_path]);
+    await deleteAttachmentFile(a);
     await supabase.from("request_attachments").delete().eq("id", a.id);
     toast.success("تم الحذف");
     onChanged();
