@@ -87,6 +87,7 @@ const navGroups: NavGroup[] = [
     collapsible: true,
     items: [
       { to: "/admin/inventory", label: "المخزون وإعادة التوريد", icon: Package, exact: true },
+      { to: "/admin/inventory/catalog", label: "كاتلوج دنيا الربيع", icon: Truck },
     ],
   },
   {
