@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { publicUrl, uploadMedia } from "@/lib/storage";
+import { publicUrl } from "@/lib/storage";
+import { uploadPrivateMedia, isPrivateAsset, AssetImage } from "@/lib/customer-storage";
 import { toast } from "sonner";
 import {
   Droplets, FlaskConical, Camera, StickyNote, AlertTriangle, Wrench,
