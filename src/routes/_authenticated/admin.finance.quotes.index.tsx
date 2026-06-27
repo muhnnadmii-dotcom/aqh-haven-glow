@@ -8,7 +8,7 @@ import { Plus, Copy, Trash2, FileText, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
 
-export const Route = createFileRoute("/_authenticated/admin/finance/quotes")({
+export const Route = createFileRoute("/_authenticated/admin/finance/quotes/")({
   ssr: false,
   component: QuotesList,
 });
