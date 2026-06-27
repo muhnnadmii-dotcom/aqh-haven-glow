@@ -90,7 +90,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/inventory/products", label: "المنتجات", icon: Boxes },
       { to: "/admin/inventory/categories", label: "التصنيفات", icon: FolderTree },
       { to: "/admin/finance/suppliers", label: "الموردين", icon: Truck },
-      { to: "/admin/inventory/catalog", label: "كاتلوج دنيا الربيع", icon: BookOpen },
+      { to: "/admin/inventory/catalog", label: "كاتلوج الموردين", icon: BookOpen },
       { to: "/admin/inventory/requests", label: "طلبات التوريد", icon: ClipboardList },
       { to: "/admin/inventory/reports", label: "تقارير المخزون", icon: BarChart3 },
     ],
@@ -127,7 +127,7 @@ const TITLES: Record<string, string> = {
   "/admin/inventory/products": "إدارة المنتجات",
   "/admin/inventory/categories": "التصنيفات",
   
-  "/admin/inventory/catalog": "كاتلوج دنيا الربيع",
+  "/admin/inventory/catalog": "كاتلوج الموردين",
   "/admin/inventory/requests": "طلبات التوريد",
   "/admin/inventory/reports": "تقارير المخزون",
 };

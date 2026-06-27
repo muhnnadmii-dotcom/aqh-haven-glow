@@ -37,7 +37,10 @@ type SupplierProduct = {
   cost: number | null;
   needs_review: boolean;
   is_active: boolean;
+  vendor_supplier_id: string | null;
 };
+
+type Vendor = { id: string; name: string; products: number };
 
 const VAT_RATE = 0.15;
 const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
@@ -49,14 +52,13 @@ function SupplierCatalogPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("aqh_supplier_products" as any)
-        .select("id,supplier_key,supplier_name,name,item_no,barcode,cost,needs_review,is_active")
+        .select("id,supplier_key,supplier_name,name,item_no,barcode,cost,needs_review,is_active,vendor_supplier_id")
         .eq("is_active", true)
         .eq("needs_review", false)
         .order("supplier_key", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
       const rows = (data as unknown as SupplierProduct[]) ?? [];
-      // Deduplicate by (supplier_key, normalized name) — keep first occurrence
       const seen = new Set<string>();
       return rows.filter((p) => {
         const key = `${p.supplier_key}::${p.name.trim().toLowerCase()}`;
@@ -67,13 +69,26 @@ function SupplierCatalogPage() {
     },
   });
 
-  const brands = useMemo(() => {
-    const m = new Map<string, string>();
-    (productsQ.data ?? []).forEach((p) => m.set(p.supplier_key, p.supplier_name));
-    return Array.from(m.entries()).map(([key, name]) => ({ key, name }));
-  }, [productsQ.data]);
+  const vendorsListQ = useQuery({
+    queryKey: ["aqh_catalog_vendors"],
+    queryFn: async () => {
+      const { data: fs } = await supabase.from("finance_suppliers").select("id,name");
+      const map = new Map<string, string>((fs ?? []).map((s: any) => [s.id, s.name]));
+      const counts = new Map<string, number>();
+      (productsQ.data ?? []).forEach((p) => {
+        if (p.vendor_supplier_id) counts.set(p.vendor_supplier_id, (counts.get(p.vendor_supplier_id) ?? 0) + 1);
+      });
+      const list: Vendor[] = Array.from(counts.entries()).map(([id, n]) => ({
+        id, name: map.get(id) ?? "مورد",
+        products: n,
+      }));
+      return list.sort((a, b) => b.products - a.products);
+    },
+    enabled: !!productsQ.data,
+  });
 
 
+  const [vendorId, setVendorId] = useState<string>("");
   const [supplier, setSupplier] = useState<string>("");
   const [q, setQ] = useState("");
   // cart: id -> qty
@@ -82,8 +97,17 @@ function SupplierCatalogPage() {
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  // Auto-select first supplier
-  const activeSupplier = supplier || brands[0]?.key || "";
+  const brands = useMemo(() => {
+    if (!vendorId) return [] as { key: string; name: string }[];
+    const m = new Map<string, string>();
+    (productsQ.data ?? []).forEach((p) => {
+      if (p.vendor_supplier_id === vendorId) m.set(p.supplier_key, p.supplier_name);
+    });
+    return Array.from(m.entries()).map(([key, name]) => ({ key, name }));
+  }, [productsQ.data, vendorId]);
+
+  // Auto-select first brand when vendor changes
+  const activeSupplier = supplier && brands.some((b) => b.key === supplier) ? supplier : (brands[0]?.key ?? "");
 
   const cartSupplierKey = useMemo(() => {
     const ids = Object.keys(cart).map(Number);
@@ -93,8 +117,10 @@ function SupplierCatalogPage() {
   }, [cart, productsQ.data]);
 
   const filtered = useMemo(() => {
+    if (!vendorId) return [];
     const text = q.trim().toLowerCase();
     return (productsQ.data ?? []).filter((p) => {
+      if (p.vendor_supplier_id !== vendorId) return false;
       if (activeSupplier && p.supplier_key !== activeSupplier) return false;
       if (!text) return true;
       return (
@@ -103,7 +129,10 @@ function SupplierCatalogPage() {
         (p.barcode ?? "").toLowerCase().includes(text)
       );
     });
-  }, [productsQ.data, activeSupplier, q]);
+  }, [productsQ.data, vendorId, activeSupplier, q]);
+
+  const activeVendorName = (vendorsListQ.data ?? []).find((v) => v.id === vendorId)?.name ?? "";
+
 
   const cartItems = useMemo(() => {
     return Object.entries(cart)
@@ -186,20 +215,74 @@ function SupplierCatalogPage() {
     );
   }
 
+  // Vendor selection screen
+  if (!vendorId) {
+    const vendors = vendorsListQ.data ?? [];
+    return (
+      <div className="space-y-5" dir="rtl">
+        <header className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center">
+            <Truck size={20} />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-xl font-semibold">كاتلوج الموردين</h1>
+            <p className="text-xs text-muted-foreground">اختر المورد لاستعراض الكاتلوج وإنشاء طلب توريد</p>
+          </div>
+          <Link to="/admin/inventory" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+            <ArrowRight size={12} /> المخزون
+          </Link>
+        </header>
+
+        {productsQ.isLoading ? (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            <Loader2 className="inline-block animate-spin" size={16} /> جارٍ التحميل…
+          </div>
+        ) : vendors.length === 0 ? (
+          <div className="py-16 text-center text-sm text-muted-foreground">
+            لا يوجد كاتلوج لأي مورد بعد.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {vendors.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => { setVendorId(v.id); setSupplier(""); }}
+                className="text-start rounded-xl border border-white/10 bg-white/[0.02] hover:border-gold/40 hover:bg-gold/5 transition p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gold/15 border border-gold/30 text-gold flex items-center justify-center">
+                    <Truck size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{v.name}</div>
+                    <div className="text-[11px] text-muted-foreground">{v.products} منتج في الكاتلوج</div>
+                  </div>
+                  <ArrowRight size={14} className="text-muted-foreground" />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 pb-32" dir="rtl">
       <header className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center">
-          <Truck size={20} />
-        </div>
+        <button onClick={() => { setVendorId(""); setCart({}); setSupplier(""); }}
+          className="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center hover:bg-gold/20" aria-label="رجوع">
+          <ArrowRight size={18} />
+        </button>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">كاتلوج دنيا الربيع</h1>
-          <p className="text-xs text-muted-foreground">المورد: دنيا الربيع · اختر براند ثم منتجات منه لإنشاء طلب توريد شامل الضريبة</p>
+          <h1 className="text-xl font-semibold">كاتلوج {activeVendorName}</h1>
+          <p className="text-xs text-muted-foreground">اختر براند ثم منتجات لإنشاء طلب توريد شامل الضريبة</p>
         </div>
         <Link to="/admin/inventory" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
           <ArrowRight size={12} /> المخزون
         </Link>
       </header>
+
 
       {/* Brand tabs */}
       <div className="flex flex-wrap gap-2">
