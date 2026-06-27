@@ -53,11 +53,12 @@ type Product = {
   restock_type: RestockType;
 };
 
-type RestockItem = { sku: string; name_ar: string; qty: number };
+type RestockItem = { sku: string; name_ar: string; qty: number; cost?: number };
 
 type RestockRequest = {
   id: number;
   employee_name: string | null;
+
   created_by: string | null;
   request_kind: RequestKind;
   status: RestockStatus;
@@ -65,6 +66,11 @@ type RestockRequest = {
   items_count: number;
   notes: string | null;
   created_at: string;
+  source: string | null;
+  supplier_key: string | null;
+  subtotal: number | null;
+  vat: number | null;
+  total: number | null;
 };
 
 const STATUS_LABEL: Record<RestockStatus, string> = {
@@ -136,7 +142,7 @@ function InventoryPage() {
           <p className="text-xs text-muted-foreground">طلبات التوريد وبلاغات نفاد المخزون</p>
         </div>
         <Link
-          to="/admin/inventory/suppliers"
+          to="/admin/inventory/catalog"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] bg-gold/15 border border-gold/30 text-gold hover:bg-gold/25"
         >
           <Truck size={14} /> كاتلوج الموردين
@@ -652,6 +658,7 @@ function RequestsListTab() {
   const qc = useQueryClient();
   const [kindF, setKindF] = useState<RequestKind | "all">("all");
   const [statusF, setStatusF] = useState<RestockStatus | "all">("all");
+  const [sourceF, setSourceF] = useState<"all" | "internal" | "supplier_catalog">("all");
   const [expanded, setExpanded] = useState<number | null>(null);
 
   const requestsQ = useQuery({
@@ -659,10 +666,10 @@ function RequestsListTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("aqh_restock_requests")
-        .select("id, employee_name, created_by, request_kind, status, items, items_count, notes, created_at")
+        .select("id, employee_name, created_by, request_kind, status, items, items_count, notes, created_at, source, supplier_key, subtotal, vat, total" as any)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((r) => ({
+      return (data ?? []).map((r: any) => ({
         ...r,
         items: (Array.isArray(r.items) ? r.items : []) as RestockItem[],
         status: (r.status ?? "new") as RestockStatus,
@@ -671,13 +678,29 @@ function RequestsListTab() {
     },
   });
 
+  const suppliersQ = useQuery({
+    queryKey: ["aqh_supplier_names"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("aqh_supplier_products" as any)
+        .select("supplier_key,supplier_name");
+      if (error) throw error;
+      const m: Record<string, string> = {};
+      ((data as any[]) ?? []).forEach((r) => { m[r.supplier_key] = r.supplier_name; });
+      return m;
+    },
+  });
+  const supplierNames = suppliersQ.data ?? {};
+
   const filtered = useMemo(() => {
     return (requestsQ.data ?? []).filter((r) => {
       if (kindF !== "all" && r.request_kind !== kindF) return false;
       if (statusF !== "all" && r.status !== statusF) return false;
+      if (sourceF === "internal" && r.source === "supplier_catalog") return false;
+      if (sourceF === "supplier_catalog" && r.source !== "supplier_catalog") return false;
       return true;
     });
-  }, [requestsQ.data, kindF, statusF]);
+  }, [requestsQ.data, kindF, statusF, sourceF]);
 
   const statusM = useMutation({
     mutationFn: async (args: { id: number; next: RestockStatus }) => {
@@ -695,10 +718,26 @@ function RequestsListTab() {
   });
 
   function exportCsv(r: RestockRequest) {
-    const headers = ["SKU", "المنتج", "الكمية"];
+    const hasCost = r.items.some((it) => it.cost != null);
+    const headers = hasCost
+      ? ["SKU", "المنتج", "الكمية", "التكلفة", "الإجمالي"]
+      : ["SKU", "المنتج", "الكمية"];
     const esc = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
-    const rows = r.items.map((it) => [it.sku, it.name_ar, String(it.qty)].map(esc).join(","));
-    const csv = "\uFEFF" + headers.map(esc).join(",") + "\n" + rows.join("\n") + "\n";
+    const rows = r.items.map((it) => {
+      const base = [it.sku, it.name_ar, String(it.qty)];
+      if (hasCost) {
+        const c = Number(it.cost) || 0;
+        base.push(c.toFixed(2), (c * it.qty).toFixed(2));
+      }
+      return base.map(esc).join(",");
+    });
+    let csv = "\uFEFF" + headers.map(esc).join(",") + "\n" + rows.join("\n") + "\n";
+    if (hasCost && r.total != null) {
+      csv += "\n";
+      csv += `${esc("المجموع قبل الضريبة")},${esc(String((r.subtotal ?? 0).toFixed(2)))}\n`;
+      csv += `${esc("الضريبة 15%")},${esc(String((r.vat ?? 0).toFixed(2)))}\n`;
+      csv += `${esc("الإجمالي")},${esc(String((r.total ?? 0).toFixed(2)))}\n`;
+    }
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -713,6 +752,11 @@ function RequestsListTab() {
     { v: "order", label: "طلبات توريد" },
     { v: "report", label: "بلاغات نفاد" },
   ];
+  const sourceChips: Array<{ v: "all" | "internal" | "supplier_catalog"; label: string }> = [
+    { v: "all", label: "كل المصادر" },
+    { v: "internal", label: "مخزون داخلي" },
+    { v: "supplier_catalog", label: "كاتلوج موردين" },
+  ];
   const statusChips: Array<{ v: RestockStatus | "all"; label: string }> = [
     { v: "all", label: "كل الحالات" },
     { v: "new", label: "جديد" },
@@ -720,6 +764,8 @@ function RequestsListTab() {
     { v: "received", label: "تم الاستلام" },
     { v: "resolved", label: "تم الحل" },
   ];
+
+  const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
 
   return (
     <div className="space-y-4">
@@ -731,6 +777,17 @@ function RequestsListTab() {
               onClick={() => setKindF(c.v)}
               className={`text-xs px-3 py-1.5 rounded-full border transition ${
                 kindF === c.v ? "bg-gold/20 text-gold border-gold/40" : "bg-white/[0.03] text-muted-foreground border-white/10 hover:border-white/25"
+              }`}
+            >{c.label}</button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {sourceChips.map((c) => (
+            <button
+              key={c.v}
+              onClick={() => setSourceF(c.v)}
+              className={`text-[11px] px-2.5 py-1 rounded-full border transition ${
+                sourceF === c.v ? "bg-gold/15 text-gold border-gold/30" : "bg-white/[0.03] text-muted-foreground border-white/10 hover:border-white/25"
               }`}
             >{c.label}</button>
           ))}
@@ -776,6 +833,16 @@ function RequestsListTab() {
                   <span className="text-[11px] text-muted-foreground" dir="ltr">
                     {new Date(r.created_at).toLocaleString("ar-SA")}
                   </span>
+                  {r.source === "supplier_catalog" && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold/10 text-gold border border-gold/30">
+                      كاتلوج: {r.supplier_key ? (supplierNames[r.supplier_key] ?? r.supplier_key) : "—"}
+                    </span>
+                  )}
+                  {r.source === "supplier_catalog" && r.total != null && (
+                    <span className="text-[10px] text-muted-foreground">
+                      الإجمالي: <span className="text-gold font-mono">{SAR(Number(r.total))}</span>
+                    </span>
+                  )}
                   <div className="ms-auto flex items-center gap-2">
                     {r.request_kind === "order" && r.status === "new" && (
                       <Button size="sm" variant="outline" className="h-8 bg-sky-500/10 border-sky-500/30 text-sky-300 hover:bg-sky-500/20"
@@ -812,6 +879,12 @@ function RequestsListTab() {
                           <th className="text-right p-2 font-normal">المنتج</th>
                           <th className="text-right p-2 font-normal w-24">SKU</th>
                           <th className="text-left p-2 font-normal w-20">الكمية</th>
+                          {r.source === "supplier_catalog" && (
+                            <>
+                              <th className="text-left p-2 font-normal w-24">التكلفة</th>
+                              <th className="text-left p-2 font-normal w-24">الإجمالي</th>
+                            </>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -820,10 +893,23 @@ function RequestsListTab() {
                             <td className="p-2">{it.name_ar}</td>
                             <td className="p-2 text-xs text-muted-foreground" dir="ltr">{it.sku}</td>
                             <td className="p-2 text-left text-gold font-medium">× {it.qty}</td>
+                            {r.source === "supplier_catalog" && (
+                              <>
+                                <td className="p-2 text-left text-xs font-mono">{it.cost != null ? SAR(Number(it.cost)) : "—"}</td>
+                                <td className="p-2 text-left text-xs font-mono">{it.cost != null ? SAR(Number(it.cost) * it.qty) : "—"}</td>
+                              </>
+                            )}
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                    {r.source === "supplier_catalog" && r.total != null && (
+                      <div className="border-t border-white/10 p-2 flex flex-wrap gap-4 justify-end text-xs">
+                        <span>المجموع: <span className="font-mono">{SAR(Number(r.subtotal ?? 0))}</span></span>
+                        <span>الضريبة 15%: <span className="font-mono">{SAR(Number(r.vat ?? 0))}</span></span>
+                        <span className="text-gold">الإجمالي: <span className="font-mono font-semibold">{SAR(Number(r.total))}</span></span>
+                      </div>
+                    )}
                     {r.notes && (
                       <div className="text-xs text-muted-foreground border-t border-white/10 p-2">
                         <span className="text-foreground">ملاحظة: </span>{r.notes}

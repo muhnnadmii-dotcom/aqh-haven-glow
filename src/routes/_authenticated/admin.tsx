@@ -87,6 +87,7 @@ const navGroups: NavGroup[] = [
     collapsible: true,
     items: [
       { to: "/admin/inventory", label: "المخزون وإعادة التوريد", icon: Package, exact: true },
+      { to: "/admin/inventory/catalog", label: "كاتلوج دنيا الربيع", icon: Truck },
     ],
   },
   {
@@ -118,6 +119,7 @@ const TITLES: Record<string, string> = {
   "/admin/design/contact": "تواصل معنا",
   "/admin/staff": "الموظفين",
   "/admin/inventory": "المخزون وإعادة التوريد",
+  "/admin/inventory/catalog": "كاتلوج دنيا الربيع",
 };
 
 function AdminLayout() {
