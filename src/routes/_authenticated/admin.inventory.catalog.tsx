@@ -193,15 +193,15 @@ function SupplierCatalogPage() {
           <Truck size={20} />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">كاتلوج الموردين</h1>
-          <p className="text-xs text-muted-foreground">اختر منتجات من نفس المورد ثم أنشئ طلب توريد بسعر شامل الضريبة</p>
+          <h1 className="text-xl font-semibold">كاتلوج دنيا الربيع</h1>
+          <p className="text-xs text-muted-foreground">المورد: دنيا الربيع · اختر براند ثم منتجات منه لإنشاء طلب توريد شامل الضريبة</p>
         </div>
         <Link to="/admin/inventory" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
           <ArrowRight size={12} /> المخزون
         </Link>
       </header>
 
-      {/* Supplier tabs */}
+      {/* Brand tabs */}
       <div className="flex flex-wrap gap-2">
         {brands.map((s) => (
           <button
