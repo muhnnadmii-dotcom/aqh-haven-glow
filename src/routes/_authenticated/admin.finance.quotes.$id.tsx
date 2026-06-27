@@ -477,7 +477,7 @@ function QuoteBuilder() {
                             <Search size={10} /> بحث
                           </button>
                           {it.source && it.source !== "manual" && (
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded border ${it.source === "salla" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+                            <span className={`no-print text-[9px] px-1.5 py-0.5 rounded border ${it.source === "salla" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
                               {it.source === "salla" ? "سلة" : "مورّد"}
                             </span>
                           )}
