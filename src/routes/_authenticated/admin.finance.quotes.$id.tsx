@@ -774,7 +774,7 @@ function TermBlock({ label, value, onChange, templates }: { label: string; value
           />
         )}
       </div>
-      <Textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className="bg-transparent border-none text-slate-700 text-xs p-0 resize-none focus-visible:ring-0 no-print-border" />
+      <Textarea value={value} onChange={(e) => onChange(e.target.value)} rows={5} className="bg-transparent border-none text-slate-700 text-xs p-0 resize-y focus-visible:ring-0 no-print-border" />
     </div>
   );
 }
