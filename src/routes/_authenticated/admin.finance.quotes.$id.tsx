@@ -769,8 +769,8 @@ function TermBlock({ label, value, onChange, templates }: { label: string; value
         {templates && templates.length > 0 && (
           <TemplatePicker
             templates={templates}
-            onPick={(v) => onChange(value ? value + "\n" + v : v)}
-            label="قالب"
+            onPick={(v) => onChange(v)}
+            label="اختر قالب"
           />
         )}
       </div>
