@@ -88,13 +88,7 @@ function SupplierCatalogPage() {
   });
 
 
-  const brands = useMemo(() => {
-    const m = new Map<string, string>();
-    (productsQ.data ?? []).forEach((p) => m.set(p.supplier_key, p.supplier_name));
-    return Array.from(m.entries()).map(([key, name]) => ({ key, name }));
-  }, [productsQ.data]);
-
-
+  const [vendorId, setVendorId] = useState<string>("");
   const [supplier, setSupplier] = useState<string>("");
   const [q, setQ] = useState("");
   // cart: id -> qty
@@ -103,8 +97,17 @@ function SupplierCatalogPage() {
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  // Auto-select first supplier
-  const activeSupplier = supplier || brands[0]?.key || "";
+  const brands = useMemo(() => {
+    if (!vendorId) return [] as { key: string; name: string }[];
+    const m = new Map<string, string>();
+    (productsQ.data ?? []).forEach((p) => {
+      if (p.vendor_supplier_id === vendorId) m.set(p.supplier_key, p.supplier_name);
+    });
+    return Array.from(m.entries()).map(([key, name]) => ({ key, name }));
+  }, [productsQ.data, vendorId]);
+
+  // Auto-select first brand when vendor changes
+  const activeSupplier = supplier && brands.some((b) => b.key === supplier) ? supplier : (brands[0]?.key ?? "");
 
   const cartSupplierKey = useMemo(() => {
     const ids = Object.keys(cart).map(Number);
@@ -114,8 +117,10 @@ function SupplierCatalogPage() {
   }, [cart, productsQ.data]);
 
   const filtered = useMemo(() => {
+    if (!vendorId) return [];
     const text = q.trim().toLowerCase();
     return (productsQ.data ?? []).filter((p) => {
+      if (p.vendor_supplier_id !== vendorId) return false;
       if (activeSupplier && p.supplier_key !== activeSupplier) return false;
       if (!text) return true;
       return (
@@ -124,7 +129,10 @@ function SupplierCatalogPage() {
         (p.barcode ?? "").toLowerCase().includes(text)
       );
     });
-  }, [productsQ.data, activeSupplier, q]);
+  }, [productsQ.data, vendorId, activeSupplier, q]);
+
+  const activeVendorName = (vendorsListQ.data ?? []).find((v) => v.id === vendorId)?.name ?? "";
+
 
   const cartItems = useMemo(() => {
     return Object.entries(cart)
