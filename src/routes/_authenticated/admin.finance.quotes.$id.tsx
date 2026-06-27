@@ -746,7 +746,7 @@ function TemplatePicker({ templates, onPick, label }: { templates: string[]; onP
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" variant="outline" className="no-print h-7 text-[11px] gap-1 px-2">
+        <Button type="button" size="sm" variant="outline" className="no-print h-7 text-[11px] gap-1 px-2">
           <ListPlus size={12} /> {label}
         </Button>
       </DropdownMenuTrigger>
@@ -769,12 +769,12 @@ function TermBlock({ label, value, onChange, templates }: { label: string; value
         {templates && templates.length > 0 && (
           <TemplatePicker
             templates={templates}
-            onPick={(v) => onChange(value ? value + "\n" + v : v)}
-            label="قالب"
+            onPick={(v) => onChange(v)}
+            label="اختر قالب"
           />
         )}
       </div>
-      <Textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className="bg-transparent border-none text-slate-700 text-xs p-0 resize-none focus-visible:ring-0 no-print-border" />
+      <Textarea value={value} onChange={(e) => onChange(e.target.value)} rows={5} className="bg-transparent border-none text-slate-700 text-xs p-0 resize-y focus-visible:ring-0 no-print-border" />
     </div>
   );
 }
