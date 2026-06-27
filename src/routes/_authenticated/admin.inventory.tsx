@@ -131,10 +131,16 @@ function InventoryPage() {
         <div className="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center">
           <Package size={20} />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl font-semibold">المخزون</h1>
           <p className="text-xs text-muted-foreground">طلبات التوريد وبلاغات نفاد المخزون</p>
         </div>
+        <Link
+          to="/admin/inventory/suppliers"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] bg-gold/15 border border-gold/30 text-gold hover:bg-gold/25"
+        >
+          <Truck size={14} /> كاتلوج الموردين
+        </Link>
       </header>
 
       <Tabs defaultValue="supply" dir="rtl">
