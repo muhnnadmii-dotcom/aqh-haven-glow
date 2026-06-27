@@ -126,7 +126,7 @@ const TITLES: Record<string, string> = {
   "/admin/inventory": "لوحة المخزون",
   "/admin/inventory/products": "إدارة المنتجات",
   "/admin/inventory/categories": "التصنيفات",
-  "/admin/inventory/suppliers": "الموردين",
+  
   "/admin/inventory/catalog": "كاتلوج دنيا الربيع",
   "/admin/inventory/requests": "طلبات التوريد",
   "/admin/inventory/reports": "تقارير المخزون",
