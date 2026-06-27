@@ -136,7 +136,7 @@ function InventoryPage() {
           <p className="text-xs text-muted-foreground">طلبات التوريد وبلاغات نفاد المخزون</p>
         </div>
         <Link
-          to="/admin/inventory/suppliers"
+          to="/admin/inventory/catalog"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] bg-gold/15 border border-gold/30 text-gold hover:bg-gold/25"
         >
           <Truck size={14} /> كاتلوج الموردين
