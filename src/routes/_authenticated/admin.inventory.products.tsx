@@ -465,7 +465,7 @@ function BulkDialog({
     if (restockType) args.p_restock_type = restockType;
     if (isActive !== "") args.p_is_active = isActive === "true";
     if (costPct) args.p_cost_pct = Number(costPct);
-    if (supplierId) args.p_supplier_id = Number(supplierId);
+    if (supplierId) args.p_supplier_id = supplierId;
     const { error } = await supabase.rpc("aqh_bulk_update_products", args as any);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
