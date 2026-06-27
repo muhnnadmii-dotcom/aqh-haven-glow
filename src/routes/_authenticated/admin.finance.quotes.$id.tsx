@@ -539,8 +539,8 @@ function QuoteBuilder() {
               <div className="flex justify-between py-1 text-red-600"><span>الخصم</span><span className="font-mono">-{SAR(calc.discountValue)}</span></div>
             )}
             <div className="flex justify-between py-1 text-slate-600"><span>ضريبة القيمة المضافة ({vatRate}%)</span><span className="font-mono">{SAR(calc.vatTotal)}</span></div>
-            <div className="flex justify-between py-2 mt-1 text-base font-bold bg-slate-900 text-amber-300 px-3 rounded">
-              <span>الإجمالي</span><span className="font-mono">{SAR(calc.grandTotal)} {currency}</span>
+            <div className="grand flex justify-between py-2 mt-1 text-base font-bold bg-slate-900 text-amber-300 px-3 rounded">
+              <span>الإجمالي</span><span className="total-val font-mono" dir="ltr">{SAR(calc.grandTotal)} {currency}</span>
             </div>
           </div>
         </div>
@@ -648,6 +648,11 @@ function QuoteBuilder() {
           }
           .quote-doc .overflow-x-auto, .quote-doc .overflow-y-auto, .quote-doc .overflow-auto {
             overflow: visible !important;
+          }
+          .quote-doc .grand {
+            padding: 10px 14px !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .quote-doc tr, .quote-doc section, .quote-doc .break-avoid {
             break-inside: avoid !important;
