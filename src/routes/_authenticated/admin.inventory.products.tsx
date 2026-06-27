@@ -80,11 +80,12 @@ function ProductsPage() {
   });
 
   const suppliersQ = useQuery({
-    queryKey: ["aqh_suppliers_simple"],
+    queryKey: ["aqh_finance_suppliers_simple"],
     queryFn: async () => {
-      const { data } = await supabase.from("aqh_suppliers")
-        .select("id,name_ar").eq("is_active", true).order("name_ar");
-      return (data ?? []) as Supplier[];
+      const { data } = await supabase.from("finance_suppliers")
+        .select("id,name").eq("is_active", true).order("name");
+      return ((data ?? []) as { id: string; name: string }[])
+        .map((s) => ({ id: s.id, name_ar: s.name })) as Supplier[];
     },
   });
 
