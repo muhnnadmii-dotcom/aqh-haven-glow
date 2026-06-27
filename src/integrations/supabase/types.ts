@@ -279,6 +279,7 @@ export type Database = {
           needs_review: boolean | null
           supplier_key: string
           supplier_name: string
+          vendor_supplier_id: string | null
         }
         Insert: {
           barcode?: string | null
@@ -291,6 +292,7 @@ export type Database = {
           needs_review?: boolean | null
           supplier_key: string
           supplier_name: string
+          vendor_supplier_id?: string | null
         }
         Update: {
           barcode?: string | null
@@ -303,8 +305,17 @@ export type Database = {
           needs_review?: boolean | null
           supplier_key?: string
           supplier_name?: string
+          vendor_supplier_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "aqh_supplier_products_vendor_supplier_id_fkey"
+            columns: ["vendor_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "finance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       aquarium_care_logs: {
         Row: {
