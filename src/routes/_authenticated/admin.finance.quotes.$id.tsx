@@ -144,7 +144,7 @@ function QuoteBuilder() {
     setDiscount(Number(d.discount ?? 0));
     setDiscountType((d.discount_type as any) ?? "amount");
     setCurrency(d.currency ?? "SAR");
-    setPricesIncludeVat(d.prices_include_vat ?? true);
+    // pricesIncludeVat is fixed to false; ignore legacy field
     setStatus((d.status as any) ?? "draft");
     if (Array.isArray(d.items)) {
       setItems(d.items.map((it: any) => ({ uid: uid(), ...it })));
