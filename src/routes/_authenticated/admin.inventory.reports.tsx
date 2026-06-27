@@ -35,11 +35,11 @@ function ReportsPage() {
   });
 
   const suppliersQ = useQuery({
-    queryKey: ["aqh_suppliers_map"],
+    queryKey: ["finance_suppliers_map"],
     queryFn: async () => {
-      const { data } = await supabase.from("aqh_suppliers").select("key,name_ar");
+      const { data } = await supabase.from("finance_suppliers").select("id,name");
       const m = new Map<string, string>();
-      (data ?? []).forEach((s: any) => m.set(s.key, s.name_ar));
+      (data ?? []).forEach((s: any) => m.set(s.id, s.name));
       return m;
     },
   });

@@ -41,7 +41,7 @@ type Product = {
 };
 
 type Category = { id: number; name_ar: string };
-type Supplier = { id: number; name_ar: string };
+type Supplier = { id: string; name_ar: string };
 
 const SAR = (n: number) =>
   new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
@@ -80,11 +80,12 @@ function ProductsPage() {
   });
 
   const suppliersQ = useQuery({
-    queryKey: ["aqh_suppliers_simple"],
+    queryKey: ["aqh_finance_suppliers_simple"],
     queryFn: async () => {
-      const { data } = await supabase.from("aqh_suppliers")
-        .select("id,name_ar").eq("is_active", true).order("name_ar");
-      return (data ?? []) as Supplier[];
+      const { data } = await supabase.from("finance_suppliers")
+        .select("id,name").eq("is_active", true).order("name");
+      return ((data ?? []) as { id: string; name: string }[])
+        .map((s) => ({ id: s.id, name_ar: s.name })) as Supplier[];
     },
   });
 
@@ -464,7 +465,7 @@ function BulkDialog({
     if (restockType) args.p_restock_type = restockType;
     if (isActive !== "") args.p_is_active = isActive === "true";
     if (costPct) args.p_cost_pct = Number(costPct);
-    if (supplierId) args.p_supplier_id = Number(supplierId);
+    if (supplierId) args.p_supplier_id = supplierId;
     const { error } = await supabase.rpc("aqh_bulk_update_products", args as any);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
@@ -556,7 +557,7 @@ function LinksDialog({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("aqh_product_suppliers")
-        .select("id,supplier_id,cost,supplier_sku,is_preferred,lead_time_days")
+        .select("id,finance_supplier_id,cost,supplier_sku,is_preferred,lead_time_days")
         .eq("product_id", product.id);
       if (error) throw error;
       return data ?? [];
@@ -570,7 +571,7 @@ function LinksDialog({
     if (!pickSupplier) { toast.error("اختر مورد"); return; }
     const { error } = await supabase.from("aqh_product_suppliers").insert({
       product_id: product.id,
-      supplier_id: Number(pickSupplier),
+      finance_supplier_id: pickSupplier,
       cost: cost ? Number(cost) : null,
       supplier_sku: supSku.trim() || null,
     });
@@ -614,10 +615,10 @@ function LinksDialog({
           ) : (
             <div className="space-y-1">
               {(linksQ.data ?? []).map((l: any) => {
-                const sup = suppliers.find((s) => s.id === l.supplier_id);
+                const sup = suppliers.find((s) => s.id === l.finance_supplier_id);
                 return (
                   <div key={l.id} className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/5 text-[12px]">
-                    <span className="flex-1">{sup?.name_ar ?? `#${l.supplier_id}`}</span>
+                    <span className="flex-1">{sup?.name_ar ?? "مورد محذوف"}</span>
                     <span className="text-muted-foreground font-mono text-[10px]" dir="ltr">{l.supplier_sku ?? "—"}</span>
                     <span className="font-mono text-[11px]">{l.cost != null ? SAR(Number(l.cost)) : "—"}</span>
                     <label className="text-[10px] inline-flex items-center gap-1">
