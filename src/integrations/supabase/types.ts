@@ -71,9 +71,105 @@ export type Database = {
           },
         ]
       }
+      aqh_product_categories: {
+        Row: {
+          created_at: string
+          id: number
+          is_active: boolean
+          name_ar: string
+          parent_id: number | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          is_active?: boolean
+          name_ar: string
+          parent_id?: number | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          is_active?: boolean
+          name_ar?: string
+          parent_id?: number | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aqh_product_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "aqh_product_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aqh_product_suppliers: {
+        Row: {
+          cost: number | null
+          created_at: string
+          id: number
+          is_preferred: boolean
+          lead_time_days: number | null
+          notes: string | null
+          product_id: number
+          supplier_id: number
+          supplier_sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          id?: never
+          is_preferred?: boolean
+          lead_time_days?: number | null
+          notes?: string | null
+          product_id: number
+          supplier_id: number
+          supplier_sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          id?: never
+          is_preferred?: boolean
+          lead_time_days?: number | null
+          notes?: string | null
+          product_id?: number
+          supplier_id?: number
+          supplier_sku?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aqh_product_suppliers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "aqh_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aqh_product_suppliers_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "aqh_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aqh_products: {
         Row: {
           category: string | null
+          category_id: number | null
           cost: number | null
           created_at: string | null
           current_qty: number | null
@@ -86,6 +182,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          category_id?: number | null
           cost?: number | null
           created_at?: string | null
           current_qty?: number | null
@@ -98,6 +195,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          category_id?: number | null
           cost?: number | null
           created_at?: string | null
           current_qty?: number | null
@@ -108,7 +206,15 @@ export type Database = {
           restock_type?: string | null
           sku?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "aqh_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "aqh_product_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       aqh_restock_requests: {
         Row: {
@@ -197,6 +303,45 @@ export type Database = {
           needs_review?: boolean | null
           supplier_key?: string
           supplier_name?: string
+        }
+        Relationships: []
+      }
+      aqh_suppliers: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: number
+          is_active: boolean
+          key: string
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: never
+          is_active?: boolean
+          key: string
+          name_ar: string
+          name_en?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: never
+          is_active?: boolean
+          key?: string
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2220,6 +2365,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aqh_bulk_update_products: {
+        Args: {
+          p_category_id?: number
+          p_cost_pct?: number
+          p_ids: number[]
+          p_is_active?: boolean
+          p_restock_type?: string
+          p_supplier_id?: number
+        }
+        Returns: number
+      }
       finance_archive_import_batch: {
         Args: { p_batch_id: string; p_reason: string }
         Returns: Json
