@@ -49,6 +49,7 @@ export const ADMIN_PAGES: AdminPageDef[] = [
   { key: "/admin/finance/import",          label: "استيراد Excel",     group: "finance", financeOnly: true },
   { key: "/admin/finance/import-batches",  label: "دفعات الاستيراد",   group: "finance", financeOnly: true },
   { key: "/admin/finance/audit",           label: "سجل التعديلات",     group: "finance", financeOnly: true },
+  { key: "/admin/finance/quotes",          label: "عروض الأسعار",      group: "finance", financeOnly: true },
   { key: "/admin/finance/settings",        label: "الإعدادات المالية", group: "finance", financeOnly: true },
 
   // Inventory
