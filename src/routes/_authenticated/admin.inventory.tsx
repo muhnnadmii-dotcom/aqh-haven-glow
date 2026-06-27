@@ -658,6 +658,7 @@ function RequestsListTab() {
   const qc = useQueryClient();
   const [kindF, setKindF] = useState<RequestKind | "all">("all");
   const [statusF, setStatusF] = useState<RestockStatus | "all">("all");
+  const [sourceF, setSourceF] = useState<"all" | "internal" | "supplier_catalog">("all");
   const [expanded, setExpanded] = useState<number | null>(null);
 
   const requestsQ = useQuery({
@@ -665,10 +666,10 @@ function RequestsListTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("aqh_restock_requests")
-        .select("id, employee_name, created_by, request_kind, status, items, items_count, notes, created_at")
+        .select("id, employee_name, created_by, request_kind, status, items, items_count, notes, created_at, source, supplier_key, subtotal, vat, total" as any)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((r) => ({
+      return (data ?? []).map((r: any) => ({
         ...r,
         items: (Array.isArray(r.items) ? r.items : []) as RestockItem[],
         status: (r.status ?? "new") as RestockStatus,
@@ -677,13 +678,29 @@ function RequestsListTab() {
     },
   });
 
+  const suppliersQ = useQuery({
+    queryKey: ["aqh_supplier_names"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("aqh_supplier_products" as any)
+        .select("supplier_key,supplier_name");
+      if (error) throw error;
+      const m: Record<string, string> = {};
+      ((data as any[]) ?? []).forEach((r) => { m[r.supplier_key] = r.supplier_name; });
+      return m;
+    },
+  });
+  const supplierNames = suppliersQ.data ?? {};
+
   const filtered = useMemo(() => {
     return (requestsQ.data ?? []).filter((r) => {
       if (kindF !== "all" && r.request_kind !== kindF) return false;
       if (statusF !== "all" && r.status !== statusF) return false;
+      if (sourceF === "internal" && r.source === "supplier_catalog") return false;
+      if (sourceF === "supplier_catalog" && r.source !== "supplier_catalog") return false;
       return true;
     });
-  }, [requestsQ.data, kindF, statusF]);
+  }, [requestsQ.data, kindF, statusF, sourceF]);
 
   const statusM = useMutation({
     mutationFn: async (args: { id: number; next: RestockStatus }) => {
@@ -701,10 +718,26 @@ function RequestsListTab() {
   });
 
   function exportCsv(r: RestockRequest) {
-    const headers = ["SKU", "المنتج", "الكمية"];
+    const hasCost = r.items.some((it) => it.cost != null);
+    const headers = hasCost
+      ? ["SKU", "المنتج", "الكمية", "التكلفة", "الإجمالي"]
+      : ["SKU", "المنتج", "الكمية"];
     const esc = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
-    const rows = r.items.map((it) => [it.sku, it.name_ar, String(it.qty)].map(esc).join(","));
-    const csv = "\uFEFF" + headers.map(esc).join(",") + "\n" + rows.join("\n") + "\n";
+    const rows = r.items.map((it) => {
+      const base = [it.sku, it.name_ar, String(it.qty)];
+      if (hasCost) {
+        const c = Number(it.cost) || 0;
+        base.push(c.toFixed(2), (c * it.qty).toFixed(2));
+      }
+      return base.map(esc).join(",");
+    });
+    let csv = "\uFEFF" + headers.map(esc).join(",") + "\n" + rows.join("\n") + "\n";
+    if (hasCost && r.total != null) {
+      csv += "\n";
+      csv += `${esc("المجموع قبل الضريبة")},${esc(String((r.subtotal ?? 0).toFixed(2)))}\n`;
+      csv += `${esc("الضريبة 15%")},${esc(String((r.vat ?? 0).toFixed(2)))}\n`;
+      csv += `${esc("الإجمالي")},${esc(String((r.total ?? 0).toFixed(2)))}\n`;
+    }
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -719,6 +752,11 @@ function RequestsListTab() {
     { v: "order", label: "طلبات توريد" },
     { v: "report", label: "بلاغات نفاد" },
   ];
+  const sourceChips: Array<{ v: "all" | "internal" | "supplier_catalog"; label: string }> = [
+    { v: "all", label: "كل المصادر" },
+    { v: "internal", label: "مخزون داخلي" },
+    { v: "supplier_catalog", label: "كاتلوج موردين" },
+  ];
   const statusChips: Array<{ v: RestockStatus | "all"; label: string }> = [
     { v: "all", label: "كل الحالات" },
     { v: "new", label: "جديد" },
@@ -726,6 +764,8 @@ function RequestsListTab() {
     { v: "received", label: "تم الاستلام" },
     { v: "resolved", label: "تم الحل" },
   ];
+
+  const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
 
   return (
     <div className="space-y-4">
