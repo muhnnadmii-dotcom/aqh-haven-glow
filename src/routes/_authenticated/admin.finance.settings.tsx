@@ -44,6 +44,9 @@ function SettingsPage() {
     <div className="space-y-5 max-w-2xl">
       <h2 className="text-base font-semibold">إعدادات المالية</h2>
 
+      <BusinessSettingsCard />
+
+
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-semibold">مصادر الدخل</div>
