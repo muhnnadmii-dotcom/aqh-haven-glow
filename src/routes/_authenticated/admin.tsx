@@ -119,6 +119,7 @@ const TITLES: Record<string, string> = {
   "/admin/design/contact": "تواصل معنا",
   "/admin/staff": "الموظفين",
   "/admin/inventory": "المخزون وإعادة التوريد",
+  "/admin/inventory/catalog": "كاتلوج دنيا الربيع",
 };
 
 function AdminLayout() {
