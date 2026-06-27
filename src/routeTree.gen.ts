@@ -61,7 +61,10 @@ import { Route as AuthenticatedAccountRequestsIndexRouteImport } from './routes/
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
 import { Route as AuthenticatedAdminTanksIdRouteImport } from './routes/_authenticated/admin.tanks.$id'
 import { Route as AuthenticatedAdminRequestsIdRouteImport } from './routes/_authenticated/admin.requests.$id'
+import { Route as AuthenticatedAdminInventorySuppliersRouteImport } from './routes/_authenticated/admin.inventory.suppliers'
 import { Route as AuthenticatedAdminInventoryRequestsRouteImport } from './routes/_authenticated/admin.inventory.requests'
+import { Route as AuthenticatedAdminInventoryReportsRouteImport } from './routes/_authenticated/admin.inventory.reports'
+import { Route as AuthenticatedAdminInventoryCategoriesRouteImport } from './routes/_authenticated/admin.inventory.categories'
 import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes/_authenticated/admin.inventory.catalog'
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
@@ -365,10 +368,28 @@ const AuthenticatedAdminRequestsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminRequestsRoute,
   } as any)
+const AuthenticatedAdminInventorySuppliersRoute =
+  AuthenticatedAdminInventorySuppliersRouteImport.update({
+    id: '/inventory/suppliers',
+    path: '/inventory/suppliers',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminInventoryRequestsRoute =
   AuthenticatedAdminInventoryRequestsRouteImport.update({
     id: '/inventory/requests',
     path: '/inventory/requests',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminInventoryReportsRoute =
+  AuthenticatedAdminInventoryReportsRouteImport.update({
+    id: '/inventory/reports',
+    path: '/inventory/reports',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminInventoryCategoriesRoute =
+  AuthenticatedAdminInventoryCategoriesRouteImport.update({
+    id: '/inventory/categories',
+    path: '/inventory/categories',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminInventoryCatalogRoute =
@@ -532,7 +553,10 @@ export interface FileRoutesByFullPath {
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
+  '/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
+  '/admin/inventory/reports': typeof AuthenticatedAdminInventoryReportsRoute
   '/admin/inventory/requests': typeof AuthenticatedAdminInventoryRequestsRoute
+  '/admin/inventory/suppliers': typeof AuthenticatedAdminInventorySuppliersRoute
   '/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -595,7 +619,10 @@ export interface FileRoutesByTo {
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
+  '/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
+  '/admin/inventory/reports': typeof AuthenticatedAdminInventoryReportsRoute
   '/admin/inventory/requests': typeof AuthenticatedAdminInventoryRequestsRoute
+  '/admin/inventory/suppliers': typeof AuthenticatedAdminInventorySuppliersRoute
   '/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -668,7 +695,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/_authenticated/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
+  '/_authenticated/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
+  '/_authenticated/admin/inventory/reports': typeof AuthenticatedAdminInventoryReportsRoute
   '/_authenticated/admin/inventory/requests': typeof AuthenticatedAdminInventoryRequestsRoute
+  '/_authenticated/admin/inventory/suppliers': typeof AuthenticatedAdminInventorySuppliersRoute
   '/_authenticated/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/_authenticated/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -741,7 +771,10 @@ export interface FileRouteTypes {
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
     | '/admin/inventory/catalog'
+    | '/admin/inventory/categories'
+    | '/admin/inventory/reports'
     | '/admin/inventory/requests'
+    | '/admin/inventory/suppliers'
     | '/admin/requests/$id'
     | '/admin/tanks/$id'
     | '/admin/users/$id'
@@ -804,7 +837,10 @@ export interface FileRouteTypes {
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
     | '/admin/inventory/catalog'
+    | '/admin/inventory/categories'
+    | '/admin/inventory/reports'
     | '/admin/inventory/requests'
+    | '/admin/inventory/suppliers'
     | '/admin/requests/$id'
     | '/admin/tanks/$id'
     | '/admin/users/$id'
@@ -876,7 +912,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/settings'
     | '/_authenticated/admin/finance/suppliers'
     | '/_authenticated/admin/inventory/catalog'
+    | '/_authenticated/admin/inventory/categories'
+    | '/_authenticated/admin/inventory/reports'
     | '/_authenticated/admin/inventory/requests'
+    | '/_authenticated/admin/inventory/suppliers'
     | '/_authenticated/admin/requests/$id'
     | '/_authenticated/admin/tanks/$id'
     | '/_authenticated/admin/users/$id'
@@ -1273,11 +1312,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsIdRouteImport
       parentRoute: typeof AuthenticatedAdminRequestsRoute
     }
+    '/_authenticated/admin/inventory/suppliers': {
+      id: '/_authenticated/admin/inventory/suppliers'
+      path: '/inventory/suppliers'
+      fullPath: '/admin/inventory/suppliers'
+      preLoaderRoute: typeof AuthenticatedAdminInventorySuppliersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/inventory/requests': {
       id: '/_authenticated/admin/inventory/requests'
       path: '/inventory/requests'
       fullPath: '/admin/inventory/requests'
       preLoaderRoute: typeof AuthenticatedAdminInventoryRequestsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/inventory/reports': {
+      id: '/_authenticated/admin/inventory/reports'
+      path: '/inventory/reports'
+      fullPath: '/admin/inventory/reports'
+      preLoaderRoute: typeof AuthenticatedAdminInventoryReportsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/inventory/categories': {
+      id: '/_authenticated/admin/inventory/categories'
+      path: '/inventory/categories'
+      fullPath: '/admin/inventory/categories'
+      preLoaderRoute: typeof AuthenticatedAdminInventoryCategoriesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/inventory/catalog': {
@@ -1568,7 +1628,10 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminContentPageRoute: typeof AuthenticatedAdminContentPageRoute
   AuthenticatedAdminInventoryCatalogRoute: typeof AuthenticatedAdminInventoryCatalogRoute
+  AuthenticatedAdminInventoryCategoriesRoute: typeof AuthenticatedAdminInventoryCategoriesRoute
+  AuthenticatedAdminInventoryReportsRoute: typeof AuthenticatedAdminInventoryReportsRoute
   AuthenticatedAdminInventoryRequestsRoute: typeof AuthenticatedAdminInventoryRequestsRoute
+  AuthenticatedAdminInventorySuppliersRoute: typeof AuthenticatedAdminInventorySuppliersRoute
   AuthenticatedAdminContentIndexRoute: typeof AuthenticatedAdminContentIndexRoute
   AuthenticatedAdminGalleryIndexRoute: typeof AuthenticatedAdminGalleryIndexRoute
   AuthenticatedAdminInventoryIndexRoute: typeof AuthenticatedAdminInventoryIndexRoute
@@ -1593,8 +1656,14 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminContentPageRoute: AuthenticatedAdminContentPageRoute,
   AuthenticatedAdminInventoryCatalogRoute:
     AuthenticatedAdminInventoryCatalogRoute,
+  AuthenticatedAdminInventoryCategoriesRoute:
+    AuthenticatedAdminInventoryCategoriesRoute,
+  AuthenticatedAdminInventoryReportsRoute:
+    AuthenticatedAdminInventoryReportsRoute,
   AuthenticatedAdminInventoryRequestsRoute:
     AuthenticatedAdminInventoryRequestsRoute,
+  AuthenticatedAdminInventorySuppliersRoute:
+    AuthenticatedAdminInventorySuppliersRoute,
   AuthenticatedAdminContentIndexRoute: AuthenticatedAdminContentIndexRoute,
   AuthenticatedAdminGalleryIndexRoute: AuthenticatedAdminGalleryIndexRoute,
   AuthenticatedAdminInventoryIndexRoute: AuthenticatedAdminInventoryIndexRoute,
