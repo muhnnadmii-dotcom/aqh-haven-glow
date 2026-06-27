@@ -660,6 +660,39 @@ function QuoteBuilder() {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
+          /* v2 fixes: prevent left-edge clipping of eyebrow + date inputs */
+          .quote-doc .quote-eyebrow {
+            padding-inline: 4px !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
+            text-overflow: clip !important;
+          }
+          .quote-doc .quote-no {
+            padding-inline-start: 4px !important;
+            letter-spacing: 0 !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
+          }
+          .quote-doc .quote-header-meta { padding-inline-start: 6px !important; }
+          .quote-doc input.quote-date,
+          .quote-doc input[type="date"] {
+            width: auto !important;
+            min-width: max-content !important;
+            direction: rtl !important;
+            text-align: right !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+            padding-inline: 2px !important;
+            text-indent: 0 !important;
+          }
+          .quote-doc .grand { padding: 12px 18px !important; }
+          .quote-doc .grand .total-val {
+            padding-inline-start: 4px !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
+          }
+
         }
       `}</style>
     </div>
