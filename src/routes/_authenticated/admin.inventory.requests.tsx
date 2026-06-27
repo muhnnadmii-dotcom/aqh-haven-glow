@@ -19,7 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-export const Route = createFileRoute("/_authenticated/admin/inventory/")({
+export const Route = createFileRoute("/_authenticated/admin/inventory/requests")({
   ssr: false,
   beforeLoad: async () => {
     const user = await getSessionUser();

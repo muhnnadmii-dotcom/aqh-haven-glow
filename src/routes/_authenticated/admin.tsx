@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
   Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings as Cog, Images, Wallet,
   ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive, Shield, ShieldOff,
-  Package,
+  Package, Boxes, FolderTree, ClipboardList, BarChart3,
 } from "lucide-react";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { useAllowedPages } from "@/lib/use-allowed-pages";
@@ -86,8 +86,13 @@ const navGroups: NavGroup[] = [
     label: "المخزون",
     collapsible: true,
     items: [
-      { to: "/admin/inventory", label: "المخزون وإعادة التوريد", icon: Package, exact: true },
-      { to: "/admin/inventory/catalog", label: "كاتلوج دنيا الربيع", icon: Truck },
+      { to: "/admin/inventory", label: "لوحة المخزون", icon: LayoutDashboard, exact: true },
+      { to: "/admin/inventory/products", label: "المنتجات", icon: Boxes },
+      { to: "/admin/inventory/categories", label: "التصنيفات", icon: FolderTree },
+      { to: "/admin/inventory/suppliers", label: "الموردين", icon: Truck },
+      { to: "/admin/inventory/catalog", label: "كاتلوج دنيا الربيع", icon: BookOpen },
+      { to: "/admin/inventory/requests", label: "طلبات التوريد", icon: ClipboardList },
+      { to: "/admin/inventory/reports", label: "تقارير المخزون", icon: BarChart3 },
     ],
   },
   {
@@ -118,8 +123,13 @@ const TITLES: Record<string, string> = {
   "/admin/design/about": "من نحن",
   "/admin/design/contact": "تواصل معنا",
   "/admin/staff": "الموظفين",
-  "/admin/inventory": "المخزون وإعادة التوريد",
+  "/admin/inventory": "لوحة المخزون",
+  "/admin/inventory/products": "إدارة المنتجات",
+  "/admin/inventory/categories": "التصنيفات",
+  "/admin/inventory/suppliers": "الموردين",
   "/admin/inventory/catalog": "كاتلوج دنيا الربيع",
+  "/admin/inventory/requests": "طلبات التوريد",
+  "/admin/inventory/reports": "تقارير المخزون",
 };
 
 function AdminLayout() {
