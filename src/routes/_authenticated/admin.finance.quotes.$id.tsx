@@ -356,7 +356,13 @@ function QuoteBuilder() {
           </div>
           <div className="text-end space-y-1">
             <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold">عرض سعر · QUOTATION</div>
-            <div className="text-2xl font-bold font-mono" dir="ltr">{quoteNo || "AQH-XXXX-XXX"}</div>
+            <input
+              dir="ltr"
+              value={quoteNo}
+              onChange={(e) => setQuoteNo(e.target.value)}
+              placeholder="AQH-XXXX-XXX"
+              className="text-2xl font-bold font-mono bg-transparent outline-none no-print-border text-end w-48"
+            />
             <div className="text-xs text-slate-500 space-y-0.5 mt-2">
               <div className="flex items-center gap-2 justify-end">
                 <span>التاريخ:</span>
@@ -576,11 +582,23 @@ function QuoteBuilder() {
         .no-print-border:hover, .no-print-border:focus { border-bottom-color: #f59e0b; }
         @media print {
           @page { size: A4; margin: 12mm; }
-          body { background: white !important; }
-          .no-print { display: none !important; }
-          .quote-doc { box-shadow: none !important; border: none !important; padding: 0 !important; }
+          html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
+          body * { visibility: hidden !important; }
+          .quote-doc, .quote-doc * { visibility: visible !important; }
+          .quote-doc {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            background: white !important;
+            color: #1e293b !important;
+          }
+          .no-print, .no-print * { display: none !important; visibility: hidden !important; }
           .no-print-border { border-bottom: none !important; }
-          input, textarea { color: #1e293b !important; background: transparent !important; }
+          input, textarea { color: #1e293b !important; background: transparent !important; border: none !important; }
         }
       `}</style>
     </div>
