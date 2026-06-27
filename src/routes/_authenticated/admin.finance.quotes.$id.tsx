@@ -82,9 +82,36 @@ function QuoteBuilder() {
   const [items, setItems] = useState<LineItem[]>([
     { uid: uid(), name: "", description: "", unit: "قطعة", qty: 1, price: 0, taxable: true, source: "manual" },
   ]);
-  const [footerPhone, setFooterPhone] = useState("+966 5X XXX XXXX");
+  const [footerPhone, setFooterPhone] = useState("0552700442");
   const [footerEmail, setFooterEmail] = useState("info@aquahaven.sa");
-  const [footerVat, setFooterVat] = useState("الرقم الضريبي: ");
+  const [footerVat, setFooterVat] = useState("الرقم الضريبي: 312327536500003");
+
+  // Load business settings (singleton)
+  const settingsQ = useQuery({
+    queryKey: ["aqh_business_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("aqh_business_settings" as any)
+        .select("*")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  // Apply settings defaults (only for new quotes, before user edits)
+  useEffect(() => {
+    const s = settingsQ.data;
+    if (!s) return;
+    if (s.company_name) setCompanyName(s.company_name);
+    if (s.company_sub) setCompanySub(s.company_sub);
+    if (s.logo_url) setLogoUrl(s.logo_url);
+    if (s.phone) setFooterPhone(s.phone);
+    if (s.email) setFooterEmail(s.email);
+    if (s.vat_number) setFooterVat(`الرقم الضريبي: ${s.vat_number}`);
+    if (isNew && s.default_vat_rate != null) setVatRate(Number(s.default_vat_rate));
+  }, [settingsQ.data, isNew]);
 
   // Load existing quote
   const loadQ = useQuery({
