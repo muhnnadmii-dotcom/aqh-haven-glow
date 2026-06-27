@@ -356,7 +356,13 @@ function QuoteBuilder() {
           </div>
           <div className="text-end space-y-1">
             <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold">عرض سعر · QUOTATION</div>
-            <div className="text-2xl font-bold font-mono" dir="ltr">{quoteNo || "AQH-XXXX-XXX"}</div>
+            <input
+              dir="ltr"
+              value={quoteNo}
+              onChange={(e) => setQuoteNo(e.target.value)}
+              placeholder="AQH-XXXX-XXX"
+              className="text-2xl font-bold font-mono bg-transparent outline-none no-print-border text-end w-48"
+            />
             <div className="text-xs text-slate-500 space-y-0.5 mt-2">
               <div className="flex items-center gap-2 justify-end">
                 <span>التاريخ:</span>
