@@ -40,7 +40,8 @@ type Catalog = {
   supplier_cost: number | null;
 };
 
-const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n || 0);
+const FMT = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const SAR = (n: number) => FMT.format(Number.isFinite(n) ? n : 0);
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const plusDaysISO = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); };
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -79,7 +80,7 @@ function QuoteBuilder() {
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState<"amount" | "percent">("amount");
   const [currency, setCurrency] = useState("SAR");
-  const [pricesIncludeVat, setPricesIncludeVat] = useState(true);
+  const pricesIncludeVat = false; // fixed: prices are entered without VAT
   const [status, setStatus] = useState<"draft" | "sent" | "accepted" | "rejected">("draft");
   const [items, setItems] = useState<LineItem[]>([
     { uid: uid(), name: "", description: "", unit: "قطعة", qty: 1, price: 0, taxable: true, source: "manual" },
@@ -143,14 +144,14 @@ function QuoteBuilder() {
     setDiscount(Number(d.discount ?? 0));
     setDiscountType((d.discount_type as any) ?? "amount");
     setCurrency(d.currency ?? "SAR");
-    setPricesIncludeVat(d.prices_include_vat ?? true);
+    // pricesIncludeVat is fixed to false; ignore legacy field
     setStatus((d.status as any) ?? "draft");
     if (Array.isArray(d.items)) {
       setItems(d.items.map((it: any) => ({ uid: uid(), ...it })));
     }
   }, [loadQ.data]);
 
-  // ---- Calculations
+  // ---- Calculations (prices always entered WITHOUT VAT)
   const calc = useMemo(() => {
     const lineTotals = items.map((it) => (Number(it.qty) || 0) * (Number(it.price) || 0));
     const totalsByTax = items.reduce(
@@ -163,35 +164,33 @@ function QuoteBuilder() {
       { taxable: 0, nonTaxable: 0 }
     );
 
-    // Discount applied to gross line totals (taxable+nontaxable), proportionally
     const grossAll = totalsByTax.taxable + totalsByTax.nonTaxable;
     const discountValue =
       discountType === "percent" ? grossAll * (Number(discount) || 0) / 100 : Number(discount) || 0;
     const ratio = grossAll > 0 ? Math.max(0, 1 - discountValue / grossAll) : 1;
+    const vr = (Number(vatRate) || 0) / 100;
+
+    // Per-line VAT/total (after discount ratio applied), exclusive VAT model
+    const lineVat = items.map((it, i) => (it.taxable ? lineTotals[i] * ratio * vr : 0));
+    const lineWithVat = items.map((i, idx) => lineTotals[idx] * ratio + lineVat[idx]);
+
     const taxableAfter = totalsByTax.taxable * ratio;
     const nonTaxAfter = totalsByTax.nonTaxable * ratio;
-
-    let subtotalBeforeVat: number; let vatTotal: number; let grandTotal: number;
-    if (pricesIncludeVat) {
-      const netTaxable = taxableAfter / (1 + (Number(vatRate) || 0) / 100);
-      vatTotal = taxableAfter - netTaxable;
-      subtotalBeforeVat = netTaxable + nonTaxAfter;
-      grandTotal = subtotalBeforeVat + vatTotal;
-    } else {
-      vatTotal = taxableAfter * ((Number(vatRate) || 0) / 100);
-      subtotalBeforeVat = taxableAfter + nonTaxAfter;
-      grandTotal = subtotalBeforeVat + vatTotal;
-    }
+    const vatTotal = taxableAfter * vr;
+    const subtotalBeforeVat = taxableAfter + nonTaxAfter;
+    const grandTotal = subtotalBeforeVat + vatTotal;
 
     return {
       lineTotals,
+      lineVat,
+      lineWithVat,
       gross: grossAll,
       discountValue,
       subtotalBeforeVat: +subtotalBeforeVat.toFixed(2),
       vatTotal: +vatTotal.toFixed(2),
       grandTotal: +grandTotal.toFixed(2),
     };
-  }, [items, vatRate, discount, discountType, pricesIncludeVat]);
+  }, [items, vatRate, discount, discountType]);
 
   // ---- Product search
   const [searchOpenFor, setSearchOpenFor] = useState<string | null>(null);
@@ -358,9 +357,8 @@ function QuoteBuilder() {
           <label className="block text-[11px] text-muted-foreground mb-1">العملة</label>
           <Input value={currency} onChange={(e) => setCurrency(e.target.value)} />
         </div>
-        <div className="flex items-end gap-2">
-          <Switch checked={pricesIncludeVat} onCheckedChange={setPricesIncludeVat} id="incvat" />
-          <label htmlFor="incvat" className="text-xs">الأسعار شاملة الضريبة</label>
+        <div className="flex items-end text-[11px] text-muted-foreground leading-snug">
+          الأسعار المُدخلة <strong className="text-foreground">بدون</strong> ضريبة؛ تُحتسب الضريبة تلقائيًا 15%.
         </div>
       </div>
 
@@ -452,9 +450,9 @@ function QuoteBuilder() {
                   <th className="px-2 py-2 text-start">البند / الوصف</th>
                   <th className="px-2 py-2 text-start w-20">الوحدة</th>
                   <th className="px-2 py-2 text-start w-16">الكمية</th>
-                  <th className="px-2 py-2 text-start w-24">السعر</th>
-                  <th className="px-2 py-2 text-center w-14">ضريبة</th>
-                  <th className="px-2 py-2 text-start w-28">الإجمالي</th>
+                  <th className="px-2 py-2 text-start w-32">السعر (بدون ضريبة)</th>
+                  <th className="px-2 py-2 text-start w-24">ضريبة 15%</th>
+                  <th className="px-2 py-2 text-start w-28">الإجمالي شامل</th>
                   <th className="px-2 py-2 w-10 no-print"></th>
                 </tr>
               </thead>
@@ -479,7 +477,7 @@ function QuoteBuilder() {
                             <Search size={10} /> بحث
                           </button>
                           {it.source && it.source !== "manual" && (
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded border ${it.source === "salla" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+                            <span className={`no-print text-[9px] px-1.5 py-0.5 rounded border ${it.source === "salla" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
                               {it.source === "salla" ? "سلة" : "مورّد"}
                             </span>
                           )}
@@ -546,11 +544,17 @@ function QuoteBuilder() {
                     </td>
                     <td className="px-2 py-2">
                       <input type="number" min="0" step="0.01" value={it.price} onChange={(e) => patchItem(it.uid, { price: Number(e.target.value) })} className="w-full bg-transparent outline-none font-mono no-print-border" />
+                      {it.taxable && (Number(it.price) || 0) > 0 && (
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">شامل: {SAR((Number(it.price) || 0) * 1.15)} ر.س</div>
+                      )}
                     </td>
-                    <td className="px-2 py-2 text-center">
-                      <input type="checkbox" checked={it.taxable} onChange={(e) => patchItem(it.uid, { taxable: e.target.checked })} />
+                    <td className="px-2 py-2 font-mono text-slate-700">
+                      <div className="flex items-center gap-1">
+                        <input type="checkbox" checked={it.taxable} onChange={(e) => patchItem(it.uid, { taxable: e.target.checked })} className="no-print" />
+                        <span>{it.taxable ? SAR(calc.lineVat[i]) : <span className="text-[10px] text-slate-400">غير خاضعة</span>}</span>
+                      </div>
                     </td>
-                    <td className="px-2 py-2 font-mono text-slate-700">{SAR(calc.lineTotals[i])}</td>
+                    <td className="px-2 py-2 font-mono text-slate-700">{SAR(calc.lineWithVat[i])}</td>
                     <td className="px-2 py-2 no-print">
                       <button onClick={() => delItem(it.uid)} className="text-red-500 hover:text-red-700"><Trash2 size={13} /></button>
                     </td>
@@ -571,6 +575,9 @@ function QuoteBuilder() {
             <div className="flex justify-between py-1 text-slate-600"><span>ضريبة القيمة المضافة ({vatRate}%)</span><span className="font-mono">{SAR(calc.vatTotal)}</span></div>
             <div className="grand flex justify-between py-2 mt-1 text-base font-bold bg-slate-900 text-amber-300 px-3 rounded">
               <span>الإجمالي</span><span className="total-val font-mono" dir="ltr">{SAR(calc.grandTotal)} {currency}</span>
+            </div>
+            <div className="mt-2 text-[11px] text-slate-500 text-end">
+              جميع الأسعار شاملة ضريبة القيمة المضافة 15%
             </div>
           </div>
         </div>
