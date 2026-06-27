@@ -109,3 +109,78 @@ function SourceDialog({ row, onClose, onSaved }: any) {
     </div>
   );
 }
+
+function BusinessSettingsCard() {
+  const [row, setRow] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("aqh_business_settings" as any)
+        .select("*")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) toast.error(error.message);
+      setRow(data ?? { id: 1 });
+      setLoading(false);
+    })();
+  }, []);
+
+  const set = (k: string, v: any) => setRow((r: any) => ({ ...r, [k]: v }));
+
+  const save = async () => {
+    setSaving(true);
+    const payload = {
+      id: 1,
+      company_name: row.company_name || null,
+      company_sub: row.company_sub || null,
+      vat_number: row.vat_number || null,
+      phone: row.phone || null,
+      email: row.email || null,
+      logo_url: row.logo_url || null,
+      default_vat_rate: row.default_vat_rate ?? 15,
+    };
+    const { error } = await supabase.from("aqh_business_settings" as any).upsert(payload);
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else toast.success("تم حفظ بيانات النشاط");
+  };
+
+  if (loading) return <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-[12px] text-muted-foreground">جاري التحميل…</div>;
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+      <div className="text-sm font-semibold">بيانات النشاط (تظهر في عرض السعر)</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[12px]">
+        <Field label="اسم الشركة" value={row.company_name ?? ""} onChange={(v) => set("company_name", v)} />
+        <Field label="الوصف الفرعي" value={row.company_sub ?? ""} onChange={(v) => set("company_sub", v)} />
+        <Field label="الرقم الضريبي" value={row.vat_number ?? ""} onChange={(v) => set("vat_number", v)} />
+        <Field label="الجوال" value={row.phone ?? ""} onChange={(v) => set("phone", v)} />
+        <Field label="البريد" value={row.email ?? ""} onChange={(v) => set("email", v)} />
+        <Field label="رابط الشعار (اختياري)" value={row.logo_url ?? ""} onChange={(v) => set("logo_url", v)} />
+        <Field label="نسبة الضريبة الافتراضية %" type="number" value={String(row.default_vat_rate ?? 15)} onChange={(v) => set("default_vat_rate", Number(v))} />
+      </div>
+      <div className="flex justify-end">
+        <button onClick={save} disabled={saving} className="px-4 py-1.5 rounded-lg text-[12px] bg-gold/20 border border-gold/40 text-gold disabled:opacity-50">
+          {saving ? "جاري الحفظ…" : "حفظ بيانات النشاط"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+  return (
+    <label className="block">
+      <div className="text-[11px] text-muted-foreground mb-1">{label}</div>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px]"
+      />
+    </label>
+  );
+}
