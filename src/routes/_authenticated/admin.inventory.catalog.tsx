@@ -215,20 +215,74 @@ function SupplierCatalogPage() {
     );
   }
 
+  // Vendor selection screen
+  if (!vendorId) {
+    const vendors = vendorsListQ.data ?? [];
+    return (
+      <div className="space-y-5" dir="rtl">
+        <header className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center">
+            <Truck size={20} />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-xl font-semibold">كاتلوج الموردين</h1>
+            <p className="text-xs text-muted-foreground">اختر المورد لاستعراض الكاتلوج وإنشاء طلب توريد</p>
+          </div>
+          <Link to="/admin/inventory" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+            <ArrowRight size={12} /> المخزون
+          </Link>
+        </header>
+
+        {productsQ.isLoading ? (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            <Loader2 className="inline-block animate-spin" size={16} /> جارٍ التحميل…
+          </div>
+        ) : vendors.length === 0 ? (
+          <div className="py-16 text-center text-sm text-muted-foreground">
+            لا يوجد كاتلوج لأي مورد بعد.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {vendors.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => { setVendorId(v.id); setSupplier(""); }}
+                className="text-start rounded-xl border border-white/10 bg-white/[0.02] hover:border-gold/40 hover:bg-gold/5 transition p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gold/15 border border-gold/30 text-gold flex items-center justify-center">
+                    <Truck size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{v.name}</div>
+                    <div className="text-[11px] text-muted-foreground">{v.products} منتج في الكاتلوج</div>
+                  </div>
+                  <ArrowRight size={14} className="text-muted-foreground" />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 pb-32" dir="rtl">
       <header className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center">
-          <Truck size={20} />
-        </div>
+        <button onClick={() => { setVendorId(""); setCart({}); setSupplier(""); }}
+          className="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center hover:bg-gold/20" aria-label="رجوع">
+          <ArrowRight size={18} />
+        </button>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">كاتلوج دنيا الربيع</h1>
-          <p className="text-xs text-muted-foreground">المورد: دنيا الربيع · اختر براند ثم منتجات منه لإنشاء طلب توريد شامل الضريبة</p>
+          <h1 className="text-xl font-semibold">كاتلوج {activeVendorName}</h1>
+          <p className="text-xs text-muted-foreground">اختر براند ثم منتجات لإنشاء طلب توريد شامل الضريبة</p>
         </div>
         <Link to="/admin/inventory" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
           <ArrowRight size={12} /> المخزون
         </Link>
       </header>
+
 
       {/* Brand tabs */}
       <div className="flex flex-wrap gap-2">
