@@ -1,0 +1,1 @@
+ALTER VIEW public.aqh_quote_products SET (security_invoker = true);

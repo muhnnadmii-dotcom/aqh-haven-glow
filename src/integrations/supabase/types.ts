@@ -216,6 +216,87 @@ export type Database = {
           },
         ]
       }
+      aqh_quotes: {
+        Row: {
+          client_contact: string | null
+          client_name: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          delivery_terms: string | null
+          discount: number | null
+          discount_type: string | null
+          grand_total: number | null
+          id: number
+          items: Json
+          notes_text: string | null
+          payment_terms: string | null
+          prices_include_vat: boolean | null
+          project_city: string | null
+          project_name: string | null
+          quote_no: string | null
+          scope_text: string | null
+          status: string | null
+          subtotal: number | null
+          updated_at: string | null
+          vat_rate: number | null
+          vat_total: number | null
+          warranty_terms: string | null
+        }
+        Insert: {
+          client_contact?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          delivery_terms?: string | null
+          discount?: number | null
+          discount_type?: string | null
+          grand_total?: number | null
+          id?: never
+          items?: Json
+          notes_text?: string | null
+          payment_terms?: string | null
+          prices_include_vat?: boolean | null
+          project_city?: string | null
+          project_name?: string | null
+          quote_no?: string | null
+          scope_text?: string | null
+          status?: string | null
+          subtotal?: number | null
+          updated_at?: string | null
+          vat_rate?: number | null
+          vat_total?: number | null
+          warranty_terms?: string | null
+        }
+        Update: {
+          client_contact?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          delivery_terms?: string | null
+          discount?: number | null
+          discount_type?: string | null
+          grand_total?: number | null
+          id?: never
+          items?: Json
+          notes_text?: string | null
+          payment_terms?: string | null
+          prices_include_vat?: boolean | null
+          project_city?: string | null
+          project_name?: string | null
+          quote_no?: string | null
+          scope_text?: string | null
+          status?: string | null
+          subtotal?: number | null
+          updated_at?: string | null
+          vat_rate?: number | null
+          vat_total?: number | null
+          warranty_terms?: string | null
+        }
+        Relationships: []
+      }
       aqh_restock_requests: {
         Row: {
           created_at: string | null
@@ -2334,7 +2415,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      aqh_quote_products: {
+        Row: {
+          category: string | null
+          cost: number | null
+          name: string | null
+          ref: string | null
+          source: string | null
+          supplier_cost: number | null
+          supplier_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       aqh_bulk_update_products: {
@@ -2348,6 +2440,7 @@ export type Database = {
         }
         Returns: number
       }
+      aqh_next_quote_no: { Args: never; Returns: string }
       finance_archive_import_batch: {
         Args: { p_batch_id: string; p_reason: string }
         Returns: Json
