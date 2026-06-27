@@ -120,7 +120,12 @@ export type Database = {
           items_count: number | null
           notes: string | null
           request_kind: string | null
+          source: string | null
           status: string | null
+          subtotal: number | null
+          supplier_key: string | null
+          total: number | null
+          vat: number | null
         }
         Insert: {
           created_at?: string | null
@@ -131,7 +136,12 @@ export type Database = {
           items_count?: number | null
           notes?: string | null
           request_kind?: string | null
+          source?: string | null
           status?: string | null
+          subtotal?: number | null
+          supplier_key?: string | null
+          total?: number | null
+          vat?: number | null
         }
         Update: {
           created_at?: string | null
@@ -142,7 +152,51 @@ export type Database = {
           items_count?: number | null
           notes?: string | null
           request_kind?: string | null
+          source?: string | null
           status?: string | null
+          subtotal?: number | null
+          supplier_key?: string | null
+          total?: number | null
+          vat?: number | null
+        }
+        Relationships: []
+      }
+      aqh_supplier_products: {
+        Row: {
+          barcode: string | null
+          cost: number | null
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          item_no: string | null
+          name: string
+          needs_review: boolean | null
+          supplier_key: string
+          supplier_name: string
+        }
+        Insert: {
+          barcode?: string | null
+          cost?: number | null
+          created_at?: string | null
+          id?: never
+          is_active?: boolean | null
+          item_no?: string | null
+          name: string
+          needs_review?: boolean | null
+          supplier_key: string
+          supplier_name: string
+        }
+        Update: {
+          barcode?: string | null
+          cost?: number | null
+          created_at?: string | null
+          id?: never
+          is_active?: boolean | null
+          item_no?: string | null
+          name?: string
+          needs_review?: boolean | null
+          supplier_key?: string
+          supplier_name?: string
         }
         Relationships: []
       }
