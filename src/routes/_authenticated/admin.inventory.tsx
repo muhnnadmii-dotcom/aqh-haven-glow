@@ -833,6 +833,16 @@ function RequestsListTab() {
                   <span className="text-[11px] text-muted-foreground" dir="ltr">
                     {new Date(r.created_at).toLocaleString("ar-SA")}
                   </span>
+                  {r.source === "supplier_catalog" && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold/10 text-gold border border-gold/30">
+                      كاتلوج: {r.supplier_key ? (supplierNames[r.supplier_key] ?? r.supplier_key) : "—"}
+                    </span>
+                  )}
+                  {r.source === "supplier_catalog" && r.total != null && (
+                    <span className="text-[10px] text-muted-foreground">
+                      الإجمالي: <span className="text-gold font-mono">{SAR(Number(r.total))}</span>
+                    </span>
+                  )}
                   <div className="ms-auto flex items-center gap-2">
                     {r.request_kind === "order" && r.status === "new" && (
                       <Button size="sm" variant="outline" className="h-8 bg-sky-500/10 border-sky-500/30 text-sky-300 hover:bg-sky-500/20"
