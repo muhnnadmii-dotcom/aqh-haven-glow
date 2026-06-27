@@ -581,24 +581,78 @@ function QuoteBuilder() {
         .no-print-border { border-bottom: 1px dashed transparent; }
         .no-print-border:hover, .no-print-border:focus { border-bottom-color: #f59e0b; }
         @media print {
-          @page { size: A4; margin: 12mm; }
-          html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
+          @page { size: A4 portrait; margin: 12mm 12mm 14mm 12mm; }
+          html, body {
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           body * { visibility: hidden !important; }
           .quote-doc, .quote-doc * { visibility: visible !important; }
           .quote-doc {
             position: absolute !important;
             inset: 0 !important;
             width: 100% !important;
+            max-width: 100% !important;
+            min-height: auto !important;
             margin: 0 !important;
+            padding: 0 !important;
             box-shadow: none !important;
             border: none !important;
-            padding: 0 !important;
-            background: white !important;
+            border-radius: 0 !important;
+            background: #fff !important;
             color: #1e293b !important;
+            overflow: visible !important;
           }
-          .no-print, .no-print * { display: none !important; visibility: hidden !important; }
+          .quote-doc * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .no-print, .no-print *,
+          [data-no-print], .floating, .whatsapp-fab, [class*="fab"] {
+            display: none !important;
+            visibility: hidden !important;
+          }
           .no-print-border { border-bottom: none !important; }
-          input, textarea { color: #1e293b !important; background: transparent !important; border: none !important; }
+          .quote-doc input, .quote-doc textarea, .quote-doc select {
+            color: #1e293b !important;
+            background: transparent !important;
+            border: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            resize: none !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            width: auto !important;
+            min-width: 0 !important;
+          }
+          .quote-doc textarea { min-height: auto !important; overflow: hidden !important; width: 100% !important; }
+          .quote-doc input[type="date"] { width: auto !important; }
+          .quote-doc table {
+            width: 100% !important;
+            min-width: 0 !important;
+            table-layout: fixed !important;
+            border-collapse: collapse !important;
+          }
+          .quote-doc th, .quote-doc td {
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            padding: 6px !important;
+          }
+          .quote-doc table input, .quote-doc table textarea {
+            width: 100% !important;
+          }
+          .quote-doc .overflow-x-auto, .quote-doc .overflow-y-auto, .quote-doc .overflow-auto {
+            overflow: visible !important;
+          }
+          .quote-doc tr, .quote-doc section, .quote-doc .break-avoid {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
         }
       `}</style>
     </div>
