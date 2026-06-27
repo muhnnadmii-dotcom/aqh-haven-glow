@@ -359,9 +359,8 @@ function QuoteBuilder() {
           <label className="block text-[11px] text-muted-foreground mb-1">العملة</label>
           <Input value={currency} onChange={(e) => setCurrency(e.target.value)} />
         </div>
-        <div className="flex items-end gap-2">
-          <Switch checked={pricesIncludeVat} onCheckedChange={setPricesIncludeVat} id="incvat" />
-          <label htmlFor="incvat" className="text-xs">الأسعار شاملة الضريبة</label>
+        <div className="flex items-end text-[11px] text-muted-foreground leading-snug">
+          الأسعار المُدخلة <strong className="text-foreground">بدون</strong> ضريبة؛ تُحتسب الضريبة تلقائيًا 15%.
         </div>
       </div>
 
