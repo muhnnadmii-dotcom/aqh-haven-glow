@@ -16,9 +16,10 @@ import {
   display, NA, waLink, waGreeting, buildRequestSummary, orderedDetails,
 } from "@/lib/admin-ops";
 import {
-  uploadRequestAttachment, attachmentUrl, isImage, REPORT_TYPES, REPORT_TYPE_LABEL,
-  type AttachmentRow,
+  uploadRequestAttachment, isImage, REPORT_TYPES, REPORT_TYPE_LABEL,
+  deleteAttachmentFile, type AttachmentRow,
 } from "@/lib/request-attachments";
+import { AttachmentTile } from "@/components/AttachmentTile";
 import {
   ASSIGNMENT_STATUS_LABEL, ASSIGNMENT_STATUS_COLOR, DEPARTMENTS,
   fetchStaffMembers, staffLabel, type AssignmentStatus, type AssignmentEvent, type StaffMember,
@@ -845,7 +846,7 @@ export function AttachmentsPanel({
 
   const remove = async (a: AttachmentRow) => {
     if (!confirm("حذف المرفق؟")) return;
-    await supabase.storage.from("media").remove([a.file_path]);
+    await deleteAttachmentFile(a);
     await supabase.from("request_attachments").delete().eq("id", a.id);
     toast.success("تم الحذف");
     onChanged();
@@ -875,41 +876,28 @@ export function AttachmentsPanel({
         <p className="text-xs text-muted-foreground">لا توجد مرفقات. الأنواع المسموحة: صور و PDF (حتى 10 ميجابايت).</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {attachments.map((a) => {
-            const url = attachmentUrl(a.file_path);
-            const img = isImage(a.file_type, a.file_name);
-            return (
-              <div key={a.id} className="bg-white/5 rounded-lg overflow-hidden border border-white/10">
-                {img ? (
-                  <button onClick={() => onOpen(url)} className="block w-full aspect-square">
-                    <img src={url} onError={onImageError} alt={a.file_name} loading="lazy" className="w-full h-full object-cover" />
-                  </button>
-                ) : (
-                  <a href={url} target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center aspect-square text-muted-foreground hover:text-gold">
-                    <FileText size={28} />
-                    <span className="text-[10px] mt-1 px-2 truncate w-full text-center">PDF</span>
-                  </a>
-                )}
-                <div className="p-2 text-[10px] space-y-1">
-                  <div className="truncate" title={a.file_name}>{a.file_name}</div>
-                  <div className="flex items-center justify-between gap-1">
-                    {isAdmin && (
-                      <span className={`px-1 py-0.5 rounded text-[9px] ${
-                        a.is_visible_to_customer ? "bg-emerald-500/15 text-emerald-300" : "bg-white/10 text-muted-foreground"
-                      }`}>
-                        {a.is_visible_to_customer ? "ظاهر" : "داخلي"}
-                      </span>
-                    )}
-                    {isAdmin && (
-                      <button onClick={() => remove(a)} className="text-rose-300 hover:text-rose-200">
-                        <Trash2 size={11} />
-                      </button>
-                    )}
-                  </div>
+          {attachments.map((a) => (
+            <div key={a.id} className="bg-white/5 rounded-lg overflow-hidden border border-white/10">
+              <AttachmentTile row={a} onOpen={onOpen} />
+              <div className="p-2 text-[10px] space-y-1">
+                <div className="truncate" title={a.file_name}>{a.file_name}</div>
+                <div className="flex items-center justify-between gap-1">
+                  {isAdmin && (
+                    <span className={`px-1 py-0.5 rounded text-[9px] ${
+                      a.is_visible_to_customer ? "bg-emerald-500/15 text-emerald-300" : "bg-white/10 text-muted-foreground"
+                    }`}>
+                      {a.is_visible_to_customer ? "ظاهر" : "داخلي"}
+                    </span>
+                  )}
+                  {isAdmin && (
+                    <button onClick={() => remove(a)} className="text-rose-300 hover:text-rose-200">
+                      <Trash2 size={11} />
+                    </button>
+                  )}
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </Section>

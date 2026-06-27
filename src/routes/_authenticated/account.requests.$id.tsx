@@ -13,9 +13,10 @@ import {
 } from "@/lib/service-requests";
 import { display, NA, orderedDetails } from "@/lib/admin-ops";
 import {
-  uploadRequestAttachment, attachmentUrl, isImage, REPORT_TYPE_LABEL,
+  uploadRequestAttachment, isImage, REPORT_TYPE_LABEL,
   type AttachmentRow,
 } from "@/lib/request-attachments";
+import { AttachmentTile } from "@/components/AttachmentTile";
 
 export const Route = createFileRoute("/_authenticated/account/requests/$id")({
   component: CustomerRequestDetail,
@@ -378,25 +379,12 @@ function CustomerAttachmentsPanel({ requestId, attachments, onChanged, onOpen }:
         <p className="text-xs text-muted-foreground">لا توجد مرفقات. يمكنك إضافة صور أو PDF حتى 10 ميجابايت.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {attachments.map((a) => {
-            const url = attachmentUrl(a.file_path);
-            const img = isImage(a.file_type, a.file_name);
-            return (
-              <div key={a.id} className="bg-white/5 rounded-lg overflow-hidden border border-white/10">
-                {img ? (
-                  <button onClick={() => onOpen(url)} className="block w-full aspect-square">
-                    <img src={url} onError={onImageError} alt={a.file_name} loading="lazy" className="w-full h-full object-cover" />
-                  </button>
-                ) : (
-                  <a href={url} target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center aspect-square text-muted-foreground hover:text-gold">
-                    <FileText size={28} />
-                    <span className="text-[10px] mt-1">PDF</span>
-                  </a>
-                )}
-                <div className="p-2 text-[10px] truncate" title={a.file_name}>{a.file_name}</div>
-              </div>
-            );
-          })}
+          {attachments.map((a) => (
+            <div key={a.id} className="bg-white/5 rounded-lg overflow-hidden border border-white/10">
+              <AttachmentTile row={a} onOpen={onOpen} />
+              <div className="p-2 text-[10px] truncate" title={a.file_name}>{a.file_name}</div>
+            </div>
+          ))}
         </div>
       )}
     </div>

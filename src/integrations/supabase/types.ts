@@ -71,6 +71,30 @@ export type Database = {
           },
         ]
       }
+      aqh_home_stats_cache: {
+        Row: {
+          customers: number
+          projects: number
+          singleton: boolean
+          tanks: number
+          updated_at: string
+        }
+        Insert: {
+          customers?: number
+          projects?: number
+          singleton?: boolean
+          tanks?: number
+          updated_at?: string
+        }
+        Update: {
+          customers?: number
+          projects?: number
+          singleton?: boolean
+          tanks?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       aqh_product_categories: {
         Row: {
           created_at: string
@@ -1823,6 +1847,7 @@ export type Database = {
       }
       request_attachments: {
         Row: {
+          bucket: string
           created_at: string
           file_name: string
           file_path: string
@@ -1836,6 +1861,7 @@ export type Database = {
           uploaded_by: string | null
         }
         Insert: {
+          bucket?: string
           created_at?: string
           file_name: string
           file_path: string
@@ -1849,6 +1875,7 @@ export type Database = {
           uploaded_by?: string | null
         }
         Update: {
+          bucket?: string
           created_at?: string
           file_name?: string
           file_path?: string

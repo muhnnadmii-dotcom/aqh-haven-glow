@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
-import { MEDIA_BUCKET, getImageUrl } from "@/lib/storage";
+import { getImageUrl } from "@/lib/storage";
+import { CUSTOMER_BUCKET, SIGNED_URL_TTL_SECONDS } from "@/lib/customer-storage";
 
 export const MAX_ATTACHMENT_MB = 10;
 
@@ -22,10 +23,25 @@ export type AttachmentRow = {
   uploaded_by: string | null;
   is_visible_to_customer: boolean;
   created_at: string;
+  bucket?: string | null;
 };
 
-export function attachmentUrl(path: string) {
-  return getImageUrl(path);
+/**
+ * Resolve an attachment to a usable URL. New uploads live in the private
+ * `customer-uploads` bucket and need a short-lived signed URL; legacy rows
+ * still reference the public `media` bucket and resolve via a public URL.
+ */
+export async function attachmentUrl(row: Pick<AttachmentRow, "file_path" | "bucket"> | string): Promise<string> {
+  if (typeof row === "string") return getImageUrl(row);
+  const bucket = row.bucket ?? "media";
+  if (bucket === CUSTOMER_BUCKET) {
+    const { data, error } = await supabase.storage
+      .from(CUSTOMER_BUCKET)
+      .createSignedUrl(row.file_path, SIGNED_URL_TTL_SECONDS);
+    if (error || !data?.signedUrl) return getImageUrl(null);
+    return data.signedUrl;
+  }
+  return getImageUrl(row.file_path);
 }
 
 export function isImage(mime: string | null | undefined, name?: string) {
@@ -53,11 +69,11 @@ export async function uploadRequestAttachment(
 
   const safeName = file.name.replace(/[^\w.\u0600-\u06FF-]+/g, "_").slice(0, 80);
   const storedName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
-  // RLS on storage requires path to start with uploader uid
+  // RLS on customer-uploads requires path to start with uploader uid.
   const path = `${user.id}/request-attachments/${requestId}/${storedName}`;
 
-  const { error: upErr } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
-    cacheControl: "31536000",
+  const { error: upErr } = await supabase.storage.from(CUSTOMER_BUCKET).upload(path, file, {
+    cacheControl: "3600",
     upsert: false,
     contentType: mime,
   });
@@ -73,12 +89,19 @@ export async function uploadRequestAttachment(
     file_size: file.size,
     uploaded_by: user.id,
     is_visible_to_customer: opts.visibleToCustomer ?? true,
-  }).select().single();
+    bucket: CUSTOMER_BUCKET,
+  } as any).select().single();
   if (error) {
-    await supabase.storage.from(MEDIA_BUCKET).remove([path]);
+    await supabase.storage.from(CUSTOMER_BUCKET).remove([path]);
     throw error;
   }
   return data as unknown as AttachmentRow;
+}
+
+/** Remove an attachment from its source bucket. */
+export async function deleteAttachmentFile(row: Pick<AttachmentRow, "file_path" | "bucket">): Promise<void> {
+  const bucket = row.bucket ?? "media";
+  await supabase.storage.from(bucket).remove([row.file_path]);
 }
 
 export const REPORT_TYPES: { value: string; label: string }[] = [
