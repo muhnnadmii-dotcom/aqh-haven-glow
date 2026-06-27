@@ -102,13 +102,15 @@ function QuoteBuilder() {
     },
   });
 
-  // Apply settings defaults (only for new quotes, before user edits)
+  // Apply settings defaults ONCE — never overwrite user edits (incl. uploaded logo)
+  const settingsAppliedRef = useRef(false);
   useEffect(() => {
     const s = settingsQ.data;
-    if (!s) return;
+    if (!s || settingsAppliedRef.current) return;
+    settingsAppliedRef.current = true;
     if (s.company_name) setCompanyName(s.company_name);
     if (s.company_sub) setCompanySub(s.company_sub);
-    if (s.logo_url) setLogoUrl(s.logo_url);
+    if (s.logo_url) setLogoUrl((prev) => prev || s.logo_url);
     if (s.phone) setFooterPhone(s.phone);
     if (s.email) setFooterEmail(s.email);
     if (s.vat_number) setFooterVat(`الرقم الضريبي: ${s.vat_number}`);
