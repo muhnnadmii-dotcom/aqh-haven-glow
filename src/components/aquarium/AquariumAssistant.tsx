@@ -381,7 +381,7 @@ function WaterChangeForm({ tank, onDone }: { tank: TankLite; onDone: () => void 
     try {
       const value = pct === "custom" ? Number(custom) : pct;
       const paths: string[] = [];
-      for (const f of files) paths.push(await uploadMedia(f, `tank-${tank.id}/water`));
+      for (const f of files) paths.push(await uploadPrivateMedia(f, `tank-${tank.id}/water`));
       const { error } = await supabase.from("aquarium_care_logs").insert({
         tank_id: tank.id, user_id: u, log_type: "water_change",
         water_change_percentage: isNaN(value) ? null : value,
@@ -523,7 +523,7 @@ function PhotoForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
     setBusy(true);
     try {
       const paths: string[] = [];
-      for (const f of files) paths.push(await uploadMedia(f, `tank-${tank.id}/photos`));
+      for (const f of files) paths.push(await uploadPrivateMedia(f, `tank-${tank.id}/photos`));
       const { error } = await supabase.from("aquarium_care_logs").insert({
         tank_id: tank.id, user_id: u, log_type: "photo",
         image_paths: paths, note: note || null,
@@ -578,7 +578,7 @@ function NoteForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
     setBusy(true);
     try {
       const paths: string[] = [];
-      for (const f of files) paths.push(await uploadMedia(f, `tank-${tank.id}/notes`));
+      for (const f of files) paths.push(await uploadPrivateMedia(f, `tank-${tank.id}/notes`));
       const { error } = await supabase.from("aquarium_care_logs").insert({
         tank_id: tank.id, user_id: u, log_type: "note",
         note: text, note_category: category, image_paths: paths.length ? paths : null,
@@ -635,7 +635,7 @@ function IssueForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
     setBusy(true);
     try {
       const paths: string[] = [];
-      for (const f of files) paths.push(await uploadMedia(f, `tank-${tank.id}/issues`));
+      for (const f of files) paths.push(await uploadPrivateMedia(f, `tank-${tank.id}/issues`));
       const { data: issue, error } = await supabase.from("aquarium_issues").insert({
         tank_id: tank.id, user_id: u, issue_type: type,
         description: desc || null, status: "open",
