@@ -41,7 +41,7 @@ type Product = {
 };
 
 type Category = { id: number; name_ar: string };
-type Supplier = { id: number; name_ar: string };
+type Supplier = { id: string; name_ar: string };
 
 const SAR = (n: number) =>
   new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
