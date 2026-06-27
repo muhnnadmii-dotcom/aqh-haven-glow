@@ -649,6 +649,11 @@ function QuoteBuilder() {
           .quote-doc .overflow-x-auto, .quote-doc .overflow-y-auto, .quote-doc .overflow-auto {
             overflow: visible !important;
           }
+          .quote-doc .grand {
+            padding: 10px 14px !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           .quote-doc tr, .quote-doc section, .quote-doc .break-avoid {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
