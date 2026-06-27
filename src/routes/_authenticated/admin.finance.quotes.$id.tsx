@@ -450,9 +450,9 @@ function QuoteBuilder() {
                   <th className="px-2 py-2 text-start">البند / الوصف</th>
                   <th className="px-2 py-2 text-start w-20">الوحدة</th>
                   <th className="px-2 py-2 text-start w-16">الكمية</th>
-                  <th className="px-2 py-2 text-start w-24">السعر</th>
-                  <th className="px-2 py-2 text-center w-14">ضريبة</th>
-                  <th className="px-2 py-2 text-start w-28">الإجمالي</th>
+                  <th className="px-2 py-2 text-start w-32">السعر (بدون ضريبة)</th>
+                  <th className="px-2 py-2 text-start w-24">ضريبة 15%</th>
+                  <th className="px-2 py-2 text-start w-28">الإجمالي شامل</th>
                   <th className="px-2 py-2 w-10 no-print"></th>
                 </tr>
               </thead>
