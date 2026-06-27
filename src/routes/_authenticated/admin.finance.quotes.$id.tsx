@@ -354,24 +354,25 @@ function QuoteBuilder() {
               </label>
             </div>
           </div>
-          <div className="text-end space-y-1">
-            <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold">عرض سعر · QUOTATION</div>
+          <div className="text-end space-y-1 quote-header-meta">
+            <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold quote-eyebrow">عرض سعر · QUOTATION</div>
             <input
               dir="ltr"
               value={quoteNo}
               onChange={(e) => setQuoteNo(e.target.value)}
               placeholder="AQH-XXXX-XXX"
-              className="text-2xl font-bold font-mono bg-transparent outline-none no-print-border text-end w-48"
+              className="quote-no text-2xl font-bold font-mono bg-transparent outline-none no-print-border text-end w-48"
             />
             <div className="text-xs text-slate-500 space-y-0.5 mt-2">
               <div className="flex items-center gap-2 justify-end">
                 <span>التاريخ:</span>
-                <input type="date" value={quoteDate} onChange={(e) => setQuoteDate(e.target.value)} className="bg-transparent outline-none no-print-border" />
+                <input type="date" value={quoteDate} onChange={(e) => setQuoteDate(e.target.value)} className="quote-date bg-transparent outline-none no-print-border" />
               </div>
               <div className="flex items-center gap-2 justify-end">
                 <span>صالح حتى:</span>
-                <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="bg-transparent outline-none no-print-border" />
+                <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="quote-date bg-transparent outline-none no-print-border" />
               </div>
+
               <div className="flex items-center gap-2 justify-end">
                 <span>المسؤول:</span>
                 <input value={salesperson} onChange={(e) => setSalesperson(e.target.value)} placeholder="اسم المندوب" className="bg-transparent outline-none no-print-border w-32 text-end" />
@@ -581,7 +582,8 @@ function QuoteBuilder() {
         .no-print-border { border-bottom: 1px dashed transparent; }
         .no-print-border:hover, .no-print-border:focus { border-bottom-color: #f59e0b; }
         @media print {
-          @page { size: A4 portrait; margin: 12mm 12mm 14mm 12mm; }
+          @page { size: A4 portrait; margin: 12mm 14mm 14mm 14mm; }
+
           html, body {
             background: #fff !important;
             margin: 0 !important;
@@ -658,6 +660,39 @@ function QuoteBuilder() {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
+          /* v2 fixes: prevent left-edge clipping of eyebrow + date inputs */
+          .quote-doc .quote-eyebrow {
+            padding-inline: 4px !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
+            text-overflow: clip !important;
+          }
+          .quote-doc .quote-no {
+            padding-inline-start: 4px !important;
+            letter-spacing: 0 !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
+          }
+          .quote-doc .quote-header-meta { padding-inline-start: 6px !important; }
+          .quote-doc input.quote-date,
+          .quote-doc input[type="date"] {
+            width: auto !important;
+            min-width: max-content !important;
+            direction: rtl !important;
+            text-align: right !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+            padding-inline: 2px !important;
+            text-indent: 0 !important;
+          }
+          .quote-doc .grand { padding: 12px 18px !important; }
+          .quote-doc .grand .total-val {
+            padding-inline-start: 4px !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
+          }
+
         }
       `}</style>
     </div>
