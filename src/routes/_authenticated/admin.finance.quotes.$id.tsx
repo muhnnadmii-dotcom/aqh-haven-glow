@@ -582,7 +582,8 @@ function QuoteBuilder() {
         .no-print-border { border-bottom: 1px dashed transparent; }
         .no-print-border:hover, .no-print-border:focus { border-bottom-color: #f59e0b; }
         @media print {
-          @page { size: A4 portrait; margin: 12mm 12mm 14mm 12mm; }
+          @page { size: A4 portrait; margin: 12mm 14mm 14mm 14mm; }
+
           html, body {
             background: #fff !important;
             margin: 0 !important;
