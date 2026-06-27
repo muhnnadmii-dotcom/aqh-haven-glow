@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/_authenticated/admin/inventory/suppliers")({
+export const Route = createFileRoute("/_authenticated/admin/inventory/catalog")({
   ssr: false,
   beforeLoad: async () => {
     const user = await getSessionUser();
