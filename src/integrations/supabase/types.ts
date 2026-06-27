@@ -71,6 +71,42 @@ export type Database = {
           },
         ]
       }
+      aqh_business_settings: {
+        Row: {
+          company_name: string | null
+          company_sub: string | null
+          default_vat_rate: number | null
+          email: string | null
+          id: number
+          logo_url: string | null
+          phone: string | null
+          updated_at: string | null
+          vat_number: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          company_sub?: string | null
+          default_vat_rate?: number | null
+          email?: string | null
+          id?: number
+          logo_url?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          vat_number?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          company_sub?: string | null
+          default_vat_rate?: number | null
+          email?: string | null
+          id?: number
+          logo_url?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          vat_number?: string | null
+        }
+        Relationships: []
+      }
       aqh_home_stats_cache: {
         Row: {
           customers: number
