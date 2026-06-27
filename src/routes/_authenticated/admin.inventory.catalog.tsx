@@ -37,7 +37,10 @@ type SupplierProduct = {
   cost: number | null;
   needs_review: boolean;
   is_active: boolean;
+  vendor_supplier_id: string | null;
 };
+
+type Vendor = { id: string; name: string; products: number };
 
 const VAT_RATE = 0.15;
 const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
@@ -49,14 +52,13 @@ function SupplierCatalogPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("aqh_supplier_products" as any)
-        .select("id,supplier_key,supplier_name,name,item_no,barcode,cost,needs_review,is_active")
+        .select("id,supplier_key,supplier_name,name,item_no,barcode,cost,needs_review,is_active,vendor_supplier_id")
         .eq("is_active", true)
         .eq("needs_review", false)
         .order("supplier_key", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
       const rows = (data as unknown as SupplierProduct[]) ?? [];
-      // Deduplicate by (supplier_key, normalized name) — keep first occurrence
       const seen = new Set<string>();
       return rows.filter((p) => {
         const key = `${p.supplier_key}::${p.name.trim().toLowerCase()}`;
@@ -66,6 +68,25 @@ function SupplierCatalogPage() {
       });
     },
   });
+
+  const vendorsListQ = useQuery({
+    queryKey: ["aqh_catalog_vendors"],
+    queryFn: async () => {
+      const { data: fs } = await supabase.from("finance_suppliers").select("id,name");
+      const map = new Map<string, string>((fs ?? []).map((s: any) => [s.id, s.name]));
+      const counts = new Map<string, number>();
+      (productsQ.data ?? []).forEach((p) => {
+        if (p.vendor_supplier_id) counts.set(p.vendor_supplier_id, (counts.get(p.vendor_supplier_id) ?? 0) + 1);
+      });
+      const list: Vendor[] = Array.from(counts.entries()).map(([id, n]) => ({
+        id, name: map.get(id) ?? "مورد",
+        products: n,
+      }));
+      return list.sort((a, b) => b.products - a.products);
+    },
+    enabled: !!productsQ.data,
+  });
+
 
   const brands = useMemo(() => {
     const m = new Map<string, string>();
