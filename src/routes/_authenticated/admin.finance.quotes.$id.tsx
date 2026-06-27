@@ -544,11 +544,17 @@ function QuoteBuilder() {
                     </td>
                     <td className="px-2 py-2">
                       <input type="number" min="0" step="0.01" value={it.price} onChange={(e) => patchItem(it.uid, { price: Number(e.target.value) })} className="w-full bg-transparent outline-none font-mono no-print-border" />
+                      {it.taxable && (Number(it.price) || 0) > 0 && (
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">شامل: {SAR((Number(it.price) || 0) * 1.15)} ر.س</div>
+                      )}
                     </td>
-                    <td className="px-2 py-2 text-center">
-                      <input type="checkbox" checked={it.taxable} onChange={(e) => patchItem(it.uid, { taxable: e.target.checked })} />
+                    <td className="px-2 py-2 font-mono text-slate-700">
+                      <div className="flex items-center gap-1">
+                        <input type="checkbox" checked={it.taxable} onChange={(e) => patchItem(it.uid, { taxable: e.target.checked })} className="no-print" />
+                        <span>{it.taxable ? SAR(calc.lineVat[i]) : <span className="text-[10px] text-slate-400">غير خاضعة</span>}</span>
+                      </div>
                     </td>
-                    <td className="px-2 py-2 font-mono text-slate-700">{SAR(calc.lineTotals[i])}</td>
+                    <td className="px-2 py-2 font-mono text-slate-700">{SAR(calc.lineWithVat[i])}</td>
                     <td className="px-2 py-2 no-print">
                       <button onClick={() => delItem(it.uid)} className="text-red-500 hover:text-red-700"><Trash2 size={13} /></button>
                     </td>
