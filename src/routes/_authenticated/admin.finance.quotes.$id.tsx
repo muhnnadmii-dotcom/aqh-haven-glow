@@ -746,7 +746,7 @@ function TemplatePicker({ templates, onPick, label }: { templates: string[]; onP
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" variant="outline" className="no-print h-7 text-[11px] gap-1 px-2">
+        <Button type="button" size="sm" variant="outline" className="no-print h-7 text-[11px] gap-1 px-2">
           <ListPlus size={12} /> {label}
         </Button>
       </DropdownMenuTrigger>
