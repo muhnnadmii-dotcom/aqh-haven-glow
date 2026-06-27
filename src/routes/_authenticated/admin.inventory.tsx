@@ -53,7 +53,7 @@ type Product = {
   restock_type: RestockType;
 };
 
-type RestockItem = { sku: string; name_ar: string; qty: number };
+type RestockItem = { sku: string; name_ar: string; qty: number; cost?: number };
 
 type RestockRequest = {
   id: number;
@@ -66,6 +66,11 @@ type RestockRequest = {
   items_count: number;
   notes: string | null;
   created_at: string;
+  source: string | null;
+  supplier_key: string | null;
+  subtotal: number | null;
+  vat: number | null;
+  total: number | null;
 };
 
 const STATUS_LABEL: Record<RestockStatus, string> = {
