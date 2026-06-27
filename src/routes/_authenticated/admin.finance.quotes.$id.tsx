@@ -40,7 +40,8 @@ type Catalog = {
   supplier_cost: number | null;
 };
 
-const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n || 0);
+const FMT = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const SAR = (n: number) => FMT.format(Number.isFinite(n) ? n : 0);
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const plusDaysISO = (days: number) => { const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); };
 const uid = () => Math.random().toString(36).slice(2, 10);
