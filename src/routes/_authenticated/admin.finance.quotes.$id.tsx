@@ -735,10 +735,38 @@ function QuoteBuilder() {
   );
 }
 
-function TermBlock({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function TemplatePicker({ templates, onPick, label }: { templates: string[]; onPick: (v: string) => void; label: string }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="outline" className="no-print h-7 text-[11px] gap-1 px-2">
+          <ListPlus size={12} /> {label}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto w-[360px]">
+        {templates.map((t, i) => (
+          <DropdownMenuItem key={i} onClick={() => onPick(t)} className="text-xs whitespace-normal leading-relaxed cursor-pointer">
+            {t}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function TermBlock({ label, value, onChange, templates }: { label: string; value: string; onChange: (v: string) => void; templates?: string[] }) {
   return (
     <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-      <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold mb-1">{label}</div>
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold">{label}</div>
+        {templates && templates.length > 0 && (
+          <TemplatePicker
+            templates={templates}
+            onPick={(v) => onChange(value ? value + "\n" + v : v)}
+            label="قالب"
+          />
+        )}
+      </div>
       <Textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} className="bg-transparent border-none text-slate-700 text-xs p-0 resize-none focus-visible:ring-0 no-print-border" />
     </div>
   );
