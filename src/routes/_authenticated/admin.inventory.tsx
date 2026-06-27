@@ -879,6 +879,12 @@ function RequestsListTab() {
                           <th className="text-right p-2 font-normal">المنتج</th>
                           <th className="text-right p-2 font-normal w-24">SKU</th>
                           <th className="text-left p-2 font-normal w-20">الكمية</th>
+                          {r.source === "supplier_catalog" && (
+                            <>
+                              <th className="text-left p-2 font-normal w-24">التكلفة</th>
+                              <th className="text-left p-2 font-normal w-24">الإجمالي</th>
+                            </>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -887,10 +893,23 @@ function RequestsListTab() {
                             <td className="p-2">{it.name_ar}</td>
                             <td className="p-2 text-xs text-muted-foreground" dir="ltr">{it.sku}</td>
                             <td className="p-2 text-left text-gold font-medium">× {it.qty}</td>
+                            {r.source === "supplier_catalog" && (
+                              <>
+                                <td className="p-2 text-left text-xs font-mono">{it.cost != null ? SAR(Number(it.cost)) : "—"}</td>
+                                <td className="p-2 text-left text-xs font-mono">{it.cost != null ? SAR(Number(it.cost) * it.qty) : "—"}</td>
+                              </>
+                            )}
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                    {r.source === "supplier_catalog" && r.total != null && (
+                      <div className="border-t border-white/10 p-2 flex flex-wrap gap-4 justify-end text-xs">
+                        <span>المجموع: <span className="font-mono">{SAR(Number(r.subtotal ?? 0))}</span></span>
+                        <span>الضريبة 15%: <span className="font-mono">{SAR(Number(r.vat ?? 0))}</span></span>
+                        <span className="text-gold">الإجمالي: <span className="font-mono font-semibold">{SAR(Number(r.total))}</span></span>
+                      </div>
+                    )}
                     {r.notes && (
                       <div className="text-xs text-muted-foreground border-t border-white/10 p-2">
                         <span className="text-foreground">ملاحظة: </span>{r.notes}
