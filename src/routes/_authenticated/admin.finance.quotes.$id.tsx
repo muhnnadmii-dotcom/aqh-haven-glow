@@ -151,7 +151,7 @@ function QuoteBuilder() {
     }
   }, [loadQ.data]);
 
-  // ---- Calculations
+  // ---- Calculations (prices always entered WITHOUT VAT)
   const calc = useMemo(() => {
     const lineTotals = items.map((it) => (Number(it.qty) || 0) * (Number(it.price) || 0));
     const totalsByTax = items.reduce(
@@ -164,35 +164,33 @@ function QuoteBuilder() {
       { taxable: 0, nonTaxable: 0 }
     );
 
-    // Discount applied to gross line totals (taxable+nontaxable), proportionally
     const grossAll = totalsByTax.taxable + totalsByTax.nonTaxable;
     const discountValue =
       discountType === "percent" ? grossAll * (Number(discount) || 0) / 100 : Number(discount) || 0;
     const ratio = grossAll > 0 ? Math.max(0, 1 - discountValue / grossAll) : 1;
+    const vr = (Number(vatRate) || 0) / 100;
+
+    // Per-line VAT/total (after discount ratio applied), exclusive VAT model
+    const lineVat = items.map((it, i) => (it.taxable ? lineTotals[i] * ratio * vr : 0));
+    const lineWithVat = items.map((i, idx) => lineTotals[idx] * ratio + lineVat[idx]);
+
     const taxableAfter = totalsByTax.taxable * ratio;
     const nonTaxAfter = totalsByTax.nonTaxable * ratio;
-
-    let subtotalBeforeVat: number; let vatTotal: number; let grandTotal: number;
-    if (pricesIncludeVat) {
-      const netTaxable = taxableAfter / (1 + (Number(vatRate) || 0) / 100);
-      vatTotal = taxableAfter - netTaxable;
-      subtotalBeforeVat = netTaxable + nonTaxAfter;
-      grandTotal = subtotalBeforeVat + vatTotal;
-    } else {
-      vatTotal = taxableAfter * ((Number(vatRate) || 0) / 100);
-      subtotalBeforeVat = taxableAfter + nonTaxAfter;
-      grandTotal = subtotalBeforeVat + vatTotal;
-    }
+    const vatTotal = taxableAfter * vr;
+    const subtotalBeforeVat = taxableAfter + nonTaxAfter;
+    const grandTotal = subtotalBeforeVat + vatTotal;
 
     return {
       lineTotals,
+      lineVat,
+      lineWithVat,
       gross: grossAll,
       discountValue,
       subtotalBeforeVat: +subtotalBeforeVat.toFixed(2),
       vatTotal: +vatTotal.toFixed(2),
       grandTotal: +grandTotal.toFixed(2),
     };
-  }, [items, vatRate, discount, discountType, pricesIncludeVat]);
+  }, [items, vatRate, discount, discountType]);
 
   // ---- Product search
   const [searchOpenFor, setSearchOpenFor] = useState<string | null>(null);
