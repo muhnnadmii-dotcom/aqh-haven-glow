@@ -125,7 +125,7 @@ function SupplierCatalogPage() {
       const next = { ...prev };
       // If switching supplier and cart not empty, block via toast
       if (cartSupplierKey && cartSupplierKey !== supplierKey && qty > 0) {
-        toast.error("لا يمكن خلط منتجات من موردين مختلفين في طلب واحد");
+        toast.error("لا يمكن خلط منتجات من براندات مختلفة في طلب واحد");
         return prev;
       }
       if (qty <= 0) delete next[id];
