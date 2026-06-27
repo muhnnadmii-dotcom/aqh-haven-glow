@@ -58,6 +58,7 @@ type RestockItem = { sku: string; name_ar: string; qty: number };
 type RestockRequest = {
   id: number;
   employee_name: string | null;
+
   created_by: string | null;
   request_kind: RequestKind;
   status: RestockStatus;
