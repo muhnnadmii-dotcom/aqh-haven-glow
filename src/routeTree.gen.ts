@@ -68,6 +68,7 @@ import { Route as AuthenticatedAdminInventoryCategoriesRouteImport } from './rou
 import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes/_authenticated/admin.inventory.catalog'
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
+import { Route as AuthenticatedAdminFinanceQuotesRouteImport } from './routes/_authenticated/admin.finance.quotes'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
 import { Route as AuthenticatedAdminFinanceImportBatchesRouteImport } from './routes/_authenticated/admin.finance.import-batches'
 import { Route as AuthenticatedAdminFinanceImportRouteImport } from './routes/_authenticated/admin.finance.import'
@@ -410,6 +411,12 @@ const AuthenticatedAdminFinanceSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceQuotesRoute =
+  AuthenticatedAdminFinanceQuotesRouteImport.update({
+    id: '/quotes',
+    path: '/quotes',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceIncomesRoute =
   AuthenticatedAdminFinanceIncomesRouteImport.update({
     id: '/incomes',
@@ -550,6 +557,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/quotes': typeof AuthenticatedAdminFinanceQuotesRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -616,6 +624,7 @@ export interface FileRoutesByTo {
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/quotes': typeof AuthenticatedAdminFinanceQuotesRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -692,6 +701,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/_authenticated/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/_authenticated/admin/finance/quotes': typeof AuthenticatedAdminFinanceQuotesRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/_authenticated/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -768,6 +778,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/quotes'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
     | '/admin/inventory/catalog'
@@ -834,6 +845,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/quotes'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
     | '/admin/inventory/catalog'
@@ -909,6 +921,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/import'
     | '/_authenticated/admin/finance/import-batches'
     | '/_authenticated/admin/finance/incomes'
+    | '/_authenticated/admin/finance/quotes'
     | '/_authenticated/admin/finance/settings'
     | '/_authenticated/admin/finance/suppliers'
     | '/_authenticated/admin/inventory/catalog'
@@ -1361,6 +1374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/quotes': {
+      id: '/_authenticated/admin/finance/quotes'
+      path: '/quotes'
+      fullPath: '/admin/finance/quotes'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceQuotesRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/incomes': {
       id: '/_authenticated/admin/finance/incomes'
       path: '/incomes'
@@ -1535,6 +1555,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceImportRoute: typeof AuthenticatedAdminFinanceImportRoute
   AuthenticatedAdminFinanceImportBatchesRoute: typeof AuthenticatedAdminFinanceImportBatchesRoute
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
+  AuthenticatedAdminFinanceQuotesRoute: typeof AuthenticatedAdminFinanceQuotesRoute
   AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
   AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
   AuthenticatedAdminFinanceIndexRoute: typeof AuthenticatedAdminFinanceIndexRoute
@@ -1555,6 +1576,7 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceImportBatchesRoute,
     AuthenticatedAdminFinanceIncomesRoute:
       AuthenticatedAdminFinanceIncomesRoute,
+    AuthenticatedAdminFinanceQuotesRoute: AuthenticatedAdminFinanceQuotesRoute,
     AuthenticatedAdminFinanceSettingsRoute:
       AuthenticatedAdminFinanceSettingsRoute,
     AuthenticatedAdminFinanceSuppliersRoute:
