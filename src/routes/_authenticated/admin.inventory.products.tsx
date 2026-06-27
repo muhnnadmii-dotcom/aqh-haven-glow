@@ -459,14 +459,13 @@ function BulkDialog({
 
   async function run() {
     setSaving(true);
-    const { error } = await supabase.rpc("aqh_bulk_update_products", {
-      p_ids: ids,
-      p_category_id: catId ? Number(catId) : null,
-      p_restock_type: restockType || null,
-      p_is_active: isActive === "" ? null : isActive === "true",
-      p_cost_pct: costPct ? Number(costPct) : null,
-      p_supplier_id: supplierId ? Number(supplierId) : null,
-    });
+    const args: Record<string, unknown> = { p_ids: ids };
+    if (catId) args.p_category_id = Number(catId);
+    if (restockType) args.p_restock_type = restockType;
+    if (isActive !== "") args.p_is_active = isActive === "true";
+    if (costPct) args.p_cost_pct = Number(costPct);
+    if (supplierId) args.p_supplier_id = Number(supplierId);
+    const { error } = await supabase.rpc("aqh_bulk_update_products", args as any);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success(`تم تحديث ${ids.length} منتج`);
