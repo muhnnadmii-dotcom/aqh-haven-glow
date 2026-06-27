@@ -557,7 +557,7 @@ function LinksDialog({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("aqh_product_suppliers")
-        .select("id,supplier_id,cost,supplier_sku,is_preferred,lead_time_days")
+        .select("id,finance_supplier_id,cost,supplier_sku,is_preferred,lead_time_days")
         .eq("product_id", product.id);
       if (error) throw error;
       return data ?? [];
@@ -571,7 +571,7 @@ function LinksDialog({
     if (!pickSupplier) { toast.error("اختر مورد"); return; }
     const { error } = await supabase.from("aqh_product_suppliers").insert({
       product_id: product.id,
-      supplier_id: Number(pickSupplier),
+      finance_supplier_id: pickSupplier,
       cost: cost ? Number(cost) : null,
       supplier_sku: supSku.trim() || null,
     });
