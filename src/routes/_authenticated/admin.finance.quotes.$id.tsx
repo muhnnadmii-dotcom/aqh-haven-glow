@@ -7,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Plus, Trash2, Save, Printer, Loader2, Search, FileText, Sparkles } from "lucide-react";
+import { ArrowRight, Plus, Trash2, Save, Printer, Loader2, Search, FileText, Sparkles, ListPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AQH_PAYMENT_TERMS, AQH_DELIVERY_TERMS, AQH_WARRANTY_TERMS, AQH_NOTES_TEMPLATES } from "@/lib/aqh-quote-templates";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/quotes/$id")({
   ssr: false,
