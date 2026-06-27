@@ -782,6 +782,17 @@ function RequestsListTab() {
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
+          {sourceChips.map((c) => (
+            <button
+              key={c.v}
+              onClick={() => setSourceF(c.v)}
+              className={`text-[11px] px-2.5 py-1 rounded-full border transition ${
+                sourceF === c.v ? "bg-gold/15 text-gold border-gold/30" : "bg-white/[0.03] text-muted-foreground border-white/10 hover:border-white/25"
+              }`}
+            >{c.label}</button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
           {statusChips.map((c) => (
             <button
               key={c.v}
