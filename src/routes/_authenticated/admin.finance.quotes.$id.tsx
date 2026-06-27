@@ -102,13 +102,15 @@ function QuoteBuilder() {
     },
   });
 
-  // Apply settings defaults (only for new quotes, before user edits)
+  // Apply settings defaults ONCE — never overwrite user edits (incl. uploaded logo)
+  const settingsAppliedRef = useRef(false);
   useEffect(() => {
     const s = settingsQ.data;
-    if (!s) return;
+    if (!s || settingsAppliedRef.current) return;
+    settingsAppliedRef.current = true;
     if (s.company_name) setCompanyName(s.company_name);
     if (s.company_sub) setCompanySub(s.company_sub);
-    if (s.logo_url) setLogoUrl(s.logo_url);
+    if (s.logo_url) setLogoUrl((prev) => prev || s.logo_url);
     if (s.phone) setFooterPhone(s.phone);
     if (s.email) setFooterEmail(s.email);
     if (s.vat_number) setFooterVat(`الرقم الضريبي: ${s.vat_number}`);
@@ -315,15 +317,27 @@ function QuoteBuilder() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={status} onValueChange={(v) => setStatus(v as any)}>
-            <SelectTrigger className="w-32 h-9"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">مسودة</SelectItem>
-              <SelectItem value="sent">مُرسل</SelectItem>
-              <SelectItem value="accepted">مقبول</SelectItem>
-              <SelectItem value="rejected">مرفوض</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            value={status}
+            onChange={async (e) => {
+              const v = e.target.value as typeof status;
+              setStatus(v);
+              if (!isNew) {
+                const { error } = await supabase.from("aqh_quotes").update({ status: v }).eq("id", Number(id));
+                if (error) toast.error("تعذر تحديث الحالة: " + error.message);
+                else {
+                  toast.success("تم تحديث الحالة");
+                  qc.invalidateQueries({ queryKey: ["aqh_quotes_list"] });
+                }
+              }
+            }}
+            className="h-9 px-2 rounded-md border border-white/15 bg-background text-foreground text-sm min-w-[8rem]"
+          >
+            <option value="draft">مسودة</option>
+            <option value="sent">مُرسل</option>
+            <option value="accepted">مقبول</option>
+            <option value="rejected">مرفوض</option>
+          </select>
           <Button variant="outline" onClick={() => window.print()} className="gap-1">
             <Printer size={14} /> طباعة / PDF
           </Button>
