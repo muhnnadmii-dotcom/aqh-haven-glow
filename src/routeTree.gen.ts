@@ -61,6 +61,7 @@ import { Route as AuthenticatedAccountRequestsIndexRouteImport } from './routes/
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin.users.$id'
 import { Route as AuthenticatedAdminTanksIdRouteImport } from './routes/_authenticated/admin.tanks.$id'
 import { Route as AuthenticatedAdminRequestsIdRouteImport } from './routes/_authenticated/admin.requests.$id'
+import { Route as AuthenticatedAdminInventorySuppliersRouteImport } from './routes/_authenticated/admin.inventory.suppliers'
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
@@ -363,6 +364,12 @@ const AuthenticatedAdminRequestsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminRequestsRoute,
   } as any)
+const AuthenticatedAdminInventorySuppliersRoute =
+  AuthenticatedAdminInventorySuppliersRouteImport.update({
+    id: '/suppliers',
+    path: '/suppliers',
+    getParentRoute: () => AuthenticatedAdminInventoryRoute,
+  } as any)
 const AuthenticatedAdminFinanceSuppliersRoute =
   AuthenticatedAdminFinanceSuppliersRouteImport.update({
     id: '/suppliers',
@@ -490,7 +497,7 @@ export interface FileRoutesByFullPath {
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/admin/design': typeof AuthenticatedAdminDesignRouteWithChildren
   '/admin/finance': typeof AuthenticatedAdminFinanceRouteWithChildren
-  '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
+  '/admin/inventory': typeof AuthenticatedAdminInventoryRouteWithChildren
   '/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRouteWithChildren
@@ -518,6 +525,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/admin/inventory/suppliers': typeof AuthenticatedAdminInventorySuppliersRoute
   '/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -552,7 +560,7 @@ export interface FileRoutesByTo {
   '/account/reports': typeof AuthenticatedAccountReportsRoute
   '/admin/appointments': typeof AuthenticatedAdminAppointmentsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
-  '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
+  '/admin/inventory': typeof AuthenticatedAdminInventoryRouteWithChildren
   '/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/admin/roles': typeof AuthenticatedAdminRolesRoute
@@ -579,6 +587,7 @@ export interface FileRoutesByTo {
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/admin/inventory/suppliers': typeof AuthenticatedAdminInventorySuppliersRoute
   '/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -622,7 +631,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/_authenticated/admin/design': typeof AuthenticatedAdminDesignRouteWithChildren
   '/_authenticated/admin/finance': typeof AuthenticatedAdminFinanceRouteWithChildren
-  '/_authenticated/admin/inventory': typeof AuthenticatedAdminInventoryRoute
+  '/_authenticated/admin/inventory': typeof AuthenticatedAdminInventoryRouteWithChildren
   '/_authenticated/admin/project-categories': typeof AuthenticatedAdminProjectCategoriesRoute
   '/_authenticated/admin/projects': typeof AuthenticatedAdminProjectsRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRouteWithChildren
@@ -650,6 +659,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/_authenticated/admin/inventory/suppliers': typeof AuthenticatedAdminInventorySuppliersRoute
   '/_authenticated/admin/requests/$id': typeof AuthenticatedAdminRequestsIdRoute
   '/_authenticated/admin/tanks/$id': typeof AuthenticatedAdminTanksIdRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
@@ -721,6 +731,7 @@ export interface FileRouteTypes {
     | '/admin/finance/incomes'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
+    | '/admin/inventory/suppliers'
     | '/admin/requests/$id'
     | '/admin/tanks/$id'
     | '/admin/users/$id'
@@ -782,6 +793,7 @@ export interface FileRouteTypes {
     | '/admin/finance/incomes'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
+    | '/admin/inventory/suppliers'
     | '/admin/requests/$id'
     | '/admin/tanks/$id'
     | '/admin/users/$id'
@@ -852,6 +864,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/incomes'
     | '/_authenticated/admin/finance/settings'
     | '/_authenticated/admin/finance/suppliers'
+    | '/_authenticated/admin/inventory/suppliers'
     | '/_authenticated/admin/requests/$id'
     | '/_authenticated/admin/tanks/$id'
     | '/_authenticated/admin/users/$id'
@@ -1247,6 +1260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsIdRouteImport
       parentRoute: typeof AuthenticatedAdminRequestsRoute
     }
+    '/_authenticated/admin/inventory/suppliers': {
+      id: '/_authenticated/admin/inventory/suppliers'
+      path: '/suppliers'
+      fullPath: '/admin/inventory/suppliers'
+      preLoaderRoute: typeof AuthenticatedAdminInventorySuppliersRouteImport
+      parentRoute: typeof AuthenticatedAdminInventoryRoute
+    }
     '/_authenticated/admin/finance/suppliers': {
       id: '/_authenticated/admin/finance/suppliers'
       path: '/suppliers'
@@ -1467,6 +1487,21 @@ const AuthenticatedAdminFinanceRouteWithChildren =
     AuthenticatedAdminFinanceRouteChildren,
   )
 
+interface AuthenticatedAdminInventoryRouteChildren {
+  AuthenticatedAdminInventorySuppliersRoute: typeof AuthenticatedAdminInventorySuppliersRoute
+}
+
+const AuthenticatedAdminInventoryRouteChildren: AuthenticatedAdminInventoryRouteChildren =
+  {
+    AuthenticatedAdminInventorySuppliersRoute:
+      AuthenticatedAdminInventorySuppliersRoute,
+  }
+
+const AuthenticatedAdminInventoryRouteWithChildren =
+  AuthenticatedAdminInventoryRoute._addFileChildren(
+    AuthenticatedAdminInventoryRouteChildren,
+  )
+
 interface AuthenticatedAdminRequestsRouteChildren {
   AuthenticatedAdminRequestsIdRoute: typeof AuthenticatedAdminRequestsIdRoute
   AuthenticatedAdminRequestsIndexRoute: typeof AuthenticatedAdminRequestsIndexRoute
@@ -1516,7 +1551,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminArticlesRoute: typeof AuthenticatedAdminArticlesRoute
   AuthenticatedAdminDesignRoute: typeof AuthenticatedAdminDesignRouteWithChildren
   AuthenticatedAdminFinanceRoute: typeof AuthenticatedAdminFinanceRouteWithChildren
-  AuthenticatedAdminInventoryRoute: typeof AuthenticatedAdminInventoryRoute
+  AuthenticatedAdminInventoryRoute: typeof AuthenticatedAdminInventoryRouteWithChildren
   AuthenticatedAdminProjectCategoriesRoute: typeof AuthenticatedAdminProjectCategoriesRoute
   AuthenticatedAdminProjectsRoute: typeof AuthenticatedAdminProjectsRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRouteWithChildren
@@ -1537,7 +1572,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminArticlesRoute: AuthenticatedAdminArticlesRoute,
   AuthenticatedAdminDesignRoute: AuthenticatedAdminDesignRouteWithChildren,
   AuthenticatedAdminFinanceRoute: AuthenticatedAdminFinanceRouteWithChildren,
-  AuthenticatedAdminInventoryRoute: AuthenticatedAdminInventoryRoute,
+  AuthenticatedAdminInventoryRoute:
+    AuthenticatedAdminInventoryRouteWithChildren,
   AuthenticatedAdminProjectCategoriesRoute:
     AuthenticatedAdminProjectCategoriesRoute,
   AuthenticatedAdminProjectsRoute: AuthenticatedAdminProjectsRoute,
