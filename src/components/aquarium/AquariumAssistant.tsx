@@ -794,9 +794,15 @@ function CareTimeline({ logs, readings, issues }: { logs: CareLog[]; readings: R
               {e.detail && <div className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap">{e.detail}</div>}
             </div>
             {e.image && (
-              <a href={publicUrl(e.image)} target="_blank" rel="noreferrer" className="shrink-0">
-                <img src={publicUrl(e.image)} alt="" className="h-12 w-12 rounded-lg object-cover border border-white/10" />
-              </a>
+              isPrivateAsset(e.image) ? (
+                <div className="shrink-0">
+                  <AssetImage stored={e.image} className="h-12 w-12 rounded-lg object-cover border border-white/10" />
+                </div>
+              ) : (
+                <a href={publicUrl(e.image)} target="_blank" rel="noreferrer" className="shrink-0">
+                  <img src={publicUrl(e.image)} alt="" className="h-12 w-12 rounded-lg object-cover border border-white/10" />
+                </a>
+              )
             )}
           </li>
         ))}
