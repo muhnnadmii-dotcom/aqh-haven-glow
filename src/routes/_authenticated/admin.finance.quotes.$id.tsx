@@ -577,14 +577,21 @@ function QuoteBuilder() {
 
         {/* Terms */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <TermBlock label="الدفع" value={paymentTerms} onChange={setPaymentTerms} />
-          <TermBlock label="التسليم" value={deliveryTerms} onChange={setDeliveryTerms} />
-          <TermBlock label="الضمان" value={warrantyTerms} onChange={setWarrantyTerms} />
+          <TermBlock label="الدفع" value={paymentTerms} onChange={setPaymentTerms} templates={AQH_PAYMENT_TERMS} />
+          <TermBlock label="التسليم" value={deliveryTerms} onChange={setDeliveryTerms} templates={AQH_DELIVERY_TERMS} />
+          <TermBlock label="الضمان" value={warrantyTerms} onChange={setWarrantyTerms} templates={AQH_WARRANTY_TERMS} />
         </div>
 
         {/* Notes */}
         <div>
-          <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold mb-2">ملاحظات</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold">ملاحظات</div>
+            <TemplatePicker
+              templates={AQH_NOTES_TEMPLATES}
+              onPick={(v) => setNotesText((prev) => (prev ? prev + "\n" : "") + v)}
+              label="إضافة ملاحظة جاهزة"
+            />
+          </div>
           <Textarea value={notesText} onChange={(e) => setNotesText(e.target.value)} placeholder="أي ملاحظات إضافية…" rows={2} className="bg-slate-50 border-slate-200 text-slate-700 no-print-border" />
         </div>
 
