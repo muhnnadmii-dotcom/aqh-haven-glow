@@ -51,18 +51,28 @@ function SupplierCatalogPage() {
         .from("aqh_supplier_products" as any)
         .select("id,supplier_key,supplier_name,name,item_no,barcode,cost,needs_review,is_active")
         .eq("is_active", true)
+        .eq("needs_review", false)
         .order("supplier_key", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
-      return (data as unknown as SupplierProduct[]) ?? [];
+      const rows = (data as unknown as SupplierProduct[]) ?? [];
+      // Deduplicate by (supplier_key, normalized name) — keep first occurrence
+      const seen = new Set<string>();
+      return rows.filter((p) => {
+        const key = `${p.supplier_key}::${p.name.trim().toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     },
   });
 
-  const suppliers = useMemo(() => {
+  const brands = useMemo(() => {
     const m = new Map<string, string>();
     (productsQ.data ?? []).forEach((p) => m.set(p.supplier_key, p.supplier_name));
     return Array.from(m.entries()).map(([key, name]) => ({ key, name }));
   }, [productsQ.data]);
+
 
   const [supplier, setSupplier] = useState<string>("");
   const [q, setQ] = useState("");
