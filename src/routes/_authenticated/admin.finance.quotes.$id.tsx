@@ -354,24 +354,25 @@ function QuoteBuilder() {
               </label>
             </div>
           </div>
-          <div className="text-end space-y-1">
-            <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold">عرض سعر · QUOTATION</div>
+          <div className="text-end space-y-1 quote-header-meta">
+            <div className="text-[11px] uppercase tracking-widest text-amber-600 font-semibold quote-eyebrow">عرض سعر · QUOTATION</div>
             <input
               dir="ltr"
               value={quoteNo}
               onChange={(e) => setQuoteNo(e.target.value)}
               placeholder="AQH-XXXX-XXX"
-              className="text-2xl font-bold font-mono bg-transparent outline-none no-print-border text-end w-48"
+              className="quote-no text-2xl font-bold font-mono bg-transparent outline-none no-print-border text-end w-48"
             />
             <div className="text-xs text-slate-500 space-y-0.5 mt-2">
               <div className="flex items-center gap-2 justify-end">
                 <span>التاريخ:</span>
-                <input type="date" value={quoteDate} onChange={(e) => setQuoteDate(e.target.value)} className="bg-transparent outline-none no-print-border" />
+                <input type="date" value={quoteDate} onChange={(e) => setQuoteDate(e.target.value)} className="quote-date bg-transparent outline-none no-print-border" />
               </div>
               <div className="flex items-center gap-2 justify-end">
                 <span>صالح حتى:</span>
-                <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="bg-transparent outline-none no-print-border" />
+                <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="quote-date bg-transparent outline-none no-print-border" />
               </div>
+
               <div className="flex items-center gap-2 justify-end">
                 <span>المسؤول:</span>
                 <input value={salesperson} onChange={(e) => setSalesperson(e.target.value)} placeholder="اسم المندوب" className="bg-transparent outline-none no-print-border w-32 text-end" />
