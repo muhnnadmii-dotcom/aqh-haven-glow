@@ -80,7 +80,7 @@ function QuoteBuilder() {
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState<"amount" | "percent">("amount");
   const [currency, setCurrency] = useState("SAR");
-  const [pricesIncludeVat, setPricesIncludeVat] = useState(true);
+  const pricesIncludeVat = false; // fixed: prices are entered without VAT
   const [status, setStatus] = useState<"draft" | "sent" | "accepted" | "rejected">("draft");
   const [items, setItems] = useState<LineItem[]>([
     { uid: uid(), name: "", description: "", unit: "قطعة", qty: 1, price: 0, taxable: true, source: "manual" },
