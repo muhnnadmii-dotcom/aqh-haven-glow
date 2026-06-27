@@ -615,10 +615,10 @@ function LinksDialog({
           ) : (
             <div className="space-y-1">
               {(linksQ.data ?? []).map((l: any) => {
-                const sup = suppliers.find((s) => s.id === l.supplier_id);
+                const sup = suppliers.find((s) => s.id === l.finance_supplier_id);
                 return (
                   <div key={l.id} className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/5 text-[12px]">
-                    <span className="flex-1">{sup?.name_ar ?? `#${l.supplier_id}`}</span>
+                    <span className="flex-1">{sup?.name_ar ?? "مورد محذوف"}</span>
                     <span className="text-muted-foreground font-mono text-[10px]" dir="ltr">{l.supplier_sku ?? "—"}</span>
                     <span className="font-mono text-[11px]">{l.cost != null ? SAR(Number(l.cost)) : "—"}</span>
                     <label className="text-[10px] inline-flex items-center gap-1">
