@@ -31,6 +31,7 @@ const tabs = [
   { to: "/admin/finance/export", label: "التصدير", icon: Download },
   { to: "/admin/finance/import", label: "استيراد Excel", icon: Upload },
   { to: "/admin/finance/import-batches", label: "دفعات الاستيراد", icon: Archive },
+  { to: "/admin/finance/quotes", label: "عروض الأسعار", icon: FileText },
   { to: "/admin/finance/settings", label: "الإعدادات", icon: Cog },
 ];
 
