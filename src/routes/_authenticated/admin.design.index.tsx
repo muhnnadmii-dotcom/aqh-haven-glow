@@ -26,13 +26,18 @@ export const Route = createFileRoute("/_authenticated/admin/design/")({
 });
 
 const TABS = [
+  { key: "ordering", label: "ترتيب وإظهار" },
   { key: "hero", label: "البانر" },
   { key: "explore", label: "استكشف" },
   { key: "services", label: "ماذا نقدم" },
   { key: "why_us", label: "لماذا نحن" },
+  { key: "featured_projects_header", label: "هيدر المشاريع" },
   { key: "process", label: "كيف نعمل" },
+  { key: "maintenance_teaser", label: "شريط الصيانة" },
+  { key: "business_teaser", label: "شريط حلول الأعمال" },
   { key: "faq", label: "الأسئلة الشائعة" },
   { key: "cta", label: "CTA الأخير" },
+  { key: "final_whatsapp_cta", label: "شريط الواتساب النهائي" },
   { key: "partners", label: "الشركاء" },
   { key: "headers", label: "عناوين أقسام" },
   { key: "homepage_testimonials", label: "تقييمات الرئيسية (3)" },
@@ -40,6 +45,18 @@ const TABS = [
 
 
 const DEFAULT_HERO: HeroContent = {
+  title: "عالمك المائي", subtitle: "يبدأ من هنا",
+  description: "", primary_cta_label: "", primary_cta_href: "",
+  secondary_cta_label: "", secondary_cta_href: "",
+  image_path: "", image_path_mobile: "", mobile_image_enabled: false, overlay_enabled: true, overlay_opacity: 0.6,
+  stats: [],
+};
+const DEFAULT_IMG_SPLIT: ImageTextSplitContent = {
+  kicker: "", kicker_icon: null, heading: "", description: "",
+  image_path: "", image_side: "left",
+  primary_label: "", primary_href: "", secondary_label: "", secondary_whatsapp: "",
+};
+const DEFAULT_WA_CTA: WhatsappCtaContent = { heading: "", description: "", button_label: "تواصل معنا عبر واتساب", whatsapp_message: "" };
   title: "عالمك المائي", subtitle: "يبدأ من هنا",
   description: "", primary_cta_label: "", primary_cta_href: "",
   secondary_cta_label: "", secondary_cta_href: "",
