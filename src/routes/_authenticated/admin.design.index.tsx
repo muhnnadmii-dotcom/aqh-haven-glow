@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Save, Plus, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import {
   fetchHomeSections, saveHomeSection, genId, ICON_NAMES,
+  fetchOrderedHomeSections, updateSectionOrder, setSectionEnabled,
+  SECTION_LABELS,
   type HeroContent, type StatItem, type ExploreContent, type ExploreItem,
   type ServicesContent, type ServiceItem,
   type WhyUsContent, type WhyUsItem,
@@ -12,6 +14,8 @@ import {
   type CtaContent, type SectionHeader,
   type PartnersContent, type PartnerItem,
   type HomeTestimonialsContent, type HomeTestimonialItem,
+  type ImageTextSplitContent, type WhatsappCtaContent,
+  type OrderedSection,
 } from "@/lib/home-sections";
 import { Star } from "lucide-react";
 
