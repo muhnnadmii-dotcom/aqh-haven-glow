@@ -235,6 +235,14 @@ function ProductsPage() {
           </Select>
         </div>
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] text-muted-foreground">الصور:</span>
+        <Button size="sm" variant={imgFilter === "all" ? "default" : "outline"} className={`h-7 text-[11px] ${imgFilter === "all" ? "bg-gold text-black hover:bg-gold/90" : ""}`} onClick={() => setImgFilter("all")}>الكل</Button>
+        <Button size="sm" variant={imgFilter === "suspect" ? "default" : "outline"} className={`h-7 text-[11px] ${imgFilter === "suspect" ? "bg-amber-500 text-black hover:bg-amber-500/90" : ""}`} onClick={() => setImgFilter("suspect")}>
+          <AlertTriangle size={11} className="ml-1" /> صورتها قد تكون خطأ
+        </Button>
+        <Button size="sm" variant={imgFilter === "none" ? "default" : "outline"} className="h-7 text-[11px]" onClick={() => setImgFilter("none")}>بدون صورة</Button>
+      </div>
 
       {/* Table */}
       {productsQ.isLoading ? (
