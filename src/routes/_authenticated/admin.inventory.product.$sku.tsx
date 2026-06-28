@@ -36,6 +36,7 @@ type ProductRow = {
   restock_type: string | null;
   is_active: boolean;
   salla_raw: Record<string, any> | null;
+  all_images: string[] | null;
 };
 
 function ProductDetailPage() {
