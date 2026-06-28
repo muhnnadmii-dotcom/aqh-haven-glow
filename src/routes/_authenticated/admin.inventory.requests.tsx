@@ -889,9 +889,26 @@ function RequestsListTab() {
                       </thead>
                       <tbody>
                         {r.items.map((it, i) => (
-                          <tr key={i} className="border-t border-white/5">
-                            <td className="p-2">{it.name_ar}</td>
-                            <td className="p-2 text-xs text-muted-foreground" dir="ltr">{it.sku}</td>
+                          <tr key={i} className="border-t border-white/5 hover:bg-white/[0.03]">
+                            <td className="p-2">
+                              <Link
+                                to="/admin/inventory/product/$sku"
+                                params={{ sku: it.sku }}
+                                className="hover:text-gold transition inline-flex items-center gap-1"
+                                title="فتح صفحة المنتج"
+                              >
+                                {it.name_ar}
+                              </Link>
+                            </td>
+                            <td className="p-2 text-xs text-muted-foreground" dir="ltr">
+                              <Link
+                                to="/admin/inventory/product/$sku"
+                                params={{ sku: it.sku }}
+                                className="font-mono hover:text-gold transition"
+                              >
+                                {it.sku}
+                              </Link>
+                            </td>
                             <td className="p-2 text-left text-gold font-medium">× {it.qty}</td>
                             {r.source === "supplier_catalog" && (
                               <>
