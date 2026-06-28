@@ -979,7 +979,16 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
 
                 </div>
 
-                {isOpen && (
+                {isOpen && (() => {
+                  const isEditing = editing === r.id;
+                  const rowsSrc: RestockItem[] = isEditing ? draftItems : r.items;
+                  const updateDraftQty = (idx: number, q: number) => {
+                    setDraftItems((prev) => prev.map((it, i) => (i === idx ? { ...it, qty: Math.max(0, q) } : it)));
+                  };
+                  const removeDraftRow = (idx: number) => {
+                    setDraftItems((prev) => prev.filter((_, i) => i !== idx));
+                  };
+                  return (
                   <div className="rounded-lg border border-white/10 overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-white/[0.03] text-xs text-muted-foreground">
@@ -987,7 +996,7 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
                           <th className="text-right p-2 font-normal w-14"></th>
                           <th className="text-right p-2 font-normal">المنتج</th>
                           <th className="text-right p-2 font-normal w-24">SKU</th>
-                          <th className="text-left p-2 font-normal w-20">الكمية</th>
+                          <th className="text-left p-2 font-normal w-24">الكمية</th>
                           <th className="text-left p-2 font-normal w-20">المتوفر</th>
                           {r.source === "supplier_catalog" && (
                             <>
@@ -995,10 +1004,11 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
                               <th className="text-left p-2 font-normal w-24">الإجمالي</th>
                             </>
                           )}
+                          {isEditing && <th className="w-10"></th>}
                         </tr>
                       </thead>
                       <tbody>
-                        {r.items.map((it, i) => {
+                        {rowsSrc.map((it, i) => {
                           const live = liveProducts[it.sku];
                           const name = live?.name_ar ?? it.name_ar;
                           const image = live?.image_url ?? null;
@@ -1049,7 +1059,19 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
                                   {it.sku}
                                 </Link>
                               </td>
-                              <td className="p-2 text-left text-gold font-medium">× {it.qty}</td>
+                              <td className="p-2 text-left text-gold font-medium">
+                                {isEditing ? (
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    value={it.qty}
+                                    onChange={(e) => updateDraftQty(i, parseInt(e.target.value || "0", 10))}
+                                    className="h-8 w-20 text-center px-1"
+                                  />
+                                ) : (
+                                  <>× {it.qty}</>
+                                )}
+                              </td>
                               <td className="p-2 text-left text-xs font-mono text-muted-foreground">
                                 {live?.current_qty != null ? live.current_qty : "—"}
                               </td>
@@ -1059,25 +1081,50 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
                                   <td className="p-2 text-left text-xs font-mono">{cost != null ? SAR(Number(cost) * it.qty) : "—"}</td>
                                 </>
                               )}
+                              {isEditing && (
+                                <td className="p-2 text-left">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-red-300 hover:text-red-200 hover:bg-red-500/10"
+                                    title="حذف الصنف"
+                                    onClick={() => removeDraftRow(i)}
+                                  >
+                                    <Minus size={13} />
+                                  </Button>
+                                </td>
+                              )}
                             </tr>
                           );
                         })}
                       </tbody>
                     </table>
-                    {r.source === "supplier_catalog" && r.total != null && (
+                    {r.source === "supplier_catalog" && r.total != null && !isEditing && (
                       <div className="border-t border-white/10 p-2 flex flex-wrap gap-4 justify-end text-xs">
                         <span>المجموع: <span className="font-mono">{SAR(Number(r.subtotal ?? 0))}</span></span>
                         <span>الضريبة 15%: <span className="font-mono">{SAR(Number(r.vat ?? 0))}</span></span>
                         <span className="text-gold">الإجمالي: <span className="font-mono font-semibold">{SAR(Number(r.total))}</span></span>
                       </div>
                     )}
-                    {r.notes && (
+                    {isEditing ? (
+                      <div className="border-t border-white/10 p-2">
+                        <Textarea
+                          value={draftNotes}
+                          onChange={(e) => setDraftNotes(e.target.value)}
+                          placeholder="ملاحظة (اختياري)"
+                          rows={2}
+                          className="text-xs"
+                        />
+                      </div>
+                    ) : r.notes ? (
                       <div className="text-xs text-muted-foreground border-t border-white/10 p-2">
                         <span className="text-foreground">ملاحظة: </span>{r.notes}
                       </div>
-                    )}
+                    ) : null}
                   </div>
-                )}
+                  );
+                })()}
+
               </div>
             );
           })}
