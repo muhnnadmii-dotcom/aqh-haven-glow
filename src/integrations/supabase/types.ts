@@ -228,6 +228,7 @@ export type Database = {
       }
       aqh_products: {
         Row: {
+          all_images: Json | null
           category: string | null
           category_id: number | null
           cost: number | null
@@ -243,6 +244,7 @@ export type Database = {
           sku: string
         }
         Insert: {
+          all_images?: Json | null
           category?: string | null
           category_id?: number | null
           cost?: number | null
@@ -258,6 +260,7 @@ export type Database = {
           sku: string
         }
         Update: {
+          all_images?: Json | null
           category?: string | null
           category_id?: number | null
           cost?: number | null

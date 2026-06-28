@@ -36,6 +36,7 @@ type ProductRow = {
   restock_type: string | null;
   is_active: boolean;
   salla_raw: Record<string, any> | null;
+  all_images: string[] | null;
 };
 
 function ProductDetailPage() {
@@ -48,7 +49,7 @@ function ProductDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("aqh_products" as any)
-        .select("id,sku,name_ar,category,category_id,image_url,current_qty,cost,price,restock_type,is_active,salla_raw")
+        .select("id,sku,name_ar,category,category_id,image_url,current_qty,cost,price,restock_type,is_active,salla_raw,all_images")
         .eq("sku", sku)
         .maybeSingle();
       if (error) throw error;
@@ -155,10 +156,40 @@ function ProductDetailPage() {
             <Input dir="ltr" value={core.image_url ?? ""} onChange={(e) => setCore({ ...core, image_url: e.target.value })} />
           </Field>
         </div>
-        {core.image_url ? (
-          <img src={String(core.image_url).split(",")[0]} alt="" className="w-32 h-32 object-cover rounded border border-white/10" />
-        ) : null}
       </section>
+
+      {/* Gallery: pick main image */}
+      {(() => {
+        const imgs = Array.isArray(q.data?.all_images) ? (q.data!.all_images as string[]) : [];
+        const list = imgs.length > 0 ? imgs : (core.image_url ? [String(core.image_url)] : []);
+        if (list.length === 0) return null;
+        return (
+          <section className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold text-gold">صور المنتج ({list.length})</div>
+              <div className="text-[11px] text-muted-foreground">اضغط على أي صورة لجعلها الصورة الرئيسية</div>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {list.map((url, i) => {
+                const active = core.image_url === url;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setCore({ ...core, image_url: url })}
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition ${active ? "border-gold ring-2 ring-gold/40" : "border-white/10 hover:border-white/30"}`}
+                  >
+                    <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    {active && (
+                      <span className="absolute top-1 start-1 bg-gold text-black text-[10px] font-bold rounded px-1.5 py-0.5">رئيسية</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Salla full data */}
       {SALLA_GROUPS.map((g) => (
