@@ -1,0 +1,1 @@
+ALTER SEQUENCE public.aqh_products_id_seq OWNER TO postgres;
