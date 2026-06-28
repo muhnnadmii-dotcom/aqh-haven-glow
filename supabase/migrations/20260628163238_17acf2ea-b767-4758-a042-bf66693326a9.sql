@@ -1,0 +1,1 @@
+GRANT ALL ON TABLE public.aqh_product_suppliers TO sandbox_exec; GRANT ALL ON TABLE public.aqh_restock_requests TO sandbox_exec;
