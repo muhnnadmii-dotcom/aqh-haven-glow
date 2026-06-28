@@ -1533,6 +1533,8 @@ export type Database = {
           enabled: boolean
           id: string
           section_key: string
+          section_type: string | null
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -1541,6 +1543,8 @@ export type Database = {
           enabled?: boolean
           id?: string
           section_key: string
+          section_type?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -1549,6 +1553,8 @@ export type Database = {
           enabled?: boolean
           id?: string
           section_key?: string
+          section_type?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
