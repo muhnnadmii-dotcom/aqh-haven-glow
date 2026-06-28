@@ -52,6 +52,7 @@ function ProductsPage() {
   const [catFilter, setCatFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<string>("all"); // all/low/out
+  const [imgFilter, setImgFilter] = useState<string>("all"); // all/suspect/none
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
