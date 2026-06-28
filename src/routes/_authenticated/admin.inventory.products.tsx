@@ -102,6 +102,15 @@ function ProductsPage() {
     },
   });
 
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    (productsQ.data ?? []).forEach((p) => {
+      const name = p.category?.trim();
+      if (name) set.add(name);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ar"));
+  }, [productsQ.data]);
+
   const filtered = useMemo(() => {
     const text = q.trim().toLowerCase();
     return (productsQ.data ?? []).filter((p) => {
@@ -111,15 +120,28 @@ function ProductsPage() {
         if (!match) return false;
       }
       if (catFilter !== "all") {
-        if (catFilter === "none" ? p.category_id != null : String(p.category_id) !== catFilter) return false;
+        if (catFilter === "none") {
+          if ((p.category ?? "").trim() !== "") return false;
+        } else if ((p.category ?? "").trim() !== catFilter) {
+          return false;
+        }
       }
-      if (typeFilter !== "all" && p.restock_type !== typeFilter) return false;
+      if (typeFilter !== "all" && (p.restock_type ?? "") !== typeFilter) return false;
       const qty = p.current_qty ?? 0;
       if (stockFilter === "low" && qty > 3) return false;
       if (stockFilter === "out" && qty > 0) return false;
       return true;
     });
   }, [productsQ.data, q, catFilter, typeFilter, stockFilter]);
+
+  // reset page when filters change
+  useEffect(() => { setPage(1); }, [q, catFilter, typeFilter, stockFilter, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const paged = filtered.slice(pageStart, pageStart + pageSize);
+
 
   const delM = useMutation({
     mutationFn: async (id: number) => {
