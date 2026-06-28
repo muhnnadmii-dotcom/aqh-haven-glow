@@ -319,6 +319,35 @@ function ProductsPage() {
         </div>
       )}
 
+      {/* Pagination */}
+      {!productsQ.isLoading && filtered.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span>عدد لكل صفحة:</span>
+            <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+              <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+            <span>
+              {pageStart + 1}–{Math.min(pageStart + pageSize, filtered.length)} من {filtered.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-8" disabled={currentPage <= 1} onClick={() => setPage(1)}>الأولى</Button>
+            <Button size="sm" variant="outline" className="h-8" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>السابق</Button>
+            <span className="px-2">صفحة {currentPage} / {totalPages}</span>
+            <Button size="sm" variant="outline" className="h-8" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>التالي</Button>
+            <Button size="sm" variant="outline" className="h-8" disabled={currentPage >= totalPages} onClick={() => setPage(totalPages)}>الأخيرة</Button>
+          </div>
+        </div>
+      )}
+
+
       {/* Sticky bulk bar */}
       {selected.size > 0 && (
         <div className="fixed bottom-0 inset-x-0 z-30 border-t border-white/10 bg-background/95 backdrop-blur">
