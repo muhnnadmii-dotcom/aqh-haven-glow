@@ -191,502 +191,455 @@ function HomePage() {
 
 
 
-  return (
-    <>
-      {/* HERO */}
-      {heroEnabled && (
-        <section className="relative min-h-[92dvh] overflow-hidden -mt-24 pt-24 flex flex-col">
-          <div className="absolute inset-0">
-            <picture className="block h-full w-full">
-              {heroImgMobile && <source media="(max-width: 640px)" srcSet={heroImgMobile} />}
-              <img src={heroImg} alt={hero?.title ?? "أكوا هيفن"} className="h-full w-full object-cover" style={{ opacity: overlayOn ? 1 - overlayOpacity * 0.4 : 1 }} width={1920} height={1080} />
-            </picture>
-            {overlayOn && (
-              <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, oklch(0.10 0.05 245 / ${overlayOpacity}), oklch(0.10 0.05 245 / ${overlayOpacity * 0.6}), var(--background))` }} />
+  /* New CMS-managed section contents */
+  const fpHeader = sections.featured_projects_header?.content;
+  const fpHeaderEnabled = sections.featured_projects_header?.enabled ?? true;
+
+  const maintC = sections.maintenance_teaser?.content;
+  const maintEnabled = sections.maintenance_teaser?.enabled ?? true;
+
+  const bizC = sections.business_teaser?.content;
+  const bizEnabled = sections.business_teaser?.enabled ?? true;
+
+  const finalCta = sections.final_whatsapp_cta?.content;
+  const finalCtaEnabled = sections.final_whatsapp_cta?.enabled ?? true;
+
+  const renderers: Record<string, () => React.ReactNode> = {
+    hero: () => heroEnabled ? (
+      <section className="relative min-h-[92dvh] overflow-hidden -mt-24 pt-24 flex flex-col">
+        <div className="absolute inset-0">
+          <picture className="block h-full w-full">
+            {heroImgMobile && <source media="(max-width: 640px)" srcSet={heroImgMobile} />}
+            <img src={heroImg} alt={hero?.title ?? "أكوا هيفن"} className="h-full w-full object-cover" style={{ opacity: overlayOn ? 1 - overlayOpacity * 0.4 : 1 }} width={1920} height={1080} />
+          </picture>
+          {overlayOn && (
+            <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, oklch(0.10 0.05 245 / ${overlayOpacity}), oklch(0.10 0.05 245 / ${overlayOpacity * 0.6}), var(--background))` }} />
+          )}
+        </div>
+        <div className="light-rays" aria-hidden />
+        <Bubbles count={22} />
+        <div className="relative mx-auto w-full max-w-7xl px-5 pt-12 sm:pt-16 text-center flex-1 flex flex-col">
+          <div className="my-auto space-y-6">
+            {(hero?.title || hero?.subtitle) && (
+              <Reveal delay={120}>
+                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] tracking-tight">
+                  {hero?.title && (<span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>{hero.title}</span>)}
+                  {hero?.subtitle && (<>{hero?.title && <br />}<span className="text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">{hero.subtitle}</span></>)}
+                </h1>
+              </Reveal>
+            )}
+            {hero?.description && (
+              <Reveal delay={240}><p className="mx-auto max-w-2xl text-base sm:text-lg md:text-xl text-white/90 leading-relaxed px-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">{hero.description}</p></Reveal>
             )}
           </div>
-          <div className="light-rays" aria-hidden />
-          <Bubbles count={22} />
-
-          <div className="relative mx-auto w-full max-w-7xl px-5 pt-12 sm:pt-16 text-center flex-1 flex flex-col">
-            <div className="my-auto space-y-6">
-              {(hero?.title || hero?.subtitle) && (
-                <Reveal delay={120}>
-                  <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] tracking-tight">
-                    {hero?.title && (
-                      <span className="text-gradient-gold" style={{ textShadow: "0 8px 40px oklch(0.78 0.14 80 / 0.35)" }}>
-                        {hero.title}
-                      </span>
-                    )}
-                    {hero?.subtitle && (
-                      <>
-                        {hero?.title && <br />}
-                        <span className="text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">{hero.subtitle}</span>
-                      </>
-                    )}
-                  </h1>
-                </Reveal>
-              )}
-              {hero?.description && (
-                <Reveal delay={240}>
-                  <p className="mx-auto max-w-2xl text-base sm:text-lg md:text-xl text-white/90 leading-relaxed px-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-                    {hero.description}
-                  </p>
-                </Reveal>
-              )}
-            </div>
-
-
-            <div className="mt-auto pt-16 sm:pt-20 pb-10 sm:pb-12">
-              <Reveal delay={360}>
-                <div className="flex flex-wrap justify-center gap-3 mb-8 sm:mb-10">
-                  <CTAButton href={hero?.primary_cta_href || "/contact"} variant="gold">{hero?.primary_cta_label || "اطلب مشروعك"}</CTAButton>
-                </div>
-              </Reveal>
-
-              {heroStats.length > 0 && (
-                <Reveal delay={480}>
-                  <div className={`grid gap-3 sm:gap-4 max-w-3xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
-                    {heroStats.map((s) => (
-                      <div key={s.id} className="glass rounded-2xl p-4">
-                        <div className="text-2xl md:text-3xl font-bold text-gradient-gold">
-                          <Counter to={s.value} suffix={s.suffix} />
-                        </div>
-                        <div className="text-[11px] md:text-xs text-muted-foreground mt-1">{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </Reveal>
-              )}
-            </div>
-          </div>
-        </section>
-
-      )}
-
-      {/* Customer welcome card — visible only for signed-in users */}
-      <CustomerHomeCard />
-
-      {/* EXPLORE CUBES */}
-
-      {exploreEnabled && exploreItems.length > 0 && (
-        <section className="relative py-16">
-          <div className="mx-auto max-w-7xl px-6">
-            <Reveal>
-              <div className="text-center mb-10">
-                {explore?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{explore.kicker}</div>}
-                <h2 className="text-3xl sm:text-4xl font-bold">{explore?.heading ?? "استكشف أكوا هيفن"}</h2>
-                {explore?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{explore.subtitle}</p>}
+          <div className="mt-auto pt-16 sm:pt-20 pb-10 sm:pb-12">
+            <Reveal delay={360}>
+              <div className="flex flex-wrap justify-center gap-3 mb-8 sm:mb-10">
+                <CTAButton href={hero?.primary_cta_href || "/contact"} variant="gold">{hero?.primary_cta_label || "اطلب مشروعك"}</CTAButton>
               </div>
             </Reveal>
-            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
-              {exploreItems.map((c, i) => {
-                const Icon = c.icon ? ICONS[c.icon] : null;
-                const img = getImageUrl(c.image_path);
-                return (
-                  <Reveal key={c.id} delay={i * 60}>
-                    <SmartLink to={c.href} className="group block h-full rounded-2xl glass overflow-hidden hover:glass-gold hover:-translate-y-1 transition-all duration-500 flex flex-col">
-                      <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
-                        <img
-                          src={img}
-                          alt={c.label}
-                          loading="lazy"
-                          onError={onImageError}
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          width={800}
-                          height={500}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-transparent" />
-                        {(Icon || c.emoji) && (
-                          <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
-                            {Icon ? <Icon className="text-gold" size={18} aria-hidden /> : <span className="text-lg">{c.emoji}</span>}
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-5 flex flex-col flex-1">
-                        <h3 className="text-lg font-bold mb-1.5">{c.label}</h3>
-                        {c.desc && <p className="text-xs text-muted-foreground leading-relaxed flex-1">{c.desc}</p>}
-                        <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold">
-                          ادخل <ArrowLeft size={12} aria-hidden />
-                        </div>
-                      </div>
-                    </SmartLink>
-                  </Reveal>
-                );
-              })}
-            </div>
-
+            {heroStats.length > 0 && (
+              <Reveal delay={480}>
+                <div className={`grid gap-3 sm:gap-4 max-w-3xl mx-auto ${heroStats.length === 1 ? "grid-cols-1" : heroStats.length === 2 ? "grid-cols-2" : heroStats.length >= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
+                  {heroStats.map((s) => (
+                    <div key={s.id} className="glass rounded-2xl p-4">
+                      <div className="text-2xl md:text-3xl font-bold text-gradient-gold"><Counter to={s.value} suffix={s.suffix} /></div>
+                      <div className="text-[11px] md:text-xs text-muted-foreground mt-1">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            )}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+    ) : null,
 
-      {/* PARTNERS MARQUEE */}
-      {partnersEnabled && partnerItems.length > 0 && (
-        <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
-          {partnersC?.title && <div className="text-center text-sm text-muted-foreground mb-6 leading-loose">{partnersC.title}</div>}
-          <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none items-center">
-            {[...partnerItems, ...partnerItems].map((p, i) => {
-              const isImage = (p.display_type ?? (p.logo_path ? "image" : "text")) === "image" && p.logo_path;
-              return isImage ? (
-                <img
-                  key={`${p.id}-${i}`}
-                  src={publicUrl(p.logo_path!)}
-                  alt={p.label}
-                  loading="lazy"
-                  onError={onImageError}
-                  className="h-12 md:h-14 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
-                />
-              ) : (
-                <span key={`${p.id}-${i}`} className="whitespace-nowrap" dir="ltr">{p.label}</span>
+    explore: () => exploreEnabled && exploreItems.length > 0 ? (
+      <section className="relative py-16">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal>
+            <div className="text-center mb-10">
+              {explore?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{explore.kicker}</div>}
+              <h2 className="text-3xl sm:text-4xl font-bold">{explore?.heading ?? "استكشف أكوا هيفن"}</h2>
+              {explore?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{explore.subtitle}</p>}
+            </div>
+          </Reveal>
+          <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
+            {exploreItems.map((c, i) => {
+              const Icon = c.icon ? ICONS[c.icon] : null;
+              const img = getImageUrl(c.image_path);
+              return (
+                <Reveal key={c.id} delay={i * 60}>
+                  <SmartLink to={c.href} className="group block h-full rounded-2xl glass overflow-hidden hover:glass-gold hover:-translate-y-1 transition-all duration-500 flex flex-col">
+                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
+                      <img src={img} alt={c.label} loading="lazy" onError={onImageError} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" width={800} height={500} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-transparent" />
+                      {(Icon || c.emoji) && (
+                        <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
+                          {Icon ? <Icon className="text-gold" size={18} aria-hidden /> : <span className="text-lg">{c.emoji}</span>}
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3 className="text-lg font-bold mb-1.5">{c.label}</h3>
+                      {c.desc && <p className="text-xs text-muted-foreground leading-relaxed flex-1">{c.desc}</p>}
+                      <div className="mt-3 inline-flex items-center gap-1 text-xs text-gradient-gold">ادخل <ArrowLeft size={12} aria-hidden /></div>
+                    </div>
+                  </SmartLink>
+                </Reveal>
               );
             })}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+    ) : null,
 
-      {/* SERVICES — sourced from DB (services table, is_featured) */}
-      {servicesEnabled && dbServices.length > 0 && (
-        <section className="relative py-24">
-          <div className="mx-auto max-w-7xl px-6">
+    partners: () => partnersEnabled && partnerItems.length > 0 ? (
+      <section className="relative py-10 border-y border-white/5 overflow-hidden bg-[oklch(0.10_0.05_245/0.4)]">
+        {partnersC?.title && <div className="text-center text-sm text-muted-foreground mb-6 leading-loose">{partnersC.title}</div>}
+        <div className="marquee-track gap-16 text-2xl md:text-3xl font-bold text-white/30 select-none items-center">
+          {[...partnerItems, ...partnerItems].map((p, i) => {
+            const isImage = (p.display_type ?? (p.logo_path ? "image" : "text")) === "image" && p.logo_path;
+            return isImage ? (
+              <img key={`${p.id}-${i}`} src={publicUrl(p.logo_path!)} alt={p.label} loading="lazy" onError={onImageError} className="h-12 md:h-14 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity" />
+            ) : (
+              <span key={`${p.id}-${i}`} className="whitespace-nowrap" dir="ltr">{p.label}</span>
+            );
+          })}
+        </div>
+      </section>
+    ) : null,
+
+    services: () => servicesEnabled && dbServices.length > 0 ? (
+      <section className="relative py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal>
+            <div className="text-center mb-14">
+              <div className="text-xs text-gradient-gold mb-3" style={{ letterSpacing: "0.3em" }}>{services?.kicker ?? "SERVICES"}</div>
+              <h2 className="text-3xl sm:text-4xl font-bold">{services?.heading ?? "ماذا نقدم"}</h2>
+              <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{services?.description ?? "حلول متكاملة لكل من يطمح لعالم مائي استثنائي."}</p>
+            </div>
+          </Reveal>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {dbServices.map((s, i) => {
+              const Icon = s.icon ? ICONS[s.icon] : null;
+              const img = getImageUrl(s.image_path);
+              const href = s.linked_page_type === "existing_page" && s.linked_page_url
+                ? s.linked_page_url
+                : s.linked_page_type === "external_link" && s.linked_page_url
+                ? s.linked_page_url
+                : s.linked_page_type === "whatsapp"
+                ? whatsappLink(`السلام عليكم، أرغب بالاستفسار عن خدمة: ${s.title}`)
+                : `/services/${s.slug}`;
+              return (
+                <Reveal key={s.id} delay={i * 100}>
+                  <SmartLink to={href} className="group block h-full rounded-2xl glass overflow-hidden hover:-translate-y-1 transition-transform duration-500 flex flex-col">
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <img src={img} alt={s.title} onError={onImageError} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent" />
+                      {Icon && (<div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold"><Icon className="text-gold" size={18} aria-hidden /></div>)}
+                    </div>
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3 className="text-lg font-bold mb-2">{s.title}</h3>
+                      {(s.short_description || s.description) && (
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-3 line-clamp-3 flex-1">{s.short_description || s.description}</p>
+                      )}
+                      <span className="inline-flex items-center gap-1 text-xs text-gradient-gold mt-auto">اكتشف المزيد <ArrowLeft size={12} aria-hidden /></span>
+                    </div>
+                  </SmartLink>
+                </Reveal>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    ) : null,
+
+    why_us: () => whyEnabled && whyItems.length > 0 ? (
+      <section className="relative py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] items-center">
             <Reveal>
-              <div className="text-center mb-14">
-                <div className="text-xs text-gradient-gold mb-3" style={{ letterSpacing: "0.3em" }}>{services?.kicker ?? "SERVICES"}</div>
-                <h2 className="text-3xl sm:text-4xl font-bold">{services?.heading ?? "ماذا نقدم"}</h2>
-                <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{services?.description ?? "حلول متكاملة لكل من يطمح لعالم مائي استثنائي."}</p>
+              <div>
+                {why?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{why.kicker}</div>}
+                {why?.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-4">{why.heading}</h2>}
+                {why?.description && <p className="text-muted-foreground leading-relaxed mb-6">{why.description}</p>}
+                {why?.link_label && (
+                  <SmartLink to={why.link_href || "/about"} className="inline-flex items-center gap-2 text-sm text-gradient-gold">
+                    {why.link_label} <ArrowLeft size={16} aria-hidden />
+                  </SmartLink>
+                )}
               </div>
             </Reveal>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {dbServices.map((s, i) => {
-                const Icon = s.icon ? ICONS[s.icon] : null;
-                const img = getImageUrl(s.image_path);
-                const href = s.linked_page_type === "existing_page" && s.linked_page_url
-                  ? s.linked_page_url
-                  : s.linked_page_type === "external_link" && s.linked_page_url
-                  ? s.linked_page_url
-                  : s.linked_page_type === "whatsapp"
-                  ? whatsappLink(`السلام عليكم، أرغب بالاستفسار عن خدمة: ${s.title}`)
-                  : `/services/${s.slug}`;
+            <div className="grid gap-4 sm:grid-cols-2 items-stretch auto-rows-fr">
+              {whyItems.map((w, i) => {
+                const Icon = w.icon ? ICONS[w.icon] : null;
                 return (
-                  <Reveal key={s.id} delay={i * 100}>
-                    <SmartLink to={href} className="group block h-full rounded-2xl glass overflow-hidden hover:-translate-y-1 transition-transform duration-500 flex flex-col">
-                      <div className="relative aspect-[16/10] overflow-hidden">
-                        <img src={img} alt={s.title} onError={onImageError} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent" />
-                        {Icon && (
-                          <div className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-xl glass-gold">
-                            <Icon className="text-gold" size={18} aria-hidden />
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-5 flex flex-col flex-1">
-                        <h3 className="text-lg font-bold mb-2">{s.title}</h3>
-                        {(s.short_description || s.description) && (
-                          <p className="text-sm text-muted-foreground leading-relaxed mb-3 line-clamp-3 flex-1">
-                            {s.short_description || s.description}
-                          </p>
-                        )}
-                        <span className="inline-flex items-center gap-1 text-xs text-gradient-gold mt-auto">
-                          اكتشف المزيد <ArrowLeft size={12} aria-hidden />
-                        </span>
-                      </div>
-                    </SmartLink>
+                  <Reveal key={w.id} delay={i * 100} className="h-full">
+                    <div className="glass rounded-2xl p-5 hover:glass-gold transition h-full flex flex-col">
+                      {Icon && (<div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3 shrink-0"><Icon className="text-gold" size={20} aria-hidden /></div>)}
+                      <h3 className="font-bold mb-1.5">{w.title}</h3>
+                      {w.desc && <p className="text-sm text-muted-foreground leading-relaxed flex-1">{w.desc}</p>}
+                    </div>
                   </Reveal>
                 );
               })}
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+    ) : null,
 
-      {/* WHY US */}
-      {whyEnabled && whyItems.length > 0 && (
-        <section className="relative py-20">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] items-center">
+    featured_projects_header: () => fpHeaderEnabled ? (
+      <>
+        {(fpHeader?.kicker || fpHeader?.heading || fpHeader?.subtitle) && (
+          <section className="relative pt-20 sm:pt-24">
+            <div className="mx-auto max-w-7xl px-5 sm:px-6">
               <Reveal>
-                <div>
-                  {why?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{why.kicker}</div>}
-                  {why?.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-4">{why.heading}</h2>}
-                  {why?.description && <p className="text-muted-foreground leading-relaxed mb-6">{why.description}</p>}
-                  {why?.link_label && (
-                    <SmartLink to={why.link_href || "/about"} className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-                      {why.link_label} <ArrowLeft size={16} aria-hidden />
-                    </SmartLink>
-                  )}
+                <div className="text-center mb-2">
+                  {fpHeader?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{fpHeader.kicker}</div>}
+                  {fpHeader?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{fpHeader.heading}</h2>}
+                  {fpHeader?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-sm sm:text-base">{fpHeader.subtitle}</p>}
                 </div>
               </Reveal>
-              <div className="grid gap-4 sm:grid-cols-2 items-stretch auto-rows-fr">
-                {whyItems.map((w, i) => {
-                  const Icon = w.icon ? ICONS[w.icon] : null;
-                  return (
-                    <Reveal key={w.id} delay={i * 100} className="h-full">
-                      <div className="glass rounded-2xl p-5 hover:glass-gold transition h-full flex flex-col">
-                        {Icon && (
-                          <div className="grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3 shrink-0">
-                            <Icon className="text-gold" size={20} aria-hidden />
-                          </div>
-                        )}
-                        <h3 className="font-bold mb-1.5">{w.title}</h3>
-                        {w.desc && <p className="text-sm text-muted-foreground leading-relaxed flex-1">{w.desc}</p>}
-                      </div>
-                    </Reveal>
-                  );
-                })}
-              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+        <FeaturedProjectsSection projects={projects} />
+      </>
+    ) : null,
 
-      {/* FEATURED PROJECTS */}
-      <FeaturedProjectsSection projects={projects} />
-
-      {/* MAINTENANCE TEASER */}
-      <section className="relative py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-5 sm:px-6">
-          <div className="glass rounded-3xl overflow-hidden grid md:grid-cols-2 items-stretch">
-            <div className="relative h-56 md:h-auto min-h-[220px]">
-              <img src={maintenanceImg} alt="صيانة أحواض" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-l from-background/80 via-background/30 to-transparent md:bg-gradient-to-r" />
+    process: () => procEnabled && procItems.length > 0 ? (
+      <section className="relative py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal>
+            <div className="text-center mb-14">
+              {proc?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{proc.kicker}</div>}
+              {proc?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{proc.heading}</h2>}
+              {proc?.description && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{proc.description}</p>}
             </div>
-            <div className="p-6 sm:p-10 flex flex-col justify-center">
-              <div className="inline-flex items-center gap-2 text-xs tracking-widest text-gradient-gold mb-3">
-                <Wrench size={14} /> صيانة احترافية
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3">حوضك بأفضل حال طوال السنة</h2>
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">
-                باقات صيانة دورية تشمل تنظيف، فحص جودة الماء، فلاتر، إضاءة، وأسماك ونباتات. متابعة مستمرة من فريق متخصص.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <CTAButton href="/maintenance" variant="gold">احجز صيانة</CTAButton>
-                <CTAButton href={whatsappLink("أرغب بحجز صيانة لحوضي")} variant="outline">استفسار سريع</CTAButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* BUSINESS SOLUTIONS TEASER */}
-      <section className="relative py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-5 sm:px-6">
-          <div className="glass rounded-3xl overflow-hidden grid md:grid-cols-2 items-stretch">
-            <div className="p-6 sm:p-10 flex flex-col justify-center order-2 md:order-1">
-              <div className="inline-flex items-center gap-2 text-xs tracking-widest text-gradient-gold mb-3">
-                <Building2 size={14} /> حلول الأعمال
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3">أحواض للكافيهات والمكاتب والمطاعم</h2>
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">
-                نصمم تجربة بصرية فاخرة تعزز هوية مكانك وتجذب عملاءك، مع عقود صيانة كاملة وضمان تشغيلي.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <CTAButton href="/business-solutions" variant="gold">حلول الأعمال</CTAButton>
-                <CTAButton href={whatsappLink("استفسار عن حلول الأعمال لأكوا هيفن")} variant="outline">تواصل معنا</CTAButton>
-              </div>
-            </div>
-            <div className="relative h-56 md:h-auto min-h-[220px] order-1 md:order-2">
-              <img src={businessImg} alt="حلول الأعمال" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent md:bg-gradient-to-l" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PROCESS */}
-      {procEnabled && procItems.length > 0 && (
-        <section className="relative py-24">
-          <div className="mx-auto max-w-7xl px-6">
-            <Reveal>
-              <div className="text-center mb-14">
-                {proc?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{proc.kicker}</div>}
-                {proc?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{proc.heading}</h2>}
-                {proc?.description && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{proc.description}</p>}
-              </div>
-            </Reveal>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 relative">
-              {procItems.map((s, i) => {
-                const Icon = s.icon ? ICONS[s.icon] : null;
-                return (
-                  <Reveal key={s.id} delay={i * 100}>
-                    <div className="glass rounded-2xl p-6 h-full relative overflow-hidden group">
-                      <div className="absolute -top-2 -left-2 text-7xl font-black text-gradient-gold opacity-20 group-hover:opacity-40 transition">{s.number}</div>
-                      {Icon && (
-                        <div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4 relative">
-                          <Icon className="text-gold" size={22} aria-hidden />
-                        </div>
-                      )}
-                      <h3 className="text-lg font-bold mb-2 relative">{s.title}</h3>
-                      {s.desc && <p className="text-sm text-muted-foreground leading-relaxed relative">{s.desc}</p>}
-                    </div>
-                  </Reveal>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-
-
-      {/* TESTIMONIALS */}
-      {showTestimonials && (
-        <section className="relative py-24">
-          <div className="mx-auto max-w-7xl px-6">
-            <Reveal>
-              <div className="text-center mb-14">
-                {testHead?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{testHead.kicker}</div>}
-                {testHead?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{testHead.heading}</h2>}
-                {testHead?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{testHead.subtitle}</p>}
-              </div>
-            </Reveal>
-            <div className="grid gap-5 md:grid-cols-3 items-stretch">
-              {testimonials.map((t, i) => (
-                <Reveal key={t.id} delay={i * 60}>
-                  <div className="glass rounded-2xl p-6 h-full relative flex flex-col">
-                    <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
-                    <div className="flex gap-1 mb-3">
-                      {Array.from({ length: 5 }).map((_, k) => (
-                        <Star key={k} size={14} className={k < (t.rating || 5) ? "fill-gold text-gold" : "text-white/20"} aria-hidden />
-                      ))}
-                    </div>
-                    <p className="text-sm leading-relaxed text-foreground/90 mb-5 flex-1">{t.body}</p>
-                    <div className="border-t border-white/5 pt-3 flex items-center gap-3 mt-auto">
-                      <div className="h-10 w-10 rounded-full glass-gold grid place-items-center text-gold text-sm shrink-0">{(t.name || "؟").charAt(0)}</div>
-                      <div className="min-w-0">
-                        <div className="font-bold text-sm truncate">{t.name || "—"}</div>
-                      </div>
-                    </div>
+          </Reveal>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 relative">
+            {procItems.map((s, i) => {
+              const Icon = s.icon ? ICONS[s.icon] : null;
+              return (
+                <Reveal key={s.id} delay={i * 100}>
+                  <div className="glass rounded-2xl p-6 h-full relative overflow-hidden group">
+                    <div className="absolute -top-2 -left-2 text-7xl font-black text-gradient-gold opacity-20 group-hover:opacity-40 transition">{s.number}</div>
+                    {Icon && (<div className="grid h-12 w-12 place-items-center rounded-xl glass-gold mb-4 relative"><Icon className="text-gold" size={22} aria-hidden /></div>)}
+                    <h3 className="text-lg font-bold mb-2 relative">{s.title}</h3>
+                    {s.desc && <p className="text-sm text-muted-foreground leading-relaxed relative">{s.desc}</p>}
                   </div>
                 </Reveal>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+    ) : null,
 
+    maintenance_teaser: () => (maintEnabled && maintC) ? renderImageTextSplit(maintC, maintenanceImg, "صيانة أحواض") : null,
+    business_teaser: () => (bizEnabled && bizC) ? renderImageTextSplit(bizC, businessImg, "حلول الأعمال") : null,
 
-      {/* KNOWLEDGE */}
-      {knowHeadEnabled && articles.length > 0 && (
-        <section className="relative py-24">
-          <div className="mx-auto max-w-7xl px-6">
-            <Reveal>
-              <div className="flex flex-wrap items-end justify-between gap-4 mb-14">
-                <div>
-                  {knowHead?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{knowHead.kicker}</div>}
-                  {knowHead?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{knowHead.heading}</h2>}
+    testimonials_header: () => (testHeadEnabled && (testHead?.kicker || testHead?.heading || testHead?.subtitle)) ? (
+      <section className="relative pt-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal>
+            <div className="text-center mb-2">
+              {testHead?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{testHead.kicker}</div>}
+              {testHead?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{testHead.heading}</h2>}
+              {testHead?.subtitle && <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{testHead.subtitle}</p>}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+    ) : null,
+
+    homepage_testimonials: () => (homeTestEnabled && testimonials.length > 0) ? (
+      <section className="relative pb-24 pt-10">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid gap-5 md:grid-cols-3 items-stretch">
+            {testimonials.map((t, i) => (
+              <Reveal key={t.id} delay={i * 60}>
+                <div className="glass rounded-2xl p-6 h-full relative flex flex-col">
+                  <Quote className="absolute top-4 left-4 text-gold opacity-30" size={26} aria-hidden />
+                  <div className="flex gap-1 mb-3">
+                    {Array.from({ length: 5 }).map((_, k) => (
+                      <Star key={k} size={14} className={k < (t.rating || 5) ? "fill-gold text-gold" : "text-white/20"} aria-hidden />
+                    ))}
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground/90 mb-5 flex-1">{t.body}</p>
+                  <div className="border-t border-white/5 pt-3 flex items-center gap-3 mt-auto">
+                    <div className="h-10 w-10 rounded-full glass-gold grid place-items-center text-gold text-sm shrink-0">{(t.name || "؟").charAt(0)}</div>
+                    <div className="min-w-0"><div className="font-bold text-sm truncate">{t.name || "—"}</div></div>
+                  </div>
                 </div>
-                <Link to="/knowledge" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
-                  {knowHead?.link_label || "كل المقالات"} <ArrowLeft size={16} aria-hidden />
-                </Link>
-              </div>
-            </Reveal>
-            <div className="grid gap-6 md:grid-cols-3">
-              {articles.map((a, i) => {
-                const img = a.cover_path ? publicUrl(a.cover_path) : styledAquarium;
-                return (
-                  <Reveal key={a.slug} delay={i * 120}>
-                    <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
-                      <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
-                        <div className="overflow-hidden">
-                          <img src={img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                        </div>
-                        <div className="p-6">
-                          <h3 className="text-lg font-bold mb-2">{a.title}</h3>
-                          {a.excerpt && <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>}
-                        </div>
-                      </article>
-                    </Link>
-                  </Reveal>
-                );
-              })}
-            </div>
+              </Reveal>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+    ) : null,
 
-      {/* FAQ */}
-      {faqEnabled && faqItems.length > 0 && (
-        <section className="relative py-24">
-          <div className="mx-auto max-w-3xl px-6">
-            <Reveal>
-              <div className="text-center mb-12">
-                {faqC?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{faqC.kicker}</div>}
-                {faqC?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{faqC.heading}</h2>}
+    knowledge_header: () => (knowHeadEnabled && articles.length > 0) ? (
+      <section className="relative py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal>
+            <div className="flex flex-wrap items-end justify-between gap-4 mb-14">
+              <div>
+                {knowHead?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{knowHead.kicker}</div>}
+                {knowHead?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{knowHead.heading}</h2>}
               </div>
-            </Reveal>
-            <div className="space-y-3">
-              {faqItems.map((f, i) => (
-                <Reveal key={f.id} delay={i * 60}>
-                  <div className="glass rounded-2xl overflow-hidden">
-                    <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between gap-4 p-5 text-right" aria-expanded={openFaq === i}>
-                      <span className="font-bold text-sm md:text-base">{f.q}</span>
-                      <span className="grid place-items-center h-8 w-8 rounded-lg glass-gold flex-shrink-0" aria-hidden>
-                        {openFaq === i ? <Minus size={14} /> : <Plus size={14} />}
-                      </span>
-                    </button>
-                    <div className="grid transition-all duration-300 ease-out" style={{ gridTemplateRows: openFaq === i ? "1fr" : "0fr" }}>
+              <Link to="/knowledge" className="inline-flex items-center gap-2 text-sm text-gradient-gold">
+                {knowHead?.link_label || "كل المقالات"} <ArrowLeft size={16} aria-hidden />
+              </Link>
+            </div>
+          </Reveal>
+          <div className="grid gap-6 md:grid-cols-3">
+            {articles.map((a, i) => {
+              const img = a.cover_path ? publicUrl(a.cover_path) : styledAquarium;
+              return (
+                <Reveal key={a.slug} delay={i * 120}>
+                  <Link to="/knowledge/$slug" params={{ slug: a.slug }} className="block">
+                    <article className="glass rounded-2xl overflow-hidden group hover:glass-gold transition-all h-full">
                       <div className="overflow-hidden">
-                        <p className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+                        <img src={img} alt={a.title} width={1024} height={768} loading="lazy" className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                       </div>
+                      <div className="p-6">
+                        <h3 className="text-lg font-bold mb-2">{a.title}</h3>
+                        {a.excerpt && <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>}
+                      </div>
+                    </article>
+                  </Link>
+                </Reveal>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    ) : null,
+
+    faq: () => (faqEnabled && faqItems.length > 0) ? (
+      <section className="relative py-24">
+        <div className="mx-auto max-w-3xl px-6">
+          <Reveal>
+            <div className="text-center mb-12">
+              {faqC?.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{faqC.kicker}</div>}
+              {faqC?.heading && <h2 className="text-3xl sm:text-4xl font-bold">{faqC.heading}</h2>}
+            </div>
+          </Reveal>
+          <div className="space-y-3">
+            {faqItems.map((f, i) => (
+              <Reveal key={f.id} delay={i * 60}>
+                <div className="glass rounded-2xl overflow-hidden">
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between gap-4 p-5 text-right" aria-expanded={openFaq === i}>
+                    <span className="font-bold text-sm md:text-base">{f.q}</span>
+                    <span className="grid place-items-center h-8 w-8 rounded-lg glass-gold flex-shrink-0" aria-hidden>
+                      {openFaq === i ? <Minus size={14} /> : <Plus size={14} />}
+                    </span>
+                  </button>
+                  <div className="grid transition-all duration-300 ease-out" style={{ gridTemplateRows: openFaq === i ? "1fr" : "0fr" }}>
+                    <div className="overflow-hidden">
+                      <p className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
                     </div>
                   </div>
-                </Reveal>
-              ))}
-            </div>
+                </div>
+              </Reveal>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+    ) : null,
 
-      {/* CTA */}
-      {ctaEnabled && (ctaC?.heading || ctaC?.description) && (
-        <section className="relative py-20">
-          <div className="mx-auto max-w-5xl px-6">
-            <Reveal>
-              <div className="gradient-border rounded-3xl p-10 md:p-14 text-center relative overflow-hidden">
-                <div className="light-rays" aria-hidden />
-                <div className="relative">
-                  {ctaC?.heading && <h2 className="text-3xl md:text-4xl font-bold mb-4">{ctaC.heading}</h2>}
-                  {ctaC?.description && <p className="text-muted-foreground mb-8 max-w-xl mx-auto">{ctaC.description}</p>}
-                  <div className="flex flex-wrap justify-center gap-3">
-                    {ctaC?.primary_label && (
-                      <CTAButton href={ctaC.primary_href} variant="gold">{ctaC.primary_label}</CTAButton>
-                    )}
-                    {ctaC?.secondary_label && (
-                      <CTAButton href={ctaC.secondary_href} variant="outline">{ctaC.secondary_label}</CTAButton>
-                    )}
-                  </div>
+    cta: () => (ctaEnabled && (ctaC?.heading || ctaC?.description)) ? (
+      <section className="relative py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <Reveal>
+            <div className="gradient-border rounded-3xl p-10 md:p-14 text-center relative overflow-hidden">
+              <div className="light-rays" aria-hidden />
+              <div className="relative">
+                {ctaC?.heading && <h2 className="text-3xl md:text-4xl font-bold mb-4">{ctaC.heading}</h2>}
+                {ctaC?.description && <p className="text-muted-foreground mb-8 max-w-xl mx-auto">{ctaC.description}</p>}
+                <div className="flex flex-wrap justify-center gap-3">
+                  {ctaC?.primary_label && (<CTAButton href={ctaC.primary_href} variant="gold">{ctaC.primary_label}</CTAButton>)}
+                  {ctaC?.secondary_label && (<CTAButton href={ctaC.secondary_href} variant="outline">{ctaC.secondary_label}</CTAButton>)}
                 </div>
               </div>
-            </Reveal>
-          </div>
-        </section>
-      )}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+    ) : null,
 
-      {/* FINAL WHATSAPP CTA */}
+    final_whatsapp_cta: () => (finalCtaEnabled && finalCta) ? (
       <section className="relative py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-5 sm:px-6">
           <div className="gradient-border rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
             <div className="light-rays" aria-hidden />
             <div className="relative">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">جاهز تبدأ مشروعك المائي؟</h2>
-              <p className="text-sm sm:text-base text-muted-foreground mb-7 max-w-lg mx-auto">
-                تواصل معنا الآن واحصل على استشارة مجانية وعرض سعر مخصص لمشروعك.
-              </p>
+              {finalCta.heading && <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">{finalCta.heading}</h2>}
+              {finalCta.description && (
+                <p className="text-sm sm:text-base text-muted-foreground mb-7 max-w-lg mx-auto">{finalCta.description}</p>
+              )}
               <a
-                href={whatsappLink()}
+                href={whatsappLink(finalCta.whatsapp_message || undefined)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold text-white shadow-deep transition-transform hover:scale-105"
                 style={{ background: "linear-gradient(135deg, #25D366, #128C7E)" }}
               >
-                <MessageCircle size={20} /> تواصل معنا عبر واتساب
+                <MessageCircle size={20} /> {finalCta.button_label || "تواصل معنا عبر واتساب"}
               </a>
             </div>
           </div>
         </div>
       </section>
+    ) : null,
+  };
 
-
+  return (
+    <>
+      <CustomerHomeCard />
+      {orderedSections.filter((s) => s.enabled).map((s) => {
+        const R = renderers[s.section_key];
+        if (!R) return null;
+        return <React.Fragment key={s.section_key}>{R()}</React.Fragment>;
+      })}
     </>
+  );
+}
+
+function renderImageTextSplit(c: ImageTextSplitContent, fallbackImg: string, alt: string) {
+  const img = c.image_path ? publicUrl(c.image_path) : fallbackImg;
+  const Icon = c.kicker_icon ? ICONS[c.kicker_icon] : null;
+  const isLeft = (c.image_side ?? "left") === "left";
+  return (
+    <section className="relative py-16 sm:py-20">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6">
+        <div className="glass rounded-3xl overflow-hidden grid md:grid-cols-2 items-stretch">
+          <div className={`relative h-56 md:h-auto min-h-[220px] ${isLeft ? "" : "order-1 md:order-2"}`}>
+            <img src={img} alt={alt} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+            <div className={`absolute inset-0 ${isLeft ? "bg-gradient-to-l from-background/80 via-background/30 to-transparent md:bg-gradient-to-r" : "bg-gradient-to-r from-background/80 via-background/30 to-transparent md:bg-gradient-to-l"}`} />
+          </div>
+          <div className={`p-6 sm:p-10 flex flex-col justify-center ${isLeft ? "" : "order-2 md:order-1"}`}>
+            {(c.kicker || Icon) && (
+              <div className="inline-flex items-center gap-2 text-xs tracking-widest text-gradient-gold mb-3">
+                {Icon && <Icon size={14} />} {c.kicker}
+              </div>
+            )}
+            {c.heading && <h2 className="text-2xl sm:text-3xl font-bold mb-3">{c.heading}</h2>}
+            {c.description && (
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">{c.description}</p>
+            )}
+            <div className="flex flex-wrap gap-3">
+              {c.primary_label && (<CTAButton href={c.primary_href || "#"} variant="gold">{c.primary_label}</CTAButton>)}
+              {c.secondary_label && (<CTAButton href={whatsappLink(c.secondary_whatsapp || undefined)} variant="outline">{c.secondary_label}</CTAButton>)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
