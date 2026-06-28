@@ -49,7 +49,7 @@ function ProductDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("aqh_products" as any)
-        .select("id,sku,name_ar,category,category_id,image_url,current_qty,cost,price,restock_type,is_active,salla_raw")
+        .select("id,sku,name_ar,category,category_id,image_url,current_qty,cost,price,restock_type,is_active,salla_raw,all_images")
         .eq("sku", sku)
         .maybeSingle();
       if (error) throw error;
