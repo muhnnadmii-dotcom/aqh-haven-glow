@@ -746,6 +746,56 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
     onError: (e: any) => toast.error(e?.message ?? "فشل التحديث"),
   });
 
+  const deleteM = useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from("aqh_restock_requests").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف الطلب");
+      setExpanded(null);
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["aqh_restock_requests"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحذف"),
+  });
+
+  const saveEditM = useMutation({
+    mutationFn: async (args: { id: number; items: RestockItem[]; notes: string; source: string | null }) => {
+      const cleaned = args.items.filter((it) => (it.qty ?? 0) > 0);
+      if (cleaned.length === 0) throw new Error("لا يمكن حفظ طلب بدون أصناف");
+      const patch: Record<string, unknown> = {
+        items: cleaned as unknown as never,
+        items_count: cleaned.length,
+        notes: args.notes.trim() || null,
+      };
+      if (args.source === "supplier_catalog") {
+        const subtotal = cleaned.reduce((s, it) => s + (Number(it.cost) || 0) * (it.qty || 0), 0);
+        const vat = +(subtotal * 0.15).toFixed(2);
+        patch.subtotal = +subtotal.toFixed(2);
+        patch.vat = vat;
+        patch.total = +(subtotal + vat).toFixed(2);
+      }
+      const { error } = await supabase.from("aqh_restock_requests").update(patch).eq("id", args.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حفظ التعديلات");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["aqh_restock_requests"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحفظ"),
+  });
+
+  function startEdit(r: RestockRequest) {
+    setEditing(r.id);
+    setExpanded(r.id);
+    setDraftItems(r.items.map((it) => ({ ...it })));
+    setDraftNotes(r.notes ?? "");
+  }
+
+
+
   function exportCsv(r: RestockRequest) {
     const hasCost = r.items.some((it) => it.cost != null);
     const headers = hasCost
