@@ -155,10 +155,17 @@ function ProductsPage() {
     onError: (e: any) => toast.error(e?.message ?? "فشل الحذف"),
   });
 
-  const allChecked = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+  const allChecked = paged.length > 0 && paged.every((p) => selected.has(p.id));
   function toggleAll() {
-    if (allChecked) setSelected(new Set());
-    else setSelected(new Set(filtered.map((p) => p.id)));
+    if (allChecked) {
+      const n = new Set(selected);
+      paged.forEach((p) => n.delete(p.id));
+      setSelected(n);
+    } else {
+      const n = new Set(selected);
+      paged.forEach((p) => n.add(p.id));
+      setSelected(n);
+    }
   }
   function toggleOne(id: number) {
     setSelected((s) => {
