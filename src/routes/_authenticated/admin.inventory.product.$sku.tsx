@@ -236,3 +236,114 @@ function Field({ label, children, full }: { label: string; children: React.React
     </label>
   );
 }
+
+function GallerySection({
+  allImages, currentMain, onSetMain, onAddImage,
+}: {
+  allImages: string[];
+  currentMain: string;
+  onSetMain: (url: string) => void;
+  onAddImage: (url: string) => void;
+}) {
+  const [selected, setSelected] = useState<string>(currentMain || allImages[0] || "");
+  const [newUrl, setNewUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (!selected && (currentMain || allImages[0])) {
+      setSelected(currentMain || allImages[0]);
+    }
+  }, [currentMain, allImages, selected]);
+
+  const list = allImages.length > 0 ? allImages : (currentMain ? [currentMain] : []);
+
+  return (
+    <section className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="text-sm font-semibold text-gold">معرض الصور ({list.length})</div>
+        <div className="text-[11px] text-muted-foreground">
+          اختر صورة ثم اضغط «تعيين كرئيسية» — الرئيسية الحالية معلّمة بـ ⭐
+        </div>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="text-center text-xs text-muted-foreground py-6 border border-dashed border-white/10 rounded-lg">
+          لا توجد صور محفوظة. الصق رابطاً أدناه لإضافة صورة.
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            {list.map((url, i) => {
+              const isMain = currentMain === url;
+              const isSelected = selected === url;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setSelected(url)}
+                  className={`relative aspect-square rounded-lg overflow-hidden border-2 transition ${isSelected ? "border-gold ring-2 ring-gold/40" : "border-white/10 hover:border-white/30"}`}
+                  title={url}
+                >
+                  <img
+                    src={url}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      img.style.display = "none";
+                      const fb = img.nextElementSibling as HTMLElement | null;
+                      if (fb) fb.style.display = "grid";
+                    }}
+                  />
+                  <span style={{ display: "none" }} className="absolute inset-0 place-items-center text-3xl bg-white/5">🐟</span>
+                  {isMain && (
+                    <span className="absolute top-1 start-1 bg-gold text-black text-[10px] font-bold rounded px-1.5 py-0.5">⭐ رئيسية</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="text-[11px] text-muted-foreground truncate max-w-[60%]" dir="ltr">
+              {selected || "—"}
+            </div>
+            <Button
+              size="sm"
+              type="button"
+              disabled={!selected || selected === currentMain}
+              onClick={() => onSetMain(selected)}
+              className="bg-gold text-black hover:bg-gold/90"
+            >
+              تعيين كرئيسية
+            </Button>
+          </div>
+        </>
+      )}
+
+      <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+        <Input
+          dir="ltr"
+          placeholder="https://… (رابط صورة جديد)"
+          value={newUrl}
+          onChange={(e) => setNewUrl(e.target.value)}
+          className="flex-1"
+        />
+        <Button
+          size="sm"
+          type="button"
+          variant="outline"
+          disabled={!newUrl.trim().startsWith("http")}
+          onClick={() => {
+            const u = newUrl.trim();
+            if (!u) return;
+            onAddImage(u);
+            setNewUrl("");
+          }}
+        >
+          إضافة
+        </Button>
+      </div>
+    </section>
+  );
+}
