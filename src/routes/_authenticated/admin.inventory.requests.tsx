@@ -692,6 +692,30 @@ function RequestsListTab() {
   });
   const supplierNames = suppliersQ.data ?? {};
 
+  // Live product lookup by SKU — single source of truth for image/name/qty/cost.
+  // Any edit/delete on aqh_products is reflected across all requests automatically.
+  const skus = useMemo(() => {
+    const s = new Set<string>();
+    (requestsQ.data ?? []).forEach((r) => r.items.forEach((it) => it.sku && s.add(it.sku)));
+    return Array.from(s);
+  }, [requestsQ.data]);
+
+  const liveProductsQ = useQuery({
+    queryKey: ["aqh_products_by_sku", skus.join("|")],
+    enabled: skus.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("aqh_products")
+        .select("sku,name_ar,image_url,current_qty,cost,is_active")
+        .in("sku", skus);
+      if (error) throw error;
+      const m: Record<string, { name_ar: string; image_url: string | null; current_qty: number | null; cost: number | null; is_active: boolean }> = {};
+      (data ?? []).forEach((p: any) => { m[p.sku] = p; });
+      return m;
+    },
+  });
+  const liveProducts = liveProductsQ.data ?? {};
+
   const filtered = useMemo(() => {
     return (requestsQ.data ?? []).filter((r) => {
       if (kindF !== "all" && r.request_kind !== kindF) return false;
@@ -876,9 +900,11 @@ function RequestsListTab() {
                     <table className="w-full text-sm">
                       <thead className="bg-white/[0.03] text-xs text-muted-foreground">
                         <tr>
+                          <th className="text-right p-2 font-normal w-14"></th>
                           <th className="text-right p-2 font-normal">المنتج</th>
                           <th className="text-right p-2 font-normal w-24">SKU</th>
                           <th className="text-left p-2 font-normal w-20">الكمية</th>
+                          <th className="text-left p-2 font-normal w-20">المتوفر</th>
                           {r.source === "supplier_catalog" && (
                             <>
                               <th className="text-left p-2 font-normal w-24">التكلفة</th>
@@ -888,36 +914,70 @@ function RequestsListTab() {
                         </tr>
                       </thead>
                       <tbody>
-                        {r.items.map((it, i) => (
-                          <tr key={i} className="border-t border-white/5 hover:bg-white/[0.03]">
-                            <td className="p-2">
-                              <Link
-                                to="/admin/inventory/product/$sku"
-                                params={{ sku: it.sku }}
-                                className="hover:text-gold transition inline-flex items-center gap-1"
-                                title="فتح صفحة المنتج"
-                              >
-                                {it.name_ar}
-                              </Link>
-                            </td>
-                            <td className="p-2 text-xs text-muted-foreground" dir="ltr">
-                              <Link
-                                to="/admin/inventory/product/$sku"
-                                params={{ sku: it.sku }}
-                                className="font-mono hover:text-gold transition"
-                              >
-                                {it.sku}
-                              </Link>
-                            </td>
-                            <td className="p-2 text-left text-gold font-medium">× {it.qty}</td>
-                            {r.source === "supplier_catalog" && (
-                              <>
-                                <td className="p-2 text-left text-xs font-mono">{it.cost != null ? SAR(Number(it.cost)) : "—"}</td>
-                                <td className="p-2 text-left text-xs font-mono">{it.cost != null ? SAR(Number(it.cost) * it.qty) : "—"}</td>
-                              </>
-                            )}
-                          </tr>
-                        ))}
+                        {r.items.map((it, i) => {
+                          const live = liveProducts[it.sku];
+                          const name = live?.name_ar ?? it.name_ar;
+                          const image = live?.image_url ?? null;
+                          const cost = live?.cost ?? it.cost ?? null;
+                          const deleted = !liveProductsQ.isLoading && skus.length > 0 && !live;
+                          return (
+                            <tr key={i} className="border-t border-white/5 hover:bg-white/[0.03]">
+                              <td className="p-2">
+                                <Link
+                                  to="/admin/inventory/product/$sku"
+                                  params={{ sku: it.sku }}
+                                  className="block w-10 h-10 rounded-md overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center text-base"
+                                  title="فتح صفحة المنتج"
+                                >
+                                  {image ? (
+                                    <img src={image} alt={name} loading="lazy" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span aria-hidden>🐟</span>
+                                  )}
+                                </Link>
+                              </td>
+                              <td className="p-2">
+                                <Link
+                                  to="/admin/inventory/product/$sku"
+                                  params={{ sku: it.sku }}
+                                  className="hover:text-gold transition inline-flex items-center gap-2"
+                                  title="فتح صفحة المنتج"
+                                >
+                                  <span>{name}</span>
+                                  {deleted && (
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-300 border border-red-500/30">
+                                      محذوف
+                                    </span>
+                                  )}
+                                  {live && !live.is_active && (
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground border border-white/10">
+                                      غير نشط
+                                    </span>
+                                  )}
+                                </Link>
+                              </td>
+                              <td className="p-2 text-xs text-muted-foreground" dir="ltr">
+                                <Link
+                                  to="/admin/inventory/product/$sku"
+                                  params={{ sku: it.sku }}
+                                  className="font-mono hover:text-gold transition"
+                                >
+                                  {it.sku}
+                                </Link>
+                              </td>
+                              <td className="p-2 text-left text-gold font-medium">× {it.qty}</td>
+                              <td className="p-2 text-left text-xs font-mono text-muted-foreground">
+                                {live?.current_qty != null ? live.current_qty : "—"}
+                              </td>
+                              {r.source === "supplier_catalog" && (
+                                <>
+                                  <td className="p-2 text-left text-xs font-mono">{cost != null ? SAR(Number(cost)) : "—"}</td>
+                                  <td className="p-2 text-left text-xs font-mono">{cost != null ? SAR(Number(cost) * it.qty) : "—"}</td>
+                                </>
+                              )}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                     {r.source === "supplier_catalog" && r.total != null && (
