@@ -1,0 +1,1 @@
+TRUNCATE TABLE public.aqh_products RESTART IDENTITY CASCADE;
