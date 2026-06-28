@@ -234,7 +234,11 @@ function ProductsPage() {
                       </button>
                     </td>
                     <td className="px-3 py-2">
-                      <div className="flex items-center gap-2">
+                      <Link
+                        to="/admin/inventory/product/$sku"
+                        params={{ sku: p.sku }}
+                        className="flex items-center gap-2 hover:text-gold transition"
+                      >
                         {p.image_url ? (
                           <img src={p.image_url} alt="" loading="lazy" className="w-8 h-8 object-cover rounded border border-white/10" />
                         ) : <span className="w-8 h-8 grid place-items-center text-base">🐟</span>}
@@ -242,7 +246,7 @@ function ProductsPage() {
                           <div className="font-medium truncate">{p.name_ar}</div>
                           {!p.is_active && <span className="text-[9px] text-muted-foreground">معطّل</span>}
                         </div>
-                      </div>
+                      </Link>
                     </td>
                     <td className="px-3 py-2 font-mono text-[11px] hidden md:table-cell" dir="ltr">{p.sku}</td>
                     <td className="px-3 py-2 hidden lg:table-cell text-muted-foreground">{cat?.name_ar ?? p.category ?? "—"}</td>
