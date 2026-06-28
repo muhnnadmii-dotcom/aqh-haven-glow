@@ -57,6 +57,9 @@ function ProductsPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [linksOpen, setLinksOpen] = useState<Product | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
 
   const productsQ = useQuery({
     queryKey: ["aqh_products_admin"],
