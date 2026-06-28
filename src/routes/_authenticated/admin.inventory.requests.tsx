@@ -776,7 +776,7 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
         patch.vat = vat;
         patch.total = +(subtotal + vat).toFixed(2);
       }
-      const { error } = await supabase.from("aqh_restock_requests").update(patch).eq("id", args.id);
+      const { error } = await supabase.from("aqh_restock_requests").update(patch as never).eq("id", args.id);
       if (error) throw error;
     },
     onSuccess: () => {
