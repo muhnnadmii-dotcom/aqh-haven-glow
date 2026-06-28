@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Save, Plus, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import {
   fetchHomeSections, saveHomeSection, genId, ICON_NAMES,
+  fetchOrderedHomeSections, updateSectionOrder, setSectionEnabled,
+  SECTION_LABELS,
   type HeroContent, type StatItem, type ExploreContent, type ExploreItem,
   type ServicesContent, type ServiceItem,
   type WhyUsContent, type WhyUsItem,
@@ -12,6 +14,8 @@ import {
   type CtaContent, type SectionHeader,
   type PartnersContent, type PartnerItem,
   type HomeTestimonialsContent, type HomeTestimonialItem,
+  type ImageTextSplitContent, type WhatsappCtaContent,
+  type OrderedSection,
 } from "@/lib/home-sections";
 import { Star } from "lucide-react";
 
@@ -22,13 +26,18 @@ export const Route = createFileRoute("/_authenticated/admin/design/")({
 });
 
 const TABS = [
+  { key: "ordering", label: "ترتيب وإظهار" },
   { key: "hero", label: "البانر" },
   { key: "explore", label: "استكشف" },
   { key: "services", label: "ماذا نقدم" },
   { key: "why_us", label: "لماذا نحن" },
+  { key: "featured_projects_header", label: "هيدر المشاريع" },
   { key: "process", label: "كيف نعمل" },
+  { key: "maintenance_teaser", label: "شريط الصيانة" },
+  { key: "business_teaser", label: "شريط حلول الأعمال" },
   { key: "faq", label: "الأسئلة الشائعة" },
   { key: "cta", label: "CTA الأخير" },
+  { key: "final_whatsapp_cta", label: "شريط الواتساب النهائي" },
   { key: "partners", label: "الشركاء" },
   { key: "headers", label: "عناوين أقسام" },
   { key: "homepage_testimonials", label: "تقييمات الرئيسية (3)" },
@@ -42,6 +51,12 @@ const DEFAULT_HERO: HeroContent = {
   image_path: "", image_path_mobile: "", mobile_image_enabled: false, overlay_enabled: true, overlay_opacity: 0.6,
   stats: [],
 };
+const DEFAULT_IMG_SPLIT: ImageTextSplitContent = {
+  kicker: "", kicker_icon: null, heading: "", description: "",
+  image_path: "", image_side: "left",
+  primary_label: "", primary_href: "", secondary_label: "", secondary_whatsapp: "",
+};
+const DEFAULT_WA_CTA: WhatsappCtaContent = { heading: "", description: "", button_label: "تواصل معنا عبر واتساب", whatsapp_message: "" };
 const DEFAULT_WHY: WhyUsContent = { kicker: "", heading: "", description: "", link_label: "", link_href: "", items: [] };
 const DEFAULT_PROCESS: ProcessContent = { kicker: "", heading: "", description: "", items: [] };
 const DEFAULT_FAQ: FaqContent = { kicker: "", heading: "", items: [] };
@@ -58,7 +73,7 @@ function normalizeHomeTest(c?: HomeTestimonialsContent): HomeTestimonialsContent
 
 
 function DesignAdmin() {
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("hero");
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("ordering");
   const [loading, setLoading] = useState(true);
   const [hero, setHero] = useState<{ enabled: boolean; content: HeroContent }>({ enabled: true, content: DEFAULT_HERO });
   const [explore, setExplore] = useState<{ enabled: boolean; content: ExploreContent }>({ enabled: true, content: { kicker: "", heading: "", subtitle: "", items: [] } });
@@ -71,8 +86,17 @@ function DesignAdmin() {
   const [knowHeader, setKnowHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
   const [partners, setPartners] = useState<{ enabled: boolean; content: PartnersContent }>({ enabled: true, content: DEFAULT_PARTNERS });
   const [homeTest, setHomeTest] = useState<{ enabled: boolean; content: HomeTestimonialsContent }>({ enabled: true, content: DEFAULT_HOME_TEST });
+  const [fpHeader, setFpHeader] = useState<{ enabled: boolean; content: SectionHeader }>({ enabled: true, content: DEFAULT_HEADER });
+  const [maintenance, setMaintenance] = useState<{ enabled: boolean; content: ImageTextSplitContent }>({ enabled: true, content: DEFAULT_IMG_SPLIT });
+  const [business, setBusiness] = useState<{ enabled: boolean; content: ImageTextSplitContent }>({ enabled: true, content: DEFAULT_IMG_SPLIT });
+  const [finalWa, setFinalWa] = useState<{ enabled: boolean; content: WhatsappCtaContent }>({ enabled: true, content: DEFAULT_WA_CTA });
+  const [orderedList, setOrderedList] = useState<OrderedSection[]>([]);
   const [saving, setSaving] = useState(false);
 
+  const reloadOrdered = async () => {
+    const list = await fetchOrderedHomeSections();
+    setOrderedList(list);
+  };
 
   useEffect(() => {
     (async () => {
@@ -89,7 +113,11 @@ function DesignAdmin() {
         if (s.knowledge_header) setKnowHeader({ enabled: s.knowledge_header.enabled, content: { ...DEFAULT_HEADER, ...s.knowledge_header.content } });
         if (s.partners) setPartners({ enabled: s.partners.enabled, content: { ...DEFAULT_PARTNERS, ...s.partners.content } });
         if (s.homepage_testimonials) setHomeTest({ enabled: s.homepage_testimonials.enabled, content: normalizeHomeTest(s.homepage_testimonials.content) });
-
+        if (s.featured_projects_header) setFpHeader({ enabled: s.featured_projects_header.enabled, content: { ...DEFAULT_HEADER, ...s.featured_projects_header.content } });
+        if (s.maintenance_teaser) setMaintenance({ enabled: s.maintenance_teaser.enabled, content: { ...DEFAULT_IMG_SPLIT, ...s.maintenance_teaser.content } });
+        if (s.business_teaser) setBusiness({ enabled: s.business_teaser.enabled, content: { ...DEFAULT_IMG_SPLIT, ...s.business_teaser.content } });
+        if (s.final_whatsapp_cta) setFinalWa({ enabled: s.final_whatsapp_cta.enabled, content: { ...DEFAULT_WA_CTA, ...s.final_whatsapp_cta.content } });
+        await reloadOrdered();
       } catch (e: any) { toast.error(e?.message ?? "فشل التحميل"); }
       finally { setLoading(false); }
     })();
@@ -106,6 +134,10 @@ function DesignAdmin() {
       else if (tab === "faq") await saveHomeSection("faq", faq.enabled, faq.content);
       else if (tab === "cta") await saveHomeSection("cta", cta.enabled, cta.content);
       else if (tab === "partners") await saveHomeSection("partners", partners.enabled, partners.content);
+      else if (tab === "featured_projects_header") await saveHomeSection("featured_projects_header", fpHeader.enabled, fpHeader.content);
+      else if (tab === "maintenance_teaser") await saveHomeSection("maintenance_teaser", maintenance.enabled, maintenance.content);
+      else if (tab === "business_teaser") await saveHomeSection("business_teaser", business.enabled, business.content);
+      else if (tab === "final_whatsapp_cta") await saveHomeSection("final_whatsapp_cta", finalWa.enabled, finalWa.content);
       else if (tab === "headers") {
         await saveHomeSection("testimonials_header", testHeader.enabled, testHeader.content);
         await saveHomeSection("knowledge_header", knowHeader.enabled, knowHeader.content);
@@ -113,7 +145,7 @@ function DesignAdmin() {
       else if (tab === "homepage_testimonials") {
         await saveHomeSection("homepage_testimonials", homeTest.enabled, homeTest.content);
       }
-
+      await reloadOrdered();
       toast.success("تم الحفظ");
     } catch (e: any) { toast.error(e?.message ?? "فشل الحفظ"); }
     finally { setSaving(false); }
@@ -125,13 +157,15 @@ function DesignAdmin() {
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold">تصميم المتجر</h1>
-          <p className="text-sm text-muted-foreground mt-1">تعديل محتوى الصفحة الرئيسية مباشرةً.</p>
+          <h1 className="text-3xl font-bold">تصميم الصفحة الرئيسية</h1>
+          <p className="text-sm text-muted-foreground mt-1">تحكم كامل بمحتوى وترتيب وإظهار كل أقسام الرئيسية.</p>
         </div>
-        <button onClick={save} disabled={saving} className="btn-gold rounded-xl px-5 py-2.5 text-sm flex items-center gap-2 disabled:opacity-50">
-          {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-          حفظ التغييرات
-        </button>
+        {tab !== "ordering" && (
+          <button onClick={save} disabled={saving} className="btn-gold rounded-xl px-5 py-2.5 text-sm flex items-center gap-2 disabled:opacity-50">
+            {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+            حفظ التغييرات
+          </button>
+        )}
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -143,13 +177,20 @@ function DesignAdmin() {
         ))}
       </div>
 
+      {tab === "ordering" && <SectionsOrderingEditor list={orderedList} onChanged={reloadOrdered} />}
       {tab === "hero" && <HeroEditor value={hero} onChange={setHero} />}
       {tab === "explore" && <ExploreEditor value={explore} onChange={setExplore} />}
       {tab === "services" && <ServicesEditor value={services} onChange={setServices} />}
       {tab === "why_us" && <WhyUsEditor value={whyUs} onChange={setWhyUs} />}
+      {tab === "featured_projects_header" && (
+        <HeaderEditor title="هيدر قسم المشاريع المميزة" value={fpHeader} onChange={setFpHeader} />
+      )}
       {tab === "process" && <ProcessEditor value={processS} onChange={setProcessS} />}
+      {tab === "maintenance_teaser" && <ImageTextSplitEditor title="شريط الصيانة" value={maintenance} onChange={setMaintenance} folder="home/maintenance" />}
+      {tab === "business_teaser" && <ImageTextSplitEditor title="شريط حلول الأعمال" value={business} onChange={setBusiness} folder="home/business" />}
       {tab === "faq" && <FaqEditor value={faq} onChange={setFaq} />}
       {tab === "cta" && <CtaEditor value={cta} onChange={setCta} />}
+      {tab === "final_whatsapp_cta" && <WhatsappCtaEditor value={finalWa} onChange={setFinalWa} />}
       {tab === "partners" && <PartnersEditor value={partners} onChange={setPartners} />}
       {tab === "headers" && (
         <div className="space-y-4">
@@ -162,6 +203,126 @@ function DesignAdmin() {
     </div>
   );
 }
+
+/* ---------- SECTIONS ORDERING & VISIBILITY ---------- */
+function SectionsOrderingEditor({ list, onChanged }: { list: OrderedSection[]; onChanged: () => Promise<void> }) {
+  const [working, setWorking] = useState(false);
+  const [items, setItems] = useState<OrderedSection[]>(list);
+  useEffect(() => { setItems(list); }, [list]);
+
+  const move = async (idx: number, dir: -1 | 1) => {
+    const next = [...items];
+    const swap = next[idx + dir];
+    if (!swap) return;
+    [next[idx], next[idx + dir]] = [next[idx + dir], next[idx]];
+    // assign fresh sort_orders 10, 20, 30 ...
+    const updates = next.map((s, i) => ({ section_key: s.section_key, sort_order: (i + 1) * 10 }));
+    setItems(next.map((s, i) => ({ ...s, sort_order: (i + 1) * 10 })));
+    setWorking(true);
+    try {
+      await updateSectionOrder(updates);
+      toast.success("تم تحديث الترتيب");
+      await onChanged();
+    } catch (e: any) { toast.error(e?.message ?? "فشل التحديث"); }
+    finally { setWorking(false); }
+  };
+
+  const toggleVisible = async (section_key: string, current: boolean) => {
+    setItems((prev) => prev.map((s) => s.section_key === section_key ? { ...s, enabled: !current } : s));
+    setWorking(true);
+    try {
+      await setSectionEnabled(section_key, !current);
+      toast.success(!current ? "تم إظهار القسم" : "تم إخفاء القسم");
+      await onChanged();
+    } catch (e: any) { toast.error(e?.message ?? "فشل التحديث"); }
+    finally { setWorking(false); }
+  };
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground glass rounded-xl p-3">
+        رتب الأقسام بالأسهم، أو أخفِ/أظهر أي قسم بضغطة. التغييرات تنعكس فورًا على الصفحة الرئيسية.
+      </p>
+      <div className="grid gap-2">
+        {items.map((s, i) => (
+          <div key={s.section_key} className="glass rounded-2xl px-4 py-3 flex items-center gap-3">
+            <div className="text-xs text-muted-foreground font-mono w-10 shrink-0">#{i + 1}</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-sm truncate">{SECTION_LABELS[s.section_key] ?? s.section_key}</div>
+              <div className="text-[11px] text-muted-foreground font-mono">{s.section_key}</div>
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <IconBtn onClick={() => move(i, -1)} title="أعلى"><ArrowUp size={14} /></IconBtn>
+              <IconBtn onClick={() => move(i, 1)} title="أسفل"><ArrowDown size={14} /></IconBtn>
+              <IconBtn onClick={() => toggleVisible(s.section_key, s.enabled)} title={s.enabled ? "إخفاء" : "إظهار"}>
+                {s.enabled ? <Eye size={14} /> : <EyeOff size={14} className="text-red-400" />}
+              </IconBtn>
+            </div>
+          </div>
+        ))}
+      </div>
+      {working && <div className="text-xs text-muted-foreground">جاري الحفظ...</div>}
+    </div>
+  );
+}
+
+/* ---------- IMAGE-TEXT SPLIT EDITOR (used by Maintenance & Business teasers) ---------- */
+function ImageTextSplitEditor({ title, value, onChange, folder }: { title: string; value: { enabled: boolean; content: ImageTextSplitContent }; onChange: (v: { enabled: boolean; content: ImageTextSplitContent }) => void; folder: string }) {
+  const c = value.content;
+  const set = <K extends keyof ImageTextSplitContent>(k: K, v: ImageTextSplitContent[K]) =>
+    onChange({ ...value, content: { ...c, [k]: v } });
+  return (
+    <div className="glass rounded-2xl p-5 space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h3 className="font-bold">{title}</h3>
+        <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+      </div>
+      <Grid>
+        <Field label="نص علوي (Kicker)"><input className={inp} value={c.kicker} onChange={(e) => set("kicker", e.target.value)} /></Field>
+        <Field label="أيقونة Kicker (lucide)">
+          <select className={inp} value={c.kicker_icon ?? ""} onChange={(e) => set("kicker_icon", e.target.value || null)}>
+            <option value="">— لا شيء —</option>
+            {ICON_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </Field>
+        <Field label="العنوان" full><input className={inp} value={c.heading} onChange={(e) => set("heading", e.target.value)} /></Field>
+        <Field label="الوصف" full><textarea rows={3} className={ta} value={c.description} onChange={(e) => set("description", e.target.value)} /></Field>
+        <Field label="جهة الصورة">
+          <select className={inp} value={c.image_side} onChange={(e) => set("image_side", e.target.value as "left" | "right")}>
+            <option value="left">يسار</option>
+            <option value="right">يمين</option>
+          </select>
+        </Field>
+        <Field label="نص الزر الأساسي"><input className={inp} value={c.primary_label} onChange={(e) => set("primary_label", e.target.value)} /></Field>
+        <Field label="رابط الزر الأساسي"><input dir="ltr" className={inp} value={c.primary_href} onChange={(e) => set("primary_href", e.target.value)} /></Field>
+        <Field label="نص الزر الثانوي (واتساب)"><input className={inp} value={c.secondary_label} onChange={(e) => set("secondary_label", e.target.value)} /></Field>
+        <Field label="رسالة واتساب الثانوية"><input className={inp} value={c.secondary_whatsapp} onChange={(e) => set("secondary_whatsapp", e.target.value)} /></Field>
+        <Field label="صورة القسم" full>
+          <ImageUploader value={c.image_path || null} onChange={(p) => set("image_path", p ?? "")} folder={folder} cropAspect={16/10} />
+        </Field>
+      </Grid>
+    </div>
+  );
+}
+
+/* ---------- FINAL WHATSAPP CTA EDITOR ---------- */
+function WhatsappCtaEditor({ value, onChange }: { value: { enabled: boolean; content: WhatsappCtaContent }; onChange: (v: { enabled: boolean; content: WhatsappCtaContent }) => void }) {
+  const c = value.content;
+  const set = <K extends keyof WhatsappCtaContent>(k: K, v: WhatsappCtaContent[K]) =>
+    onChange({ ...value, content: { ...c, [k]: v } });
+  return (
+    <div className="glass rounded-2xl p-5 space-y-4">
+      <EnabledToggle enabled={value.enabled} onChange={(en) => onChange({ ...value, enabled: en })} label="إظهار القسم" />
+      <Grid>
+        <Field label="العنوان" full><input className={inp} value={c.heading} onChange={(e) => set("heading", e.target.value)} /></Field>
+        <Field label="الوصف" full><textarea rows={3} className={ta} value={c.description} onChange={(e) => set("description", e.target.value)} /></Field>
+        <Field label="نص الزر"><input className={inp} value={c.button_label} onChange={(e) => set("button_label", e.target.value)} /></Field>
+        <Field label="رسالة واتساب الافتراضية"><input className={inp} value={c.whatsapp_message} onChange={(e) => set("whatsapp_message", e.target.value)} placeholder="اتركها فارغة لاستخدام رسالة افتراضية" /></Field>
+      </Grid>
+    </div>
+  );
+}
+
 
 
 /* ---------- HERO ---------- */
