@@ -923,22 +923,50 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
                     </span>
                   )}
                   <div className="ms-auto flex items-center gap-2">
-                    {r.request_kind === "order" && r.status === "new" && (
-                      <Button size="sm" variant="outline" className="h-8 bg-sky-500/10 border-sky-500/30 text-sky-300 hover:bg-sky-500/20"
-                        onClick={() => statusM.mutate({ id: r.id, next: "ordered" })}>
-                        تم الطلب من المورّد
+                    <Select
+                      value={r.status}
+                      onValueChange={(v) => statusM.mutate({ id: r.id, next: v as RestockStatus })}
+                    >
+                      <SelectTrigger className="h-8 w-32 text-xs bg-white/[0.03] border-white/15">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">جديد</SelectItem>
+                        <SelectItem value="ordered">تم الطلب</SelectItem>
+                        <SelectItem value="received">تم الاستلام</SelectItem>
+                        <SelectItem value="resolved">تم الحل</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {editing === r.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          className="h-8 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25"
+                          disabled={saveEditM.isPending}
+                          onClick={() => saveEditM.mutate({ id: r.id, items: draftItems, notes: draftNotes, source: r.source })}
+                        >
+                          {saveEditM.isPending ? <Loader2 className="animate-spin" size={12} /> : "حفظ"}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditing(null)}>
+                          إلغاء
+                        </Button>
+                      </>
+                    ) : (
+                      <Button size="sm" variant="outline" className="h-8" onClick={() => startEdit(r)}>
+                        تعديل
                       </Button>
                     )}
-                    {r.request_kind === "order" && r.status === "ordered" && (
-                      <Button size="sm" variant="outline" className="h-8 bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
-                        onClick={() => statusM.mutate({ id: r.id, next: "received" })}>
-                        تم الاستلام
-                      </Button>
-                    )}
-                    {r.request_kind === "report" && r.status === "new" && (
-                      <Button size="sm" variant="outline" className="h-8 bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
-                        onClick={() => statusM.mutate({ id: r.id, next: "resolved" })}>
-                        تم الحل
+                    {isAdmin && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 bg-red-500/10 border-red-500/30 text-red-300 hover:bg-red-500/20"
+                        disabled={deleteM.isPending}
+                        onClick={() => {
+                          if (confirm(`حذف الطلب #${r.id}؟`)) deleteM.mutate(r.id);
+                        }}
+                      >
+                        حذف
                       </Button>
                     )}
                     <Button size="sm" variant="outline" className="h-8" onClick={() => exportCsv(r)}>
@@ -948,6 +976,7 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
                       {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </Button>
                   </div>
+
                 </div>
 
                 {isOpen && (
