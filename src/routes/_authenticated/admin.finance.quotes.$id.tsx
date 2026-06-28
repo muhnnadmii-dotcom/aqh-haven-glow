@@ -36,6 +36,7 @@ type Catalog = {
   category: string | null;
   supplier_name: string | null;
   cost: number | null;
+  price: number | null;
   supplier_cost: number | null;
 };
 
@@ -203,7 +204,7 @@ function QuoteBuilder() {
       const t = `%${searchText.trim()}%`;
       const { data, error } = await supabase
         .from("aqh_quote_products" as any)
-        .select("source,ref,name,category,supplier_name,cost,supplier_cost")
+        .select("source,ref,name,category,supplier_name,cost,price,supplier_cost")
         .or(`name.ilike.${t},ref.ilike.${t},supplier_name.ilike.${t}`)
         .limit(20);
       if (error) throw error;
@@ -229,7 +230,10 @@ function QuoteBuilder() {
   }
 
   function pickProduct(itemUid: string, p: Catalog) {
-    const price = p.source === "salla" ? Number(p.cost) || 0 : Number(p.supplier_cost) || 0;
+    const price =
+      p.source === "salla"
+        ? (p.price != null ? Number(p.price) : Number(p.cost) || 0)
+        : Number(p.supplier_cost) || 0;
     patchItem(itemUid, {
       name: p.name,
       price,
@@ -525,7 +529,7 @@ function QuoteBuilder() {
                                 <div className="text-[11px] text-slate-400 py-2 text-center">لا توجد نتائج</div>
                               ) : (
                                 (searchQ.data ?? []).map((p, idx) => {
-                                  const price = p.source === "salla" ? p.cost : p.supplier_cost;
+                                  const price = p.source === "salla" ? (p.price ?? p.cost) : p.supplier_cost;
                                   return (
                                     <button
                                       key={`${p.source}-${p.ref}-${idx}`}

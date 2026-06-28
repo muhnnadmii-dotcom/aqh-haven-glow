@@ -237,7 +237,9 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           name_ar: string
+          price: number | null
           restock_type: string | null
+          salla_raw: Json | null
           sku: string
         }
         Insert: {
@@ -250,7 +252,9 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           name_ar: string
+          price?: number | null
           restock_type?: string | null
+          salla_raw?: Json | null
           sku: string
         }
         Update: {
@@ -263,7 +267,9 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           name_ar?: string
+          price?: number | null
           restock_type?: string | null
+          salla_raw?: Json | null
           sku?: string
         }
         Relationships: [
@@ -2482,7 +2488,9 @@ export type Database = {
         Row: {
           category: string | null
           cost: number | null
+          image_url: string | null
           name: string | null
+          price: number | null
           ref: string | null
           source: string | null
           supplier_cost: number | null
