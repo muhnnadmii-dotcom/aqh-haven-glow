@@ -158,38 +158,44 @@ function ProductDetailPage() {
         </div>
       </section>
 
-      {/* Gallery: pick main image */}
-      {(() => {
-        const imgs = Array.isArray(q.data?.all_images) ? (q.data!.all_images as string[]) : [];
-        const list = imgs.length > 0 ? imgs : (core.image_url ? [String(core.image_url)] : []);
-        if (list.length === 0) return null;
-        return (
-          <section className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-gold">صور المنتج ({list.length})</div>
-              <div className="text-[11px] text-muted-foreground">اضغط على أي صورة لجعلها الصورة الرئيسية</div>
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-              {list.map((url, i) => {
-                const active = core.image_url === url;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setCore({ ...core, image_url: url })}
-                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition ${active ? "border-gold ring-2 ring-gold/40" : "border-white/10 hover:border-white/30"}`}
-                  >
-                    <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                    {active && (
-                      <span className="absolute top-1 start-1 bg-gold text-black text-[10px] font-bold rounded px-1.5 py-0.5">رئيسية</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })()}
+      {/* Gallery: pick main image + add manual URL */}
+      <GallerySection
+        allImages={Array.isArray(q.data?.all_images) ? (q.data!.all_images as string[]) : []}
+        currentMain={core.image_url ?? ""}
+        onSetMain={(url) => {
+          setCore({ ...core, image_url: url });
+          // Persist immediately so it appears everywhere right away
+          if (q.data) {
+            supabase.from("aqh_products" as any).update({ image_url: url }).eq("id", q.data.id).then(({ error }) => {
+              if (error) toast.error(error.message);
+              else {
+                toast.success("تم تعيين الصورة الرئيسية");
+                qc.invalidateQueries({ queryKey: ["aqh_products_admin"] });
+                qc.invalidateQueries({ queryKey: ["aqh_product_sku", sku] });
+              }
+            });
+          }
+        }}
+        onAddImage={async (url) => {
+          if (!q.data) return;
+          const current = Array.isArray(q.data.all_images) ? (q.data.all_images as string[]) : [];
+          if (current.includes(url)) {
+            toast.info("الصورة موجودة مسبقاً");
+            return;
+          }
+          const next = [...current, url];
+          const patch: any = { all_images: next };
+          if (!core.image_url) patch.image_url = url;
+          const { error } = await supabase.from("aqh_products" as any).update(patch).eq("id", q.data.id);
+          if (error) toast.error(error.message);
+          else {
+            toast.success("تمت إضافة الصورة");
+            if (!core.image_url) setCore({ ...core, image_url: url });
+            qc.invalidateQueries({ queryKey: ["aqh_product_sku", sku] });
+            qc.invalidateQueries({ queryKey: ["aqh_products_admin"] });
+          }
+        }}
+      />
 
       {/* Salla full data */}
       {SALLA_GROUPS.map((g) => (
