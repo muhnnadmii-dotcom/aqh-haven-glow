@@ -255,7 +255,7 @@ function ProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => {
+              {paged.map((p) => {
                 const qty = p.current_qty ?? 0;
                 const cat = (catsQ.data ?? []).find((c) => c.id === p.category_id);
                 return (
