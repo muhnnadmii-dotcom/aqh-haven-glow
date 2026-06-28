@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
@@ -57,6 +57,9 @@ function ProductsPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [linksOpen, setLinksOpen] = useState<Product | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
 
   const productsQ = useQuery({
     queryKey: ["aqh_products_admin"],
@@ -99,6 +102,15 @@ function ProductsPage() {
     },
   });
 
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    (productsQ.data ?? []).forEach((p) => {
+      const name = p.category?.trim();
+      if (name) set.add(name);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ar"));
+  }, [productsQ.data]);
+
   const filtered = useMemo(() => {
     const text = q.trim().toLowerCase();
     return (productsQ.data ?? []).filter((p) => {
@@ -108,15 +120,28 @@ function ProductsPage() {
         if (!match) return false;
       }
       if (catFilter !== "all") {
-        if (catFilter === "none" ? p.category_id != null : String(p.category_id) !== catFilter) return false;
+        if (catFilter === "none") {
+          if ((p.category ?? "").trim() !== "") return false;
+        } else if ((p.category ?? "").trim() !== catFilter) {
+          return false;
+        }
       }
-      if (typeFilter !== "all" && p.restock_type !== typeFilter) return false;
+      if (typeFilter !== "all" && (p.restock_type ?? "") !== typeFilter) return false;
       const qty = p.current_qty ?? 0;
       if (stockFilter === "low" && qty > 3) return false;
       if (stockFilter === "out" && qty > 0) return false;
       return true;
     });
   }, [productsQ.data, q, catFilter, typeFilter, stockFilter]);
+
+  // reset page when filters change
+  useEffect(() => { setPage(1); }, [q, catFilter, typeFilter, stockFilter, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const paged = filtered.slice(pageStart, pageStart + pageSize);
+
 
   const delM = useMutation({
     mutationFn: async (id: number) => {
@@ -130,10 +155,17 @@ function ProductsPage() {
     onError: (e: any) => toast.error(e?.message ?? "فشل الحذف"),
   });
 
-  const allChecked = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+  const allChecked = paged.length > 0 && paged.every((p) => selected.has(p.id));
   function toggleAll() {
-    if (allChecked) setSelected(new Set());
-    else setSelected(new Set(filtered.map((p) => p.id)));
+    if (allChecked) {
+      const n = new Set(selected);
+      paged.forEach((p) => n.delete(p.id));
+      setSelected(n);
+    } else {
+      const n = new Set(selected);
+      paged.forEach((p) => n.add(p.id));
+      setSelected(n);
+    }
   }
   function toggleOne(id: number) {
     setSelected((s) => {
@@ -171,8 +203,8 @@ function ProductsPage() {
           <SelectContent>
             <SelectItem value="all">كل التصنيفات</SelectItem>
             <SelectItem value="none">بدون تصنيف</SelectItem>
-            {(catsQ.data ?? []).map((c) => (
-              <SelectItem key={c.id} value={String(c.id)}>{c.name_ar}</SelectItem>
+            {categoryOptions.map((name) => (
+              <SelectItem key={name} value={name}>{name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -223,7 +255,7 @@ function ProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => {
+              {paged.map((p) => {
                 const qty = p.current_qty ?? 0;
                 const cat = (catsQ.data ?? []).find((c) => c.id === p.category_id);
                 return (
@@ -286,6 +318,35 @@ function ProductsPage() {
           </table>
         </div>
       )}
+
+      {/* Pagination */}
+      {!productsQ.isLoading && filtered.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span>عدد لكل صفحة:</span>
+            <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+              <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+            <span>
+              {pageStart + 1}–{Math.min(pageStart + pageSize, filtered.length)} من {filtered.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-8" disabled={currentPage <= 1} onClick={() => setPage(1)}>الأولى</Button>
+            <Button size="sm" variant="outline" className="h-8" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>السابق</Button>
+            <span className="px-2">صفحة {currentPage} / {totalPages}</span>
+            <Button size="sm" variant="outline" className="h-8" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>التالي</Button>
+            <Button size="sm" variant="outline" className="h-8" disabled={currentPage >= totalPages} onClick={() => setPage(totalPages)}>الأخيرة</Button>
+          </div>
+        </div>
+      )}
+
 
       {/* Sticky bulk bar */}
       {selected.size > 0 && (
