@@ -1,0 +1,1 @@
+ALTER TABLE public.aqh_products OWNER TO postgres; GRANT ALL ON TABLE public.aqh_products TO sandbox_exec; GRANT USAGE, SELECT, UPDATE ON SEQUENCE public.aqh_products_id_seq TO sandbox_exec;
