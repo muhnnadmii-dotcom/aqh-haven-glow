@@ -131,12 +131,18 @@ function ProductsPage() {
       const qty = p.current_qty ?? 0;
       if (stockFilter === "low" && qty > 3) return false;
       if (stockFilter === "out" && qty > 0) return false;
+      if (imgFilter === "suspect") {
+        const url = p.image_url ?? "";
+        if (!url || url.includes("1000x1000")) return false;
+      } else if (imgFilter === "none") {
+        if (p.image_url) return false;
+      }
       return true;
     });
-  }, [productsQ.data, q, catFilter, typeFilter, stockFilter]);
+  }, [productsQ.data, q, catFilter, typeFilter, stockFilter, imgFilter]);
 
   // reset page when filters change
-  useEffect(() => { setPage(1); }, [q, catFilter, typeFilter, stockFilter, pageSize]);
+  useEffect(() => { setPage(1); }, [q, catFilter, typeFilter, stockFilter, imgFilter, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
