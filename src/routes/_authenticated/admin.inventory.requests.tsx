@@ -162,12 +162,13 @@ function InventoryPage() {
           <ReportTab isAdmin={isAdmin} displayName={displayName} />
         </TabsContent>
         <TabsContent value="list" className="mt-4">
-          <RequestsListTab />
+          <RequestsListTab isAdmin={isAdmin} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
 /* ---------------- Shared bits ---------------- */
 
@@ -654,12 +655,16 @@ function ReportTab({ isAdmin, displayName }: { isAdmin: boolean; displayName: st
 
 /* ---------------- TAB 3: Requests list ---------------- */
 
-function RequestsListTab() {
+function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
   const qc = useQueryClient();
   const [kindF, setKindF] = useState<RequestKind | "all">("all");
   const [statusF, setStatusF] = useState<RestockStatus | "all">("all");
   const [sourceF, setSourceF] = useState<"all" | "internal" | "supplier_catalog">("all");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [draftItems, setDraftItems] = useState<RestockItem[]>([]);
+  const [draftNotes, setDraftNotes] = useState<string>("");
+
 
   const requestsQ = useQuery({
     queryKey: ["aqh_restock_requests"],
@@ -740,6 +745,56 @@ function RequestsListTab() {
     },
     onError: (e: any) => toast.error(e?.message ?? "فشل التحديث"),
   });
+
+  const deleteM = useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from("aqh_restock_requests").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف الطلب");
+      setExpanded(null);
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["aqh_restock_requests"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحذف"),
+  });
+
+  const saveEditM = useMutation({
+    mutationFn: async (args: { id: number; items: RestockItem[]; notes: string; source: string | null }) => {
+      const cleaned = args.items.filter((it) => (it.qty ?? 0) > 0);
+      if (cleaned.length === 0) throw new Error("لا يمكن حفظ طلب بدون أصناف");
+      const patch: Record<string, unknown> = {
+        items: cleaned as unknown as never,
+        items_count: cleaned.length,
+        notes: args.notes.trim() || null,
+      };
+      if (args.source === "supplier_catalog") {
+        const subtotal = cleaned.reduce((s, it) => s + (Number(it.cost) || 0) * (it.qty || 0), 0);
+        const vat = +(subtotal * 0.15).toFixed(2);
+        patch.subtotal = +subtotal.toFixed(2);
+        patch.vat = vat;
+        patch.total = +(subtotal + vat).toFixed(2);
+      }
+      const { error } = await supabase.from("aqh_restock_requests").update(patch as never).eq("id", args.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حفظ التعديلات");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["aqh_restock_requests"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحفظ"),
+  });
+
+  function startEdit(r: RestockRequest) {
+    setEditing(r.id);
+    setExpanded(r.id);
+    setDraftItems(r.items.map((it) => ({ ...it })));
+    setDraftNotes(r.notes ?? "");
+  }
+
+
 
   function exportCsv(r: RestockRequest) {
     const hasCost = r.items.some((it) => it.cost != null);
@@ -868,22 +923,50 @@ function RequestsListTab() {
                     </span>
                   )}
                   <div className="ms-auto flex items-center gap-2">
-                    {r.request_kind === "order" && r.status === "new" && (
-                      <Button size="sm" variant="outline" className="h-8 bg-sky-500/10 border-sky-500/30 text-sky-300 hover:bg-sky-500/20"
-                        onClick={() => statusM.mutate({ id: r.id, next: "ordered" })}>
-                        تم الطلب من المورّد
+                    <Select
+                      value={r.status}
+                      onValueChange={(v) => statusM.mutate({ id: r.id, next: v as RestockStatus })}
+                    >
+                      <SelectTrigger className="h-8 w-32 text-xs bg-white/[0.03] border-white/15">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">جديد</SelectItem>
+                        <SelectItem value="ordered">تم الطلب</SelectItem>
+                        <SelectItem value="received">تم الاستلام</SelectItem>
+                        <SelectItem value="resolved">تم الحل</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {editing === r.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          className="h-8 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25"
+                          disabled={saveEditM.isPending}
+                          onClick={() => saveEditM.mutate({ id: r.id, items: draftItems, notes: draftNotes, source: r.source })}
+                        >
+                          {saveEditM.isPending ? <Loader2 className="animate-spin" size={12} /> : "حفظ"}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditing(null)}>
+                          إلغاء
+                        </Button>
+                      </>
+                    ) : (
+                      <Button size="sm" variant="outline" className="h-8" onClick={() => startEdit(r)}>
+                        تعديل
                       </Button>
                     )}
-                    {r.request_kind === "order" && r.status === "ordered" && (
-                      <Button size="sm" variant="outline" className="h-8 bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
-                        onClick={() => statusM.mutate({ id: r.id, next: "received" })}>
-                        تم الاستلام
-                      </Button>
-                    )}
-                    {r.request_kind === "report" && r.status === "new" && (
-                      <Button size="sm" variant="outline" className="h-8 bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
-                        onClick={() => statusM.mutate({ id: r.id, next: "resolved" })}>
-                        تم الحل
+                    {isAdmin && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 bg-red-500/10 border-red-500/30 text-red-300 hover:bg-red-500/20"
+                        disabled={deleteM.isPending}
+                        onClick={() => {
+                          if (confirm(`حذف الطلب #${r.id}؟`)) deleteM.mutate(r.id);
+                        }}
+                      >
+                        حذف
                       </Button>
                     )}
                     <Button size="sm" variant="outline" className="h-8" onClick={() => exportCsv(r)}>
@@ -893,9 +976,19 @@ function RequestsListTab() {
                       {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </Button>
                   </div>
+
                 </div>
 
-                {isOpen && (
+                {isOpen && (() => {
+                  const isEditing = editing === r.id;
+                  const rowsSrc: RestockItem[] = isEditing ? draftItems : r.items;
+                  const updateDraftQty = (idx: number, q: number) => {
+                    setDraftItems((prev) => prev.map((it, i) => (i === idx ? { ...it, qty: Math.max(0, q) } : it)));
+                  };
+                  const removeDraftRow = (idx: number) => {
+                    setDraftItems((prev) => prev.filter((_, i) => i !== idx));
+                  };
+                  return (
                   <div className="rounded-lg border border-white/10 overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-white/[0.03] text-xs text-muted-foreground">
@@ -903,7 +996,7 @@ function RequestsListTab() {
                           <th className="text-right p-2 font-normal w-14"></th>
                           <th className="text-right p-2 font-normal">المنتج</th>
                           <th className="text-right p-2 font-normal w-24">SKU</th>
-                          <th className="text-left p-2 font-normal w-20">الكمية</th>
+                          <th className="text-left p-2 font-normal w-24">الكمية</th>
                           <th className="text-left p-2 font-normal w-20">المتوفر</th>
                           {r.source === "supplier_catalog" && (
                             <>
@@ -911,10 +1004,11 @@ function RequestsListTab() {
                               <th className="text-left p-2 font-normal w-24">الإجمالي</th>
                             </>
                           )}
+                          {isEditing && <th className="w-10"></th>}
                         </tr>
                       </thead>
                       <tbody>
-                        {r.items.map((it, i) => {
+                        {rowsSrc.map((it, i) => {
                           const live = liveProducts[it.sku];
                           const name = live?.name_ar ?? it.name_ar;
                           const image = live?.image_url ?? null;
@@ -965,7 +1059,19 @@ function RequestsListTab() {
                                   {it.sku}
                                 </Link>
                               </td>
-                              <td className="p-2 text-left text-gold font-medium">× {it.qty}</td>
+                              <td className="p-2 text-left text-gold font-medium">
+                                {isEditing ? (
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    value={it.qty}
+                                    onChange={(e) => updateDraftQty(i, parseInt(e.target.value || "0", 10))}
+                                    className="h-8 w-20 text-center px-1"
+                                  />
+                                ) : (
+                                  <>× {it.qty}</>
+                                )}
+                              </td>
                               <td className="p-2 text-left text-xs font-mono text-muted-foreground">
                                 {live?.current_qty != null ? live.current_qty : "—"}
                               </td>
@@ -975,25 +1081,50 @@ function RequestsListTab() {
                                   <td className="p-2 text-left text-xs font-mono">{cost != null ? SAR(Number(cost) * it.qty) : "—"}</td>
                                 </>
                               )}
+                              {isEditing && (
+                                <td className="p-2 text-left">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-red-300 hover:text-red-200 hover:bg-red-500/10"
+                                    title="حذف الصنف"
+                                    onClick={() => removeDraftRow(i)}
+                                  >
+                                    <Minus size={13} />
+                                  </Button>
+                                </td>
+                              )}
                             </tr>
                           );
                         })}
                       </tbody>
                     </table>
-                    {r.source === "supplier_catalog" && r.total != null && (
+                    {r.source === "supplier_catalog" && r.total != null && !isEditing && (
                       <div className="border-t border-white/10 p-2 flex flex-wrap gap-4 justify-end text-xs">
                         <span>المجموع: <span className="font-mono">{SAR(Number(r.subtotal ?? 0))}</span></span>
                         <span>الضريبة 15%: <span className="font-mono">{SAR(Number(r.vat ?? 0))}</span></span>
                         <span className="text-gold">الإجمالي: <span className="font-mono font-semibold">{SAR(Number(r.total))}</span></span>
                       </div>
                     )}
-                    {r.notes && (
+                    {isEditing ? (
+                      <div className="border-t border-white/10 p-2">
+                        <Textarea
+                          value={draftNotes}
+                          onChange={(e) => setDraftNotes(e.target.value)}
+                          placeholder="ملاحظة (اختياري)"
+                          rows={2}
+                          className="text-xs"
+                        />
+                      </div>
+                    ) : r.notes ? (
                       <div className="text-xs text-muted-foreground border-t border-white/10 p-2">
                         <span className="text-foreground">ملاحظة: </span>{r.notes}
                       </div>
-                    )}
+                    ) : null}
                   </div>
-                )}
+                  );
+                })()}
+
               </div>
             );
           })}
