@@ -57,6 +57,7 @@ const DEFAULT_IMG_SPLIT: ImageTextSplitContent = {
   primary_label: "", primary_href: "", secondary_label: "", secondary_whatsapp: "",
 };
 const DEFAULT_WA_CTA: WhatsappCtaContent = { heading: "", description: "", button_label: "تواصل معنا عبر واتساب", whatsapp_message: "" };
+const DEFAULT_HERO: HeroContent = {
   title: "عالمك المائي", subtitle: "يبدأ من هنا",
   description: "", primary_cta_label: "", primary_cta_href: "",
   secondary_cta_label: "", secondary_cta_href: "",
