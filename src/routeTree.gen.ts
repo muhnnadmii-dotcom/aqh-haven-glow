@@ -64,6 +64,7 @@ import { Route as AuthenticatedAdminRequestsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminInventoryRequestsRouteImport } from './routes/_authenticated/admin.inventory.requests'
 import { Route as AuthenticatedAdminInventoryReportsRouteImport } from './routes/_authenticated/admin.inventory.reports'
 import { Route as AuthenticatedAdminInventoryProductsRouteImport } from './routes/_authenticated/admin.inventory.products'
+import { Route as AuthenticatedAdminInventoryExportRouteImport } from './routes/_authenticated/admin.inventory.export'
 import { Route as AuthenticatedAdminInventoryCategoriesRouteImport } from './routes/_authenticated/admin.inventory.categories'
 import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes/_authenticated/admin.inventory.catalog'
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
@@ -83,6 +84,7 @@ import { Route as AuthenticatedAccountTanksIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAccountRequestsNewRouteImport } from './routes/_authenticated/account.requests.new'
 import { Route as AuthenticatedAccountRequestsIdRouteImport } from './routes/_authenticated/account.requests.$id'
 import { Route as AuthenticatedAdminFinanceQuotesIndexRouteImport } from './routes/_authenticated/admin.finance.quotes.index'
+import { Route as AuthenticatedAdminInventoryProductSkuRouteImport } from './routes/_authenticated/admin.inventory.product.$sku'
 import { Route as AuthenticatedAdminFinanceQuotesIdRouteImport } from './routes/_authenticated/admin.finance.quotes.$id'
 
 const TrustRoute = TrustRouteImport.update({
@@ -388,6 +390,12 @@ const AuthenticatedAdminInventoryProductsRoute =
     path: '/inventory/products',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminInventoryExportRoute =
+  AuthenticatedAdminInventoryExportRouteImport.update({
+    id: '/inventory/export',
+    path: '/inventory/export',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminInventoryCategoriesRoute =
   AuthenticatedAdminInventoryCategoriesRouteImport.update({
     id: '/inventory/categories',
@@ -502,6 +510,12 @@ const AuthenticatedAdminFinanceQuotesIndexRoute =
     path: '/quotes/',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminInventoryProductSkuRoute =
+  AuthenticatedAdminInventoryProductSkuRouteImport.update({
+    id: '/inventory/product/$sku',
+    path: '/inventory/product/$sku',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminFinanceQuotesIdRoute =
   AuthenticatedAdminFinanceQuotesIdRouteImport.update({
     id: '/quotes/$id',
@@ -568,6 +582,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
   '/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
+  '/admin/inventory/export': typeof AuthenticatedAdminInventoryExportRoute
   '/admin/inventory/products': typeof AuthenticatedAdminInventoryProductsRoute
   '/admin/inventory/reports': typeof AuthenticatedAdminInventoryReportsRoute
   '/admin/inventory/requests': typeof AuthenticatedAdminInventoryRequestsRoute
@@ -583,6 +598,7 @@ export interface FileRoutesByFullPath {
   '/admin/inventory/': typeof AuthenticatedAdminInventoryIndexRoute
   '/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
+  '/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
   '/admin/finance/quotes/': typeof AuthenticatedAdminFinanceQuotesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -636,6 +652,7 @@ export interface FileRoutesByTo {
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
   '/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
+  '/admin/inventory/export': typeof AuthenticatedAdminInventoryExportRoute
   '/admin/inventory/products': typeof AuthenticatedAdminInventoryProductsRoute
   '/admin/inventory/reports': typeof AuthenticatedAdminInventoryReportsRoute
   '/admin/inventory/requests': typeof AuthenticatedAdminInventoryRequestsRoute
@@ -651,6 +668,7 @@ export interface FileRoutesByTo {
   '/admin/inventory': typeof AuthenticatedAdminInventoryIndexRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsIndexRoute
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
+  '/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
   '/admin/finance/quotes': typeof AuthenticatedAdminFinanceQuotesIndexRoute
 }
 export interface FileRoutesById {
@@ -714,6 +732,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/_authenticated/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
   '/_authenticated/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
+  '/_authenticated/admin/inventory/export': typeof AuthenticatedAdminInventoryExportRoute
   '/_authenticated/admin/inventory/products': typeof AuthenticatedAdminInventoryProductsRoute
   '/_authenticated/admin/inventory/reports': typeof AuthenticatedAdminInventoryReportsRoute
   '/_authenticated/admin/inventory/requests': typeof AuthenticatedAdminInventoryRequestsRoute
@@ -729,6 +748,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/inventory/': typeof AuthenticatedAdminInventoryIndexRoute
   '/_authenticated/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
   '/_authenticated/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
+  '/_authenticated/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
   '/_authenticated/admin/finance/quotes/': typeof AuthenticatedAdminFinanceQuotesIndexRoute
 }
 export interface FileRouteTypes {
@@ -792,6 +812,7 @@ export interface FileRouteTypes {
     | '/admin/finance/suppliers'
     | '/admin/inventory/catalog'
     | '/admin/inventory/categories'
+    | '/admin/inventory/export'
     | '/admin/inventory/products'
     | '/admin/inventory/reports'
     | '/admin/inventory/requests'
@@ -807,6 +828,7 @@ export interface FileRouteTypes {
     | '/admin/inventory/'
     | '/admin/requests/'
     | '/admin/finance/quotes/$id'
+    | '/admin/inventory/product/$sku'
     | '/admin/finance/quotes/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -860,6 +882,7 @@ export interface FileRouteTypes {
     | '/admin/finance/suppliers'
     | '/admin/inventory/catalog'
     | '/admin/inventory/categories'
+    | '/admin/inventory/export'
     | '/admin/inventory/products'
     | '/admin/inventory/reports'
     | '/admin/inventory/requests'
@@ -875,6 +898,7 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/requests'
     | '/admin/finance/quotes/$id'
+    | '/admin/inventory/product/$sku'
     | '/admin/finance/quotes'
   id:
     | '__root__'
@@ -937,6 +961,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/suppliers'
     | '/_authenticated/admin/inventory/catalog'
     | '/_authenticated/admin/inventory/categories'
+    | '/_authenticated/admin/inventory/export'
     | '/_authenticated/admin/inventory/products'
     | '/_authenticated/admin/inventory/reports'
     | '/_authenticated/admin/inventory/requests'
@@ -952,6 +977,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/inventory/'
     | '/_authenticated/admin/requests/'
     | '/_authenticated/admin/finance/quotes/$id'
+    | '/_authenticated/admin/inventory/product/$sku'
     | '/_authenticated/admin/finance/quotes/'
   fileRoutesById: FileRoutesById
 }
@@ -1359,6 +1385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminInventoryProductsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/inventory/export': {
+      id: '/_authenticated/admin/inventory/export'
+      path: '/inventory/export'
+      fullPath: '/admin/inventory/export'
+      preLoaderRoute: typeof AuthenticatedAdminInventoryExportRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/inventory/categories': {
       id: '/_authenticated/admin/inventory/categories'
       path: '/inventory/categories'
@@ -1491,6 +1524,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/finance/quotes/'
       preLoaderRoute: typeof AuthenticatedAdminFinanceQuotesIndexRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/inventory/product/$sku': {
+      id: '/_authenticated/admin/inventory/product/$sku'
+      path: '/inventory/product/$sku'
+      fullPath: '/admin/inventory/product/$sku'
+      preLoaderRoute: typeof AuthenticatedAdminInventoryProductSkuRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/finance/quotes/$id': {
       id: '/_authenticated/admin/finance/quotes/$id'
@@ -1675,12 +1715,14 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminContentPageRoute: typeof AuthenticatedAdminContentPageRoute
   AuthenticatedAdminInventoryCatalogRoute: typeof AuthenticatedAdminInventoryCatalogRoute
   AuthenticatedAdminInventoryCategoriesRoute: typeof AuthenticatedAdminInventoryCategoriesRoute
+  AuthenticatedAdminInventoryExportRoute: typeof AuthenticatedAdminInventoryExportRoute
   AuthenticatedAdminInventoryProductsRoute: typeof AuthenticatedAdminInventoryProductsRoute
   AuthenticatedAdminInventoryReportsRoute: typeof AuthenticatedAdminInventoryReportsRoute
   AuthenticatedAdminInventoryRequestsRoute: typeof AuthenticatedAdminInventoryRequestsRoute
   AuthenticatedAdminContentIndexRoute: typeof AuthenticatedAdminContentIndexRoute
   AuthenticatedAdminGalleryIndexRoute: typeof AuthenticatedAdminGalleryIndexRoute
   AuthenticatedAdminInventoryIndexRoute: typeof AuthenticatedAdminInventoryIndexRoute
+  AuthenticatedAdminInventoryProductSkuRoute: typeof AuthenticatedAdminInventoryProductSkuRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -1704,6 +1746,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
     AuthenticatedAdminInventoryCatalogRoute,
   AuthenticatedAdminInventoryCategoriesRoute:
     AuthenticatedAdminInventoryCategoriesRoute,
+  AuthenticatedAdminInventoryExportRoute:
+    AuthenticatedAdminInventoryExportRoute,
   AuthenticatedAdminInventoryProductsRoute:
     AuthenticatedAdminInventoryProductsRoute,
   AuthenticatedAdminInventoryReportsRoute:
@@ -1713,6 +1757,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminContentIndexRoute: AuthenticatedAdminContentIndexRoute,
   AuthenticatedAdminGalleryIndexRoute: AuthenticatedAdminGalleryIndexRoute,
   AuthenticatedAdminInventoryIndexRoute: AuthenticatedAdminInventoryIndexRoute,
+  AuthenticatedAdminInventoryProductSkuRoute:
+    AuthenticatedAdminInventoryProductSkuRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =

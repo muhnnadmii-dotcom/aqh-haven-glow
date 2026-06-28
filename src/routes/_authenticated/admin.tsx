@@ -94,6 +94,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/inventory/catalog", label: "كاتلوج الموردين", icon: BookOpen },
       { to: "/admin/inventory/requests", label: "طلبات التوريد", icon: ClipboardList },
       { to: "/admin/inventory/reports", label: "تقارير المخزون", icon: BarChart3 },
+      { to: "/admin/inventory/export", label: "تصدير ملف سلة", icon: Download },
     ],
   },
   {
@@ -131,6 +132,7 @@ const TITLES: Record<string, string> = {
   "/admin/inventory/catalog": "كاتلوج الموردين",
   "/admin/inventory/requests": "طلبات التوريد",
   "/admin/inventory/reports": "تقارير المخزون",
+  "/admin/inventory/export": "تصدير ملف سلة",
 };
 
 function AdminLayout() {
