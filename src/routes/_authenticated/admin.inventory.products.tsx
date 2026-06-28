@@ -52,6 +52,7 @@ function ProductsPage() {
   const [catFilter, setCatFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<string>("all"); // all/low/out
+  const [imgFilter, setImgFilter] = useState<string>("all"); // all/suspect/none
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -130,12 +131,18 @@ function ProductsPage() {
       const qty = p.current_qty ?? 0;
       if (stockFilter === "low" && qty > 3) return false;
       if (stockFilter === "out" && qty > 0) return false;
+      if (imgFilter === "suspect") {
+        const url = p.image_url ?? "";
+        if (!url || url.includes("1000x1000")) return false;
+      } else if (imgFilter === "none") {
+        if (p.image_url) return false;
+      }
       return true;
     });
-  }, [productsQ.data, q, catFilter, typeFilter, stockFilter]);
+  }, [productsQ.data, q, catFilter, typeFilter, stockFilter, imgFilter]);
 
   // reset page when filters change
-  useEffect(() => { setPage(1); }, [q, catFilter, typeFilter, stockFilter, pageSize]);
+  useEffect(() => { setPage(1); }, [q, catFilter, typeFilter, stockFilter, imgFilter, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -228,6 +235,14 @@ function ProductsPage() {
           </Select>
         </div>
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] text-muted-foreground">الصور:</span>
+        <Button size="sm" variant={imgFilter === "all" ? "default" : "outline"} className={`h-7 text-[11px] ${imgFilter === "all" ? "bg-gold text-black hover:bg-gold/90" : ""}`} onClick={() => setImgFilter("all")}>الكل</Button>
+        <Button size="sm" variant={imgFilter === "suspect" ? "default" : "outline"} className={`h-7 text-[11px] ${imgFilter === "suspect" ? "bg-amber-500 text-black hover:bg-amber-500/90" : ""}`} onClick={() => setImgFilter("suspect")}>
+          <AlertTriangle size={11} className="ml-1" /> صورتها قد تكون خطأ
+        </Button>
+        <Button size="sm" variant={imgFilter === "none" ? "default" : "outline"} className="h-7 text-[11px]" onClick={() => setImgFilter("none")}>بدون صورة</Button>
+      </div>
 
       {/* Table */}
       {productsQ.isLoading ? (
@@ -272,8 +287,20 @@ function ProductsPage() {
                         className="flex items-center gap-2 hover:text-gold transition"
                       >
                         {p.image_url ? (
-                          <img src={p.image_url} alt="" loading="lazy" className="w-8 h-8 object-cover rounded border border-white/10" />
-                        ) : <span className="w-8 h-8 grid place-items-center text-base">🐟</span>}
+                          <img
+                            src={p.image_url}
+                            alt=""
+                            loading="lazy"
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              img.style.display = "none";
+                              const ph = img.nextElementSibling as HTMLElement | null;
+                              if (ph) ph.style.display = "grid";
+                            }}
+                            className="w-8 h-8 object-cover rounded border border-white/10"
+                          />
+                        ) : null}
+                        <span style={{ display: p.image_url ? "none" : "grid" }} className="w-8 h-8 place-items-center text-base rounded border border-white/10 bg-white/5">🐟</span>
                         <div className="min-w-0">
                           <div className="font-medium truncate">{p.name_ar}</div>
                           {!p.is_active && <span className="text-[9px] text-muted-foreground">معطّل</span>}
