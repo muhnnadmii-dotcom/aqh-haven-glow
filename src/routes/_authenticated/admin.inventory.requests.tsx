@@ -655,12 +655,16 @@ function ReportTab({ isAdmin, displayName }: { isAdmin: boolean; displayName: st
 
 /* ---------------- TAB 3: Requests list ---------------- */
 
-function RequestsListTab() {
+function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
   const qc = useQueryClient();
   const [kindF, setKindF] = useState<RequestKind | "all">("all");
   const [statusF, setStatusF] = useState<RestockStatus | "all">("all");
   const [sourceF, setSourceF] = useState<"all" | "internal" | "supplier_catalog">("all");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [draftItems, setDraftItems] = useState<RestockItem[]>([]);
+  const [draftNotes, setDraftNotes] = useState<string>("");
+
 
   const requestsQ = useQuery({
     queryKey: ["aqh_restock_requests"],
