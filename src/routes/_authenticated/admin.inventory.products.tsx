@@ -287,8 +287,20 @@ function ProductsPage() {
                         className="flex items-center gap-2 hover:text-gold transition"
                       >
                         {p.image_url ? (
-                          <img src={p.image_url} alt="" loading="lazy" className="w-8 h-8 object-cover rounded border border-white/10" />
-                        ) : <span className="w-8 h-8 grid place-items-center text-base">🐟</span>}
+                          <img
+                            src={p.image_url}
+                            alt=""
+                            loading="lazy"
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              img.style.display = "none";
+                              const ph = img.nextElementSibling as HTMLElement | null;
+                              if (ph) ph.style.display = "grid";
+                            }}
+                            className="w-8 h-8 object-cover rounded border border-white/10"
+                          />
+                        ) : null}
+                        <span style={{ display: p.image_url ? "none" : "grid" }} className="w-8 h-8 place-items-center text-base rounded border border-white/10 bg-white/5">🐟</span>
                         <div className="min-w-0">
                           <div className="font-medium truncate">{p.name_ar}</div>
                           {!p.is_active && <span className="text-[9px] text-muted-foreground">معطّل</span>}
