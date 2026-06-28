@@ -101,21 +101,32 @@ type Sections = {
   testimonials_header: { enabled: boolean; content: SectionHeader } | null;
   knowledge_header: { enabled: boolean; content: SectionHeader } | null;
   homepage_testimonials: { enabled: boolean; content: HomeTestimonialsContent } | null;
+  featured_projects_header: { enabled: boolean; content: SectionHeader } | null;
+  maintenance_teaser: { enabled: boolean; content: ImageTextSplitContent } | null;
+  business_teaser: { enabled: boolean; content: ImageTextSplitContent } | null;
+  final_whatsapp_cta: { enabled: boolean; content: WhatsappCtaContent } | null;
 };
 
 const EMPTY_SECTIONS: Sections = {
   hero: null, explore: null, services: null,
   why_us: null, process: null, faq: null, cta: null, partners: null,
   testimonials_header: null, knowledge_header: null, homepage_testimonials: null,
+  featured_projects_header: null, maintenance_teaser: null, business_teaser: null, final_whatsapp_cta: null,
 };
-
-const SECTION_KEYS = ["hero", "explore", "services", "why_us", "process", "faq", "cta", "partners", "testimonials_header", "knowledge_header", "homepage_testimonials"];
 
 
 function HomePage() {
-  const initial = Route.useLoaderData() as { sections: Sections; articles: FeaturedArticle[]; projects: FeaturedProject[]; dbServices: FeaturedService[]; liveStats: { customers: number; tanks: number; projects: number } };
+  const initial = Route.useLoaderData() as {
+    orderedSections: OrderedSection[];
+    sections: Sections;
+    articles: FeaturedArticle[];
+    projects: FeaturedProject[];
+    dbServices: FeaturedService[];
+    liveStats: { customers: number; tanks: number; projects: number };
+  };
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const sections = initial.sections;
+  const orderedSections = initial.orderedSections;
   const articles = initial.articles;
   const projects = initial.projects;
   const dbServices = initial.dbServices;
