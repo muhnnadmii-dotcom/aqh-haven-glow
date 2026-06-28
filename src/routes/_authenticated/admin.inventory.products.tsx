@@ -196,8 +196,8 @@ function ProductsPage() {
           <SelectContent>
             <SelectItem value="all">كل التصنيفات</SelectItem>
             <SelectItem value="none">بدون تصنيف</SelectItem>
-            {(catsQ.data ?? []).map((c) => (
-              <SelectItem key={c.id} value={String(c.id)}>{c.name_ar}</SelectItem>
+            {categoryOptions.map((name) => (
+              <SelectItem key={name} value={name}>{name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
