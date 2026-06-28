@@ -20,6 +20,8 @@ import {
   type HeroContent, type ExploreContent, type ServicesContent,
   type WhyUsContent, type ProcessContent, type FaqContent, type CtaContent, type SectionHeader,
   type PartnersContent, type HomeTestimonialsContent,
+  type ImageTextSplitContent, type WhatsappCtaContent,
+  type OrderedSection,
 } from "@/lib/home-sections";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
