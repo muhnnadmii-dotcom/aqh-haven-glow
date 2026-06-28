@@ -162,12 +162,13 @@ function InventoryPage() {
           <ReportTab isAdmin={isAdmin} displayName={displayName} />
         </TabsContent>
         <TabsContent value="list" className="mt-4">
-          <RequestsListTab />
+          <RequestsListTab isAdmin={isAdmin} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
 /* ---------------- Shared bits ---------------- */
 
