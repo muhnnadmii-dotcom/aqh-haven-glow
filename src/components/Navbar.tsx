@@ -27,6 +27,8 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, isAdmin } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
+  const links = useNavLinks("navbar", NAVBAR_FALLBACK);
+
 
   useEffect(() => {
     if (!user) { setDisplayName(""); return; }
