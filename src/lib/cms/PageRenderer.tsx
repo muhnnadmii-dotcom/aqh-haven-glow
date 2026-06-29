@@ -212,7 +212,123 @@ function renderSection(s: Section) {
       const R = dynamicSlots[s.slot];
       return R ? <div key={s.id}>{R()}</div> : null;
     }
+
+    case "business_tabs":
+      return <BusinessTabsBlock key={s.id} section={s} />;
   }
+}
+
+function BusinessTabsBlock({ section }: { section: BusinessTabsSection }) {
+  const [openId, setOpenId] = useState<string>(section.items[0]?.id ?? "");
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
+  if (!section.items.length) return null;
+  const active = section.items.find((x) => x.id === openId) ?? section.items[0];
+  return (
+    <Reveal>
+      <section className="mb-16">
+        {(section.kicker || section.heading || section.description) && (
+          <div className="text-center mb-10">
+            {section.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{section.kicker}</div>}
+            {section.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-4">{section.heading}</h2>}
+            {section.description && <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">{section.description}</p>}
+          </div>
+        )}
+        <div className="flex flex-wrap justify-center gap-2 mb-10">
+          {section.items.map((s) => {
+            const isOn = active.id === s.id;
+            return (
+              <button key={s.id} onClick={() => { setOpenId(s.id); setOpenFaq(null); }}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all ${isOn ? "btn-gold" : "glass hover:glass-gold"}`}>
+                <Icon name={s.icon} size={16} /> {s.title}
+              </button>
+            );
+          })}
+        </div>
+        <div className="glass rounded-3xl p-6 md:p-10 space-y-10">
+          <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] items-start">
+            <div>
+              <div className="inline-flex items-center gap-2 glass-gold rounded-full px-3 py-1.5 text-xs mb-4">
+                <Icon name={active.icon} size={14} className="text-gold" /> قسم {active.title}
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-3">{active.tagline}</h3>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{active.idea}</p>
+            </div>
+            {active.images.length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {active.images.map((img) => (
+                  <img key={img.id} src={getImageUrl(img.path)} onError={onImageError} alt={active.title}
+                    loading="lazy" className="h-40 sm:h-48 w-full object-cover rounded-2xl" />
+                ))}
+              </div>
+            )}
+          </div>
+          {active.features.length > 0 && (
+            <div>
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> ماذا نوفّر لك
+              </h4>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {active.features.map((f) => (
+                  <li key={f.id} className="flex items-start gap-2.5 glass rounded-xl px-4 py-3 text-sm border border-white/10">
+                    <CheckCircle2 size={16} className="text-gold mt-0.5 shrink-0" />
+                    <span className="text-foreground/90">{f.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {active.concerns.length > 0 && (
+            <div>
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> أسئلة ومخاوف شائعة
+              </h4>
+              <div className="space-y-2">
+                {active.concerns.map((c) => {
+                  const open = openFaq === c.id;
+                  return (
+                    <div key={c.id} className="glass rounded-2xl overflow-hidden">
+                      <button onClick={() => setOpenFaq(open ? null : c.id)}
+                        className="w-full flex items-center justify-between gap-4 p-4 text-right">
+                        <span className="font-bold text-sm">{c.q}</span>
+                        <span className="grid place-items-center h-7 w-7 rounded-lg glass-gold shrink-0">
+                          {open ? <Minus size={12} /> : <Plus size={12} />}
+                        </span>
+                      </button>
+                      {open && <p className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{c.a}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {active.payment.length > 0 && (
+            <div>
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> طرق الدفع والاشتراك
+              </h4>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {active.payment.map((p) => (
+                  <li key={p.id} className="flex items-start gap-2.5 text-sm">
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] shrink-0" />
+                    <span className="text-foreground/90 leading-relaxed">{p.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {active.cta && (
+            <div className="gradient-border rounded-2xl p-6 text-center">
+              <div className="font-bold mb-3">جاهز لمناقشة مشروعك؟</div>
+              <a href={whatsappLink(active.cta)} target="_blank" rel="noopener noreferrer"
+                className="btn-gold rounded-xl px-6 py-3 text-sm inline-flex items-center gap-2">
+                <MessageCircle size={16} /> تواصل عبر واتساب
+              </a>
+            </div>
+          )}
+        </div>
+      </section>
+    </Reveal>
+  );
 }
 
 // ─── Dynamic slot registry ────────────────────────────────────────────────
