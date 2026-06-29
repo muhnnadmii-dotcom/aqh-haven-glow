@@ -3,8 +3,10 @@ import { ImageUploader } from "@/components/ImageUploader";
 import type {
   Section, HeroSection, BadgeGridSection, PricingGroupsSection,
   ChecklistSection, CtaBandSection, RichTextSection,
+  LinkCardsSection, StepListSection, FaqSection, DynamicSlotSection,
 } from "./types";
 import { SECTION_TYPE_LABELS, newId } from "./types";
+
 
 const field = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:border-[color:var(--gold)]/60";
 const ta = field + " min-h-[80px]";
