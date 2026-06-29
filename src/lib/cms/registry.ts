@@ -2,6 +2,11 @@
 
 import type { PageDoc } from "./types";
 import { newId } from "./types";
+import marineCubeAsset from "@/assets/aqh-marine-cube.png.asset.json";
+import counterAquariumAsset from "@/assets/aqh-counter-aquarium.png.asset.json";
+import livingRoomTankAsset from "@/assets/aqh-living-room-tank.png.asset.json";
+import bannerTankAsset from "@/assets/aqh-banner-tank.png.asset.json";
+
 
 export type CmsPageGroup = "full" | "hybrid";
 
