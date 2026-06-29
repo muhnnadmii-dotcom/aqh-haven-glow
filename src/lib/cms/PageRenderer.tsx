@@ -268,4 +268,3 @@ export function CmsSlot({ pageKey }: { pageKey: string }) {
   return <PageSections doc={doc ?? fallback} />;
 }
 
-}
