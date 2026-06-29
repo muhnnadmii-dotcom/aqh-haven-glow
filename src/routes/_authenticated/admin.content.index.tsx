@@ -18,6 +18,7 @@ const HOME_EDITORS: DedicatedItem[] = [
   { to: "/admin/design",         label: "الصفحة الرئيسية", hint: "محرر مخصص للأقسام، البطل، والإحصائيات.", icon: Palette },
   { to: "/admin/design/about",   label: "من نحن",          hint: "محرر مخصص لقصتنا، رؤيتنا، وقيمنا.",     icon: ScrollText },
   { to: "/admin/design/contact", label: "تواصل معنا",      hint: "محرر معلومات الاتصال والشبكات الاجتماعية.", icon: ScrollText },
+  { to: "/admin/site/navigation", label: "روابط القائمة والفوتر", hint: "إدارة روابط الهيدر وقسم «روابط سريعة» بالفوتر — إضافة/ترتيب/إخفاء.", icon: FileEdit },
 ];
 
 const DYNAMIC_CONTENT: DedicatedItem[] = [

@@ -5,22 +5,30 @@ import aqhLogo from "@/assets/aqh-logo.png.asset.json";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsappLink } from "@/components/WhatsAppButton";
+import { useNavLinks, NAVBAR_FALLBACK, type SiteNavLink } from "@/lib/site-nav";
 
-const links = [
-  { to: "/", label: "الرئيسية" },
-  { to: "/portfolio", label: "أعمالنا" },
-  { to: "/services", label: "الخدمات" },
-  { to: "/maintenance", label: "الصيانة" },
-  { to: "/business-solutions", label: "حلول الأعمال" },
-  { to: "/knowledge", label: "مركز المعرفة" },
-  { to: "/contact", label: "تواصل معنا" },
-] as const;
+function NavItemLink({ l, className, activeClassName, onClick, children }: { l: SiteNavLink; className: string; activeClassName?: string; onClick?: () => void; children: React.ReactNode }) {
+  if (l.external || /^https?:\/\//i.test(l.href)) {
+    return (
+      <a href={l.href} target={l.open_in_new_tab ? "_blank" : undefined} rel={l.open_in_new_tab ? "noopener noreferrer" : undefined} className={className} onClick={onClick}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link to={l.href as any} className={className} activeProps={activeClassName ? { className: activeClassName } : undefined} activeOptions={{ exact: true }} onClick={onClick}>
+      {children}
+    </Link>
+  );
+}
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { user, isAdmin } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
+  const links = useNavLinks("navbar", NAVBAR_FALLBACK);
+
 
   useEffect(() => {
     if (!user) { setDisplayName(""); return; }
@@ -82,21 +90,18 @@ export function Navbar() {
 
             <nav className="hidden lg:flex items-center gap-1">
               {links.map((l) => (
-                <Link
-                  key={l.to}
-                  to={l.to}
+                <NavItemLink
+                  key={l.id}
+                  l={l}
                   className="relative px-3 py-2 text-sm text-muted-foreground transition-all duration-300 hover:text-[#D4A017] rounded-lg group"
-                  activeProps={{
-                    className:
-                      "relative px-3 py-2 text-sm text-[#D4A017] font-semibold rounded-lg",
-                  }}
-                  activeOptions={{ exact: true }}
+                  activeClassName="relative px-3 py-2 text-sm text-[#D4A017] font-semibold rounded-lg"
                 >
                   <span>{l.label}</span>
                   <span className="pointer-events-none absolute inset-x-3 -bottom-0.5 h-0.5 origin-center scale-x-0 bg-gradient-to-r from-transparent via-[#D4A017] to-transparent transition-transform duration-300 group-hover:scale-x-100" />
-                </Link>
+                </NavItemLink>
               ))}
             </nav>
+
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {isAdmin && (
@@ -195,20 +200,17 @@ export function Navbar() {
 
           <nav className="flex flex-col px-3 py-3 overflow-y-auto max-h-[calc(100%-72px)]">
             {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
+              <NavItemLink
+                key={l.id}
+                l={l}
                 onClick={() => setOpen(false)}
                 className="px-4 py-3 text-base rounded-xl text-white/85 hover:bg-white/5 hover:text-[#D4A017] transition-colors"
-                activeProps={{
-                  className:
-                    "px-4 py-3 text-base rounded-xl bg-[#D4A017]/15 text-[#D4A017] font-semibold border-r-2 border-[#D4A017]",
-                }}
-                activeOptions={{ exact: true }}
+                activeClassName="px-4 py-3 text-base rounded-xl bg-[#D4A017]/15 text-[#D4A017] font-semibold border-r-2 border-[#D4A017]"
               >
                 {l.label}
-              </Link>
+              </NavItemLink>
             ))}
+
 
             <div className="my-3 h-px bg-white/10" />
 

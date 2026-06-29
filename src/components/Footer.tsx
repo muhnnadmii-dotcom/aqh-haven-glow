@@ -1,6 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, MapPin, Phone } from "lucide-react";
 import aqhLogo from "@/assets/aqh-logo.png.asset.json";
+import { useNavLinks, FOOTER_FALLBACK, type SiteNavLink } from "@/lib/site-nav";
+
+function FooterLink({ l }: { l: SiteNavLink }) {
+  if (l.external || /^https?:\/\//i.test(l.href)) {
+    return (
+      <a href={l.href} target={l.open_in_new_tab ? "_blank" : undefined} rel={l.open_in_new_tab ? "noopener noreferrer" : undefined} className="hover:text-foreground">
+        {l.label}
+      </a>
+    );
+  }
+  return <Link to={l.href as any} className="hover:text-foreground">{l.label}</Link>;
+}
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
   return (
@@ -11,6 +23,7 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
 }
 
 export function Footer() {
+  const quickLinks = useNavLinks("footer_quick", FOOTER_FALLBACK);
   return (
     <footer className="relative mt-20 border-t border-white/10 bg-[oklch(0.10_0.05_245/0.6)] backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-6 py-14">
@@ -27,13 +40,12 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-bold mb-4 text-gradient-gold">روابط سريعة</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/portfolio" className="hover:text-foreground">أعمالنا</Link></li>
-              <li><Link to="/services" className="hover:text-foreground">خدماتنا</Link></li>
-              <li><Link to="/catalog" className="hover:text-foreground">الكاتلوج</Link></li>
-              <li><Link to="/knowledge" className="hover:text-foreground">مركز المعرفة</Link></li>
-              <li><Link to="/about" className="hover:text-foreground">من نحن</Link></li>
+              {quickLinks.map((l) => (
+                <li key={l.id}><FooterLink l={l} /></li>
+              ))}
             </ul>
           </div>
+
 
           <div>
             <h4 className="text-sm font-bold mb-4 text-gradient-gold">تواصل معنا</h4>
