@@ -40,13 +40,12 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-bold mb-4 text-gradient-gold">روابط سريعة</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/portfolio" className="hover:text-foreground">أعمالنا</Link></li>
-              <li><Link to="/services" className="hover:text-foreground">خدماتنا</Link></li>
-              <li><Link to="/catalog" className="hover:text-foreground">الكاتلوج</Link></li>
-              <li><Link to="/knowledge" className="hover:text-foreground">مركز المعرفة</Link></li>
-              <li><Link to="/about" className="hover:text-foreground">من نحن</Link></li>
+              {quickLinks.map((l) => (
+                <li key={l.id}><FooterLink l={l} /></li>
+              ))}
             </ul>
           </div>
+
 
           <div>
             <h4 className="text-sm font-bold mb-4 text-gradient-gold">تواصل معنا</h4>
