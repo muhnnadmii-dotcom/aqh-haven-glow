@@ -4,6 +4,7 @@ import type {
   Section, HeroSection, BadgeGridSection, PricingGroupsSection,
   ChecklistSection, CtaBandSection, RichTextSection,
   LinkCardsSection, StepListSection, FaqSection, DynamicSlotSection,
+  BusinessTabsSection,
 } from "./types";
 import { SECTION_TYPE_LABELS, newId } from "./types";
 
