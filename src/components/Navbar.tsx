@@ -5,16 +5,22 @@ import aqhLogo from "@/assets/aqh-logo.png.asset.json";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsappLink } from "@/components/WhatsAppButton";
+import { useNavLinks, NAVBAR_FALLBACK, type SiteNavLink } from "@/lib/site-nav";
 
-const links = [
-  { to: "/", label: "الرئيسية" },
-  { to: "/portfolio", label: "أعمالنا" },
-  { to: "/services", label: "الخدمات" },
-  { to: "/maintenance", label: "الصيانة" },
-  { to: "/business-solutions", label: "حلول الأعمال" },
-  { to: "/knowledge", label: "مركز المعرفة" },
-  { to: "/contact", label: "تواصل معنا" },
-] as const;
+function NavItemLink({ l, className, activeClassName, onClick, children }: { l: SiteNavLink; className: string; activeClassName?: string; onClick?: () => void; children: React.ReactNode }) {
+  if (l.external || /^https?:\/\//i.test(l.href)) {
+    return (
+      <a href={l.href} target={l.open_in_new_tab ? "_blank" : undefined} rel={l.open_in_new_tab ? "noopener noreferrer" : undefined} className={className} onClick={onClick}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link to={l.href as any} className={className} activeProps={activeClassName ? { className: activeClassName } : undefined} activeOptions={{ exact: true }} onClick={onClick}>
+      {children}
+    </Link>
+  );
+}
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
