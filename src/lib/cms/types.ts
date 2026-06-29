@@ -132,6 +132,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   step_list: "قائمة خطوات مرقّمة",
   faq: "أسئلة شائعة",
   dynamic_slot: "محتوى ديناميكي (قائمة تلقائية)",
+  business_tabs: "تبويبات حلول الأعمال",
 };
 
 export function newId() {
