@@ -23,6 +23,7 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
 }
 
 export function Footer() {
+  const quickLinks = useNavLinks("footer_quick", FOOTER_FALLBACK);
   return (
     <footer className="relative mt-20 border-t border-white/10 bg-[oklch(0.10_0.05_245/0.6)] backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-6 py-14">
