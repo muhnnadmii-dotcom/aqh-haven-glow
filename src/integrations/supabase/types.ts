@@ -2254,6 +2254,45 @@ export type Database = {
         }
         Relationships: []
       }
+      site_nav_links: {
+        Row: {
+          created_at: string
+          external: boolean
+          href: string
+          id: string
+          label: string
+          location: string
+          open_in_new_tab: boolean
+          sort_order: number
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          external?: boolean
+          href: string
+          id?: string
+          label: string
+          location: string
+          open_in_new_tab?: boolean
+          sort_order?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          external?: boolean
+          href?: string
+          id?: string
+          label?: string
+          location?: string
+          open_in_new_tab?: boolean
+          sort_order?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
       site_pages: {
         Row: {
           content: Json
