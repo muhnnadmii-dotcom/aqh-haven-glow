@@ -162,6 +162,9 @@ export function emptySection(type: SectionType): Section {
       return { ...base, type, heading: "الأسئلة الشائعة", items: [] };
     case "dynamic_slot":
       return { ...base, type, slot: "services_grid", note: "" };
+    case "business_tabs":
+      return { ...base, type, heading: "حلول لأصحاب الأعمال", kicker: "BUSINESS", description: "", items: [] };
   }
+}
 }
 
