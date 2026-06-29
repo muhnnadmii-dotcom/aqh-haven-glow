@@ -1,5 +1,224 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { uploadMedia, publicUrl, onImageError } from "@/lib/storage";
+import { whatsappLink } from "@/components/WhatsAppButton";
+import { Reveal } from "@/components/Reveal";
+import { CmsSlot, registerDynamicSlot } from "@/lib/cms/PageRenderer";
+import { toast } from "sonner";
+import {
+  ArrowDown, ArrowLeft, CheckCircle2, MessageCircle, Loader2,
+  MapPin, Upload, X,
+} from "lucide-react";
+
+const SLUG = "custom-aquariums";
+const BASE = "https://aqh-haven-glow.lovable.app";
+
+// =====================================================================
+// ROUTE
+// =====================================================================
+
+export const Route = createFileRoute("/services/custom-aquariums")({
+  loader: async () => {
+    const { data } = await supabase
+      .from("projects")
+      .select("id,slug,title,cover,cover_path,image_paths,images,location,tank_type,volume_liters")
+      .eq("published", true)
+      .order("sort_order")
+      .order("created_at", { ascending: false })
+      .limit(6);
+    const projects = (data ?? []).map((p: any) => {
+      const cover =
+        p.cover_path ||
+        (Array.isArray(p.image_paths) && p.image_paths[0]) ||
+        p.cover ||
+        (Array.isArray(p.images) && p.images[0]) ||
+        null;
+      return {
+        id: p.id as string,
+        slug: (p.slug as string) ?? null,
+        title: (p.title as string) ?? "",
+        cover: cover as string | null,
+        location: (p.location as string) ?? null,
+        tank_type: (p.tank_type as string) ?? null,
+        volume_liters: (p.volume_liters as number) ?? null,
+      };
+    });
+    return { projects };
+  },
+  head: () => ({
+    meta: [
+      { title: "تصميم وتركيب أحواض مخصصة | Aqua Haven" },
+      {
+        name: "description",
+        content:
+          "صمم حوضك المائي حسب المساحة والذوق مع Aqua Haven. خدمة تصميم وتركيب أحواض مائية للمنازل والمكاتب والمشاريع التجارية من الفكرة إلى التشغيل.",
+      },
+      { property: "og:title", content: "تصميم وتركيب أحواض مخصصة | Aqua Haven" },
+      {
+        property: "og:description",
+        content:
+          "خدمة تصميم وتركيب أحواض مخصصة: ندرس المساحة، نقترح النظام المناسب، وننفذ الحوض جاهزًا للتشغيل.",
+      },
+      { property: "og:url", content: `${BASE}/services/${SLUG}` },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: `${BASE}/services/${SLUG}` }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "تصميم وتركيب أحواض مخصصة",
+          provider: { "@type": "Organization", name: "Aqua Haven" },
+          areaServed: "SA",
+          description:
+            "خدمة تصميم وتركيب أحواض مائية مخصصة للمنازل والمكاتب والمشاريع التجارية.",
+        }),
+      },
+    ],
+  }),
+  component: CustomAquariumsPage,
+  errorComponent: () => (
+    <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+      <p className="text-muted-foreground mb-3">تعذر تحميل الصفحة.</p>
+      <Link to="/services" className="text-gradient-gold">رجوع للخدمات</Link>
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+      <Link to="/services" className="text-gradient-gold">رجوع للخدمات</Link>
+    </div>
+  ),
+});
+
+// =====================================================================
+// SIMILAR WORK — rendered via CMS dynamic_slot so admins can reorder/hide it
+// =====================================================================
+
+type SimilarProject = {
+  id: string;
+  slug: string | null;
+  title: string;
+  cover: string | null;
+  location: string | null;
+  tank_type: string | null;
+  volume_liters: number | null;
+};
+
+const SimilarWorkContext = createContext<{
+  projects: SimilarProject[];
+  onPick: (title: string) => void;
+}>({ projects: [], onPick: () => {} });
+
+const TANK_TYPE_LABELS: Record<string, string> = {
+  planted: "حوض نباتي",
+  river: "حوض نهري",
+  marine: "حوض بحري",
+  nano_reef: "نانو ريف",
+  decor: "حوض ديكور",
+};
+
+function SimilarWorkSlot() {
+  const { projects, onPick } = useContext(SimilarWorkContext);
+  if (!projects.length) return null;
+  return (
+    <Reveal>
+      <section id="similar-work" className="mb-12 scroll-mt-24">
+        <div className="flex items-end justify-between mb-5 flex-wrap gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold">أعمال مشابهة</h2>
+          <Link to="/portfolio" className="text-xs text-gradient-gold inline-flex items-center gap-1">
+            كل الأعمال <ArrowLeft size={12} />
+          </Link>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.map((p) => (
+            <article key={p.id} className="glass rounded-2xl overflow-hidden flex flex-col">
+              <div className="relative aspect-square bg-white/5 overflow-hidden">
+                <img
+                  src={publicUrl(p.cover)}
+                  alt={p.title}
+                  loading="lazy"
+                  onError={onImageError}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              </div>
+              <div className="p-4 flex flex-col flex-1">
+                <h3 className="font-bold text-sm mb-1.5 line-clamp-1">{p.title}</h3>
+                <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground mb-3">
+                  {p.tank_type && <span className="px-2 py-0.5 rounded-full bg-white/5">{TANK_TYPE_LABELS[p.tank_type] ?? p.tank_type}</span>}
+                  {p.volume_liters && <span className="px-2 py-0.5 rounded-full bg-white/5">{p.volume_liters} لتر</span>}
+                  {p.location && <span className="inline-flex items-center gap-1"><MapPin size={10} /> {p.location}</span>}
+                </div>
+                <button
+                  onClick={() => onPick(p.title)}
+                  className="mt-auto btn-outline-gold rounded-xl px-3 py-2 text-xs inline-flex items-center justify-center gap-1"
+                >
+                  أبغى مثل هذا <ArrowDown size={12} />
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </Reveal>
+  );
+}
+
+registerDynamicSlot("custom_aquariums_similar_work", () => <SimilarWorkSlot />);
+
+// =====================================================================
+// PAGE
+// =====================================================================
+
+type FormPrefill = { tank_type?: string; reference_project?: string };
+
+function CustomAquariumsPage() {
+  const data = Route.useLoaderData();
+  const projects = data.projects;
+  const [prefill, setPrefill] = useState<FormPrefill>({});
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // Prefill from URL (e.g. coming from gallery "أبغى مثل هذا" or tank-type link cards)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const ref_title = sp.get("ref_title");
+    const tank_type = sp.get("tank_type");
+    const extra: FormPrefill = {};
+    if (ref_title) extra.reference_project = ref_title;
+    if (tank_type) extra.tank_type = tank_type;
+    if (Object.keys(extra).length) {
+      setPrefill((p) => ({ ...p, ...extra }));
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    } else if (window.location.hash === "#request-form") {
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    }
+  }, []);
+
+  const pickReference = (title: string) => {
+    setPrefill((p) => ({ ...p, reference_project: title }));
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+
+  return (
+    <div className="mx-auto max-w-6xl px-5 sm:px-6 py-10 sm:py-14">
+      <Link to="/services" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-gold mb-6">
+        <ArrowLeft size={12} /> رجوع للخدمات
+      </Link>
+
+      <SimilarWorkContext.Provider value={{ projects, onPick: pickReference }}>
+        <CmsSlot pageKey="service_custom" />
+      </SimilarWorkContext.Provider>
+
+      <div ref={formRef} id="request-form" className="scroll-mt-24">
+        <DesignRequestForm prefill={prefill} />
+      </div>
+    </div>
+  );
+}
+
 import { supabase } from "@/integrations/supabase/client";
 import { uploadMedia, publicUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
