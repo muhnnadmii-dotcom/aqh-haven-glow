@@ -384,7 +384,7 @@ export const CMS_PAGES: CmsPageMeta[] = [
   { key: "trust",             label: "الخصوصية والثقة",    route: "/trust",                       group: "full",   hint: "صفحة كاملة من أقسام نصية حرة.",                                defaults: trustDefaults },
   // Hybrid pages
   { key: "consultation",      label: "صفحة الاستشارات",    route: "/consultation",                group: "hybrid", hint: "هيدر + شارات تظهر فوق نموذج الاستشارة.",                       defaults: consultationDefaults },
-  { key: "business_solutions",label: "حلول الأعمال",       route: "/business-solutions",          group: "hybrid", hint: "هيدر يظهر فوق محتوى صفحة الأعمال.",                            defaults: businessDefaults },
+  { key: "business_solutions",label: "حلول الأعمال",       route: "/business-solutions",          group: "full",   hint: "صفحة كاملة قابلة للتعديل: هيرو + تبويبات (كافيهات/مطاعم/فعاليات/...) بكل المحتوى.", defaults: businessDefaults },
   { key: "services_index",    label: "صفحة الخدمات",       route: "/services",                    group: "full",   hint: "صفحة كاملة قابلة للتعديل: هيرو، شبكة الخدمات، بطاقات إرشاد، خطوات، أسئلة شائعة، CTA.", defaults: servicesIndexDefaults },
   { key: "service_custom",    label: "تصميم أحواض مخصصة",  route: "/services/custom-aquariums",   group: "hybrid", hint: "هيدر يظهر فوق محتوى صفحة التصميم المخصص.",                    defaults: serviceCustomDefaults },
   { key: "catalog_meta",      label: "صفحة المتجر",        route: "/catalog",                     group: "hybrid", hint: "هيدر صفحة الكاتلوج.",                                          defaults: catalogDefaults },
