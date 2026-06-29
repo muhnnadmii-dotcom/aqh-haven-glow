@@ -165,7 +165,7 @@ function MemberBlock({ snap }: { snap: Snapshot }) {
               to="/account"
               className="btn-gold rounded-xl px-5 py-2.5 text-sm inline-flex items-center justify-center gap-2 shrink-0"
             >
-              ⬚ لوحة العميل ←
+              لوحة العميل ←
             </Link>
           </div>
 
