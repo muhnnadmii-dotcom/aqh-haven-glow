@@ -142,7 +142,7 @@ const businessDefaults: PageDoc = {
   ],
 };
 
-// ─── SERVICES INDEX (hybrid: hero above the dynamic services grid) ───────────
+// ─── SERVICES INDEX (full CMS) ───────────────────────────────────────────────
 const servicesIndexDefaults: PageDoc = {
   sections: [
     {
@@ -151,8 +151,59 @@ const servicesIndexDefaults: PageDoc = {
       title: "خدماتنا",
       description: "من التصميم الأولي وحتى الصيانة المستمرة — حلول متكاملة لعالمك المائي.",
     },
+    {
+      id: newId(), type: "dynamic_slot", enabled: true,
+      slot: "services_grid",
+      note: "شبكة الخدمات (تُدار من «الخدمات» بالقائمة الجانبية).",
+    },
+    {
+      id: newId(), type: "link_cards", enabled: true,
+      heading: "اختر الخدمة المناسبة لك",
+      subheading: "دلّنا على احتياجك ونوصلك للحل المباشر.",
+      columns: 5,
+      items: [
+        { id: newId(), title: "أريد حوضًا جديدًا", desc: "تصميم وتركيب أحواض مخصصة", href: "/services/custom-aquariums" },
+        { id: newId(), title: "حوضي يحتاج تنظيف", desc: "صيانة دورية وطارئة", href: "/maintenance" },
+        { id: newId(), title: "عندي مشكلة سمك أو ماء", desc: "استشارة مشاكل الأحواض", href: "/services/aquarium-consultation" },
+        { id: newId(), title: "عندي كافيه أو مشروع", desc: "حلول الأعمال والمشاريع", href: "/business-solutions" },
+        { id: newId(), title: "أريد منتجات ومستلزمات", desc: "الكاتلوج والمتجر", href: "/catalog" },
+      ],
+    },
+    {
+      id: newId(), type: "step_list", enabled: true,
+      heading: "طريقة العمل",
+      items: [
+        { id: newId(), text: "نسمع احتياجك" },
+        { id: newId(), text: "نعاين أو نراجع الصور" },
+        { id: newId(), text: "نقترح الحل المناسب" },
+        { id: newId(), text: "نجهز وننفذ" },
+        { id: newId(), text: "نتابع بعد التسليم" },
+      ],
+    },
+    {
+      id: newId(), type: "faq", enabled: true,
+      heading: "الأسئلة الشائعة",
+      items: [
+        { id: newId(), q: "كم تكلفة الحوض؟", a: "تختلف حسب الحجم، النوع (نهري/بحري)، والديكور. نقدّم عرضًا دقيقًا بعد فهم احتياجك أو معاينة المكان." },
+        { id: newId(), q: "هل توفرون صيانة؟", a: "نعم، لدينا باقات صيانة منتظمة شهرية أو نصف شهرية للأحواض النهرية والبحرية." },
+        { id: newId(), q: "هل أحتاج خبرة قبل أن أطلب حوضًا؟", a: "لا. نتولى كل شيء من التصميم حتى التشغيل، ونمنحك إرشادات بسيطة للعناية." },
+        { id: newId(), q: "هل يمكن تصميم الحوض حسب المساحة؟", a: "نعم، نصمم وننفذ أحواضًا مخصصة بمقاسات وأشكال تناسب مكانك وذوقك." },
+        { id: newId(), q: "هل تقدمون حلولًا للمشاريع التجارية؟", a: "نعم، لدينا حلول مخصصة للكافيهات والمطاعم والمكاتب والمعارض." },
+        { id: newId(), q: "هل أقدر أرسل صورة المكان فقط؟", a: "بالتأكيد. أرسلها عبر واتساب وسنرشدك بأنسب الخيارات." },
+      ],
+    },
+    {
+      id: newId(), type: "cta_band", enabled: true,
+      heading: "جاهز نبدأ معك؟",
+      description: "تواصل معنا الآن واطلب استشارتك أو حدد موعد معاينة.",
+      primary_label: "تواصل واتساب",
+      primary_whatsapp_template: "السلام عليكم، أرغب بالاستفسار عن خدماتكم.",
+      secondary_label: "نموذج التواصل",
+      secondary_href: "/contact",
+    },
   ],
 };
+
 
 // ─── SERVICE CUSTOM (hybrid: hero above the dynamic content) ─────────────────
 const serviceCustomDefaults: PageDoc = {
