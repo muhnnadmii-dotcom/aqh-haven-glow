@@ -404,6 +404,7 @@ export function SectionCard({
       {section.type === "step_list" && <StepListEditor section={section} onChange={onChange as any} />}
       {section.type === "faq" && <FaqEditor section={section} onChange={onChange as any} />}
       {section.type === "dynamic_slot" && <DynamicSlotEditor section={section} onChange={onChange as any} />}
+      {section.type === "business_tabs" && <BusinessTabsEditor section={section} onChange={onChange as any} />}
 
     </div>
   );
