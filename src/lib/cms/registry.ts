@@ -330,7 +330,7 @@ const servicesIndexDefaults: PageDoc = {
 };
 
 
-// ─── SERVICE CUSTOM (hybrid: hero above the dynamic content) ─────────────────
+// ─── SERVICE CUSTOM (full CMS: hero + all marketing sections) ────────────────
 const serviceCustomDefaults: PageDoc = {
   sections: [
     {
@@ -338,6 +338,119 @@ const serviceCustomDefaults: PageDoc = {
       kicker: "SERVICE",
       title: "تصميم وتركيب أحواض مخصصة",
       description: "نصمم وننفذ أحواضًا مائية تناسب مساحتك وذوقك، من دراسة الفكرة واختيار المقاس إلى التركيب والتشغيل والتسليم النهائي.",
+    },
+    {
+      id: newId(), type: "badge_grid", enabled: true,
+      items: [
+        { id: newId(), icon: "Ruler",        title: "تصميم حسب المساحة", desc: "نختار المقاس المناسب لمكانك بدقة." },
+        { id: newId(), icon: "Wrench",       title: "اختيار معدات مناسبة", desc: "فلتر، إضاءة، سخان، ومستلزمات أساسية." },
+        { id: newId(), icon: "CheckCircle2", title: "تركيب وتشغيل كامل", desc: "ننفذ ونسلمك الحوض جاهزًا للعمل." },
+      ],
+    },
+    {
+      id: newId(), type: "step_list", enabled: true,
+      heading: "كيف نعمل؟",
+      items: [
+        { id: newId(), text: "ندرس المساحة — نراجع الصور والمقاسات وطبيعة المكان." },
+        { id: newId(), text: "نقترح النظام المناسب — نوع الحوض، المقاس، المعدات، والكائنات." },
+        { id: newId(), text: "ننفذ ونسلم الحوض جاهزًا — تركيب وتشغيل، ثم شرح طريقة العناية." },
+      ],
+    },
+    {
+      id: newId(), type: "checklist", enabled: true,
+      heading: "لمن هذه الخدمة؟",
+      items: [
+        { id: newId(), text: "من يريد حوضًا جديدًا بدون تعقيد." },
+        { id: newId(), text: "من لا يعرف المقاس أو المعدات المناسبة." },
+        { id: newId(), text: "من يريد حوضًا يناسب ديكور البيت أو المكتب." },
+        { id: newId(), text: "من يريد حوضًا نباتيًا أو نهريًا أو بحريًا أو نانو." },
+        { id: newId(), text: "من يريد تنفيذًا كاملًا من الفكرة إلى التشغيل." },
+        { id: newId(), text: "من يريد حوضًا لمشروع تجاري أو مساحة استقبال." },
+      ],
+    },
+    {
+      id: newId(), type: "checklist", enabled: true,
+      heading: "ماذا تشمل الخدمة؟",
+      items: [
+        { id: newId(), text: "استشارة مبدئية لفهم المساحة والاحتياج" },
+        { id: newId(), text: "اقتراح نوع الحوض المناسب" },
+        { id: newId(), text: "تحديد المقاس المناسب حسب المكان" },
+        { id: newId(), text: "اختيار نوع النظام: نهري / نباتي / بحري / نانو" },
+        { id: newId(), text: "اختيار الفلتر، الإضاءة، السخان، والمعدات الأساسية" },
+        { id: newId(), text: "تصميم الديكور الداخلي" },
+        { id: newId(), text: "اختيار الأسماك أو النباتات أو الكائنات المناسبة" },
+        { id: newId(), text: "التركيب والتشغيل" },
+        { id: newId(), text: "شرح طريقة العناية بعد التسليم" },
+        { id: newId(), text: "متابعة مبدئية بعد التنفيذ" },
+      ],
+    },
+    {
+      id: newId(), type: "link_cards", enabled: true,
+      heading: "أنواع الأحواض التي ننفذها",
+      columns: 3,
+      items: [
+        { id: newId(), title: "أحواض نباتية",      desc: "تصاميم طبيعية بالنباتات الحية، مناسبة للمنازل والمكاتب.", href: "?tank_type=planted#request-form" },
+        { id: newId(), title: "أحواض نهريّة",      desc: "أحواض أسماك نهريّة بتجهيزات عملية ومناسبة للمبتدئين.", href: "?tank_type=river#request-form" },
+        { id: newId(), title: "أحواض بحرية",       desc: "أنظمة بحرية بتصميم فاخر واختيار دقيق للمعدات والكائنات.", href: "?tank_type=marine#request-form" },
+        { id: newId(), title: "نانو ريف",         desc: "أحواض بحرية صغيرة بمظهر فخم للمساحات المحدودة.", href: "?tank_type=nano_reef#request-form" },
+        { id: newId(), title: "أحواض مكاتب ومجالس", desc: "تصاميم تناسب الديكور وتضيف حضورًا بصريًا للمكان.", href: "?tank_type=decor#request-form" },
+        { id: newId(), title: "أحواض مشاريع تجارية", desc: "حلول للكافيهات، المطاعم، العيادات، المعارض، وصالات الانتظار.", href: "?tank_type=decor#request-form" },
+      ],
+    },
+    {
+      id: newId(), type: "step_list", enabled: true,
+      heading: "طريقة العمل",
+      items: [
+        { id: newId(), text: "ترسل لنا صورة المكان أو الفكرة." },
+        { id: newId(), text: "نراجع المساحة والاحتياج." },
+        { id: newId(), text: "نقترح نوع النظام والمقاس المناسب." },
+        { id: newId(), text: "نعطيك تصورًا مبدئيًا وتكلفة تقريبية." },
+        { id: newId(), text: "نجهز المعدات والمواد." },
+        { id: newId(), text: "ننفذ التركيب والتشغيل." },
+        { id: newId(), text: "نسلمك تعليمات العناية والمتابعة." },
+      ],
+    },
+    {
+      id: newId(), type: "checklist", enabled: true,
+      heading: "ماذا نحتاج منك؟",
+      items: [
+        { id: newId(), text: "صورة للمكان." },
+        { id: newId(), text: "المقاس التقريبي للمساحة." },
+        { id: newId(), text: "المدينة والحي." },
+        { id: newId(), text: "نوع الحوض المطلوب إن وجد." },
+        { id: newId(), text: "الميزانية التقريبية." },
+        { id: newId(), text: "هل يوجد حوض حالي؟" },
+        { id: newId(), text: "هل تريد صيانة بعد التركيب؟" },
+        { id: newId(), text: "أي صورة إلهام أو تصميم أعجبك." },
+      ],
+    },
+    {
+      id: newId(), type: "dynamic_slot", enabled: true,
+      slot: "custom_aquariums_similar_work",
+      note: "أعمال مشابهة (تُسحب تلقائيًا من «أعمالنا/المشاريع»).",
+    },
+    {
+      id: newId(), type: "faq", enabled: true,
+      heading: "أسئلة شائعة",
+      items: [
+        { id: newId(), q: "كم يستغرق تنفيذ الحوض؟", a: "يختلف حسب حجم الحوض ونوع النظام. غالبًا من أيام إلى أسابيع، ونحدد جدولًا واضحًا بعد الاتفاق." },
+        { id: newId(), q: "هل أحتاج خبرة للعناية بالحوض؟", a: "لا. نُسلّمك الحوض جاهزًا للتشغيل ونشرح لك خطوات العناية الأساسية بطريقة بسيطة." },
+        { id: newId(), q: "هل توفرون الصيانة بعد التركيب؟", a: "نعم، نقدّم باقات صيانة دورية اختيارية بعد التسليم." },
+        { id: newId(), q: "هل أقدر أختار شكل التصميم؟", a: "بالتأكيد. نأخذ ذوقك ومرجعك البصري بعين الاعتبار قبل اقتراح التصميم." },
+        { id: newId(), q: "وش الأفضل لي: نهري أو بحري؟", a: "يعتمد على مستوى العناية المطلوب والميزانية. نقترح لك الأنسب بعد فهم احتياجك." },
+        { id: newId(), q: "هل الحوض يحتاج عناية يومية؟", a: "أغلب الأنظمة تحتاج إجراءات بسيطة جدًا يوميًا، وصيانة دورية كل فترة." },
+        { id: newId(), q: "هل توفرون الأسماك والنباتات؟", a: "نعم، نختار الكائنات المناسبة لنظام الحوض ونرتب تجهيزها." },
+        { id: newId(), q: "هل يمكن تنفيذ الحوض حسب مساحة معينة؟", a: "نعم، نصمم الحوض بمقاسات وأشكال تناسب مكانك بدقة." },
+        { id: newId(), q: "هل أقدر أرسل صورة فقط وتحددون المناسب؟", a: "نعم، أرسل صورة المكان وسنقترح الحل المناسب." },
+        { id: newId(), q: "هل السعر ثابت؟", a: "السعر يختلف حسب الحجم، النظام، المعدات، والكائنات. نقدم تقديرًا واضحًا بعد فهم التفاصيل." },
+      ],
+    },
+    {
+      id: newId(), type: "cta_band", enabled: true,
+      heading: "جاهز تبدأ تصميم حوضك؟",
+      description: "عبّئ الطلب التالي، وسنراجع التفاصيل ونقترح لك الحل المناسب حسب المساحة والميزانية ونوع الحوض.",
+      primary_label: "ابدأ الطلب الآن",
+      primary_href: "#request-form",
     },
   ],
 };
@@ -386,7 +499,7 @@ export const CMS_PAGES: CmsPageMeta[] = [
   { key: "consultation",      label: "صفحة الاستشارات",    route: "/consultation",                group: "hybrid", hint: "هيدر + شارات تظهر فوق نموذج الاستشارة.",                       defaults: consultationDefaults },
   { key: "business_solutions",label: "حلول الأعمال",       route: "/business-solutions",          group: "full",   hint: "صفحة كاملة قابلة للتعديل: هيرو + تبويبات (كافيهات/مطاعم/فعاليات/...) بكل المحتوى.", defaults: businessDefaults },
   { key: "services_index",    label: "صفحة الخدمات",       route: "/services",                    group: "full",   hint: "صفحة كاملة قابلة للتعديل: هيرو، شبكة الخدمات، بطاقات إرشاد، خطوات، أسئلة شائعة، CTA.", defaults: servicesIndexDefaults },
-  { key: "service_custom",    label: "تصميم أحواض مخصصة",  route: "/services/custom-aquariums",   group: "hybrid", hint: "هيدر يظهر فوق محتوى صفحة التصميم المخصص.",                    defaults: serviceCustomDefaults },
+  { key: "service_custom",    label: "تصميم أحواض مخصصة",  route: "/services/custom-aquariums",   group: "full",   hint: "صفحة كاملة قابلة للتعديل: هيرو، شارات، خطوات، قوائم، أنواع الأحواض، أعمال مشابهة، أسئلة شائعة، CTA.", defaults: serviceCustomDefaults },
   { key: "catalog_meta",      label: "صفحة المتجر",        route: "/catalog",                     group: "hybrid", hint: "هيدر صفحة الكاتلوج.",                                          defaults: catalogDefaults },
   { key: "portfolio_meta",    label: "صفحة أعمالنا",       route: "/portfolio",                   group: "hybrid", hint: "هيدر صفحة المشاريع (تُدار من «أعمالنا/الأحواض»).",            defaults: portfolioDefaults },
   { key: "knowledge_meta",    label: "صفحة المعرفة",       route: "/knowledge",                   group: "hybrid", hint: "هيدر صفحة المقالات (تُدار من «المقالات»).",                    defaults: knowledgeDefaults },
