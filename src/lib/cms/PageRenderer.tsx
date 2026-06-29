@@ -1,12 +1,14 @@
 import { Link } from "@tanstack/react-router";
+import { useState, type ReactNode } from "react";
 import * as Icons from "lucide-react";
-import { CheckCircle2, MessageCircle } from "lucide-react";
+import { CheckCircle2, MessageCircle, ChevronDown, ArrowLeft } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { usePageDoc } from "./api";
 import { getPageMeta } from "./registry";
 import type { Section, PageDoc } from "./types";
+
 
 function Icon({ name, size = 20, className = "" }: { name: string; size?: number; className?: string }) {
   const Cmp = (Icons as any)[name] ?? Icons.Sparkles;
@@ -147,7 +149,99 @@ function renderSection(s: Section) {
           </div>
         </Reveal>
       );
+
+    case "link_cards": {
+      if (!s.items.length) return null;
+      const cols = Math.max(2, Math.min(5, s.columns ?? 5));
+      const colsCls = ({ 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4", 5: "lg:grid-cols-5" } as Record<number, string>)[cols];
+      return (
+        <Reveal key={s.id}>
+          <section className="mb-16">
+            {(s.heading || s.subheading) && (
+              <div className="text-center mb-8">
+                {s.heading && <h2 className="text-2xl md:text-3xl font-bold mb-2">{s.heading}</h2>}
+                {s.subheading && <p className="text-muted-foreground text-sm">{s.subheading}</p>}
+              </div>
+            )}
+            <div className={`grid gap-3 sm:grid-cols-2 ${colsCls}`}>
+              {s.items.map((o) => {
+                const isExternal = /^https?:\/\//.test(o.href) || o.href.startsWith("mailto:") || o.href.startsWith("tel:");
+                const cls = "glass rounded-2xl p-4 hover:glass-gold transition flex flex-col";
+                const inner: ReactNode = (
+                  <>
+                    <div className="font-bold text-sm mb-1.5">{o.title}</div>
+                    {o.desc && <div className="text-xs text-muted-foreground flex-1">{o.desc}</div>}
+                    <span className="inline-flex items-center gap-1 text-xs text-gradient-gold mt-3">انتقل <ArrowLeft size={12} /></span>
+                  </>
+                );
+                return isExternal ? (
+                  <a key={o.id} href={o.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+                ) : (
+                  <a key={o.id} href={o.href} className={cls}>{inner}</a>
+                );
+              })}
+            </div>
+          </section>
+        </Reveal>
+      );
+    }
+
+    case "step_list":
+      if (!s.items.length) return null;
+      return (
+        <Reveal key={s.id}>
+          <section className="glass rounded-3xl p-8 md:p-10 mb-16">
+            {s.heading && <h2 className="text-2xl font-bold text-center mb-8">{s.heading}</h2>}
+            <div className={`grid gap-4 sm:grid-cols-2 ${s.items.length >= 5 ? "lg:grid-cols-5" : s.items.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+              {s.items.map((it, i) => (
+                <div key={it.id} className="text-center">
+                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-full glass-gold text-gold font-bold mb-3">{i + 1}</div>
+                  <div className="text-sm">{it.text}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </Reveal>
+      );
+
+    case "faq":
+      if (!s.items.length) return null;
+      return <FaqBlock key={s.id} heading={s.heading} items={s.items} />;
+
+    case "dynamic_slot": {
+      const R = dynamicSlots[s.slot];
+      return R ? <div key={s.id}>{R()}</div> : null;
+    }
   }
+}
+
+// ─── Dynamic slot registry ────────────────────────────────────────────────
+const dynamicSlots: Record<string, () => ReactNode> = {};
+export function registerDynamicSlot(key: string, render: () => ReactNode) {
+  dynamicSlots[key] = render;
+}
+
+function FaqBlock({ heading, items }: { heading?: string; items: { id: string; q: string; a: string }[] }) {
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <Reveal>
+      <section className="mb-16">
+        {heading && <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">{heading}</h2>}
+        <div className="space-y-3 max-w-3xl mx-auto">
+          {items.map((f, i) => (
+            <div key={f.id} className="glass rounded-2xl overflow-hidden">
+              <button onClick={() => setOpen(open === i ? null : i)}
+                className="w-full p-5 flex items-center justify-between gap-3 text-right">
+                <span className="font-bold text-sm">{f.q}</span>
+                <ChevronDown size={16} className={`shrink-0 transition ${open === i ? "rotate-180" : ""}`} />
+              </button>
+              {open === i && <div className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{f.a}</div>}
+            </div>
+          ))}
+        </div>
+      </section>
+    </Reveal>
+  );
 }
 
 /** Renders sections only — no outer wrapper. For embedding inside hybrid pages. */
@@ -173,3 +267,4 @@ export function CmsSlot({ pageKey }: { pageKey: string }) {
   const fallback = getPageMeta(pageKey)?.defaults ?? { sections: [] };
   return <PageSections doc={doc ?? fallback} />;
 }
+

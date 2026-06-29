@@ -52,13 +52,46 @@ export type RichTextSection = SectionBase & {
   body: string;
 };
 
+export type LinkCardItem = { id: string; title: string; desc?: string; href: string };
+export type LinkCardsSection = SectionBase & {
+  type: "link_cards";
+  heading?: string;
+  subheading?: string;
+  columns?: number; // 2..5
+  items: LinkCardItem[];
+};
+
+export type StepListSection = SectionBase & {
+  type: "step_list";
+  heading?: string;
+  items: { id: string; text: string }[];
+};
+
+export type FaqItem = { id: string; q: string; a: string };
+export type FaqSection = SectionBase & {
+  type: "faq";
+  heading?: string;
+  items: FaqItem[];
+};
+
+// Renders a built-in dynamic block in place (e.g. the services list grid).
+export type DynamicSlotSection = SectionBase & {
+  type: "dynamic_slot";
+  slot: string; // e.g. "services_grid"
+  note?: string;
+};
+
 export type Section =
   | HeroSection
   | BadgeGridSection
   | PricingGroupsSection
   | ChecklistSection
   | CtaBandSection
-  | RichTextSection;
+  | RichTextSection
+  | LinkCardsSection
+  | StepListSection
+  | FaqSection
+  | DynamicSlotSection;
 
 export type SectionType = Section["type"];
 
@@ -73,6 +106,10 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   checklist: "قائمة تحقق",
   cta_band: "شريط دعوة (CTA)",
   rich_text: "نص حر",
+  link_cards: "بطاقات روابط",
+  step_list: "قائمة خطوات مرقّمة",
+  faq: "أسئلة شائعة",
+  dynamic_slot: "محتوى ديناميكي (قائمة تلقائية)",
 };
 
 export function newId() {
@@ -94,5 +131,14 @@ export function emptySection(type: SectionType): Section {
       return { ...base, type, heading: "ابدأ الآن", description: "", primary_label: "تواصل واتساب", primary_whatsapp_template: "السلام عليكم", secondary_label: "نموذج التواصل", secondary_href: "/contact" };
     case "rich_text":
       return { ...base, type, heading: "", body: "" };
+    case "link_cards":
+      return { ...base, type, heading: "اختر ما يناسبك", subheading: "", columns: 5, items: [] };
+    case "step_list":
+      return { ...base, type, heading: "طريقة العمل", items: [] };
+    case "faq":
+      return { ...base, type, heading: "الأسئلة الشائعة", items: [] };
+    case "dynamic_slot":
+      return { ...base, type, slot: "services_grid", note: "" };
   }
 }
+
