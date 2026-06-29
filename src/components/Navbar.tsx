@@ -200,20 +200,17 @@ export function Navbar() {
 
           <nav className="flex flex-col px-3 py-3 overflow-y-auto max-h-[calc(100%-72px)]">
             {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
+              <NavItemLink
+                key={l.id}
+                l={l}
                 onClick={() => setOpen(false)}
                 className="px-4 py-3 text-base rounded-xl text-white/85 hover:bg-white/5 hover:text-[#D4A017] transition-colors"
-                activeProps={{
-                  className:
-                    "px-4 py-3 text-base rounded-xl bg-[#D4A017]/15 text-[#D4A017] font-semibold border-r-2 border-[#D4A017]",
-                }}
-                activeOptions={{ exact: true }}
+                activeClassName="px-4 py-3 text-base rounded-xl bg-[#D4A017]/15 text-[#D4A017] font-semibold border-r-2 border-[#D4A017]"
               >
                 {l.label}
-              </Link>
+              </NavItemLink>
             ))}
+
 
             <div className="my-3 h-px bg-white/10" />
 
