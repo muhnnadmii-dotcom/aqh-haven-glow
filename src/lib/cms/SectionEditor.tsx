@@ -291,6 +291,11 @@ export function SectionCard({
       {section.type === "checklist" && <ChecklistEditor section={section} onChange={onChange as any} />}
       {section.type === "cta_band" && <CtaBandEditor section={section} onChange={onChange as any} />}
       {section.type === "rich_text" && <RichTextEditor section={section} onChange={onChange as any} />}
+      {section.type === "link_cards" && <LinkCardsEditor section={section} onChange={onChange as any} />}
+      {section.type === "step_list" && <StepListEditor section={section} onChange={onChange as any} />}
+      {section.type === "faq" && <FaqEditor section={section} onChange={onChange as any} />}
+      {section.type === "dynamic_slot" && <DynamicSlotEditor section={section} onChange={onChange as any} />}
+
     </div>
   );
 }
