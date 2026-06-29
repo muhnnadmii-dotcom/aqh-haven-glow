@@ -136,10 +136,6 @@ const trustDefaults: PageDoc = {
 };
 
 // ─── BUSINESS SOLUTIONS (full CMS via business_tabs) ─────────────────────────
-import marineCubeAsset from "@/assets/aqh-marine-cube.png.asset.json";
-import counterAquariumAsset from "@/assets/aqh-counter-aquarium.png.asset.json";
-import livingRoomTankAsset from "@/assets/aqh-living-room-tank.png.asset.json";
-import bannerTankAsset from "@/assets/aqh-banner-tank.png.asset.json";
 
 const businessDefaults: PageDoc = {
   sections: [
