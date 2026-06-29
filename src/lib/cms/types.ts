@@ -166,5 +166,4 @@ export function emptySection(type: SectionType): Section {
       return { ...base, type, heading: "حلول لأصحاب الأعمال", kicker: "BUSINESS", description: "", items: [] };
   }
 }
-}
 
