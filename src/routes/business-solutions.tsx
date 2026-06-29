@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BusinessSolutions } from "../components/BusinessSolutions";
 import { CmsSlot } from "@/lib/cms/PageRenderer";
 
 export const Route = createFileRoute("/business-solutions")({
@@ -20,7 +19,6 @@ function BusinessSolutionsPage() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">
       <CmsSlot pageKey="business_solutions" />
-      <BusinessSolutions />
     </div>
   );
 }

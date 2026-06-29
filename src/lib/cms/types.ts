@@ -81,6 +81,27 @@ export type DynamicSlotSection = SectionBase & {
   note?: string;
 };
 
+// Multi-tab business solutions block (cafes/restaurants/events/...).
+export type BusinessTabItem = {
+  id: string;
+  icon: string; // lucide icon name
+  title: string;
+  tagline: string;
+  idea: string;
+  features: { id: string; text: string }[];
+  concerns: { id: string; q: string; a: string }[];
+  payment: { id: string; text: string }[];
+  images: { id: string; path: string }[]; // storage path or absolute URL
+  cta: string; // whatsapp message template
+};
+export type BusinessTabsSection = SectionBase & {
+  type: "business_tabs";
+  heading?: string;
+  kicker?: string;
+  description?: string;
+  items: BusinessTabItem[];
+};
+
 export type Section =
   | HeroSection
   | BadgeGridSection
@@ -91,7 +112,8 @@ export type Section =
   | LinkCardsSection
   | StepListSection
   | FaqSection
-  | DynamicSlotSection;
+  | DynamicSlotSection
+  | BusinessTabsSection;
 
 export type SectionType = Section["type"];
 
@@ -110,6 +132,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   step_list: "قائمة خطوات مرقّمة",
   faq: "أسئلة شائعة",
   dynamic_slot: "محتوى ديناميكي (قائمة تلقائية)",
+  business_tabs: "تبويبات حلول الأعمال",
 };
 
 export function newId() {
@@ -139,6 +162,8 @@ export function emptySection(type: SectionType): Section {
       return { ...base, type, heading: "الأسئلة الشائعة", items: [] };
     case "dynamic_slot":
       return { ...base, type, slot: "services_grid", note: "" };
+    case "business_tabs":
+      return { ...base, type, heading: "حلول لأصحاب الأعمال", kicker: "BUSINESS", description: "", items: [] };
   }
 }
 

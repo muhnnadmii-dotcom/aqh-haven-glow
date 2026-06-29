@@ -4,6 +4,7 @@ import type {
   Section, HeroSection, BadgeGridSection, PricingGroupsSection,
   ChecklistSection, CtaBandSection, RichTextSection,
   LinkCardsSection, StepListSection, FaqSection, DynamicSlotSection,
+  BusinessTabsSection,
 } from "./types";
 import { SECTION_TYPE_LABELS, newId } from "./types";
 
@@ -252,6 +253,114 @@ function DynamicSlotEditor({ section, onChange }: Props<DynamicSlotSection>) {
   );
 }
 
+function BusinessTabsEditor({ section, onChange }: Props<BusinessTabsSection>) {
+  const setItem = (i: number, patch: Partial<BusinessTabsSection["items"][number]>) => {
+    const items = section.items.slice(); items[i] = { ...items[i], ...patch }; onChange({ ...section, items });
+  };
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <label><span className={lbl}>Kicker</span>
+          <input className={field} value={section.kicker ?? ""} onChange={(e) => onChange({ ...section, kicker: e.target.value })} /></label>
+        <label className="sm:col-span-2"><span className={lbl}>عنوان القسم</span>
+          <input className={field} value={section.heading ?? ""} onChange={(e) => onChange({ ...section, heading: e.target.value })} /></label>
+        <label className="sm:col-span-3"><span className={lbl}>الوصف</span>
+          <textarea className={ta} value={section.description ?? ""} onChange={(e) => onChange({ ...section, description: e.target.value })} /></label>
+      </div>
+      {section.items.map((it, i) => (
+        <details key={it.id} className="rounded-2xl border border-white/10 p-4" open={i === 0}>
+          <summary className="cursor-pointer text-sm font-bold flex items-center justify-between gap-2">
+            <span>{it.title || "تبويب بدون اسم"}</span>
+            <button type="button" onClick={(e) => { e.preventDefault(); onChange({ ...section, items: section.items.filter((_, k) => k !== i) }); }}
+              className="px-3 py-1.5 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+          </summary>
+          <div className="mt-4 space-y-3">
+            <div className="grid gap-2 sm:grid-cols-[160px_1fr]">
+              <input className={field} placeholder="أيقونة (Coffee, Fish ...)" value={it.icon} onChange={(e) => setItem(i, { icon: e.target.value })} />
+              <input className={field} placeholder="اسم التبويب" value={it.title} onChange={(e) => setItem(i, { title: e.target.value })} />
+            </div>
+            <input className={field} placeholder="عنوان فرعي (Tagline)" value={it.tagline} onChange={(e) => setItem(i, { tagline: e.target.value })} />
+            <textarea className={ta} placeholder="فكرة القسم" value={it.idea} onChange={(e) => setItem(i, { idea: e.target.value })} />
+            <input className={field} placeholder="رسالة واتساب عند الضغط على CTA" value={it.cta} onChange={(e) => setItem(i, { cta: e.target.value })} />
+
+            <div>
+              <div className={lbl}>الصور</div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {it.images.map((img, ii) => (
+                  <div key={img.id} className="rounded-xl border border-white/10 p-3 space-y-2">
+                    <ImageUploader value={img.path} onChange={(p) => {
+                      const images = it.images.slice(); images[ii] = { ...img, path: p ?? "" }; setItem(i, { images });
+                    }} folder="cms/business" cropAspect="free" />
+                    <button type="button" onClick={() => setItem(i, { images: it.images.filter((_, k) => k !== ii) })}
+                      className="text-xs px-3 py-1.5 rounded-xl border border-red-400/20 text-red-300 inline-flex items-center gap-1">
+                      <Trash2 size={12} /> حذف الصورة
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={() => setItem(i, { images: [...it.images, { id: newId(), path: "" }] })}
+                className="mt-2 text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف صورة</button>
+            </div>
+
+            <div>
+              <div className={lbl}>ماذا نوفّر (features)</div>
+              {it.features.map((f, fi) => (
+                <div key={f.id} className="flex gap-2 mb-2">
+                  <input className={field} value={f.text}
+                    onChange={(e) => { const features = it.features.slice(); features[fi] = { ...f, text: e.target.value }; setItem(i, { features }); }} />
+                  <button type="button" onClick={() => setItem(i, { features: it.features.filter((_, k) => k !== fi) })}
+                    className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+                </div>
+              ))}
+              <button type="button" onClick={() => setItem(i, { features: [...it.features, { id: newId(), text: "" }] })}
+                className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف ميزة</button>
+            </div>
+
+            <div>
+              <div className={lbl}>أسئلة ومخاوف</div>
+              {it.concerns.map((c, ci) => (
+                <div key={c.id} className="rounded-xl border border-white/10 p-3 mb-2 space-y-2">
+                  <div className="flex gap-2">
+                    <input className={field} placeholder="السؤال" value={c.q}
+                      onChange={(e) => { const concerns = it.concerns.slice(); concerns[ci] = { ...c, q: e.target.value }; setItem(i, { concerns }); }} />
+                    <button type="button" onClick={() => setItem(i, { concerns: it.concerns.filter((_, k) => k !== ci) })}
+                      className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+                  </div>
+                  <textarea className={ta} placeholder="الإجابة" value={c.a}
+                    onChange={(e) => { const concerns = it.concerns.slice(); concerns[ci] = { ...c, a: e.target.value }; setItem(i, { concerns }); }} />
+                </div>
+              ))}
+              <button type="button" onClick={() => setItem(i, { concerns: [...it.concerns, { id: newId(), q: "", a: "" }] })}
+                className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف سؤال</button>
+            </div>
+
+            <div>
+              <div className={lbl}>طرق الدفع</div>
+              {it.payment.map((p, pi) => (
+                <div key={p.id} className="flex gap-2 mb-2">
+                  <input className={field} value={p.text}
+                    onChange={(e) => { const payment = it.payment.slice(); payment[pi] = { ...p, text: e.target.value }; setItem(i, { payment }); }} />
+                  <button type="button" onClick={() => setItem(i, { payment: it.payment.filter((_, k) => k !== pi) })}
+                    className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+                </div>
+              ))}
+              <button type="button" onClick={() => setItem(i, { payment: [...it.payment, { id: newId(), text: "" }] })}
+                className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف بند</button>
+            </div>
+          </div>
+        </details>
+      ))}
+      <button type="button" onClick={() => onChange({ ...section, items: [...section.items, {
+        id: newId(), icon: "Sparkles", title: "تبويب جديد", tagline: "", idea: "",
+        features: [], concerns: [], payment: [], images: [], cta: "السلام عليكم",
+      }] })} className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1">
+        <Plus size={14} /> أضف تبويب
+      </button>
+      <p className="text-[11px] text-muted-foreground">أسماء الأيقونات من <code>lucide-react</code> (Coffee, UtensilsCrossed, PartyPopper, Fish ...).</p>
+    </div>
+  );
+}
+
 export function SectionCard({
 
   section, index, total, onChange, onDelete, onMoveUp, onMoveDown,
@@ -295,6 +404,7 @@ export function SectionCard({
       {section.type === "step_list" && <StepListEditor section={section} onChange={onChange as any} />}
       {section.type === "faq" && <FaqEditor section={section} onChange={onChange as any} />}
       {section.type === "dynamic_slot" && <DynamicSlotEditor section={section} onChange={onChange as any} />}
+      {section.type === "business_tabs" && <BusinessTabsEditor section={section} onChange={onChange as any} />}
 
     </div>
   );
