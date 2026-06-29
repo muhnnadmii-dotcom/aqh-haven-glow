@@ -596,11 +596,12 @@ function HomePage() {
         </div>
       </section>
     ) : null,
+
+    customer_card: () => <CustomerHomeCard />,
   };
 
   return (
     <>
-      <CustomerHomeCard />
       {orderedSections.filter((s) => s.enabled).map((s) => {
         const R = renderers[s.section_key];
         if (!R) return null;

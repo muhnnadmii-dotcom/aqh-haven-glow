@@ -203,6 +203,7 @@ export async function setSectionEnabled(section_key: string, enabled: boolean) {
 }
 
 export const SECTION_LABELS: Record<string, string> = {
+  customer_card: "بطاقة ترحيب العميل",
   hero: "البانر العلوي",
   explore: "استكشف أكوا هيفن",
   partners: "شريط الشركاء",
