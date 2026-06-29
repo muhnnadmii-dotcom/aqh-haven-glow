@@ -1,12 +1,14 @@
 import { Link } from "@tanstack/react-router";
+import { useState, type ReactNode } from "react";
 import * as Icons from "lucide-react";
-import { CheckCircle2, MessageCircle } from "lucide-react";
+import { CheckCircle2, MessageCircle, ChevronDown, ArrowLeft } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { usePageDoc } from "./api";
 import { getPageMeta } from "./registry";
 import type { Section, PageDoc } from "./types";
+
 
 function Icon({ name, size = 20, className = "" }: { name: string; size?: number; className?: string }) {
   const Cmp = (Icons as any)[name] ?? Icons.Sparkles;
