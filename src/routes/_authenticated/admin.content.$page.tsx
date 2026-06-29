@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/admin/content/$page")({
   component: ContentEditor,
 });
 
-const ALL_TYPES: SectionType[] = ["hero", "badge_grid", "pricing_groups", "checklist", "cta_band", "rich_text", "link_cards", "step_list", "faq", "dynamic_slot"];
+const ALL_TYPES: SectionType[] = ["hero", "badge_grid", "pricing_groups", "checklist", "cta_band", "rich_text", "link_cards", "step_list", "faq", "dynamic_slot", "business_tabs"];
 
 function ContentEditor() {
   const { page } = Route.useParams();
