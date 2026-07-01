@@ -14,6 +14,30 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
   const [rows, setRows] = useState<Att[]>([]);
   const [uploading, setUploading] = useState(false);
   const [type, setType] = useState(ATTACHMENT_TYPES[0]);
+  const [dragOver, setDragOver] = useState(false);
+  const typeRef = useRef(type);
+  useEffect(() => { typeRef.current = type; }, [type]);
+
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length) return;
+    setUploading(true);
+    let failed = 0;
+    for (const file of files) {
+      try {
+        await uploadOneAttachment(relatedType, relatedId, file, typeRef.current);
+      } catch (err: any) {
+        failed++;
+        console.error("attachment upload failed", err);
+      }
+    }
+    setUploading(false);
+    if (failed === 0) toast.success(files.length > 1 ? `تم رفع ${files.length} مرفقات` : "تم رفع المرفق");
+    else if (failed < files.length) toast.warning(`فشل رفع ${failed} من ${files.length}`);
+    else toast.error("تعذر رفع المرفقات");
+    load();
+  };
+  const [uploading, setUploading] = useState(false);
+  const [type, setType] = useState(ATTACHMENT_TYPES[0]);
 
   const load = async () => {
     const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", relatedType).eq("related_id", relatedId).order("created_at", { ascending: false });
