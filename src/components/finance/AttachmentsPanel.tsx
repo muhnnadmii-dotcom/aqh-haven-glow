@@ -71,7 +71,12 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
   };
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+    <div
+      onDragOver={(e) => { if (!canManage) return; e.preventDefault(); setDragOver(true); }}
+      onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
+      onDrop={onDrop}
+      className={`rounded-lg border p-3 transition-colors ${dragOver ? "border-gold/60 bg-gold/10" : "border-white/10 bg-white/5"}`}
+    >
       <div className="flex items-center justify-between gap-2 mb-2">
         <div className="text-[12px] font-semibold flex items-center gap-1.5"><Paperclip size={13} /> المرفقات</div>
         {canManage && (
@@ -86,6 +91,11 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
           </div>
         )}
       </div>
+      {canManage && (
+        <div className={`text-[10.5px] text-center py-1.5 mb-2 rounded border border-dashed ${dragOver ? "border-gold/60 text-gold" : "border-white/10 text-muted-foreground"}`}>
+          {dragOver ? "أفلت الملفات للرفع" : "اسحب وأفلت الملفات هنا للرفع"}
+        </div>
+      )}
       {rows.length === 0 ? (
         <div className="text-[11px] text-muted-foreground text-center py-3">لا توجد مرفقات</div>
       ) : (
