@@ -755,6 +755,16 @@ function QuoteBuilder() {
 
         }
       `}</style>
+
+      <div className="no-print">
+        {isNew ? (
+          <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-[12px] text-muted-foreground">
+            احفظ الفاتورة أولاً قبل إرفاق الملفات.
+          </div>
+        ) : (
+          <AttachmentsPanel relatedType="quote" relatedId={id} canManage={true} />
+        )}
+      </div>
     </div>
   );
 }
