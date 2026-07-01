@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ATTACHMENT_TYPES } from "@/lib/finance/constants";
 import { Paperclip, Upload, Trash2, Download, X } from "lucide-react";
