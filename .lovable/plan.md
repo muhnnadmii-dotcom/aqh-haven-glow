@@ -1,30 +1,36 @@
-## الخطة
+## Goal
 
-### 1) تحديث بنية قاعدة البيانات (migration)
-- إضافة عمودين على `aqh_products`:
-  - `price numeric` — سعر البيع من سلة (بدون ضريبة).
-  - `salla_raw jsonb` — حفظ كل صف سلة كما هو للرجوع إليه لاحقاً.
-- إعادة تعريف الـ view `aqh_quote_products` لتُظهر `price` للمنتجات (مع إبقاء `cost` متاحاً) — حتى يقدر مولّد عرض السعر يجيب سعر البيع، لا التكلفة.
+Allow the admin to attach more than one file to an invoice/quote in the finance module, matching the behavior already used on income/expense rows.
 
-### 2) إعادة استيراد المنتجات (data)
-- تنفيذ الملف المرفق كما هو:
-  - `TRUNCATE aqh_products RESTART IDENTITY CASCADE` ← ⚠️ ينظّف أيضاً `aqh_product_suppliers` و `aqh_restock_requests` (روابط المورد + طلبات إعادة التموين) لأنها FK على المنتجات. هذا متوقّع وصرّحت بقبوله.
-  - `INSERT` لكل المنتجات (~الـ 690 سطر) مع `price` + `salla_raw`.
-- التنفيذ يتم على دفعات عبر أداة الإدخال (لتفادي قيود حجم الاستعلام).
+## Findings
 
-### 3) ربط السعر في مولّد عرض السعر
-ملف: `src/routes/_authenticated/admin.finance.quotes.$id.tsx`
-- نوع `Catalog`: إضافة `price?: number`.
-- استعلام البحث يختار `price` أيضاً من الـ view.
-- `pickProduct` لمنتجات سلة: تعبئة `price` من `p.price` (سعر البيع بدون ضريبة). الرجوع لـ `cost` فقط لو السعر مفقود. منتجات الموردين تبقى على `supplier_cost`.
-- شريحة السعر داخل قائمة البحث تعرض سعر البيع بدل التكلفة لمنتجات سلة.
+- **Income/expense rows already support multi-file uploads.** `src/components/finance/RowAttachmentControl.tsx` opens a dialog whose file input is `multiple`, and it loops `uploadOneAttachment` over every selected file. No change needed there — will just verify UX after the quote work.
+- **Quotes/invoices have no attachments UI today.** `src/routes/_authenticated/admin.finance.quotes.$id.tsx` has no attachment code, and the `finance_related_type` enum only allows `income | expense | supplier`, so the existing `finance_attachments` table cannot store quote files as-is.
 
-### ملاحظات
-- النموذج الضريبي الحالي ثابت: الأسعار تُدخل **بدون** ضريبة ثم تُحسب 15% — يتطابق مع `سعر المنتج` في سلة (الخاضع للضريبة يضاف عليه VAT تلقائياً في الواجهة).
-- لا تغييرات على RLS أو الصلاحيات.
-- لا حذف لملفات/صفحات أخرى.
+## Plan
 
-### قائمة الفحص بعد التنفيذ
-- جدول المنتجات يحتوي على عمودَي `price` و `salla_raw` والصفوف معاد إدخالها بالعدد المتوقع.
-- في `/admin/finance/quotes/new`: البحث عن منتج سلة → يظهر السعر، واختياره يعبّي `price` بسعر البيع.
-- يجب إعادة ربط الموردين بالمنتجات (روابط `aqh_product_suppliers` تم تفريغها بسبب CASCADE).
+### 1. Database migration
+- Add `'quote'` to the `public.finance_related_type` enum.
+- Update `public.finance_refresh_attachment_status()` so the `quote` branch is a no-op (quotes have no `attachment_status` column to sync — just skip the UPDATE for that type instead of erroring).
+- No new table, no new bucket: reuse `finance_attachments` + the private `finance-attachments` storage bucket that already backs income/expense uploads.
+
+### 2. Reusable attachments panel for quotes
+- Add an "المرفقات" card at the bottom of the quote builder page (`admin.finance.quotes.$id.tsx`), visible only after the quote is saved (i.e. when `id !== "new"`).
+- Reuse `AttachmentsPanel` from `src/components/finance/AttachmentsPanel.tsx` with `relatedType="quote"` and `relatedId={id}`. It already supports:
+  - Selecting multiple files at once (`<input multiple>`).
+  - Uploading each file via `uploadOneAttachment` in a loop.
+  - Listing existing attachments with download and delete actions and per-file "attachment type" tagging.
+- Show a small hint above the panel: "احفظ الفاتورة أولاً قبل إرفاق الملفات" when `isNew`, then reveal the panel after first save.
+
+### 3. Permissions
+- Access control is handled by the existing RLS on `finance_attachments` (admin / finance roles). No new policy needed since we're only widening the enum, not the policy expression.
+
+### 4. Verification
+- Open an existing quote → attach 3 mixed files (PDF + images) in one go → confirm all appear in the list, can be downloaded, and can be individually deleted.
+- Confirm income/expense rows still let the user pick and upload multiple files in a single dialog action.
+
+## Technical notes
+
+- Migration touches: `finance_related_type` enum, `finance_refresh_attachment_status` function.
+- Frontend touches: `src/routes/_authenticated/admin.finance.quotes.$id.tsx` (import + render `AttachmentsPanel`).
+- No changes to storage buckets, RLS policies, or the row-level attachment control.
