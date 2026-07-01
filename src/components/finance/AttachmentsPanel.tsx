@@ -66,7 +66,7 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
             </select>
             <label className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold/15 border border-gold/30 text-gold text-[11px] cursor-pointer hover:bg-gold/25">
               <Upload size={11} /> {uploading ? "..." : "رفع"}
-              <input type="file" hidden onChange={onPick} disabled={uploading} accept={ACCEPT} />
+              <input type="file" hidden multiple onChange={onPick} disabled={uploading} accept={ACCEPT} />
             </label>
           </div>
         )}
