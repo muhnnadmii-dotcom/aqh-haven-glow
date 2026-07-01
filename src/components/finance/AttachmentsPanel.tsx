@@ -22,17 +22,24 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
   useEffect(() => { load(); }, [relatedType, relatedId]);
 
   const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
     setUploading(true);
-    try {
-      await uploadOneAttachment(relatedType, relatedId, file, type);
-      toast.success("تم رفع المرفق");
-      e.target.value = "";
-      load();
-    } catch (err: any) {
-      toast.error("تعذر الرفع: " + (err.message ?? "خطأ"));
-    } finally { setUploading(false); }
+    let failed = 0;
+    for (const file of files) {
+      try {
+        await uploadOneAttachment(relatedType, relatedId, file, type);
+      } catch (err: any) {
+        failed++;
+        console.error("attachment upload failed", err);
+      }
+    }
+    setUploading(false);
+    e.target.value = "";
+    if (failed === 0) toast.success(files.length > 1 ? `تم رفع ${files.length} مرفقات` : "تم رفع المرفق");
+    else if (failed < files.length) toast.warning(`فشل رفع ${failed} من ${files.length}`);
+    else toast.error("تعذر رفع المرفقات");
+    load();
   };
 
   const del = async (a: Att) => {
