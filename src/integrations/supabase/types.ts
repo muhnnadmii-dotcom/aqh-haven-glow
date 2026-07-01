@@ -2611,7 +2611,7 @@ export type Database = {
       finance_attachment_status: "attached" | "not_attached" | "not_required"
       finance_category_kind: "main" | "sub"
       finance_internal_review: "unreviewed" | "reviewed"
-      finance_related_type: "income" | "expense" | "supplier"
+      finance_related_type: "income" | "expense" | "supplier" | "quote"
       request_status: "new" | "in_progress" | "closed"
       service_request_status:
         | "new"
@@ -2772,7 +2772,7 @@ export const Constants = {
       finance_attachment_status: ["attached", "not_attached", "not_required"],
       finance_category_kind: ["main", "sub"],
       finance_internal_review: ["unreviewed", "reviewed"],
-      finance_related_type: ["income", "expense", "supplier"],
+      finance_related_type: ["income", "expense", "supplier", "quote"],
       request_status: ["new", "in_progress", "closed"],
       service_request_status: [
         "new",

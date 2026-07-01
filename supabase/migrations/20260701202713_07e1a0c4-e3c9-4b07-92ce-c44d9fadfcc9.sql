@@ -1,0 +1,1 @@
+ALTER TYPE public.finance_related_type ADD VALUE IF NOT EXISTS 'quote';

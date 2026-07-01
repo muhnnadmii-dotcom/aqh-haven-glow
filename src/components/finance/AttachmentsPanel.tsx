@@ -8,7 +8,9 @@ type Att = { id: string; file_url: string; file_name: string; file_type: string 
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.csv";
 
-export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relatedType: "income" | "expense" | "supplier"; relatedId: string; canManage: boolean }) {
+export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote";
+
+export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relatedType: FinanceAttachRelatedType; relatedId: string; canManage: boolean }) {
   const [rows, setRows] = useState<Att[]>([]);
   const [uploading, setUploading] = useState(false);
   const [type, setType] = useState(ATTACHMENT_TYPES[0]);
@@ -20,17 +22,24 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
   useEffect(() => { load(); }, [relatedType, relatedId]);
 
   const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
     setUploading(true);
-    try {
-      await uploadOneAttachment(relatedType, relatedId, file, type);
-      toast.success("تم رفع المرفق");
-      e.target.value = "";
-      load();
-    } catch (err: any) {
-      toast.error("تعذر الرفع: " + (err.message ?? "خطأ"));
-    } finally { setUploading(false); }
+    let failed = 0;
+    for (const file of files) {
+      try {
+        await uploadOneAttachment(relatedType, relatedId, file, type);
+      } catch (err: any) {
+        failed++;
+        console.error("attachment upload failed", err);
+      }
+    }
+    setUploading(false);
+    e.target.value = "";
+    if (failed === 0) toast.success(files.length > 1 ? `تم رفع ${files.length} مرفقات` : "تم رفع المرفق");
+    else if (failed < files.length) toast.warning(`فشل رفع ${failed} من ${files.length}`);
+    else toast.error("تعذر رفع المرفقات");
+    load();
   };
 
   const del = async (a: Att) => {
@@ -57,7 +66,7 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
             </select>
             <label className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold/15 border border-gold/30 text-gold text-[11px] cursor-pointer hover:bg-gold/25">
               <Upload size={11} /> {uploading ? "..." : "رفع"}
-              <input type="file" hidden onChange={onPick} disabled={uploading} accept={ACCEPT} />
+              <input type="file" hidden multiple onChange={onPick} disabled={uploading} accept={ACCEPT} />
             </label>
           </div>
         )}
@@ -139,7 +148,7 @@ export function PendingAttachmentsPicker({ items, setItems }: { items: PendingAt
   );
 }
 
-export async function uploadOneAttachment(relatedType: "income" | "expense" | "supplier", relatedId: string, file: File, attachmentType: string) {
+export async function uploadOneAttachment(relatedType: FinanceAttachRelatedType, relatedId: string, file: File, attachmentType: string) {
   const { data: u } = await supabase.auth.getUser();
   const safe = file.name.replace(/[^\w.\-]+/g, "_");
   const path = `${relatedType}/${relatedId}/${Date.now()}_${safe}`;
@@ -157,7 +166,7 @@ export async function uploadOneAttachment(relatedType: "income" | "expense" | "s
   if (ins.error) throw ins.error;
 }
 
-export async function uploadPendingAttachments(relatedType: "income" | "expense" | "supplier", relatedId: string, items: PendingAttachment[]) {
+export async function uploadPendingAttachments(relatedType: FinanceAttachRelatedType, relatedId: string, items: PendingAttachment[]) {
   let failed = 0;
   for (const it of items) {
     try {

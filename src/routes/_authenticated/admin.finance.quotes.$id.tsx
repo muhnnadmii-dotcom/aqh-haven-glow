@@ -11,6 +11,7 @@ import { ArrowRight, Plus, Trash2, Save, Printer, Loader2, Search, FileText, Spa
 import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AQH_PAYMENT_TERMS, AQH_DELIVERY_TERMS, AQH_WARRANTY_TERMS, AQH_NOTES_TEMPLATES } from "@/lib/aqh-quote-templates";
+import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/quotes/$id")({
   ssr: false,
@@ -755,6 +756,16 @@ function QuoteBuilder() {
 
         }
       `}</style>
+
+      <div className="no-print">
+        {isNew ? (
+          <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-[12px] text-muted-foreground">
+            احفظ الفاتورة أولاً قبل إرفاق الملفات.
+          </div>
+        ) : (
+          <AttachmentsPanel relatedType="quote" relatedId={id} canManage={true} />
+        )}
+      </div>
     </div>
   );
 }
