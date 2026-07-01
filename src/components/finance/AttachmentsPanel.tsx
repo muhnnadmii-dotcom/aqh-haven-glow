@@ -148,7 +148,7 @@ export function PendingAttachmentsPicker({ items, setItems }: { items: PendingAt
   );
 }
 
-export async function uploadOneAttachment(relatedType: "income" | "expense" | "supplier", relatedId: string, file: File, attachmentType: string) {
+export async function uploadOneAttachment(relatedType: FinanceAttachRelatedType, relatedId: string, file: File, attachmentType: string) {
   const { data: u } = await supabase.auth.getUser();
   const safe = file.name.replace(/[^\w.\-]+/g, "_");
   const path = `${relatedType}/${relatedId}/${Date.now()}_${safe}`;
