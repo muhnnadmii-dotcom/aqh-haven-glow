@@ -8,7 +8,9 @@ type Att = { id: string; file_url: string; file_name: string; file_type: string 
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.csv";
 
-export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relatedType: "income" | "expense" | "supplier"; relatedId: string; canManage: boolean }) {
+export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote";
+
+export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relatedType: FinanceAttachRelatedType; relatedId: string; canManage: boolean }) {
   const [rows, setRows] = useState<Att[]>([]);
   const [uploading, setUploading] = useState(false);
   const [type, setType] = useState(ATTACHMENT_TYPES[0]);
