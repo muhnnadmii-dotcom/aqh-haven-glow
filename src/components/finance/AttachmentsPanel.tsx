@@ -166,7 +166,7 @@ export async function uploadOneAttachment(relatedType: FinanceAttachRelatedType,
   if (ins.error) throw ins.error;
 }
 
-export async function uploadPendingAttachments(relatedType: "income" | "expense" | "supplier", relatedId: string, items: PendingAttachment[]) {
+export async function uploadPendingAttachments(relatedType: FinanceAttachRelatedType, relatedId: string, items: PendingAttachment[]) {
   let failed = 0;
   for (const it of items) {
     try {
