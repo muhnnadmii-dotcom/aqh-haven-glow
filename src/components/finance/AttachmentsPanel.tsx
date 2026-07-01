@@ -36,8 +36,6 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
     else toast.error("تعذر رفع المرفقات");
     load();
   };
-  const [uploading, setUploading] = useState(false);
-  const [type, setType] = useState(ATTACHMENT_TYPES[0]);
 
   const load = async () => {
     const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", relatedType).eq("related_id", relatedId).order("created_at", { ascending: false });
@@ -47,23 +45,16 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
 
   const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
-    setUploading(true);
-    let failed = 0;
-    for (const file of files) {
-      try {
-        await uploadOneAttachment(relatedType, relatedId, file, type);
-      } catch (err: any) {
-        failed++;
-        console.error("attachment upload failed", err);
-      }
-    }
-    setUploading(false);
     e.target.value = "";
-    if (failed === 0) toast.success(files.length > 1 ? `تم رفع ${files.length} مرفقات` : "تم رفع المرفق");
-    else if (failed < files.length) toast.warning(`فشل رفع ${failed} من ${files.length}`);
-    else toast.error("تعذر رفع المرفقات");
-    load();
+    await uploadFiles(files);
+  };
+
+  const onDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (!canManage || uploading) return;
+    const files = Array.from(e.dataTransfer.files ?? []);
+    await uploadFiles(files);
   };
 
   const del = async (a: Att) => {
