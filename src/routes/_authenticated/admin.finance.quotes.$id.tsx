@@ -11,6 +11,7 @@ import { ArrowRight, Plus, Trash2, Save, Printer, Loader2, Search, FileText, Spa
 import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AQH_PAYMENT_TERMS, AQH_DELIVERY_TERMS, AQH_WARRANTY_TERMS, AQH_NOTES_TEMPLATES } from "@/lib/aqh-quote-templates";
+import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/quotes/$id")({
   ssr: false,
