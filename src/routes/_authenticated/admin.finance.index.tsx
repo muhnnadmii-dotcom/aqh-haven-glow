@@ -48,10 +48,9 @@ function FinanceDashboard() {
   const range = useMemo(() => {
     if (pickedMonth) {
       const [y, m] = pickedMonth.split("-").map(Number);
-      const first = new Date(y, m - 1, 1);
-      const last = new Date(y, m, 0);
-      const iso = (d: Date) => d.toISOString().slice(0, 10);
-      return { dateFrom: iso(first), dateTo: iso(last) };
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const lastDay = new Date(y, m, 0).getDate();
+      return { dateFrom: `${y}-${pad(m)}-01`, dateTo: `${y}-${pad(m)}-${pad(lastDay)}` };
     }
     return resolveRange(period, from, to);
   }, [period, from, to, pickedMonth]);
