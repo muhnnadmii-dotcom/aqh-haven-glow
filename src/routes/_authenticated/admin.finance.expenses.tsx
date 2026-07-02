@@ -24,6 +24,7 @@ function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<any>(null);
   const [creating, setCreating] = useState(false);
+  const [creatingOwnerDraw, setCreatingOwnerDraw] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
 
   const [q, setQ] = useState("");
