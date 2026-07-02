@@ -27,6 +27,7 @@ function FinanceDashboard() {
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [pickedMonth, setPickedMonth] = useState(""); // YYYY-MM specific month
   const [excludeDraws, setExcludeDraws] = useState(true);
   const [fMain, setFMain] = useState("");
   const [fSupplier, setFSupplier] = useState("");
@@ -44,7 +45,16 @@ function FinanceDashboard() {
   const [loading, setLoading] = useState(true);
   const [drawer, setDrawer] = useState<DrawerSpec | null>(null);
 
-  const range = useMemo(() => resolveRange(period, from, to), [period, from, to]);
+  const range = useMemo(() => {
+    if (pickedMonth) {
+      const [y, m] = pickedMonth.split("-").map(Number);
+      const first = new Date(y, m - 1, 1);
+      const last = new Date(y, m, 0);
+      const iso = (d: Date) => d.toISOString().slice(0, 10);
+      return { dateFrom: iso(first), dateTo: iso(last) };
+    }
+    return resolveRange(period, from, to);
+  }, [period, from, to, pickedMonth]);
   const prev = useMemo(() => previousRange(range), [range]);
   const ownerDrawCatId = useMemo(() => cats.find((c) => c.system_slug === OWNER_DRAW_SLUG)?.id ?? null, [cats]);
 
@@ -179,15 +189,28 @@ function FinanceDashboard() {
             { v: "all", l: "الكل" },
             { v: "custom", l: "مخصص" },
           ].map((o) => (
-            <button key={o.v} onClick={() => setPeriod(o.v as PeriodKey)}
-              className={`px-3 py-1.5 rounded-lg text-[12px] border ${period === o.v ? "bg-gold/15 border-gold/30 text-gold" : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground"}`}>{o.l}</button>
+            <button key={o.v} onClick={() => { setPeriod(o.v as PeriodKey); setPickedMonth(""); }}
+              className={`px-3 py-1.5 rounded-lg text-[12px] border ${!pickedMonth && period === o.v ? "bg-gold/15 border-gold/30 text-gold" : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground"}`}>{o.l}</button>
           ))}
-          {period === "custom" && (
+          {period === "custom" && !pickedMonth && (
             <>
               <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border border-white/10" />
               <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border border-white/10" />
             </>
           )}
+          <div className="inline-flex items-center gap-1.5">
+            <span className="text-[11px] text-muted-foreground">شهر محدد:</span>
+            <input
+              type="month"
+              value={pickedMonth}
+              onChange={(e) => setPickedMonth(e.target.value)}
+              className={`px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border ${pickedMonth ? "border-gold/40 text-gold" : "border-white/10"}`}
+            />
+            {pickedMonth && (
+              <button onClick={() => setPickedMonth("")}
+                className="px-2 py-1.5 rounded-lg text-[11px] border border-white/10 bg-white/5 hover:bg-white/10">مسح</button>
+            )}
+          </div>
           <label className={`ms-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] border cursor-pointer ${excludeDraws ? "bg-gold/10 border-gold/30 text-gold" : "bg-white/5 border-white/10 text-muted-foreground"}`}>
             <input type="checkbox" checked={excludeDraws} onChange={(e) => setExcludeDraws(e.target.checked)} className="accent-gold" />
             استثناء توزيع الأرباح من الحسابات
@@ -214,7 +237,7 @@ function FinanceDashboard() {
         <Kpi icon={TrendingDown} label="مصروفات التشغيل" value={fmtSAR(totOpExpense)} tone="text-red-300"
           change={pctChange(totOpExpense, pTotOpExpense)} invert
           onClick={() => open({ title: "مصروفات التشغيل", show: "expense" })} />
-        <Kpi icon={Scale} label="الصافي التشغيلي" value={fmtSAR(netOp)} tone={netOp >= 0 ? "text-emerald-300" : "text-red-300"}
+        <Kpi icon={Scale} label="صافي الربح قبل التوزيع" value={fmtSAR(netOp)} tone={netOp >= 0 ? "text-emerald-300" : "text-red-300"}
           change={pctChange(netOp, pNetOp)} />
         <Kpi icon={Wallet} label="توزيع الأرباح" value={fmtSAR(totDraws)} tone="text-gold"
           change={pctChange(totDraws, pTotDraws)}
