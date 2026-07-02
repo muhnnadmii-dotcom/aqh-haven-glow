@@ -248,7 +248,7 @@ function BusinessTabsBlock({ section }: { section: BusinessTabsSection }) {
           <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] items-start">
             <div>
               <div className="inline-flex items-center gap-2 glass-gold rounded-full px-3 py-1.5 text-xs mb-4">
-                <Icon name={active.icon} size={14} className="text-gold" /> قسم {active.title}
+                <Icon name={active.icon} size={14} className="text-gold" /> {(section.tab_badge_prefix ?? "قسم")} {active.title}
               </div>
               <h3 className="text-2xl md:text-3xl font-bold mb-3">{active.tagline}</h3>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{active.idea}</p>
@@ -265,7 +265,7 @@ function BusinessTabsBlock({ section }: { section: BusinessTabsSection }) {
           {active.features.length > 0 && (
             <div>
               <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> ماذا نوفّر لك
+                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> {section.features_heading ?? "ماذا نوفّر لك"}
               </h4>
               <ul className="grid gap-3 sm:grid-cols-2">
                 {active.features.map((f) => (
@@ -280,7 +280,7 @@ function BusinessTabsBlock({ section }: { section: BusinessTabsSection }) {
           {active.concerns.length > 0 && (
             <div>
               <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> أسئلة ومخاوف شائعة
+                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> {section.concerns_heading ?? "أسئلة ومخاوف شائعة"}
               </h4>
               <div className="space-y-2">
                 {active.concerns.map((c) => {
@@ -304,7 +304,7 @@ function BusinessTabsBlock({ section }: { section: BusinessTabsSection }) {
           {active.payment.length > 0 && (
             <div>
               <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> طرق الدفع والاشتراك
+                <span className="h-1 w-6 rounded-full bg-[color:var(--gold)]" /> {section.payment_heading ?? "طرق الدفع والاشتراك"}
               </h4>
               <ul className="grid gap-2 sm:grid-cols-2">
                 {active.payment.map((p) => (
@@ -318,10 +318,10 @@ function BusinessTabsBlock({ section }: { section: BusinessTabsSection }) {
           )}
           {active.cta && (
             <div className="gradient-border rounded-2xl p-6 text-center">
-              <div className="font-bold mb-3">جاهز لمناقشة مشروعك؟</div>
+              <div className="font-bold mb-3">{section.cta_heading ?? "جاهز لمناقشة مشروعك؟"}</div>
               <a href={whatsappLink(active.cta)} target="_blank" rel="noopener noreferrer"
                 className="btn-gold rounded-xl px-6 py-3 text-sm inline-flex items-center gap-2">
-                <MessageCircle size={16} /> تواصل عبر واتساب
+                <MessageCircle size={16} /> {section.cta_button_label ?? "تواصل عبر واتساب"}
               </a>
             </div>
           )}
