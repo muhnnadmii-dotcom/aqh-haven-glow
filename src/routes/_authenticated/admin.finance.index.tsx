@@ -87,7 +87,7 @@ function FinanceDashboard() {
     };
     // last 6 months window for the owner-draws bar chart
     const drawsFrom = new Date(); drawsFrom.setMonth(drawsFrom.getMonth() - 5); drawsFrom.setDate(1);
-    const drawsFromStr = drawsFrom.toISOString().slice(0, 10);
+    const drawsFromStr = `${drawsFrom.getFullYear()}-${String(drawsFrom.getMonth() + 1).padStart(2, "0")}-01`;
 
     const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }] = await Promise.all([
       buildIncQ(range),
