@@ -64,7 +64,7 @@ function FinanceDashboard() {
       if (r.dateFrom) q = q.gte("income_date", r.dateFrom);
       if (r.dateTo) q = q.lte("income_date", r.dateTo);
       if (fSource) q = q.eq("income_source_id", fSource);
-      if (fAccount) q = q.eq("account_type", fAccount);
+      if (fAccount) q = q.eq("account_type", fAccount as "business" | "personal");
       return q;
     };
     const buildExpQ = (r: { dateFrom: string | null; dateTo: string | null }) => {
@@ -73,7 +73,7 @@ function FinanceDashboard() {
       if (r.dateTo) q = q.lte("expense_date", r.dateTo);
       if (fMain) q = q.eq("main_category_id", fMain);
       if (fSupplier) q = q.eq("supplier_id", fSupplier);
-      if (fAccount) q = q.eq("account_type", fAccount);
+      if (fAccount) q = q.eq("account_type", fAccount as "business" | "personal");
       return q;
     };
     // last 6 months window for the owner-draws bar chart
