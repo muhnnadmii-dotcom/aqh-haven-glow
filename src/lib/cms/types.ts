@@ -99,6 +99,13 @@ export type BusinessTabsSection = SectionBase & {
   heading?: string;
   kicker?: string;
   description?: string;
+  // Labels for the fixed sub-headings inside the active tab (all optional; sensible defaults if empty)
+  tab_badge_prefix?: string;        // default: "قسم" → "قسم كافيهات"
+  features_heading?: string;        // default: "ماذا نوفّر لك"
+  concerns_heading?: string;        // default: "أسئلة ومخاوف شائعة"
+  payment_heading?: string;         // default: "طرق الدفع والاشتراك"
+  cta_heading?: string;             // default: "جاهز لمناقشة مشروعك؟"
+  cta_button_label?: string;        // default: "تواصل عبر واتساب"
   items: BusinessTabItem[];
 };
 
