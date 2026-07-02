@@ -3,7 +3,8 @@ export type PeriodKey = "today" | "week" | "month" | "year" | "all" | "custom";
 
 export type DateRange = { dateFrom: string | null; dateTo: string | null };
 
-const iso = (d: Date) => d.toISOString().slice(0, 10);
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export function resolveRange(period: PeriodKey, from: string, to: string): DateRange {
   const now = new Date();
