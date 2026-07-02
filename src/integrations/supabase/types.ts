@@ -1194,6 +1194,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["finance_category_kind"]
           name: string
           parent_id: string | null
+          system_slug: string | null
           updated_at: string
         }
         Insert: {
@@ -1204,6 +1205,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["finance_category_kind"]
           name: string
           parent_id?: string | null
+          system_slug?: string | null
           updated_at?: string
         }
         Update: {
@@ -1214,6 +1216,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["finance_category_kind"]
           name?: string
           parent_id?: string | null
+          system_slug?: string | null
           updated_at?: string
         }
         Relationships: [

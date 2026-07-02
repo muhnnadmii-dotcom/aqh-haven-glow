@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
-import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
-import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive } from "lucide-react";
+import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, OWNER_DRAW_SLUG, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
+import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
 import { AuditPanel } from "@/components/finance/AuditPanel";
@@ -24,6 +24,7 @@ function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<any>(null);
   const [creating, setCreating] = useState(false);
+  const [creatingOwnerDraw, setCreatingOwnerDraw] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
 
   const [q, setQ] = useState("");
@@ -53,6 +54,8 @@ function ExpensesPage() {
 
   const supName = (id: string | null) => suppliers.find((s) => s.id === id)?.name ?? "—";
   const catName = (id: string | null) => [...mains, ...subs].find((c) => c.id === id)?.name ?? "—";
+  const ownerDrawCatId = useMemo(() => mains.find((c: any) => c.system_slug === OWNER_DRAW_SLUG)?.id ?? null, [mains]);
+  const ownerDrawSubId = useMemo(() => ownerDrawCatId ? (subs.find((s: any) => s.parent_id === ownerDrawCatId)?.id ?? null) : null, [subs, ownerDrawCatId]);
 
   const filtered = useMemo(() => rows.filter((r) => {
     if (!showDeleted && r.deleted_at) return false;
@@ -106,6 +109,11 @@ function ExpensesPage() {
               <Archive size={13} /> {showDeleted ? "إخفاء المؤرشفة" : `عرض المؤرشفة (${deletedCount})`}
             </button>
           )}
+          {roles.canManage && ownerDrawCatId && (
+            <button onClick={() => setCreatingOwnerDraw(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-gold/40 text-gold text-[12px] hover:bg-gold/15">
+              <Wallet size={13} /> سحب أونر
+            </button>
+          )}
           {roles.canManage && (
             <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[12px] hover:bg-gold/25">
               <Plus size={14} /> إضافة مصروف
@@ -150,7 +158,14 @@ function ExpensesPage() {
               <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 ${r.deleted_at ? "opacity-60" : ""}`}>
                 <td className="px-3 py-2 whitespace-nowrap">{r.expense_date}</td>
                 <td className="px-3 py-2 font-mono">{fmtSAR(r.amount)}</td>
-                <td className="px-3 py-2 max-w-[180px] truncate" title={r.item_name}>{r.item_name}</td>
+                <td className="px-3 py-2 max-w-[180px] truncate" title={r.item_name}>
+                  {r.main_category_id === ownerDrawCatId && (
+                    <span className="me-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-gold/40 bg-gold/10 text-gold align-middle">
+                      <Wallet size={10} /> توزيع أرباح
+                    </span>
+                  )}
+                  {r.item_name}
+                </td>
                 <td className="px-3 py-2">{supName(r.supplier_id) !== "—" ? supName(r.supplier_id) : r.supplier_name || "—"}</td>
                 <td className="px-3 py-2">{catName(r.main_category_id)}</td>
                 <td className="px-3 py-2">{catName(r.sub_category_id)}</td>
@@ -212,10 +227,14 @@ function ExpensesPage() {
         </table>
       </div>
 
-      {(editing || creating) && (
-        <ExpenseDialog row={editing} suppliers={suppliers} mains={mains} subs={subs} roles={roles}
-          onClose={() => { setEditing(null); setCreating(false); }}
-          onSaved={() => { setEditing(null); setCreating(false); load(); }}
+      {(editing || creating || creatingOwnerDraw) && (
+        <ExpenseDialog
+          row={editing}
+          initial={creatingOwnerDraw ? { main_category_id: ownerDrawCatId, sub_category_id: ownerDrawSubId, item_name: "سحب أونر" } : null}
+          suppliers={suppliers} mains={mains} subs={subs} roles={roles}
+          ownerDrawCatId={ownerDrawCatId}
+          onClose={() => { setEditing(null); setCreating(false); setCreatingOwnerDraw(false); }}
+          onSaved={() => { setEditing(null); setCreating(false); setCreatingOwnerDraw(false); load(); }}
         />
       )}
     </div>
@@ -232,17 +251,17 @@ function Select({ v, onChange, ph, opts }: { v: string; onChange: (s: string) =>
   );
 }
 
-function ExpenseDialog({ row, suppliers, mains, subs, roles, onClose, onSaved }: any) {
+function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawCatId, onClose, onSaved }: any) {
   const isNew = !row;
   const accountantOnly = !roles.canManage && roles.canAccountant;
   const [f, setF] = useState({
     expense_date: row?.expense_date ?? new Date().toISOString().slice(0, 10),
     amount: row?.amount ?? 0,
-    item_name: row?.item_name ?? "",
+    item_name: row?.item_name ?? initial?.item_name ?? "",
     supplier_id: row?.supplier_id ?? "",
     supplier_name: row?.supplier_name ?? "",
-    main_category_id: row?.main_category_id ?? "",
-    sub_category_id: row?.sub_category_id ?? "",
+    main_category_id: row?.main_category_id ?? initial?.main_category_id ?? "",
+    sub_category_id: row?.sub_category_id ?? initial?.sub_category_id ?? "",
     account_type: row?.account_type ?? "business",
     note: row?.note ?? "",
     internal_review_status: row?.internal_review_status ?? "unreviewed",
@@ -311,6 +330,12 @@ function ExpenseDialog({ row, suppliers, mains, subs, roles, onClose, onSaved }:
           {row?.deleted_at && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-200 text-[11px] p-2">
               عملية مؤرشفة بتاريخ {new Date(row.deleted_at).toLocaleString("ar")}{row.delete_reason ? ` · السبب: ${row.delete_reason}` : ""}
+            </div>
+          )}
+          {ownerDrawCatId && f.main_category_id === ownerDrawCatId && (
+            <div className="rounded-lg border border-gold/40 bg-gold/10 text-gold text-[11px] p-2 flex items-start gap-2">
+              <Wallet size={13} className="mt-0.5" />
+              <div>هذه العملية مصنّفة كـ <b>توزيع أرباح</b> ولن تُحتسب ضمن مصروفات التشغيل في الداشبورد.</div>
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">

@@ -1,36 +1,94 @@
-## Goal
+# تطوير اللوحة المالية
 
-Allow the admin to attach more than one file to an invoice/quote in the finance module, matching the behavior already used on income/expense rows.
+## الهدف
+1. فصل سحوبات الأونر (توزيع الأرباح) عن مصروفات التشغيل عشان يبين الربح الحقيقي قبل السحب.
+2. داشبورد جديد فيه مؤشرات واضحة، مقارنة شهرية، ورسوم بيانية.
+3. توحيد الفلترة (فترة + تصنيف + مورد + مصدر دخل + استثناء توزيع الأرباح).
 
-## Findings
+---
 
-- **Income/expense rows already support multi-file uploads.** `src/components/finance/RowAttachmentControl.tsx` opens a dialog whose file input is `multiple`, and it loops `uploadOneAttachment` over every selected file. No change needed there — will just verify UX after the quote work.
-- **Quotes/invoices have no attachments UI today.** `src/routes/_authenticated/admin.finance.quotes.$id.tsx` has no attachment code, and the `finance_related_type` enum only allows `income | expense | supplier`, so the existing `finance_attachments` table cannot store quote files as-is.
+## 1) قاعدة البيانات (Migration)
 
-## Plan
+- إضافة عمود `system_slug text` على `finance_categories` (فريد عند وجود قيمة).
+- إنشاء تصنيف رئيسي جديد باسم **"توزيع الأرباح"** بـ `system_slug = 'owner_draw'` (نفس نوع `main`).
+- الغاية: أي مصروف مربوط بهذا التصنيف يُعامل كـ "سحب أونر" وليس مصروف تشغيلي.
 
-### 1. Database migration
-- Add `'quote'` to the `public.finance_related_type` enum.
-- Update `public.finance_refresh_attachment_status()` so the `quote` branch is a no-op (quotes have no `attachment_status` column to sync — just skip the UPDATE for that type instead of erroring).
-- No new table, no new bucket: reuse `finance_attachments` + the private `finance-attachments` storage bucket that already backs income/expense uploads.
+سبب هذا المنهج: يستفيد من نظام المصروفات الحالي (audit logs، مرفقات، مراجعة محاسب، استيراد…) بدون جدول جديد ولا تغيير في السياسات (RLS).
 
-### 2. Reusable attachments panel for quotes
-- Add an "المرفقات" card at the bottom of the quote builder page (`admin.finance.quotes.$id.tsx`), visible only after the quote is saved (i.e. when `id !== "new"`).
-- Reuse `AttachmentsPanel` from `src/components/finance/AttachmentsPanel.tsx` with `relatedType="quote"` and `relatedId={id}`. It already supports:
-  - Selecting multiple files at once (`<input multiple>`).
-  - Uploading each file via `uploadOneAttachment` in a loop.
-  - Listing existing attachments with download and delete actions and per-file "attachment type" tagging.
-- Show a small hint above the panel: "احفظ الفاتورة أولاً قبل إرفاق الملفات" when `isNew`, then reveal the panel after first save.
+---
 
-### 3. Permissions
-- Access control is handled by the existing RLS on `finance_attachments` (admin / finance roles). No new policy needed since we're only widening the enum, not the policy expression.
+## 2) الداشبورد الجديد `admin/finance/`
 
-### 4. Verification
-- Open an existing quote → attach 3 mixed files (PDF + images) in one go → confirm all appear in the list, can be downloaded, and can be individually deleted.
-- Confirm income/expense rows still let the user pick and upload multiple files in a single dialog action.
+### KPIs (بطاقات فوق):
+- **إجمالي الدخل** (الفترة)
+- **إجمالي المصروفات التشغيلية** (يستثني توزيع الأرباح)
+- **الصافي التشغيلي** = دخل − مصروفات تشغيلية
+- **توزيع الأرباح** (سحوبات الأونر في نفس الفترة)
+- **الصافي بعد التوزيع** = صافي تشغيلي − توزيع الأرباح
+- كل بطاقة تعرض **مقارنة % مع الفترة السابقة** (سهم أخضر/أحمر)
 
-## Technical notes
+### الرسوم البيانية (recharts):
+- **خط زمني**: دخل / مصروفات تشغيلية / صافي — تقسيم يومي أو شهري حسب مدى الفترة.
+- **دائري (Donut)**: توزيع المصروفات التشغيلية على التصنيفات الرئيسية.
+- **أعمدة**: توزيع الأرباح الشهري (آخر 6 شهور).
+- **Cash flow تراكمي**: خط تراكمي للصافي بعد التوزيع.
 
-- Migration touches: `finance_related_type` enum, `finance_refresh_attachment_status` function.
-- Frontend touches: `src/routes/_authenticated/admin.finance.quotes.$id.tsx` (import + render `AttachmentsPanel`).
-- No changes to storage buckets, RLS policies, or the row-level attachment control.
+### قوائم:
+- أعلى 5 تصنيفات صرفًا (تشغيلي فقط).
+- أعلى 5 موردين صرفًا.
+- آخر 5 عمليات دخل + آخر 5 مصروفات (كما هي).
+- بطاقات المراجعة الحالية (غير مراجع، يحتاج تعديل، بدون مرفق) تبقى كما هي.
+
+---
+
+## 3) الفلترة الموحدة (`FinanceFilterBar`)
+
+مكوّن جديد يُستخدم في: الداشبورد، الدخل، المصروفات، التصدير.
+
+الفلاتر:
+- **الفترة**: اليوم / الأسبوع / الشهر / السنة / مخصص (from-to).
+- **التصنيف الرئيسي والفرعي** (للمصروفات).
+- **المورد** (للمصروفات).
+- **مصدر الدخل** (للدخل).
+- **نوع الحساب** (business/personal).
+- **زر Toggle**: "استثناء توزيع الأرباح" (مفعّل افتراضيًا في الداشبورد؛ لا يظهر في صفحة المصروفات).
+
+الحالة تُحفظ في URL search params باستخدام `zodValidator + fallback` عشان تكون قابلة للمشاركة والرجوع.
+
+---
+
+## 4) صفحة المصروفات
+
+- إضافة عمود "نوع" يميّز توزيع الأرباح ببادج ذهبي.
+- عند إضافة/تعديل مصروف: عند اختيار تصنيف "توزيع الأرباح" يظهر تنبيه صغير: "هذه العملية لن تُحتسب ضمن مصروفات التشغيل."
+- زر سريع "سحب أونر جديد" يفتح نموذج المصروف مع التصنيف مُعبّأ مسبقًا.
+
+---
+
+## الملفات المتأثرة
+
+**جديدة**
+- `supabase/migrations/<ts>_finance_owner_draw.sql`
+- `src/components/finance/FinanceFilterBar.tsx`
+- `src/components/finance/dashboard/KpiCard.tsx`
+- `src/components/finance/dashboard/TimeSeriesChart.tsx`
+- `src/components/finance/dashboard/CategoryDonut.tsx`
+- `src/components/finance/dashboard/OwnerDrawBars.tsx`
+- `src/components/finance/dashboard/CashflowChart.tsx`
+- `src/lib/finance/dashboard-data.ts` (تجميع البيانات + حساب الفترة السابقة)
+
+**تعديلات**
+- `src/routes/_authenticated/admin.finance.index.tsx` (إعادة بناء كامل)
+- `src/routes/_authenticated/admin.finance.expenses.tsx` (زر سحب سريع + بادج)
+- `src/lib/finance/constants.ts` (ثابت `OWNER_DRAW_SLUG`)
+
+**بدون تغيير**: RLS، السياسات، الجداول الأخرى، الاستيراد/التصدير، سجل التعديلات.
+
+---
+
+## ملاحظات تقنية
+
+- `recharts` موجود مسبقًا في `src/components/ui/chart.tsx`.
+- الحسابات تتم client-side بعد جلب البيانات مرة واحدة (كما هو الحال الآن).
+- الفترة السابقة تُحسب بنفس طول الفترة الحالية (شهر → الشهر السابق كامل).
+- لا مساس بالأمان: نفس السياسات الحالية تُغطي كل شيء لأن التصنيف الجديد يمر عبر `finance_expenses`.
