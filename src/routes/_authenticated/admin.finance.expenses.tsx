@@ -109,6 +109,11 @@ function ExpensesPage() {
               <Archive size={13} /> {showDeleted ? "إخفاء المؤرشفة" : `عرض المؤرشفة (${deletedCount})`}
             </button>
           )}
+          {roles.canManage && ownerDrawCatId && (
+            <button onClick={() => setCreatingOwnerDraw(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-gold/40 text-gold text-[12px] hover:bg-gold/15">
+              <Wallet size={13} /> سحب أونر
+            </button>
+          )}
           {roles.canManage && (
             <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[12px] hover:bg-gold/25">
               <Plus size={14} /> إضافة مصروف
