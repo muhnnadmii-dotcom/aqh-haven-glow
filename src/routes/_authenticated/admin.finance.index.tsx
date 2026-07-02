@@ -27,6 +27,7 @@ function FinanceDashboard() {
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [pickedMonth, setPickedMonth] = useState(""); // YYYY-MM specific month
   const [excludeDraws, setExcludeDraws] = useState(true);
   const [fMain, setFMain] = useState("");
   const [fSupplier, setFSupplier] = useState("");
@@ -44,7 +45,16 @@ function FinanceDashboard() {
   const [loading, setLoading] = useState(true);
   const [drawer, setDrawer] = useState<DrawerSpec | null>(null);
 
-  const range = useMemo(() => resolveRange(period, from, to), [period, from, to]);
+  const range = useMemo(() => {
+    if (pickedMonth) {
+      const [y, m] = pickedMonth.split("-").map(Number);
+      const first = new Date(y, m - 1, 1);
+      const last = new Date(y, m, 0);
+      const iso = (d: Date) => d.toISOString().slice(0, 10);
+      return { dateFrom: iso(first), dateTo: iso(last) };
+    }
+    return resolveRange(period, from, to);
+  }, [period, from, to, pickedMonth]);
   const prev = useMemo(() => previousRange(range), [range]);
   const ownerDrawCatId = useMemo(() => cats.find((c) => c.system_slug === OWNER_DRAW_SLUG)?.id ?? null, [cats]);
 
