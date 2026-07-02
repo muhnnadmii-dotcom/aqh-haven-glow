@@ -3,6 +3,9 @@ export const OWNER_DRAW_SLUG = "owner_draw";
 export const ACCOUNT_TYPES = [
   { value: "business", label: "Business Account" },
   { value: "personal", label: "Personal Account" },
+] as const;
+
+
 
 
 export const INTERNAL_REVIEW = [
