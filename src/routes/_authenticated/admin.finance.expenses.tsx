@@ -158,7 +158,14 @@ function ExpensesPage() {
               <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 ${r.deleted_at ? "opacity-60" : ""}`}>
                 <td className="px-3 py-2 whitespace-nowrap">{r.expense_date}</td>
                 <td className="px-3 py-2 font-mono">{fmtSAR(r.amount)}</td>
-                <td className="px-3 py-2 max-w-[180px] truncate" title={r.item_name}>{r.item_name}</td>
+                <td className="px-3 py-2 max-w-[180px] truncate" title={r.item_name}>
+                  {r.main_category_id === ownerDrawCatId && (
+                    <span className="me-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-gold/40 bg-gold/10 text-gold align-middle">
+                      <Wallet size={10} /> توزيع أرباح
+                    </span>
+                  )}
+                  {r.item_name}
+                </td>
                 <td className="px-3 py-2">{supName(r.supplier_id) !== "—" ? supName(r.supplier_id) : r.supplier_name || "—"}</td>
                 <td className="px-3 py-2">{catName(r.main_category_id)}</td>
                 <td className="px-3 py-2">{catName(r.sub_category_id)}</td>
