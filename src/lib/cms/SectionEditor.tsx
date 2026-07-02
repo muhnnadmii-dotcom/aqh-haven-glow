@@ -267,6 +267,24 @@ function BusinessTabsEditor({ section, onChange }: Props<BusinessTabsSection>) {
         <label className="sm:col-span-3"><span className={lbl}>الوصف</span>
           <textarea className={ta} value={section.description ?? ""} onChange={(e) => onChange({ ...section, description: e.target.value })} /></label>
       </div>
+
+      <details className="rounded-2xl border border-white/10 p-4">
+        <summary className="cursor-pointer text-sm font-bold">تسميات ثابتة داخل التبويب (اتركها فارغة للافتراضي)</summary>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label><span className={lbl}>بادئة اسم التبويب (افتراضي: قسم)</span>
+            <input className={field} placeholder="قسم" value={section.tab_badge_prefix ?? ""} onChange={(e) => onChange({ ...section, tab_badge_prefix: e.target.value })} /></label>
+          <label><span className={lbl}>عنوان قائمة المزايا (افتراضي: ماذا نوفّر لك)</span>
+            <input className={field} placeholder="ماذا نوفّر لك" value={section.features_heading ?? ""} onChange={(e) => onChange({ ...section, features_heading: e.target.value })} /></label>
+          <label><span className={lbl}>عنوان قائمة المخاوف (افتراضي: أسئلة ومخاوف شائعة)</span>
+            <input className={field} placeholder="أسئلة ومخاوف شائعة" value={section.concerns_heading ?? ""} onChange={(e) => onChange({ ...section, concerns_heading: e.target.value })} /></label>
+          <label><span className={lbl}>عنوان طرق الدفع (افتراضي: طرق الدفع والاشتراك)</span>
+            <input className={field} placeholder="طرق الدفع والاشتراك" value={section.payment_heading ?? ""} onChange={(e) => onChange({ ...section, payment_heading: e.target.value })} /></label>
+          <label><span className={lbl}>عنوان شريط CTA (افتراضي: جاهز لمناقشة مشروعك؟)</span>
+            <input className={field} placeholder="جاهز لمناقشة مشروعك؟" value={section.cta_heading ?? ""} onChange={(e) => onChange({ ...section, cta_heading: e.target.value })} /></label>
+          <label><span className={lbl}>نص زر واتساب (افتراضي: تواصل عبر واتساب)</span>
+            <input className={field} placeholder="تواصل عبر واتساب" value={section.cta_button_label ?? ""} onChange={(e) => onChange({ ...section, cta_button_label: e.target.value })} /></label>
+        </div>
+      </details>
       {section.items.map((it, i) => (
         <details key={it.id} className="rounded-2xl border border-white/10 p-4" open={i === 0}>
           <summary className="cursor-pointer text-sm font-bold flex items-center justify-between gap-2">
