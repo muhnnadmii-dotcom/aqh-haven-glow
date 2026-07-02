@@ -227,10 +227,14 @@ function ExpensesPage() {
         </table>
       </div>
 
-      {(editing || creating) && (
-        <ExpenseDialog row={editing} suppliers={suppliers} mains={mains} subs={subs} roles={roles}
-          onClose={() => { setEditing(null); setCreating(false); }}
-          onSaved={() => { setEditing(null); setCreating(false); load(); }}
+      {(editing || creating || creatingOwnerDraw) && (
+        <ExpenseDialog
+          row={editing}
+          initial={creatingOwnerDraw ? { main_category_id: ownerDrawCatId, sub_category_id: ownerDrawSubId, item_name: "سحب أونر" } : null}
+          suppliers={suppliers} mains={mains} subs={subs} roles={roles}
+          ownerDrawCatId={ownerDrawCatId}
+          onClose={() => { setEditing(null); setCreating(false); setCreatingOwnerDraw(false); }}
+          onSaved={() => { setEditing(null); setCreating(false); setCreatingOwnerDraw(false); load(); }}
         />
       )}
     </div>
