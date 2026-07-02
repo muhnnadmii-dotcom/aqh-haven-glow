@@ -332,6 +332,12 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
               عملية مؤرشفة بتاريخ {new Date(row.deleted_at).toLocaleString("ar")}{row.delete_reason ? ` · السبب: ${row.delete_reason}` : ""}
             </div>
           )}
+          {ownerDrawCatId && f.main_category_id === ownerDrawCatId && (
+            <div className="rounded-lg border border-gold/40 bg-gold/10 text-gold text-[11px] p-2 flex items-start gap-2">
+              <Wallet size={13} className="mt-0.5" />
+              <div>هذه العملية مصنّفة كـ <b>توزيع أرباح</b> ولن تُحتسب ضمن مصروفات التشغيل في الداشبورد.</div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <Field label="التاريخ"><input type="date" disabled={accountantOnly} value={f.expense_date} onChange={(e) => setF({ ...f, expense_date: e.target.value })} className="inp" /></Field>
             <Field label="المبلغ"><input type="number" step="0.01" disabled={accountantOnly} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value as any })} className="inp" /></Field>
