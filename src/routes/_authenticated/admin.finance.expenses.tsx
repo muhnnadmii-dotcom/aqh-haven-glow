@@ -251,7 +251,7 @@ function Select({ v, onChange, ph, opts }: { v: string; onChange: (s: string) =>
   );
 }
 
-function ExpenseDialog({ row, suppliers, mains, subs, roles, onClose, onSaved }: any) {
+function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawCatId, onClose, onSaved }: any) {
   const isNew = !row;
   const accountantOnly = !roles.canManage && roles.canAccountant;
   const [f, setF] = useState({
