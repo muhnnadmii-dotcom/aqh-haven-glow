@@ -54,6 +54,8 @@ function ExpensesPage() {
 
   const supName = (id: string | null) => suppliers.find((s) => s.id === id)?.name ?? "—";
   const catName = (id: string | null) => [...mains, ...subs].find((c) => c.id === id)?.name ?? "—";
+  const ownerDrawCatId = useMemo(() => mains.find((c: any) => c.system_slug === OWNER_DRAW_SLUG)?.id ?? null, [mains]);
+  const ownerDrawSubId = useMemo(() => ownerDrawCatId ? (subs.find((s: any) => s.parent_id === ownerDrawCatId)?.id ?? null) : null, [subs, ownerDrawCatId]);
 
   const filtered = useMemo(() => rows.filter((r) => {
     if (!showDeleted && r.deleted_at) return false;
