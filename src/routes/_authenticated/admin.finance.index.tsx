@@ -48,10 +48,9 @@ function FinanceDashboard() {
   const range = useMemo(() => {
     if (pickedMonth) {
       const [y, m] = pickedMonth.split("-").map(Number);
-      const first = new Date(y, m - 1, 1);
-      const last = new Date(y, m, 0);
-      const iso = (d: Date) => d.toISOString().slice(0, 10);
-      return { dateFrom: iso(first), dateTo: iso(last) };
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const lastDay = new Date(y, m, 0).getDate();
+      return { dateFrom: `${y}-${pad(m)}-01`, dateTo: `${y}-${pad(m)}-${pad(lastDay)}` };
     }
     return resolveRange(period, from, to);
   }, [period, from, to, pickedMonth]);
@@ -88,7 +87,7 @@ function FinanceDashboard() {
     };
     // last 6 months window for the owner-draws bar chart
     const drawsFrom = new Date(); drawsFrom.setMonth(drawsFrom.getMonth() - 5); drawsFrom.setDate(1);
-    const drawsFromStr = drawsFrom.toISOString().slice(0, 10);
+    const drawsFromStr = `${drawsFrom.getFullYear()}-${String(drawsFrom.getMonth() + 1).padStart(2, "0")}-01`;
 
     const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }] = await Promise.all([
       buildIncQ(range),
@@ -200,12 +199,30 @@ function FinanceDashboard() {
           )}
           <div className="inline-flex items-center gap-1.5">
             <span className="text-[11px] text-muted-foreground">شهر محدد:</span>
-            <input
-              type="month"
-              value={pickedMonth}
-              onChange={(e) => setPickedMonth(e.target.value)}
-              className={`px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border ${pickedMonth ? "border-gold/40 text-gold" : "border-white/10"}`}
-            />
+            {(() => {
+              const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+              const nowY = new Date().getFullYear();
+              const years = Array.from({ length: 7 }, (_, i) => nowY - 5 + i);
+              const [py, pm] = pickedMonth ? pickedMonth.split("-") : ["", ""];
+              const set = (y: string, m: string) => {
+                if (y && m) setPickedMonth(`${y}-${m.padStart(2, "0")}`);
+                else setPickedMonth("");
+              };
+              return (
+                <>
+                  <select value={pm} onChange={(e) => set(py || String(nowY), e.target.value)}
+                    className={`px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border ${pickedMonth ? "border-gold/40 text-gold" : "border-white/10"}`}>
+                    <option value="">الشهر</option>
+                    {MONTHS_AR.map((n, i) => <option key={i} value={String(i + 1).padStart(2, "0")}>{n}</option>)}
+                  </select>
+                  <select value={py} onChange={(e) => set(e.target.value, pm || "01")}
+                    className={`px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border ${pickedMonth ? "border-gold/40 text-gold" : "border-white/10"}`}>
+                    <option value="">السنة</option>
+                    {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
+                  </select>
+                </>
+              );
+            })()}
             {pickedMonth && (
               <button onClick={() => setPickedMonth("")}
                 className="px-2 py-1.5 rounded-lg text-[11px] border border-white/10 bg-white/5 hover:bg-white/10">مسح</button>
