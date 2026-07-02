@@ -237,7 +237,7 @@ function FinanceDashboard() {
         <Kpi icon={TrendingDown} label="مصروفات التشغيل" value={fmtSAR(totOpExpense)} tone="text-red-300"
           change={pctChange(totOpExpense, pTotOpExpense)} invert
           onClick={() => open({ title: "مصروفات التشغيل", show: "expense" })} />
-        <Kpi icon={Scale} label="الصافي التشغيلي" value={fmtSAR(netOp)} tone={netOp >= 0 ? "text-emerald-300" : "text-red-300"}
+        <Kpi icon={Scale} label="صافي الربح قبل التوزيع" value={fmtSAR(netOp)} tone={netOp >= 0 ? "text-emerald-300" : "text-red-300"}
           change={pctChange(netOp, pNetOp)} />
         <Kpi icon={Wallet} label="توزيع الأرباح" value={fmtSAR(totDraws)} tone="text-gold"
           change={pctChange(totDraws, pTotDraws)}
