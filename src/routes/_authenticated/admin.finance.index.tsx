@@ -199,12 +199,30 @@ function FinanceDashboard() {
           )}
           <div className="inline-flex items-center gap-1.5">
             <span className="text-[11px] text-muted-foreground">شهر محدد:</span>
-            <input
-              type="month"
-              value={pickedMonth}
-              onChange={(e) => setPickedMonth(e.target.value)}
-              className={`px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border ${pickedMonth ? "border-gold/40 text-gold" : "border-white/10"}`}
-            />
+            {(() => {
+              const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+              const nowY = new Date().getFullYear();
+              const years = Array.from({ length: 7 }, (_, i) => nowY - 5 + i);
+              const [py, pm] = pickedMonth ? pickedMonth.split("-") : ["", ""];
+              const set = (y: string, m: string) => {
+                if (y && m) setPickedMonth(`${y}-${m.padStart(2, "0")}`);
+                else setPickedMonth("");
+              };
+              return (
+                <>
+                  <select value={pm} onChange={(e) => set(py || String(nowY), e.target.value)}
+                    className={`px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border ${pickedMonth ? "border-gold/40 text-gold" : "border-white/10"}`}>
+                    <option value="">الشهر</option>
+                    {MONTHS_AR.map((n, i) => <option key={i} value={String(i + 1).padStart(2, "0")}>{n}</option>)}
+                  </select>
+                  <select value={py} onChange={(e) => set(e.target.value, pm || "01")}
+                    className={`px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border ${pickedMonth ? "border-gold/40 text-gold" : "border-white/10"}`}>
+                    <option value="">السنة</option>
+                    {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
+                  </select>
+                </>
+              );
+            })()}
             {pickedMonth && (
               <button onClick={() => setPickedMonth("")}
                 className="px-2 py-1.5 rounded-lg text-[11px] border border-white/10 bg-white/5 hover:bg-white/10">مسح</button>
