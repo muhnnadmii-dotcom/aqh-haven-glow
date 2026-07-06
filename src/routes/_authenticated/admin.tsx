@@ -59,6 +59,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/project-categories", label: "تصنيفات الأحواض", icon: Tags },
       { to: "/admin/articles", label: "المقالات", icon: BookOpen },
       { to: "/admin/testimonials", label: "التقييمات", icon: MessageSquareQuote },
+      { to: "/admin/translations", label: "الترجمات (AR/EN)", icon: FileText },
     ],
   },
 

@@ -1,94 +1,94 @@
-# تطوير اللوحة المالية
-
 ## الهدف
-1. فصل سحوبات الأونر (توزيع الأرباح) عن مصروفات التشغيل عشان يبين الربح الحقيقي قبل السحب.
-2. داشبورد جديد فيه مؤشرات واضحة، مقارنة شهرية، ورسوم بيانية.
-3. توحيد الفلترة (فترة + تصنيف + مورد + مصدر دخل + استثناء توزيع الأرباح).
+إضافة دعم كامل للغة الإنجليزية (AR/EN) مع محول لغة في Navbar، دعم URLs بالشكل `/en/...`، تحويل تلقائي بين RTL و LTR، ولوحة إدارة لتحرير الترجمات مع ترجمة تلقائية عبر Lovable AI (Gemini) وتحديث تلقائي للنصوص الجديدة.
 
 ---
 
-## 1) قاعدة البيانات (Migration)
+## 1) البنية التحتية للغة (i18n)
 
-- إضافة عمود `system_slug text` على `finance_categories` (فريد عند وجود قيمة).
-- إنشاء تصنيف رئيسي جديد باسم **"توزيع الأرباح"** بـ `system_slug = 'owner_draw'` (نفس نوع `main`).
-- الغاية: أي مصروف مربوط بهذا التصنيف يُعامل كـ "سحب أونر" وليس مصروف تشغيلي.
+- `src/lib/i18n/LangProvider.tsx` — React Context يوفّر `lang` (`ar` | `en`)، `setLang(l)`، `dir` (`rtl`/`ltr`)، `t(key)`.
+  - المصدر: `localStorage("aqh_lang")` + `URLSearchParams("lang")` + بادئة المسار `/en`.
+  - عند التغيير: تحديث `document.documentElement.lang` و `dir`، حفظ التفضيل، ودفع Query invalidation لإعادة جلب محتوى CMS باللغة الجديدة.
+- `src/lib/i18n/strings.ts` — قاموس ثابت `{ ar: {...}, en: {...} }` لجميع النصوص الثابتة في:
+  - `Navbar`, `Footer`, `WhatsAppButton`, أزرار مشتركة، رسائل النماذج، labels الحسابات.
+- `useT()` hook قصير لاستخدامه في المكونات.
+- تفعيل `dir="rtl|ltr"` في `__root.tsx` عبر state من الـ Provider، مع تبديل خط المحتوى الإنجليزي إلى Inter (يبقى IBM Plex Sans Arabic للعربي).
 
-سبب هذا المنهج: يستفيد من نظام المصروفات الحالي (audit logs، مرفقات، مراجعة محاسب، استيراد…) بدون جدول جديد ولا تغيير في السياسات (RLS).
+## 2) محول اللغة
+
+- زر AR/EN في `Navbar` (desktop + mobile) يبدّل فورًا ويحدّث `localStorage` + الـ URL.
+- دعم مسار `/en/...` عبر Layout route `src/routes/_lang.tsx` بديل — **بدلاً منه لتفادي مضاعفة كل الـ routes**، نستخدم:
+  - `?lang=en` كـ URL قابل للمشاركة (يعمل مع كل صفحة تلقائيًا).
+  - Middleware في `LangProvider` يقرأ `/en/*` إن وُجد ويحوّله داخليًا.
+  - إضافة `<link rel="alternate" hreflang="ar/en">` في `__root.tsx` لتحسين SEO.
+
+## 3) قاعدة البيانات (Migration)
+
+إضافة عمود `content_en jsonb` للجداول التي تحتوي محتوى:
+
+```sql
+ALTER TABLE public.site_pages ADD COLUMN content_en jsonb;
+ALTER TABLE public.site_pages ADD COLUMN title_en text;
+ALTER TABLE public.projects   ADD COLUMN title_en text, ADD COLUMN description_en text, ADD COLUMN summary_en text;
+ALTER TABLE public.articles   ADD COLUMN title_en text, ADD COLUMN excerpt_en text, ADD COLUMN body_en text;
+ALTER TABLE public.services   ADD COLUMN title_en text, ADD COLUMN description_en text;
+```
+
+- جدول جديد `ui_translations (key text pk, ar text, en text, updated_at timestamptz)` لتخزين ترجمات الواجهة الثابتة القابلة للتحرير من اللوحة (يطغى على القاموس الثابت عند وجوده).
+- `GRANT SELECT` للجميع + `GRANT ALL` للـ admin/staff عبر RLS.
+
+## 4) قراءة المحتوى ثنائي اللغة
+
+- تعديل `fetchPageDoc(page_key)` و `fetchSitePage()` لقبول `lang` واختيار `content_en` عند `en` مع fallback للعربي.
+- تعديل `PageRenderer` / `CmsSlot` لتمرير `lang` من الـ Provider.
+- تعديل قوائم المشاريع/المقالات/الخدمات لاختيار الحقل المناسب.
+
+## 5) لوحة إدارة الترجمات
+
+مسار جديد: `/admin/translations` تحت `_authenticated`، بثلاث تبويبات:
+
+1. **واجهة الموقع (UI)** — جدول من `ui_translations` + مفاتيح القاموس الثابت. حقل AR (للقراءة) + حقل EN قابل للتحرير + زر "ترجمة تلقائية" لكل صف.
+2. **صفحات CMS** — قائمة `site_pages`، فتح صفحة يعرض الأقسام جنبًا إلى جنب (AR read-only | EN editable)، مع زر "ترجمة كل الصفحة تلقائيًا".
+3. **المحتوى الديناميكي** — تبويبات فرعية للمشاريع / المقالات / الخدمات، جدول موحّد فيه العنوان AR و EN والأزرار.
+
+**أدوات مشتركة:**
+- زر "🔄 اكتشاف نصوص جديدة" يمسح كل الجداول ويظهر الصفوف التي تنقصها ترجمة EN.
+- زر "🌐 ترجمة كل الناقص تلقائيًا" (batch).
+- Toast عند النجاح/الفشل.
+
+## 6) الترجمة التلقائية (Lovable AI Gateway)
+
+Server function جديدة `src/lib/i18n/translate.functions.ts`:
+
+```ts
+translateAr2En({ texts: string[] }) → { translations: string[] }
+```
+
+- تستخدم `google/gemini-3-flash-preview` عبر `@ai-sdk/openai-compatible`.
+- Prompt: "ترجم من العربية إلى الإنجليزية الاحترافية مع الحفاظ على النبرة الفاخرة لعلامة Aqua Haven. أرجع JSON فقط."
+- محمية بـ `requireSupabaseAuth` + فحص دور admin/staff.
+- تدعم batch حتى 50 نصًا في المرة الواحدة.
+
+## 7) الاكتشاف التلقائي للنصوص الجديدة
+
+- عند حفظ صفحة CMS (`savePageDoc`)، إذا كان الحقل `content_en` فارغًا أو أقدم من `content` (نضيف `content_updated_at`)، تظهر شارة "بحاجة ترجمة" في لوحة الترجمات.
+- نفس المنطق للجداول الأخرى عبر مقارنة `updated_at` مع `translated_at`.
+
+## 8) SEO
+
+- `<html lang>` و `dir` ديناميكيان.
+- `<link rel="alternate" hreflang="ar" href="..."> / hreflang="en"` في كل route.
+- تحديث `head()` في الصفحات ليختار العنوان/الوصف حسب اللغة.
 
 ---
 
-## 2) الداشبورد الجديد `admin/finance/`
+## ما لن يتغيّر
+- شكل الموقع الحالي وألوانه والخطوط العربية.
+- سلوك RTL يبقى الافتراضي عند الدخول.
+- لوحة الإدارة نفسها تبقى عربية (لا نترجم واجهة /admin).
 
-### KPIs (بطاقات فوق):
-- **إجمالي الدخل** (الفترة)
-- **إجمالي المصروفات التشغيلية** (يستثني توزيع الأرباح)
-- **الصافي التشغيلي** = دخل − مصروفات تشغيلية
-- **توزيع الأرباح** (سحوبات الأونر في نفس الفترة)
-- **الصافي بعد التوزيع** = صافي تشغيلي − توزيع الأرباح
-- كل بطاقة تعرض **مقارنة % مع الفترة السابقة** (سهم أخضر/أحمر)
+## الملفات الرئيسية المتأثرة
+- جديد: `src/lib/i18n/*`, `src/routes/_authenticated/admin.translations.tsx`, migration واحد.
+- تعديل: `__root.tsx`, `Navbar.tsx`, `Footer.tsx`, `PageRenderer.tsx`, `cms/api.ts`, `site-pages.ts`.
 
-### الرسوم البيانية (recharts):
-- **خط زمني**: دخل / مصروفات تشغيلية / صافي — تقسيم يومي أو شهري حسب مدى الفترة.
-- **دائري (Donut)**: توزيع المصروفات التشغيلية على التصنيفات الرئيسية.
-- **أعمدة**: توزيع الأرباح الشهري (آخر 6 شهور).
-- **Cash flow تراكمي**: خط تراكمي للصافي بعد التوزيع.
-
-### قوائم:
-- أعلى 5 تصنيفات صرفًا (تشغيلي فقط).
-- أعلى 5 موردين صرفًا.
-- آخر 5 عمليات دخل + آخر 5 مصروفات (كما هي).
-- بطاقات المراجعة الحالية (غير مراجع، يحتاج تعديل، بدون مرفق) تبقى كما هي.
-
----
-
-## 3) الفلترة الموحدة (`FinanceFilterBar`)
-
-مكوّن جديد يُستخدم في: الداشبورد، الدخل، المصروفات، التصدير.
-
-الفلاتر:
-- **الفترة**: اليوم / الأسبوع / الشهر / السنة / مخصص (from-to).
-- **التصنيف الرئيسي والفرعي** (للمصروفات).
-- **المورد** (للمصروفات).
-- **مصدر الدخل** (للدخل).
-- **نوع الحساب** (business/personal).
-- **زر Toggle**: "استثناء توزيع الأرباح" (مفعّل افتراضيًا في الداشبورد؛ لا يظهر في صفحة المصروفات).
-
-الحالة تُحفظ في URL search params باستخدام `zodValidator + fallback` عشان تكون قابلة للمشاركة والرجوع.
-
----
-
-## 4) صفحة المصروفات
-
-- إضافة عمود "نوع" يميّز توزيع الأرباح ببادج ذهبي.
-- عند إضافة/تعديل مصروف: عند اختيار تصنيف "توزيع الأرباح" يظهر تنبيه صغير: "هذه العملية لن تُحتسب ضمن مصروفات التشغيل."
-- زر سريع "سحب أونر جديد" يفتح نموذج المصروف مع التصنيف مُعبّأ مسبقًا.
-
----
-
-## الملفات المتأثرة
-
-**جديدة**
-- `supabase/migrations/<ts>_finance_owner_draw.sql`
-- `src/components/finance/FinanceFilterBar.tsx`
-- `src/components/finance/dashboard/KpiCard.tsx`
-- `src/components/finance/dashboard/TimeSeriesChart.tsx`
-- `src/components/finance/dashboard/CategoryDonut.tsx`
-- `src/components/finance/dashboard/OwnerDrawBars.tsx`
-- `src/components/finance/dashboard/CashflowChart.tsx`
-- `src/lib/finance/dashboard-data.ts` (تجميع البيانات + حساب الفترة السابقة)
-
-**تعديلات**
-- `src/routes/_authenticated/admin.finance.index.tsx` (إعادة بناء كامل)
-- `src/routes/_authenticated/admin.finance.expenses.tsx` (زر سحب سريع + بادج)
-- `src/lib/finance/constants.ts` (ثابت `OWNER_DRAW_SLUG`)
-
-**بدون تغيير**: RLS، السياسات، الجداول الأخرى، الاستيراد/التصدير، سجل التعديلات.
-
----
-
-## ملاحظات تقنية
-
-- `recharts` موجود مسبقًا في `src/components/ui/chart.tsx`.
-- الحسابات تتم client-side بعد جلب البيانات مرة واحدة (كما هو الحال الآن).
-- الفترة السابقة تُحسب بنفس طول الفترة الحالية (شهر → الشهر السابق كامل).
-- لا مساس بالأمان: نفس السياسات الحالية تُغطي كل شيء لأن التصنيف الجديد يمر عبر `finance_expenses`.
+## التقديرات
+عمل كبير نسبيًا (migration + ~15 ملف). سأنفّذه على مرحلة واحدة كاملة بعد موافقتك.

@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { useNavLinks, NAVBAR_FALLBACK, type SiteNavLink } from "@/lib/site-nav";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useT } from "@/lib/i18n/LangProvider";
 
 function NavItemLink({ l, className, activeClassName, onClick, children }: { l: SiteNavLink; className: string; activeClassName?: string; onClick?: () => void; children: React.ReactNode }) {
   if (l.external || /^https?:\/\//i.test(l.href)) {
@@ -28,6 +30,7 @@ export function Navbar() {
   const { user, isAdmin } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
   const links = useNavLinks("navbar", NAVBAR_FALLBACK);
+  const t = useT();
 
 
   useEffect(() => {
@@ -63,7 +66,7 @@ export function Navbar() {
     };
   }, [open]);
 
-  const waLink = whatsappLink("السلام عليكم، أرغب بطلب خدمة من أكوا هيفن.");
+  const waLink = whatsappLink(t("wa.defaultMessage"));
 
   return (
     <>
@@ -104,6 +107,7 @@ export function Navbar() {
 
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <LanguageSwitcher />
               {isAdmin && (
                 <Link
                   to="/admin"
@@ -199,6 +203,9 @@ export function Navbar() {
           </div>
 
           <nav className="flex flex-col px-3 py-3 overflow-y-auto max-h-[calc(100%-72px)]">
+            <div className="px-1 pb-2 flex justify-end">
+              <LanguageSwitcher />
+            </div>
             {links.map((l) => (
               <NavItemLink
                 key={l.id}

@@ -37,6 +37,7 @@ export const ADMIN_PAGES: AdminPageDef[] = [
   { key: "/admin/content",             label: "كل صفحات الموقع",    group: "content" },
   { key: "/admin/design/about",        label: "من نحن",             group: "content" },
   { key: "/admin/design/contact",      label: "تواصل معنا",         group: "content" },
+  { key: "/admin/translations",        label: "الترجمات (AR/EN)",    group: "content" },
   { key: "/admin/site/navigation",     label: "روابط القائمة والفوتر", group: "content" },
 
   // Finance
