@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { useNavLinks, NAVBAR_FALLBACK, type SiteNavLink } from "@/lib/site-nav";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useT } from "@/lib/i18n/LangProvider";
 
 function NavItemLink({ l, className, activeClassName, onClick, children }: { l: SiteNavLink; className: string; activeClassName?: string; onClick?: () => void; children: React.ReactNode }) {
   if (l.external || /^https?:\/\//i.test(l.href)) {
