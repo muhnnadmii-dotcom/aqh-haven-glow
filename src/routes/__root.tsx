@@ -160,14 +160,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {!isAdmin && <ScrollProgress />}
-      {!isAdmin && <Navbar />}
-      <main id="main" className={isAdmin ? "" : "pt-24"}>
-        <Outlet />
-      </main>
-      {!isAdmin && <Footer />}
-      {!isAdmin && <WhatsAppFloating />}
-      <Toaster richColors position="top-center" />
+      <LangProvider>
+        {!isAdmin && <ScrollProgress />}
+        {!isAdmin && <Navbar />}
+        <main id="main" className={isAdmin ? "" : "pt-24"}>
+          <Outlet />
+        </main>
+        {!isAdmin && <Footer />}
+        {!isAdmin && <WhatsAppFloating />}
+        <Toaster richColors position="top-center" />
+      </LangProvider>
     </QueryClientProvider>
   );
 }
