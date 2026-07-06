@@ -55,10 +55,22 @@ async def main():
                 ctx = await browser.new_context(viewport={"width": 1280, "height": 800})
                 page = await ctx.new_page()
                 leaks, server_fns = [], []
-                page.on("request", lambda req: (
-                    leaks.append(req.url) if is_forbidden(req.url) else None,
-                    server_fns.append(req.url) if "/_serverFn/" in req.url else None,
-                ))
+                # Only count backend requests that fire while we're still on the /admin URL.
+                # Requests made after the redirect to /auth are the public shell (Navbar/Footer)
+                # and are allowed — /auth is a public route.
+                def on_request(req):
+                    try:
+                        current = urlparse(page.url).path
+                    except Exception:
+                        current = ""
+                    if not current.startswith("/admin"):
+                        return
+                    url = req.url
+                    if is_forbidden(url):
+                        leaks.append(url)
+                    if "/_serverFn/" in url:
+                        server_fns.append(url)
+                page.on("request", on_request)
                 err = None
                 try:
                     await page.goto(f"{BASE}{route}", wait_until="networkidle", timeout=15000)
@@ -75,6 +87,7 @@ async def main():
                 await ctx.close()
         finally:
             await browser.close()
+
 
     print("\n=== Admin Auth-Guard Report ===\n")
     for route, final, redirected, leaks, sfns, err, ok in results:
