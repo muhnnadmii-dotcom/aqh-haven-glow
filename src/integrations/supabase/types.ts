@@ -689,11 +689,13 @@ export type Database = {
       articles: {
         Row: {
           body: string | null
+          body_en: string | null
           category: string | null
           cover_image: string | null
           cover_path: string | null
           created_at: string
           excerpt: string | null
+          excerpt_en: string | null
           featured_on_home: boolean
           home_order: number
           id: string
@@ -704,16 +706,19 @@ export type Database = {
           slug: string
           tags: string[]
           title: string
+          title_en: string | null
           updated_at: string
           visible: boolean
         }
         Insert: {
           body?: string | null
+          body_en?: string | null
           category?: string | null
           cover_image?: string | null
           cover_path?: string | null
           created_at?: string
           excerpt?: string | null
+          excerpt_en?: string | null
           featured_on_home?: boolean
           home_order?: number
           id?: string
@@ -724,16 +729,19 @@ export type Database = {
           slug: string
           tags?: string[]
           title: string
+          title_en?: string | null
           updated_at?: string
           visible?: boolean
         }
         Update: {
           body?: string | null
+          body_en?: string | null
           category?: string | null
           cover_image?: string | null
           cover_path?: string | null
           created_at?: string
           excerpt?: string | null
+          excerpt_en?: string | null
           featured_on_home?: boolean
           home_order?: number
           id?: string
@@ -744,6 +752,7 @@ export type Database = {
           slug?: string
           tags?: string[]
           title?: string
+          title_en?: string | null
           updated_at?: string
           visible?: boolean
         }
@@ -1734,6 +1743,7 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          description_en: string | null
           duration: string | null
           equipment: Json
           equipment_warranty_enabled: boolean
@@ -1759,7 +1769,9 @@ export type Database = {
           slug: string
           sort_order: number
           specs: Json
+          summary_en: string | null
           title: string
+          title_en: string | null
           updated_at: string
           volume_liters: number | null
           water_system: string[] | null
@@ -1776,6 +1788,7 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          description_en?: string | null
           duration?: string | null
           equipment?: Json
           equipment_warranty_enabled?: boolean
@@ -1801,7 +1814,9 @@ export type Database = {
           slug: string
           sort_order?: number
           specs?: Json
+          summary_en?: string | null
           title: string
+          title_en?: string | null
           updated_at?: string
           volume_liters?: number | null
           water_system?: string[] | null
@@ -1818,6 +1833,7 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          description_en?: string | null
           duration?: string | null
           equipment?: Json
           equipment_warranty_enabled?: boolean
@@ -1843,7 +1859,9 @@ export type Database = {
           slug?: string
           sort_order?: number
           specs?: Json
+          summary_en?: string | null
           title?: string
+          title_en?: string | null
           updated_at?: string
           volume_liters?: number | null
           water_system?: string[] | null
@@ -2169,6 +2187,7 @@ export type Database = {
           cta_type: string | null
           cta_url: string | null
           description: string | null
+          description_en: string | null
           faqs: Json
           features: Json
           full_description: string | null
@@ -2191,6 +2210,7 @@ export type Database = {
           starting_price: number | null
           suitable_for: Json
           title: string
+          title_en: string | null
           updated_at: string
         }
         Insert: {
@@ -2200,6 +2220,7 @@ export type Database = {
           cta_type?: string | null
           cta_url?: string | null
           description?: string | null
+          description_en?: string | null
           faqs?: Json
           features?: Json
           full_description?: string | null
@@ -2222,6 +2243,7 @@ export type Database = {
           starting_price?: number | null
           suitable_for?: Json
           title: string
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
@@ -2231,6 +2253,7 @@ export type Database = {
           cta_type?: string | null
           cta_url?: string | null
           description?: string | null
+          description_en?: string | null
           faqs?: Json
           features?: Json
           full_description?: string | null
@@ -2253,6 +2276,7 @@ export type Database = {
           starting_price?: number | null
           suitable_for?: Json
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2299,23 +2323,29 @@ export type Database = {
       site_pages: {
         Row: {
           content: Json
+          content_en: Json | null
           id: string
           page_key: string
           title: string | null
+          title_en: string | null
           updated_at: string
         }
         Insert: {
           content?: Json
+          content_en?: Json | null
           id?: string
           page_key: string
           title?: string | null
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
           content?: Json
+          content_en?: Json | null
           id?: string
           page_key?: string
           title?: string | null
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2359,6 +2389,33 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           visible?: boolean
+        }
+        Relationships: []
+      }
+      ui_translations: {
+        Row: {
+          ar: string
+          context: string | null
+          en: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ar?: string
+          context?: string | null
+          en?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ar?: string
+          context?: string | null
+          en?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
