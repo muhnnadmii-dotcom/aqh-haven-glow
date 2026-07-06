@@ -203,6 +203,9 @@ export function Navbar() {
           </div>
 
           <nav className="flex flex-col px-3 py-3 overflow-y-auto max-h-[calc(100%-72px)]">
+            <div className="px-1 pb-2 flex justify-end">
+              <LanguageSwitcher />
+            </div>
             {links.map((l) => (
               <NavItemLink
                 key={l.id}
