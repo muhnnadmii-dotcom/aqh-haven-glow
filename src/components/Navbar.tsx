@@ -215,7 +215,7 @@ export function Navbar() {
                 className="px-4 py-3 text-base rounded-xl text-white/85 hover:bg-white/5 hover:text-[#D4A017] transition-colors"
                 activeClassName="px-4 py-3 text-base rounded-xl bg-[#D4A017]/15 text-[#D4A017] font-semibold border-r-2 border-[#D4A017]"
               >
-                {l.label}
+                {navLabel(l, lang)}
               </NavItemLink>
             ))}
 
