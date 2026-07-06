@@ -21,15 +21,24 @@ export const Route = createFileRoute("/about")({
     links: [{ rel: "canonical", href: "/about" }],
   }),
   loader: async () => {
-    const { data } = await supabase.from("site_pages").select("content").eq("page_key", "about").maybeSingle();
-    return { content: ((data?.content as unknown) as AboutContent | null) ?? null };
+    const { data } = await supabase
+      .from("site_pages")
+      .select("content, content_en")
+      .eq("page_key", "about")
+      .maybeSingle();
+    return {
+      content: ((data?.content as unknown) as AboutContent | null) ?? null,
+      content_en: ((data?.content_en as unknown) as AboutContent | null) ?? null,
+    };
   },
   component: AboutPage,
 });
 
 function AboutPage() {
-  const c = Route.useLoaderData().content as AboutContent | null;
-  if (!c) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-muted-foreground">لا يوجد محتوى بعد.</div>;
+  const { content, content_en } = Route.useLoaderData() as { content: AboutContent | null; content_en: AboutContent | null };
+  const { lang } = useLang();
+  const c = (lang === "en" ? (content_en ?? content) : content) as AboutContent | null;
+  if (!c) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-muted-foreground">{lang === "en" ? "No content yet." : "لا يوجد محتوى بعد."}</div>;
 
   const heroImg = c.hero.image_path ? publicUrl(c.hero.image_path) : heroFallback;
   const sortedValues = (c.values ?? []).filter((v) => v.visible).sort((a, b) => a.order - b.order);
