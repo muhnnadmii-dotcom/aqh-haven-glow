@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:admin-guard": "node tests/admin-auth-guard.spec.mjs"
+    "test:admin-guard": "python3 tests/admin_auth_guard.py"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.5",
