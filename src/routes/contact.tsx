@@ -61,14 +61,8 @@ function ContactPage() {
     const { error } = await supabase.from("contact_requests").insert(payload);
     if (error) { toast.error("تعذر إرسال الطلب"); return; }
     toast.success(c.form.success_message || "تم الاستلام");
-    if (c.whatsapp_number) {
-      const text =
-        `السلام عليكم، أنا ${name}.\n` +
-        `نوع الطلب: ${type}\n` +
-        `الجوال: ${phone}\n` +
-        `الرسالة: ${message}`;
-      window.open(whatsappLinkFor(c.whatsapp_number, text), "_blank");
-    }
+    setName(""); setPhone(""); setMessage("");
+    setType(c.request_types?.[0] ?? "");
   };
 
   if (!c) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-muted-foreground">لا يوجد محتوى بعد.</div>;
