@@ -503,27 +503,7 @@ function walkSection(sec: Section, visit: (obj: any, key: string) => void) {
   }
 }
 
-function collectStrings(
-  doc: PageDoc,
-  paths: { get: (d: PageDoc) => string; set: (d: PageDoc, v: string) => void }[],
-) {
-  doc.sections.forEach((_, sIdx) => {
-    const sec = doc.sections[sIdx];
-    walkSection(sec as Section, (obj, key) => {
-      if (key === "__self") return;
-      // capture by walking again on target doc — simpler: use closure refs
-      const val = obj[key];
-      if (typeof val !== "string") return;
-      // build accessor by re-walking the same section in the target doc.
-      // We can't rely on object identity across clones, so store an index
-      // into a per-doc flat list and reuse flattenStrings/setStringAt.
-      paths.push({
-        get: (d: PageDoc) => flattenStrings(d)[paths.length] ?? "",
-        set: (d: PageDoc, v: string) => setStringAt(d, paths.length, v),
-      });
-    });
-  });
-}
+
 
 function flattenStrings(doc: PageDoc): string[] {
   const out: string[] = [];
