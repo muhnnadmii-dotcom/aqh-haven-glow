@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { publicUrl } from "@/lib/storage";
 import { ICONS } from "@/lib/home-sections";
 import type { AboutContent } from "@/lib/site-pages";
+import { useLang } from "@/lib/i18n/LangProvider";
 
 const heroFallback = consultationTankAsset.url;
 
