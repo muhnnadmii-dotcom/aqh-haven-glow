@@ -5,7 +5,8 @@ import { Instagram, MapPin, Phone, MessageCircle, Mail, Clock } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ContactContent, SocialItem } from "@/lib/site-pages";
-import { getSessionUser } from "@/lib/client-auth";
+import { submitContactInquiry } from "@/lib/contact.functions";
+
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
