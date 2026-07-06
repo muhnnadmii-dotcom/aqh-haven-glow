@@ -31,6 +31,7 @@ export function Navbar() {
   const [displayName, setDisplayName] = useState<string>("");
   const links = useNavLinks("navbar", NAVBAR_FALLBACK);
   const t = useT();
+  const { lang } = useLang();
 
 
   useEffect(() => {
