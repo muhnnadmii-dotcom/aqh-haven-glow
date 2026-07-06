@@ -30,6 +30,7 @@ export function Navbar() {
   const { user, isAdmin } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
   const links = useNavLinks("navbar", NAVBAR_FALLBACK);
+  const t = useT();
 
 
   useEffect(() => {
