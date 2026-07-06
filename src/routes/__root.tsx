@@ -19,6 +19,7 @@ import { ScrollProgress } from "../components/ScrollProgress";
 import { Toaster } from "../components/ui/sonner";
 import { supabase } from "../integrations/supabase/client";
 import { LangProvider } from "../lib/i18n/LangProvider";
+import { AutoTranslator } from "../lib/i18n/AutoTranslator";
 
 function NotFoundComponent() {
   return (
@@ -168,6 +169,7 @@ function RootComponent() {
         {!isAdmin && <Footer />}
         {!isAdmin && <WhatsAppFloating />}
         <Toaster richColors position="top-center" />
+        {!isAdmin && <AutoTranslator />}
       </LangProvider>
     </QueryClientProvider>
   );
