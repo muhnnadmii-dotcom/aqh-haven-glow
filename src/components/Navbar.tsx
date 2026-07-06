@@ -66,7 +66,7 @@ export function Navbar() {
     };
   }, [open]);
 
-  const waLink = whatsappLink("السلام عليكم، أرغب بطلب خدمة من أكوا هيفن.");
+  const waLink = whatsappLink(t("wa.defaultMessage"));
 
   return (
     <>
