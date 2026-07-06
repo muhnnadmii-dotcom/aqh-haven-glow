@@ -107,6 +107,7 @@ export function Navbar() {
 
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <LanguageSwitcher />
               {isAdmin && (
                 <Link
                   to="/admin"
