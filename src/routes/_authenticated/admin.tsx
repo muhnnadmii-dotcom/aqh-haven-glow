@@ -126,6 +126,7 @@ const TITLES: Record<string, string> = {
   "/admin/content": "محتوى صفحات الموقع",
   "/admin/design/about": "من نحن",
   "/admin/design/contact": "تواصل معنا",
+  "/admin/design/aquarium-consultation": "استشارة الأحواض",
   "/admin/staff": "الموظفين",
   "/admin/inventory": "لوحة المخزون",
   "/admin/inventory/products": "إدارة المنتجات",
