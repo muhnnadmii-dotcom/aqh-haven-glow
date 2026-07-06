@@ -100,7 +100,7 @@ export function Navbar() {
                   className="relative px-3 py-2 text-sm text-muted-foreground transition-all duration-300 hover:text-[#D4A017] rounded-lg group"
                   activeClassName="relative px-3 py-2 text-sm text-[#D4A017] font-semibold rounded-lg"
                 >
-                  <span>{l.label}</span>
+                  <span>{navLabel(l, lang)}</span>
                   <span className="pointer-events-none absolute inset-x-3 -bottom-0.5 h-0.5 origin-center scale-x-0 bg-gradient-to-r from-transparent via-[#D4A017] to-transparent transition-transform duration-300 group-hover:scale-x-100" />
                 </NavItemLink>
               ))}
