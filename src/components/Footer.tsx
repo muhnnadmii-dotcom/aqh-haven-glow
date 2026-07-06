@@ -45,7 +45,7 @@ export function Footer() {
             <h4 className="text-sm font-bold mb-4 text-gradient-gold">روابط سريعة</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               {quickLinks.map((l) => (
-                <li key={l.id}><FooterLink l={l} /></li>
+                <li key={l.id}><FooterLink l={l} lang={lang} /></li>
               ))}
             </ul>
           </div>
