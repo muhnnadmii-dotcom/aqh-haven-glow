@@ -75,7 +75,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
     [qc],
   );
 
-  const dir = lang === "en" ? "ltr" : "rtl";
+  const dir: "ltr" | "rtl" = lang === "en" ? "ltr" : "rtl";
 
   // Sync <html lang/dir>
   useEffect(() => {
