@@ -53,6 +53,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/design", label: "الصفحة الرئيسية", icon: Palette, exact: true },
       { to: "/admin/design/about", label: "من نحن", icon: FileText },
       { to: "/admin/design/contact", label: "تواصل معنا", icon: FileText },
+      { to: "/admin/design/aquarium-consultation", label: "استشارة الأحواض", icon: FileText },
       { to: "/admin/services", label: "خدماتنا", icon: Wrench },
       { to: "/admin/projects", label: "أعمالنا / الأحواض", icon: Fish },
       { to: "/admin/gallery", label: "لقطات من أعمالنا", icon: Images },
