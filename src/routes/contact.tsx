@@ -5,7 +5,8 @@ import { Instagram, MapPin, Phone, MessageCircle, Mail, Clock } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ContactContent, SocialItem } from "@/lib/site-pages";
-import { getSessionUser } from "@/lib/client-auth";
+import { submitContactInquiry } from "@/lib/contact.functions";
+
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -53,17 +54,17 @@ function ContactPage() {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!c) return;
-    const user = await getSessionUser();
-    const payload: { name: string; phone: string; type: string; message: string; user_id?: string } = {
-      name, phone, type, message,
-    };
-    if (user) payload.user_id = user.id;
-    const { error } = await supabase.from("contact_requests").insert(payload);
-    if (error) { toast.error("تعذر إرسال الطلب"); return; }
+    try {
+      await submitContactInquiry({ data: { name, phone, type, message } });
+    } catch (err: any) {
+      toast.error(err?.message ?? "تعذر إرسال الطلب");
+      return;
+    }
     toast.success(c.form.success_message || "تم الاستلام");
     setName(""); setPhone(""); setMessage("");
     setType(c.request_types?.[0] ?? "");
   };
+
 
   if (!c) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-muted-foreground">لا يوجد محتوى بعد.</div>;
 
