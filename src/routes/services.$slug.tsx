@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getImageUrl, onImageError } from "@/lib/storage";
 import { whatsappLink } from "@/components/WhatsAppButton";
@@ -7,9 +7,13 @@ import { Reveal } from "@/components/Reveal";
 import * as Icons from "lucide-react";
 import {
   ArrowRight, CheckCircle2, MessageCircle, ChevronDown,
-  Sparkles, Camera, Lightbulb, ShieldCheck, Clock, Award, Heart,
-  Droplets, Fish, Leaf, Wind, Stethoscope, Waves, Filter, Sun, AlertCircle,
+  Sparkles, ShieldCheck, Heart, Waves,
 } from "lucide-react";
+import {
+  fetchConsultationContent,
+  CONSULTATION_DEFAULTS,
+  type ConsultationContent,
+} from "@/lib/consultation-page";
 
 
 type Svc = {
