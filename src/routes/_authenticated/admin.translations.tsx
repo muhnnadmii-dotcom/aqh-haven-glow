@@ -340,25 +340,15 @@ function CmsPageEditor({ pageKey }: { pageKey: string }) {
     if (!arDoc) return;
     setTranslating(true);
     try {
-      // Collect all translatable strings from arDoc in a stable order
-      const paths: { get: (d: PageDoc) => string; set: (d: PageDoc, v: string) => void }[] = [];
-      collectStrings(arDoc, paths);
-
-      const texts = paths.map((p) => p.get(arDoc)).map((t) => t ?? "");
-      const nonEmpty = texts
-        .map((t, i) => ({ t, i }))
-        .filter((x) => x.t.trim());
-
+      const texts = flattenStrings(arDoc);
+      const nonEmpty = texts.map((t, i) => ({ t, i })).filter((x) => x.t.trim());
       if (!nonEmpty.length) {
         toast.message("لا يوجد نص للترجمة");
         return;
       }
 
-      // clone ar structure as base for en
-      const base: PageDoc = JSON.parse(JSON.stringify(arDoc));
-      // batch 25 at a time
+      const results: string[] = texts.slice();
       const CHUNK = 25;
-      const results: string[] = new Array(texts.length).fill("");
       for (let i = 0; i < nonEmpty.length; i += CHUNK) {
         const slice = nonEmpty.slice(i, i + CHUNK);
         const res = await translate({
@@ -369,11 +359,8 @@ function CmsPageEditor({ pageKey }: { pageKey: string }) {
         });
       }
 
-      // rebuild base collectors (they are order-preserving over the same structure)
-      const basePaths: { get: (d: PageDoc) => string; set: (d: PageDoc, v: string) => void }[] = [];
-      collectStrings(base, basePaths);
-      basePaths.forEach((p, i) => p.set(base, results[i] || texts[i] || ""));
-
+      const base: PageDoc = JSON.parse(JSON.stringify(arDoc));
+      results.forEach((v, i) => setStringAt(base, i, v));
       setEnDoc(base);
       toast.success("تمت الترجمة — راجع ثم اضغط حفظ");
     } catch (e: any) {
