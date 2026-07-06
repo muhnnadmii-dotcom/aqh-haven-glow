@@ -1,17 +1,20 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, MapPin, Phone } from "lucide-react";
 import aqhLogo from "@/assets/aqh-logo.png.asset.json";
-import { useNavLinks, FOOTER_FALLBACK, type SiteNavLink } from "@/lib/site-nav";
+import { useNavLinks, FOOTER_FALLBACK, navLabel, type SiteNavLink } from "@/lib/site-nav";
+import { useLang } from "@/lib/i18n/LangProvider";
+import type { Lang } from "@/lib/i18n/strings";
 
-function FooterLink({ l }: { l: SiteNavLink }) {
+function FooterLink({ l, lang }: { l: SiteNavLink; lang: Lang }) {
+  const label = navLabel(l, lang);
   if (l.external || /^https?:\/\//i.test(l.href)) {
     return (
       <a href={l.href} target={l.open_in_new_tab ? "_blank" : undefined} rel={l.open_in_new_tab ? "noopener noreferrer" : undefined} className="hover:text-foreground">
-        {l.label}
+        {label}
       </a>
     );
   }
-  return <Link to={l.href as any} className="hover:text-foreground">{l.label}</Link>;
+  return <Link to={l.href as any} className="hover:text-foreground">{label}</Link>;
 }
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -24,6 +27,7 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
 
 export function Footer() {
   const quickLinks = useNavLinks("footer_quick", FOOTER_FALLBACK);
+  const { lang } = useLang();
   return (
     <footer className="relative mt-20 border-t border-white/10 bg-[oklch(0.10_0.05_245/0.6)] backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-6 py-14">
@@ -41,7 +45,7 @@ export function Footer() {
             <h4 className="text-sm font-bold mb-4 text-gradient-gold">روابط سريعة</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               {quickLinks.map((l) => (
-                <li key={l.id}><FooterLink l={l} /></li>
+                <li key={l.id}><FooterLink l={l} lang={lang} /></li>
               ))}
             </ul>
           </div>

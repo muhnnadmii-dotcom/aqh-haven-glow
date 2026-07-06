@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Lang } from "@/lib/i18n/strings";
 
 export type NavLocation = "navbar" | "footer_quick";
 
@@ -7,6 +8,7 @@ export type SiteNavLink = {
   id: string;
   location: NavLocation;
   label: string;
+  label_en?: string | null;
   href: string;
   sort_order: number;
   visible: boolean;
@@ -14,22 +16,28 @@ export type SiteNavLink = {
   open_in_new_tab: boolean;
 };
 
+/** Pick the label matching the current UI language, with graceful fallback. */
+export function navLabel(l: SiteNavLink, lang: Lang): string {
+  if (lang === "en") return (l.label_en && l.label_en.trim()) || l.label;
+  return l.label || l.label_en || "";
+}
+
 export const NAVBAR_FALLBACK: SiteNavLink[] = [
-  { id: "n1", location: "navbar", label: "الرئيسية",       href: "/",                    sort_order: 10, visible: true, external: false, open_in_new_tab: false },
-  { id: "n2", location: "navbar", label: "أعمالنا",        href: "/portfolio",           sort_order: 20, visible: true, external: false, open_in_new_tab: false },
-  { id: "n3", location: "navbar", label: "الخدمات",        href: "/services",            sort_order: 30, visible: true, external: false, open_in_new_tab: false },
-  { id: "n4", location: "navbar", label: "الصيانة",        href: "/maintenance",         sort_order: 40, visible: true, external: false, open_in_new_tab: false },
-  { id: "n5", location: "navbar", label: "حلول الأعمال",   href: "/business-solutions",  sort_order: 50, visible: true, external: false, open_in_new_tab: false },
-  { id: "n6", location: "navbar", label: "مركز المعرفة",   href: "/knowledge",           sort_order: 60, visible: true, external: false, open_in_new_tab: false },
-  { id: "n7", location: "navbar", label: "تواصل معنا",     href: "/contact",             sort_order: 70, visible: true, external: false, open_in_new_tab: false },
+  { id: "n1", location: "navbar", label: "الرئيسية",       label_en: "Home",               href: "/",                    sort_order: 10, visible: true, external: false, open_in_new_tab: false },
+  { id: "n2", location: "navbar", label: "أعمالنا",        label_en: "Our Work",           href: "/portfolio",           sort_order: 20, visible: true, external: false, open_in_new_tab: false },
+  { id: "n3", location: "navbar", label: "الخدمات",        label_en: "Services",           href: "/services",            sort_order: 30, visible: true, external: false, open_in_new_tab: false },
+  { id: "n4", location: "navbar", label: "الصيانة",        label_en: "Maintenance",        href: "/maintenance",         sort_order: 40, visible: true, external: false, open_in_new_tab: false },
+  { id: "n5", location: "navbar", label: "حلول الأعمال",   label_en: "Business Solutions", href: "/business-solutions",  sort_order: 50, visible: true, external: false, open_in_new_tab: false },
+  { id: "n6", location: "navbar", label: "مركز المعرفة",   label_en: "Knowledge",          href: "/knowledge",           sort_order: 60, visible: true, external: false, open_in_new_tab: false },
+  { id: "n7", location: "navbar", label: "تواصل معنا",     label_en: "Contact",            href: "/contact",             sort_order: 70, visible: true, external: false, open_in_new_tab: false },
 ];
 
 export const FOOTER_FALLBACK: SiteNavLink[] = [
-  { id: "f1", location: "footer_quick", label: "أعمالنا",      href: "/portfolio", sort_order: 10, visible: true, external: false, open_in_new_tab: false },
-  { id: "f2", location: "footer_quick", label: "خدماتنا",      href: "/services",  sort_order: 20, visible: true, external: false, open_in_new_tab: false },
-  { id: "f3", location: "footer_quick", label: "الكاتلوج",     href: "/catalog",   sort_order: 30, visible: true, external: false, open_in_new_tab: false },
-  { id: "f4", location: "footer_quick", label: "مركز المعرفة", href: "/knowledge", sort_order: 40, visible: true, external: false, open_in_new_tab: false },
-  { id: "f5", location: "footer_quick", label: "من نحن",       href: "/about",     sort_order: 50, visible: true, external: false, open_in_new_tab: false },
+  { id: "f1", location: "footer_quick", label: "أعمالنا",      label_en: "Our Work",   href: "/portfolio", sort_order: 10, visible: true, external: false, open_in_new_tab: false },
+  { id: "f2", location: "footer_quick", label: "خدماتنا",      label_en: "Services",   href: "/services",  sort_order: 20, visible: true, external: false, open_in_new_tab: false },
+  { id: "f3", location: "footer_quick", label: "الكاتلوج",     label_en: "Catalog",    href: "/catalog",   sort_order: 30, visible: true, external: false, open_in_new_tab: false },
+  { id: "f4", location: "footer_quick", label: "مركز المعرفة", label_en: "Knowledge",  href: "/knowledge", sort_order: 40, visible: true, external: false, open_in_new_tab: false },
+  { id: "f5", location: "footer_quick", label: "من نحن",       label_en: "About",      href: "/about",     sort_order: 50, visible: true, external: false, open_in_new_tab: false },
 ];
 
 export async function fetchNavLinks(location: NavLocation): Promise<SiteNavLink[]> {

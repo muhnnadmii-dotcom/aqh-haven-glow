@@ -5,9 +5,9 @@ import aqhLogo from "@/assets/aqh-logo.png.asset.json";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsappLink } from "@/components/WhatsAppButton";
-import { useNavLinks, NAVBAR_FALLBACK, type SiteNavLink } from "@/lib/site-nav";
+import { useNavLinks, NAVBAR_FALLBACK, navLabel, type SiteNavLink } from "@/lib/site-nav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { useT } from "@/lib/i18n/LangProvider";
+import { useLang, useT } from "@/lib/i18n/LangProvider";
 
 function NavItemLink({ l, className, activeClassName, onClick, children }: { l: SiteNavLink; className: string; activeClassName?: string; onClick?: () => void; children: React.ReactNode }) {
   if (l.external || /^https?:\/\//i.test(l.href)) {
@@ -31,6 +31,7 @@ export function Navbar() {
   const [displayName, setDisplayName] = useState<string>("");
   const links = useNavLinks("navbar", NAVBAR_FALLBACK);
   const t = useT();
+  const { lang } = useLang();
 
 
   useEffect(() => {
@@ -99,7 +100,7 @@ export function Navbar() {
                   className="relative px-3 py-2 text-sm text-muted-foreground transition-all duration-300 hover:text-[#D4A017] rounded-lg group"
                   activeClassName="relative px-3 py-2 text-sm text-[#D4A017] font-semibold rounded-lg"
                 >
-                  <span>{l.label}</span>
+                  <span>{navLabel(l, lang)}</span>
                   <span className="pointer-events-none absolute inset-x-3 -bottom-0.5 h-0.5 origin-center scale-x-0 bg-gradient-to-r from-transparent via-[#D4A017] to-transparent transition-transform duration-300 group-hover:scale-x-100" />
                 </NavItemLink>
               ))}
@@ -214,7 +215,7 @@ export function Navbar() {
                 className="px-4 py-3 text-base rounded-xl text-white/85 hover:bg-white/5 hover:text-[#D4A017] transition-colors"
                 activeClassName="px-4 py-3 text-base rounded-xl bg-[#D4A017]/15 text-[#D4A017] font-semibold border-r-2 border-[#D4A017]"
               >
-                {l.label}
+                {navLabel(l, lang)}
               </NavItemLink>
             ))}
 

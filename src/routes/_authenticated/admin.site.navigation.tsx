@@ -48,7 +48,7 @@ function LocationEditor({ loc }: { loc: { key: NavLocation; label: string; hint:
     setSavingId(i.id);
     try {
       await updateNavLink(i.id, {
-        label: i.label, href: i.href, visible: i.visible,
+        label: i.label, label_en: i.label_en ?? null, href: i.href, visible: i.visible,
         external: i.external, open_in_new_tab: i.open_in_new_tab,
       });
     } finally { setSavingId(null); }
@@ -105,9 +105,13 @@ function LocationEditor({ loc }: { loc: { key: NavLocation; label: string; hint:
           {items.map((i, idx) => (
             <div key={i.id} className="grid grid-cols-12 gap-2 items-center rounded-xl border border-white/10 bg-white/[0.02] p-2">
               <div className="col-span-12 sm:col-span-3">
-                <label className="text-[10px] text-muted-foreground">الاسم</label>
+                <label className="text-[10px] text-muted-foreground">الاسم (عربي)</label>
                 <input value={i.label} onChange={(e) => patch(i.id, { label: e.target.value })}
                   className="w-full rounded-lg bg-background/40 border border-white/10 px-2 py-1.5 text-sm" />
+                <label className="text-[10px] text-muted-foreground mt-1 block">Label (English)</label>
+                <input value={i.label_en ?? ""} onChange={(e) => patch(i.id, { label_en: e.target.value })}
+                  placeholder="e.g. Services"
+                  className="w-full rounded-lg bg-background/40 border border-white/10 px-2 py-1.5 text-sm" dir="ltr" />
               </div>
               <div className="col-span-12 sm:col-span-4">
                 <label className="text-[10px] text-muted-foreground">الرابط (مثال: /services أو https://...)</label>

@@ -2288,6 +2288,7 @@ export type Database = {
           href: string
           id: string
           label: string
+          label_en: string | null
           location: string
           open_in_new_tab: boolean
           sort_order: number
@@ -2300,6 +2301,7 @@ export type Database = {
           href: string
           id?: string
           label: string
+          label_en?: string | null
           location: string
           open_in_new_tab?: boolean
           sort_order?: number
@@ -2312,6 +2314,7 @@ export type Database = {
           href?: string
           id?: string
           label?: string
+          label_en?: string | null
           location?: string
           open_in_new_tab?: boolean
           sort_order?: number
