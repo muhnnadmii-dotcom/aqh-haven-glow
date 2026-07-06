@@ -18,6 +18,8 @@ import { WhatsAppFloating } from "../components/WhatsAppButton";
 import { ScrollProgress } from "../components/ScrollProgress";
 import { Toaster } from "../components/ui/sonner";
 import { supabase } from "../integrations/supabase/client";
+import { LangProvider, useLang } from "../lib/i18n/LangProvider";
+import { useT } from "../lib/i18n/LangProvider";
 
 function NotFoundComponent() {
   return (
