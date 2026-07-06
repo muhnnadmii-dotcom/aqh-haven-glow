@@ -13,14 +13,16 @@ export const translateBatch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data, context }) => {
-    // Authorization: admin or staff only
-    const { data: roleRow } = await context.supabase
+    // Authorization: admin or staff only.
+    // Note: users can hold multiple roles, so we must NOT use maybeSingle() —
+    // it errors when more than one row matches. Use limit(1) instead.
+    const { data: roleRows } = await context.supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", context.userId)
       .in("role", ["admin", "staff"])
-      .maybeSingle();
-    if (!roleRow) throw new Error("forbidden");
+      .limit(1);
+    if (!roleRows || roleRows.length === 0) throw new Error("forbidden");
 
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
