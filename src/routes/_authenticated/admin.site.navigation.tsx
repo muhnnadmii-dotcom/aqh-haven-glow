@@ -48,7 +48,7 @@ function LocationEditor({ loc }: { loc: { key: NavLocation; label: string; hint:
     setSavingId(i.id);
     try {
       await updateNavLink(i.id, {
-        label: i.label, href: i.href, visible: i.visible,
+        label: i.label, label_en: i.label_en ?? null, href: i.href, visible: i.visible,
         external: i.external, open_in_new_tab: i.open_in_new_tab,
       });
     } finally { setSavingId(null); }
