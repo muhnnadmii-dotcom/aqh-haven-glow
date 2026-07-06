@@ -1,17 +1,20 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, MapPin, Phone } from "lucide-react";
 import aqhLogo from "@/assets/aqh-logo.png.asset.json";
-import { useNavLinks, FOOTER_FALLBACK, type SiteNavLink } from "@/lib/site-nav";
+import { useNavLinks, FOOTER_FALLBACK, navLabel, type SiteNavLink } from "@/lib/site-nav";
+import { useLang } from "@/lib/i18n/LangProvider";
+import type { Lang } from "@/lib/i18n/strings";
 
-function FooterLink({ l }: { l: SiteNavLink }) {
+function FooterLink({ l, lang }: { l: SiteNavLink; lang: Lang }) {
+  const label = navLabel(l, lang);
   if (l.external || /^https?:\/\//i.test(l.href)) {
     return (
       <a href={l.href} target={l.open_in_new_tab ? "_blank" : undefined} rel={l.open_in_new_tab ? "noopener noreferrer" : undefined} className="hover:text-foreground">
-        {l.label}
+        {label}
       </a>
     );
   }
-  return <Link to={l.href as any} className="hover:text-foreground">{l.label}</Link>;
+  return <Link to={l.href as any} className="hover:text-foreground">{label}</Link>;
 }
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
