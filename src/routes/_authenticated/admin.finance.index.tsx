@@ -570,8 +570,14 @@ function RecentList({ title, rows, dateField, subField, linkTo }: { title: strin
   );
 }
 
-function BalanceCard({ icon: Icon, label, value, tone, accent, hint, onEdit }: {
-  icon: any; label: string; value: number; tone?: string; accent?: string; hint?: string; onEdit?: () => void;
+function fmtArDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
+  } catch { return iso; }
+}
+
+function BalanceCard({ icon: Icon, label, value, tone, accent, hint, badge, onEdit }: {
+  icon: any; label: string; value: number; tone?: string; accent?: string; hint?: string; badge?: string; onEdit?: () => void;
 }) {
   return (
     <div className={`rounded-2xl border p-5 relative ${accent ?? "border-white/10 bg-white/5"}`}>
@@ -589,6 +595,11 @@ function BalanceCard({ icon: Icon, label, value, tone, accent, hint, onEdit }: {
       <div className={`mt-2 text-2xl font-semibold font-mono ${tone ?? ""}`}>
         {fmtSAR(value)} <span className="text-xs text-muted-foreground">ر.س</span>
       </div>
+      {badge && (
+        <div className="mt-2 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-muted-foreground font-mono">
+          {badge}
+        </div>
+      )}
       {hint && <div className="mt-1 text-[10px] text-muted-foreground">{hint}</div>}
     </div>
   );
