@@ -271,8 +271,33 @@ function FinanceDashboard() {
         </div>
       </div>
 
+      {/* Headline: cash on hand + invested capital (all-time, not filtered) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-5">
+          <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+            <span>الرصيد النقدي الحالي (كل الوقت)</span>
+            <Banknote size={16} className="text-gold" />
+          </div>
+          <div className={`mt-2 text-3xl font-semibold font-mono ${cashOnHand >= 0 ? "text-gold" : "text-red-300"}`}>
+            {fmtSAR(cashOnHand)} <span className="text-xs text-muted-foreground">ر.س</span>
+          </div>
+          <div className="mt-1 text-[10px] text-muted-foreground">= رأس المال + الدخل − المصروفات − السحوبات</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+            <span>رأس المال المستثمر</span>
+            <Coins size={16} className="text-sky-300" />
+          </div>
+          <div className="mt-2 text-3xl font-semibold text-sky-300 font-mono">
+            {fmtSAR(investedCapital)} <span className="text-xs text-muted-foreground">ر.س</span>
+          </div>
+          <div className="mt-1 text-[10px] text-muted-foreground">من إعدادات المالية · الرصيد الافتتاحي + الضخّات − السحوبات</div>
+        </div>
+      </div>
+
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+
         <Kpi icon={TrendingUp} label="إجمالي الدخل" value={fmtSAR(totIncome)} tone="text-emerald-300"
           change={pctChange(totIncome, pTotIncome)}
           onClick={() => open({ title: "الدخل", show: "income" })} />
