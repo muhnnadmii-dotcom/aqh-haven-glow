@@ -550,6 +550,86 @@ function RecentList({ title, rows, dateField, subField, linkTo }: { title: strin
   );
 }
 
+function BalanceCard({ icon: Icon, label, value, tone, accent, hint, onEdit }: {
+  icon: any; label: string; value: number; tone?: string; accent?: string; hint?: string; onEdit?: () => void;
+}) {
+  return (
+    <div className={`rounded-2xl border p-5 relative ${accent ?? "border-white/10 bg-white/5"}`}>
+      <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+        <span>{label}</span>
+        <div className="flex items-center gap-2">
+          <Icon size={16} className={tone} />
+          {onEdit && (
+            <button onClick={onEdit} className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground" title="تعديل">
+              <Pencil size={12} />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className={`mt-2 text-2xl font-semibold font-mono ${tone ?? ""}`}>
+        {fmtSAR(value)} <span className="text-xs text-muted-foreground">ر.س</span>
+      </div>
+      {hint && <div className="mt-1 text-[10px] text-muted-foreground">{hint}</div>}
+    </div>
+  );
+}
+
+function EditBalanceDialog({ field, current, onClose, onSaved }: {
+  field: "cash_actual" | "inventory_value" | "assets_value";
+  current: number;
+  onClose: () => void;
+  onSaved: (val: number) => void;
+}) {
+  const labels: Record<string, string> = {
+    cash_actual: "النقد الفعلي (صرافة/بنك)",
+    inventory_value: "قيمة المخزون",
+    assets_value: "قيمة الأصول",
+  };
+  const [val, setVal] = useState(String(current));
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const num = Number(val);
+    if (!isFinite(num) || num < 0) { toast.error("مبلغ غير صحيح"); return; }
+    setSaving(true);
+    try {
+      await updateManualBalances({ [field]: num } as any);
+      toast.success("تم الحفظ");
+      onSaved(num);
+    } catch (e: any) {
+      toast.error(e.message ?? "تعذر الحفظ");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl bg-background border border-white/10 p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <div className="font-semibold text-sm">تعديل: {labels[field]}</div>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+        <div>
+          <div className="text-[11px] text-muted-foreground mb-1">المبلغ (ر.س)</div>
+          <input
+            type="number"
+            step="0.01"
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            autoFocus
+            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-mono text-lg"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] bg-white/5">إلغاء</button>
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-[12px] bg-gold/20 border border-gold/40 text-gold disabled:opacity-50">
+            <Check size={13} /> {saving ? "جاري…" : "حفظ"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TopList({ title, items, onPick }: { title: string; items: { id: string; name: string; total: number }[]; onPick: (id: string, name: string) => void }) {
   const max = Math.max(1, ...items.map((i) => i.total));
   return (
