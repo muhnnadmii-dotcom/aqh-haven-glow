@@ -220,15 +220,18 @@ function AdminLayout() {
         {/* Main content */}
         <main className="flex-1 lg:mr-64 min-w-0">
           <div className="px-4 sm:px-6 lg:px-8 py-5 lg:py-8 max-w-6xl mx-auto">
-            <RouteAccessGate pathname={pathname}>
-              <Outlet />
-            </RouteAccessGate>
+            <AdminMfaGate isAdmin={(Route.useRouteContext() as any).isAdmin ?? false}>
+              <RouteAccessGate pathname={pathname}>
+                <Outlet />
+              </RouteAccessGate>
+            </AdminMfaGate>
           </div>
         </main>
       </div>
     </div>
   );
 }
+
 
 function matchPageKey(pathname: string): string | null {
   let best: string | null = null;
