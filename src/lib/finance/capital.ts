@@ -24,7 +24,7 @@ export const CAPITAL_TYPE_LABELS: Record<CapitalEntryType, string> = {
 const TABLE = "aqh_finance_capital" as any;
 
 export async function listCapital(): Promise<CapitalEntry[]> {
-  const { data, error } = await supabase.from(TABLE).select("*").order("entry_date", { ascending: false });
+  const { data, error } = await (supabase.from(TABLE) as any).select("*").order("entry_date", { ascending: false });
   if (error) throw error;
   return (data ?? []) as CapitalEntry[];
 }
