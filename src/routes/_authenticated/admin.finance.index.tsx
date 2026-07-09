@@ -16,7 +16,9 @@ import {
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
-import { Banknote, Coins } from "lucide-react";
+import { getManualBalances, updateManualBalances, totalNetWorth, type ManualBalances } from "@/lib/finance/manual-balances";
+import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/")({
   ssr: false,
@@ -49,6 +51,8 @@ function FinanceDashboard() {
   const [capital, setCapital] = useState<CapitalEntry[]>([]);
   const [allIncomes, setAllIncomes] = useState<any[]>([]);
   const [allExpenses, setAllExpenses] = useState<any[]>([]);
+  const [manual, setManual] = useState<ManualBalances | null>(null);
+  const [editField, setEditField] = useState<null | "cash_actual" | "inventory_value" | "assets_value">(null);
 
   const range = useMemo(() => {
     if (pickedMonth) {
@@ -94,7 +98,7 @@ function FinanceDashboard() {
     const drawsFrom = new Date(); drawsFrom.setMonth(drawsFrom.getMonth() - 5); drawsFrom.setDate(1);
     const drawsFromStr = `${drawsFrom.getFullYear()}-${String(drawsFrom.getMonth() + 1).padStart(2, "0")}-01`;
 
-    const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }, capRows, { data: allInc }, { data: allExp }] = await Promise.all([
+    const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }, capRows, { data: allInc }, { data: allExp }, manualRow] = await Promise.all([
       buildIncQ(range),
       buildExpQ(range),
       buildIncQ(prev),
@@ -103,6 +107,7 @@ function FinanceDashboard() {
       listCapital().catch(() => [] as CapitalEntry[]),
       supabase.from("finance_incomes").select("income_date, amount").is("deleted_at", null),
       supabase.from("finance_expenses").select("expense_date, amount, main_category_id").is("deleted_at", null),
+      getManualBalances().catch(() => null),
     ]);
     setIncomes(inc ?? []);
     setExpenses(exp ?? []);
@@ -112,6 +117,7 @@ function FinanceDashboard() {
     setCapital(capRows ?? []);
     setAllIncomes(allInc ?? []);
     setAllExpenses(allExp ?? []);
+    setManual(manualRow);
     setLoading(false);
   }, [range, prev, fMain, fSupplier, fSource, fAccount]);
 
@@ -271,31 +277,73 @@ function FinanceDashboard() {
         </div>
       </div>
 
-      {/* Headline: cash on hand + invested capital (all-time, not filtered) */}
+      {/* Headline: manual balances (editable) + auto-computed reference */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <BalanceCard
+          icon={Banknote}
+          label="النقد الفعلي (صرافة/بنك)"
+          value={Number(manual?.cash_actual ?? 0)}
+          tone="text-gold"
+          accent="border-gold/30 bg-gradient-to-br from-gold/10 to-transparent"
+          onEdit={() => setEditField("cash_actual")}
+        />
+        <BalanceCard
+          icon={Package}
+          label="قيمة المخزون"
+          value={Number(manual?.inventory_value ?? 0)}
+          tone="text-emerald-300"
+          onEdit={() => setEditField("inventory_value")}
+        />
+        <BalanceCard
+          icon={Building2}
+          label="قيمة الأصول"
+          value={Number(manual?.assets_value ?? 0)}
+          tone="text-sky-300"
+          onEdit={() => setEditField("assets_value")}
+        />
+        <BalanceCard
+          icon={PiggyBank}
+          label="إجمالي الثروة"
+          value={totalNetWorth(manual)}
+          tone="text-foreground"
+          accent="border-white/20 bg-white/10"
+          hint="النقد + المخزون + الأصول"
+        />
+      </div>
+
+      {/* Reference: auto-computed cash and invested capital */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-5">
-          <div className="flex items-center justify-between text-[12px] text-muted-foreground">
-            <span>الرصيد النقدي الحالي (كل الوقت)</span>
-            <Banknote size={16} className="text-gold" />
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>الرصيد المحسوب من الحركات (مرجعي)</span>
+            <span className="text-[10px]">= رأس المال + الدخل − المصروفات − السحوبات</span>
           </div>
-          <div className={`mt-2 text-3xl font-semibold font-mono ${cashOnHand >= 0 ? "text-gold" : "text-red-300"}`}>
-            {fmtSAR(cashOnHand)} <span className="text-xs text-muted-foreground">ر.س</span>
+          <div className={`mt-1 text-lg font-semibold font-mono ${cashOnHand >= 0 ? "text-emerald-300" : "text-red-300"}`}>
+            {fmtSAR(cashOnHand)} <span className="text-[10px] text-muted-foreground">ر.س</span>
           </div>
-          <div className="mt-1 text-[10px] text-muted-foreground">= رأس المال + الدخل − المصروفات − السحوبات</div>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>رأس المال المستثمر</span>
-            <Coins size={16} className="text-sky-300" />
+            <Coins size={14} className="text-sky-300" />
           </div>
-          <div className="mt-2 text-3xl font-semibold text-sky-300 font-mono">
-            {fmtSAR(investedCapital)} <span className="text-xs text-muted-foreground">ر.س</span>
+          <div className="mt-1 text-lg font-semibold text-sky-300 font-mono">
+            {fmtSAR(investedCapital)} <span className="text-[10px] text-muted-foreground">ر.س</span>
           </div>
-          <div className="mt-1 text-[10px] text-muted-foreground">من إعدادات المالية · الرصيد الافتتاحي + الضخّات − السحوبات</div>
         </div>
       </div>
 
-      {/* KPI cards */}
+      {editField && (
+        <EditBalanceDialog
+          field={editField}
+          current={Number(manual?.[editField] ?? 0)}
+          onClose={() => setEditField(null)}
+          onSaved={(val) => {
+            setManual((prev) => prev ? { ...prev, [editField]: val } : prev);
+            setEditField(null);
+          }}
+        />
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
 
         <Kpi icon={TrendingUp} label="إجمالي الدخل" value={fmtSAR(totIncome)} tone="text-emerald-300"
@@ -498,6 +546,86 @@ function RecentList({ title, rows, dateField, subField, linkTo }: { title: strin
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function BalanceCard({ icon: Icon, label, value, tone, accent, hint, onEdit }: {
+  icon: any; label: string; value: number; tone?: string; accent?: string; hint?: string; onEdit?: () => void;
+}) {
+  return (
+    <div className={`rounded-2xl border p-5 relative ${accent ?? "border-white/10 bg-white/5"}`}>
+      <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+        <span>{label}</span>
+        <div className="flex items-center gap-2">
+          <Icon size={16} className={tone} />
+          {onEdit && (
+            <button onClick={onEdit} className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground" title="تعديل">
+              <Pencil size={12} />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className={`mt-2 text-2xl font-semibold font-mono ${tone ?? ""}`}>
+        {fmtSAR(value)} <span className="text-xs text-muted-foreground">ر.س</span>
+      </div>
+      {hint && <div className="mt-1 text-[10px] text-muted-foreground">{hint}</div>}
+    </div>
+  );
+}
+
+function EditBalanceDialog({ field, current, onClose, onSaved }: {
+  field: "cash_actual" | "inventory_value" | "assets_value";
+  current: number;
+  onClose: () => void;
+  onSaved: (val: number) => void;
+}) {
+  const labels: Record<string, string> = {
+    cash_actual: "النقد الفعلي (صرافة/بنك)",
+    inventory_value: "قيمة المخزون",
+    assets_value: "قيمة الأصول",
+  };
+  const [val, setVal] = useState(String(current));
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const num = Number(val);
+    if (!isFinite(num) || num < 0) { toast.error("مبلغ غير صحيح"); return; }
+    setSaving(true);
+    try {
+      await updateManualBalances({ [field]: num } as any);
+      toast.success("تم الحفظ");
+      onSaved(num);
+    } catch (e: any) {
+      toast.error(e.message ?? "تعذر الحفظ");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl bg-background border border-white/10 p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <div className="font-semibold text-sm">تعديل: {labels[field]}</div>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+        <div>
+          <div className="text-[11px] text-muted-foreground mb-1">المبلغ (ر.س)</div>
+          <input
+            type="number"
+            step="0.01"
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            autoFocus
+            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 font-mono text-lg"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] bg-white/5">إلغاء</button>
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-[12px] bg-gold/20 border border-gold/40 text-gold disabled:opacity-50">
+            <Check size={13} /> {saving ? "جاري…" : "حفظ"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

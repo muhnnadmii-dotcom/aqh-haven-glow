@@ -140,6 +140,42 @@ export type Database = {
         }
         Relationships: []
       }
+      aqh_finance_manual_balances: {
+        Row: {
+          assets_value: number
+          cash_actual: number
+          created_at: string
+          id: string
+          inventory_value: number
+          note: string | null
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assets_value?: number
+          cash_actual?: number
+          created_at?: string
+          id?: string
+          inventory_value?: number
+          note?: string | null
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assets_value?: number
+          cash_actual?: number
+          created_at?: string
+          id?: string
+          inventory_value?: number
+          note?: string | null
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       aqh_home_stats_cache: {
         Row: {
           customers: number
