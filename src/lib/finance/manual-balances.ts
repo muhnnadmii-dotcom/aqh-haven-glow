@@ -7,6 +7,7 @@ export interface ManualBalances {
   cash_actual: number;
   inventory_value: number;
   assets_value: number;
+  cash_anchor_date: string | null;
   note: string | null;
   updated_at: string;
 }
