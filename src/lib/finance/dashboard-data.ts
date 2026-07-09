@@ -136,3 +136,19 @@ export function drawsByMonth(draws: any[], months = 6): { label: string; amount:
   }
   return out;
 }
+
+/** Get first/last day of a YYYY-MM month as a DateRange. */
+export function monthRange(ym: string): DateRange {
+  const [y, m] = ym.split("-").map(Number);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const lastDay = new Date(y, m, 0).getDate();
+  return { dateFrom: `${y}-${pad(m)}-01`, dateTo: `${y}-${pad(m)}-${pad(lastDay)}` };
+}
+
+/** Format a YYYY-MM month key in Arabic. */
+export function formatMonthAr(ym: string): string {
+  const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  const [y, m] = ym.split("-").map(Number);
+  return `${MONTHS_AR[m - 1]} ${y}`;
+}
+
