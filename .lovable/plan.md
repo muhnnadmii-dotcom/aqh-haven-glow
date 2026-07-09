@@ -1,94 +1,86 @@
 ## الهدف
-إضافة دعم كامل للغة الإنجليزية (AR/EN) مع محول لغة في Navbar، دعم URLs بالشكل `/en/...`، تحويل تلقائي بين RTL و LTR، ولوحة إدارة لتحرير الترجمات مع ترجمة تلقائية عبر Lovable AI (Gemini) وتحديث تلقائي للنصوص الجديدة.
+تطوير `/admin/finance` إلى لوحة مالية موثوقة: تتبع رأس المال والنقد الفعلي، أرقام متسقة بدون تناقض، رسوم نظيفة، مقارنة أشهر، وتقارير قابلة للتصدير.
 
----
+## المرحلة 1 — تتبع رأس المال والنقد
 
-## 1) البنية التحتية للغة (i18n)
+**Migration** — جدول `aqh_finance_capital`:
+- `id`, `entry_type` (`opening_balance` | `capital_injection` | `owner_withdrawal`), `amount numeric`, `entry_date date`, `note text`, `created_by uuid`, `created_at`, `updated_at`.
+- Constraint: `opening_balance` مسموح صف واحد فقط.
+- RLS: قراءة لأي دور مالي، كتابة لـ admin/finance_manage فقط. GRANT للـ authenticated + service_role.
+- Trigger `updated_at`.
 
-- `src/lib/i18n/LangProvider.tsx` — React Context يوفّر `lang` (`ar` | `en`)، `setLang(l)`، `dir` (`rtl`/`ltr`)، `t(key)`.
-  - المصدر: `localStorage("aqh_lang")` + `URLSearchParams("lang")` + بادئة المسار `/en`.
-  - عند التغيير: تحديث `document.documentElement.lang` و `dir`، حفظ التفضيل، ودفع Query invalidation لإعادة جلب محتوى CMS باللغة الجديدة.
-- `src/lib/i18n/strings.ts` — قاموس ثابت `{ ar: {...}, en: {...} }` لجميع النصوص الثابتة في:
-  - `Navbar`, `Footer`, `WhatsAppButton`, أزرار مشتركة، رسائل النماذج، labels الحسابات.
-- `useT()` hook قصير لاستخدامه في المكونات.
-- تفعيل `dir="rtl|ltr"` في `__root.tsx` عبر state من الـ Provider، مع تبديل خط المحتوى الإنجليزي إلى Inter (يبقى IBM Plex Sans Arabic للعربي).
+**واجهة الإدخال** — قسم جديد داخل `/admin/finance/settings`:
+- بطاقة "الرصيد الافتتاحي" (تعديل صف واحد).
+- جدول ضخّات رأس المال + السحوبات الشخصية مع أزرار إضافة/تعديل/حذف.
 
-## 2) محول اللغة
+## المرحلة 2 — أرقام متسقة ورسوم نظيفة
 
-- زر AR/EN في `Navbar` (desktop + mobile) يبدّل فورًا ويحدّث `localStorage` + الـ URL.
-- دعم مسار `/en/...` عبر Layout route `src/routes/_lang.tsx` بديل — **بدلاً منه لتفادي مضاعفة كل الـ routes**، نستخدم:
-  - `?lang=en` كـ URL قابل للمشاركة (يعمل مع كل صفحة تلقائيًا).
-  - Middleware في `LangProvider` يقرأ `/en/*` إن وُجد ويحوّله داخليًا.
-  - إضافة `<link rel="alternate" hreflang="ar/en">` في `__root.tsx` لتحسين SEO.
+**بطاقات رئيسية جديدة أعلى اللوحة:**
+1. **النقد المتوفر الآن** (البطاقة الأكبر، ذهبية):
+   `= الرصيد الافتتاحي + Σ ضخّات − Σ سحوبات + Σ دخل − Σ مصروفات` (كل التاريخ حتى نهاية الفترة).
+2. **رأس المال المُستثمر**: `= الرصيد الافتتاحي + Σ ضخّات − Σ سحوبات`.
+3. شلال الأرباح خطوة خطوة داخل الفترة المختارة:
+   ```text
+   الدخل  ─┐
+           ├─ − المصروفات التشغيلية = صافي تشغيلي
+           └─ − السحوبات/التوزيعات = الصافي بعد التوزيع
+   ```
+   عرض كمخطط شلال (Waterfall) + جدول موحّد. لن تتناقض الأرقام لأنها مشتقة من نفس المصدر.
 
-## 3) قاعدة البيانات (Migration)
+**تلميح "كيف حُسب؟"** على كل رقم رئيسي (Popover مع الصيغة).
 
-إضافة عمود `content_en jsonb` للجداول التي تحتوي محتوى:
+**إصلاح الرسوم المتذبذبة:**
+- `buildTimeSeries` الحالية تجمّع يومياً/شهرياً بناءً على طول الفترة — نضيف مُبدّل صريح (يوم/أسبوع/شهر) يحترمه الرسم.
+- التأكد من فرز التواريخ تصاعدياً قبل الرسم.
+- التدفق النقدي التراكمي يبدأ من "النقد قبل الفترة" ويجمع صافي كل bucket → خط رتيب طبيعي.
+- إزالة نقاط اليوم الواحد الشاذة عبر تجميع شهري افتراضي عند الفترة > 60 يوم (موجود، نتأكد من صحته).
 
-```sql
-ALTER TABLE public.site_pages ADD COLUMN content_en jsonb;
-ALTER TABLE public.site_pages ADD COLUMN title_en text;
-ALTER TABLE public.projects   ADD COLUMN title_en text, ADD COLUMN description_en text, ADD COLUMN summary_en text;
-ALTER TABLE public.articles   ADD COLUMN title_en text, ADD COLUMN excerpt_en text, ADD COLUMN body_en text;
-ALTER TABLE public.services   ADD COLUMN title_en text, ADD COLUMN description_en text;
-```
+## المرحلة 3 — مقارنة الأشهر
 
-- جدول جديد `ui_translations (key text pk, ar text, en text, updated_at timestamptz)` لتخزين ترجمات الواجهة الثابتة القابلة للتحرير من اللوحة (يطغى على القاموس الثابت عند وجوده).
-- `GRANT SELECT` للجميع + `GRANT ALL` للـ admin/staff عبر RLS.
+مسار جديد `/admin/finance/compare`:
+- منتقي فترة: شهر / ربع / سنة / مخصص + قائمة الأشهر المشمولة.
+- **رسم أعمدة مجمّعة**: دخل / مصروفات / صافي لكل شهر.
+- **جدول** بنفس البيانات + عمود نمو % مقابل الفترة السابقة (أخضر/أحمر).
+- **رسم أعمدة مكدّسة**: المصروفات حسب التصنيف الرئيسي عبر الأشهر.
+- **مصفوفة**: تصنيفات × أشهر (خلايا بالمبلغ).
 
-## 4) قراءة المحتوى ثنائي اللغة
+إضافة تبويب في شريط `admin.finance.tsx`.
 
-- تعديل `fetchPageDoc(page_key)` و `fetchSitePage()` لقبول `lang` واختيار `content_en` عند `en` مع fallback للعربي.
-- تعديل `PageRenderer` / `CmsSlot` لتمرير `lang` من الـ Provider.
-- تعديل قوائم المشاريع/المقالات/الخدمات لاختيار الحقل المناسب.
+## المرحلة 4 — التقارير والتصدير
 
-## 5) لوحة إدارة الترجمات
+مسار جديد `/admin/finance/reports`:
+- **قائمة تقارير جاهزة**: ملخص شهري، قائمة الدخل، مصروفات حسب التصنيف، أعلى الموردين، تدفق نقدي.
+- كل تقرير: عرض داخلي + زر تصدير Excel (نستخدم `xlsx.ts` الموجود) + زر طباعة/PDF (نستنسخ نمط طباعة عروض الأسعار: A4، RTL، إخفاء chrome).
+- كل التقارير تحترم الفلتر (period + custom range).
 
-مسار جديد: `/admin/translations` تحت `_authenticated`، بثلاث تبويبات:
+إضافة تبويب في شريط `admin.finance.tsx`.
 
-1. **واجهة الموقع (UI)** — جدول من `ui_translations` + مفاتيح القاموس الثابت. حقل AR (للقراءة) + حقل EN قابل للتحرير + زر "ترجمة تلقائية" لكل صف.
-2. **صفحات CMS** — قائمة `site_pages`، فتح صفحة يعرض الأقسام جنبًا إلى جنب (AR read-only | EN editable)، مع زر "ترجمة كل الصفحة تلقائيًا".
-3. **المحتوى الديناميكي** — تبويبات فرعية للمشاريع / المقالات / الخدمات، جدول موحّد فيه العنوان AR و EN والأزرار.
+## القواعد
 
-**أدوات مشتركة:**
-- زر "🔄 اكتشاف نصوص جديدة" يمسح كل الجداول ويظهر الصفوف التي تنقصها ترجمة EN.
-- زر "🌐 ترجمة كل الناقص تلقائيًا" (batch).
-- Toast عند النجاح/الفشل.
+- كل الاستعلامات تستبعد `deleted_at IS NOT NULL` (متوافق مع الحالي).
+- كل رقم مشتقّ من مصدر واحد؛ لا تناقض بين البطاقات والشلال.
+- البطاقات قابلة للنقر للتنقّل إلى قوائم المعاملات (سلوك حالي محفوظ).
+- ألوان/خط/RTL كما هو، أرقام غربية بمنازل ألوف + عشريتين.
 
-## 6) الترجمة التلقائية (Lovable AI Gateway)
+## الملفات المتأثرة
 
-Server function جديدة `src/lib/i18n/translate.functions.ts`:
+**جديد:**
+- Migration واحد لـ `aqh_finance_capital`.
+- `src/lib/finance/capital.ts` (fetch/insert/update helpers).
+- `src/routes/_authenticated/admin.finance.compare.tsx`.
+- `src/routes/_authenticated/admin.finance.reports.tsx`.
+- `src/components/finance/CapitalManager.tsx` (مضمّن في settings).
+- `src/components/finance/WaterfallChart.tsx`.
+- `src/components/finance/FormulaTooltip.tsx`.
 
-```ts
-translateAr2En({ texts: string[] }) → { translations: string[] }
-```
+**تعديل:**
+- `src/lib/finance/dashboard-data.ts` (حسابات النقد ورأس المال والتدفق التراكمي).
+- `src/routes/_authenticated/admin.finance.index.tsx` (البطاقات الجديدة + الشلال + مُبدّل الحبيبات).
+- `src/routes/_authenticated/admin.finance.settings.tsx` (قسم رأس المال).
+- `src/routes/_authenticated/admin.finance.tsx` (تبويبات جديدة).
 
-- تستخدم `google/gemini-3-flash-preview` عبر `@ai-sdk/openai-compatible`.
-- Prompt: "ترجم من العربية إلى الإنجليزية الاحترافية مع الحفاظ على النبرة الفاخرة لعلامة Aqua Haven. أرجع JSON فقط."
-- محمية بـ `requireSupabaseAuth` + فحص دور admin/staff.
-- تدعم batch حتى 50 نصًا في المرة الواحدة.
+## الملاحظات
 
-## 7) الاكتشاف التلقائي للنصوص الجديدة
-
-- عند حفظ صفحة CMS (`savePageDoc`)، إذا كان الحقل `content_en` فارغًا أو أقدم من `content` (نضيف `content_updated_at`)، تظهر شارة "بحاجة ترجمة" في لوحة الترجمات.
-- نفس المنطق للجداول الأخرى عبر مقارنة `updated_at` مع `translated_at`.
-
-## 8) SEO
-
-- `<html lang>` و `dir` ديناميكيان.
-- `<link rel="alternate" hreflang="ar" href="..."> / hreflang="en"` في كل route.
-- تحديث `head()` في الصفحات ليختار العنوان/الوصف حسب اللغة.
-
----
-
-## ما لن يتغيّر
-- شكل الموقع الحالي وألوانه والخطوط العربية.
-- سلوك RTL يبقى الافتراضي عند الدخول.
-- لوحة الإدارة نفسها تبقى عربية (لا نترجم واجهة /admin).
-
-## الملفات الرئيسية المتأثرة
-- جديد: `src/lib/i18n/*`, `src/routes/_authenticated/admin.translations.tsx`, migration واحد.
-- تعديل: `__root.tsx`, `Navbar.tsx`, `Footer.tsx`, `PageRenderer.tsx`, `cms/api.ts`, `site-pages.ts`.
-
-## التقديرات
-عمل كبير نسبيًا (migration + ~15 ملف). سأنفّذه على مرحلة واحدة كاملة بعد موافقتك.
+- المخزون لا يُدرج ضمن حساب "النقد" (كما ذكرت، لاحقاً).
+- التنفيذ على مرحلتين: (1) Migration + settings، ثم (2) بقية اللوحة بعد اعتماد الجدول.
+- لن أكسر أي حساب/فلتر/تصدير موجود.
