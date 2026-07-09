@@ -52,13 +52,13 @@ function ComparePage() {
   const A = useMemo(() => summarize(incA, expA, ownerDrawCatId), [incA, expA, ownerDrawCatId]);
   const B = useMemo(() => summarize(incB, expB, ownerDrawCatId), [incB, expB, ownerDrawCatId]);
 
-  const rows = [
+  const rows: { key: "income" | "operating" | "netOp" | "draws" | "netAfter"; label: string; invert: boolean; bold?: boolean }[] = [
     { key: "income", label: "إجمالي الدخل", invert: false },
     { key: "operating", label: "مصروفات التشغيل", invert: true },
     { key: "netOp", label: "صافي الربح قبل التوزيع", invert: false, bold: true },
     { key: "draws", label: "توزيع الأرباح (سحوبات المالك)", invert: false },
     { key: "netAfter", label: "الصافي بعد التوزيع", invert: false, bold: true },
-  ] as const;
+  ];
 
   const chartData = rows.map((r) => ({
     label: r.label,

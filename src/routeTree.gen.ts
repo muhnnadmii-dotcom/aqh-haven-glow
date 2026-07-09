@@ -76,6 +76,7 @@ import { Route as AuthenticatedAdminFinanceImportBatchesRouteImport } from './ro
 import { Route as AuthenticatedAdminFinanceImportRouteImport } from './routes/_authenticated/admin.finance.import'
 import { Route as AuthenticatedAdminFinanceExportRouteImport } from './routes/_authenticated/admin.finance.export'
 import { Route as AuthenticatedAdminFinanceExpensesRouteImport } from './routes/_authenticated/admin.finance.expenses'
+import { Route as AuthenticatedAdminFinanceCompareRouteImport } from './routes/_authenticated/admin.finance.compare'
 import { Route as AuthenticatedAdminFinanceCategoriesRouteImport } from './routes/_authenticated/admin.finance.categories'
 import { Route as AuthenticatedAdminFinanceAuditRouteImport } from './routes/_authenticated/admin.finance.audit'
 import { Route as AuthenticatedAdminFinanceAttachmentsRouteImport } from './routes/_authenticated/admin.finance.attachments'
@@ -465,6 +466,12 @@ const AuthenticatedAdminFinanceExpensesRoute =
     path: '/expenses',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceCompareRoute =
+  AuthenticatedAdminFinanceCompareRouteImport.update({
+    id: '/compare',
+    path: '/compare',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceCategoriesRoute =
   AuthenticatedAdminFinanceCategoriesRouteImport.update({
     id: '/categories',
@@ -596,6 +603,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
@@ -669,6 +677,7 @@ export interface FileRoutesByTo {
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
@@ -752,6 +761,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/_authenticated/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/_authenticated/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/_authenticated/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/_authenticated/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/_authenticated/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/_authenticated/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
@@ -835,6 +845,7 @@ export interface FileRouteTypes {
     | '/admin/finance/attachments'
     | '/admin/finance/audit'
     | '/admin/finance/categories'
+    | '/admin/finance/compare'
     | '/admin/finance/expenses'
     | '/admin/finance/export'
     | '/admin/finance/import'
@@ -908,6 +919,7 @@ export interface FileRouteTypes {
     | '/admin/finance/attachments'
     | '/admin/finance/audit'
     | '/admin/finance/categories'
+    | '/admin/finance/compare'
     | '/admin/finance/expenses'
     | '/admin/finance/export'
     | '/admin/finance/import'
@@ -990,6 +1002,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/attachments'
     | '/_authenticated/admin/finance/audit'
     | '/_authenticated/admin/finance/categories'
+    | '/_authenticated/admin/finance/compare'
     | '/_authenticated/admin/finance/expenses'
     | '/_authenticated/admin/finance/export'
     | '/_authenticated/admin/finance/import'
@@ -1508,6 +1521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceExpensesRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/compare': {
+      id: '/_authenticated/admin/finance/compare'
+      path: '/compare'
+      fullPath: '/admin/finance/compare'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceCompareRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/categories': {
       id: '/_authenticated/admin/finance/categories'
       path: '/categories'
@@ -1673,6 +1693,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceAttachmentsRoute: typeof AuthenticatedAdminFinanceAttachmentsRoute
   AuthenticatedAdminFinanceAuditRoute: typeof AuthenticatedAdminFinanceAuditRoute
   AuthenticatedAdminFinanceCategoriesRoute: typeof AuthenticatedAdminFinanceCategoriesRoute
+  AuthenticatedAdminFinanceCompareRoute: typeof AuthenticatedAdminFinanceCompareRoute
   AuthenticatedAdminFinanceExpensesRoute: typeof AuthenticatedAdminFinanceExpensesRoute
   AuthenticatedAdminFinanceExportRoute: typeof AuthenticatedAdminFinanceExportRoute
   AuthenticatedAdminFinanceImportRoute: typeof AuthenticatedAdminFinanceImportRoute
@@ -1692,6 +1713,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
     AuthenticatedAdminFinanceAuditRoute: AuthenticatedAdminFinanceAuditRoute,
     AuthenticatedAdminFinanceCategoriesRoute:
       AuthenticatedAdminFinanceCategoriesRoute,
+    AuthenticatedAdminFinanceCompareRoute:
+      AuthenticatedAdminFinanceCompareRoute,
     AuthenticatedAdminFinanceExpensesRoute:
       AuthenticatedAdminFinanceExpensesRoute,
     AuthenticatedAdminFinanceExportRoute: AuthenticatedAdminFinanceExportRoute,
