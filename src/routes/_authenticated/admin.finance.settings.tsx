@@ -47,8 +47,11 @@ function SettingsPage() {
 
       <BusinessSettingsCard />
 
+      <CapitalManager />
+
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-semibold">مصادر الدخل</div>
           <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[11px]"><Plus size={11} /> إضافة</button>
