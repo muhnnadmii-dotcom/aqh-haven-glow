@@ -15,6 +15,8 @@ import {
   type PeriodKey, resolveRange, previousRange, pctChange, sum, splitExpenses,
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
+import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
+import { Banknote, Coins } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/")({
   ssr: false,
