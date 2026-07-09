@@ -5,12 +5,14 @@ import { getSessionUser } from "@/lib/client-auth";
 import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
   Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings as Cog, Images, Wallet,
-  ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive, Shield, ShieldOff,
+  ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive, Shield, ShieldOff, ShieldCheck,
   Package, Boxes, FolderTree, ClipboardList, BarChart3,
 } from "lucide-react";
+
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { useAllowedPages } from "@/lib/use-allowed-pages";
 import { ADMIN_PAGES } from "@/lib/admin-pages";
+import { AdminMfaGate } from "@/components/admin/AdminMfaGate";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
@@ -25,9 +27,17 @@ export const Route = createFileRoute("/_authenticated/admin")({
       .limit(1)
       .maybeSingle();
     if (!r) throw redirect({ to: "/account" });
+    const { data: adminRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    return { isAdmin: !!adminRow };
   },
   component: AdminLayout,
 });
+
 
 type NavItem = { to: string; label: string; icon: any; exact?: boolean };
 type NavGroup = { key: string; label: string; items: NavItem[]; collapsible?: boolean; financeOnly?: boolean };
@@ -106,7 +116,9 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/admin/staff", label: "الموظفين", icon: UserCog },
       { to: "/admin/roles", label: "إدارة الصلاحيات", icon: Shield },
+      { to: "/admin/security", label: "الأمان و 2FA", icon: ShieldCheck },
     ],
+
   },
 ];
 
@@ -211,15 +223,18 @@ function AdminLayout() {
         {/* Main content */}
         <main className="flex-1 lg:mr-64 min-w-0">
           <div className="px-4 sm:px-6 lg:px-8 py-5 lg:py-8 max-w-6xl mx-auto">
-            <RouteAccessGate pathname={pathname}>
-              <Outlet />
-            </RouteAccessGate>
+            <AdminMfaGate isAdmin={(Route.useRouteContext() as any).isAdmin ?? false}>
+              <RouteAccessGate pathname={pathname}>
+                <Outlet />
+              </RouteAccessGate>
+            </AdminMfaGate>
           </div>
         </main>
       </div>
     </div>
   );
 }
+
 
 function matchPageKey(pathname: string): string | null {
   let best: string | null = null;
