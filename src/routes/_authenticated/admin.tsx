@@ -5,9 +5,10 @@ import { getSessionUser } from "@/lib/client-auth";
 import {
   LayoutDashboard, Inbox, Fish, BookOpen, MessageSquareQuote, Users, UserCog,
   Wrench, FileText, Calendar, Palette, Menu, X, Tags, ExternalLink, LogOut, Settings as Cog, Images, Wallet,
-  ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive, Shield, ShieldOff,
+  ChevronDown, TrendingUp, TrendingDown, Truck, Paperclip, History, Download, Upload, Archive, Shield, ShieldOff, ShieldCheck,
   Package, Boxes, FolderTree, ClipboardList, BarChart3,
 } from "lucide-react";
+
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { useAllowedPages } from "@/lib/use-allowed-pages";
 import { ADMIN_PAGES } from "@/lib/admin-pages";
