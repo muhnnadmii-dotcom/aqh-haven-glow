@@ -16,7 +16,9 @@ import {
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
-import { Banknote, Coins } from "lucide-react";
+import { getManualBalances, updateManualBalances, totalNetWorth, type ManualBalances } from "@/lib/finance/manual-balances";
+import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/")({
   ssr: false,
