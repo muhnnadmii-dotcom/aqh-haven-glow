@@ -103,8 +103,8 @@ function ComparePage() {
           <thead className="bg-white/5 text-[11px] text-muted-foreground">
             <tr>
               <th className="text-right p-3">البند</th>
-              <th className="text-right p-3">{formatMonthAr(monthA)}</th>
-              <th className="text-right p-3">{formatMonthAr(monthB)}</th>
+              <th className="text-right p-3">{labelA}</th>
+              <th className="text-right p-3">{labelB}</th>
               <th className="text-right p-3">الفرق</th>
               <th className="text-right p-3">النمو %</th>
             </tr>
@@ -120,14 +120,20 @@ function ComparePage() {
               const bad = r.invert ? dir > 0 : dir < 0;
               const tone = dir === 0 ? "text-muted-foreground" : good ? "text-emerald-300" : bad ? "text-red-300" : "";
               const Ico = dir === 0 ? Minus : dir > 0 ? ArrowUpRight : ArrowDownRight;
+              const diffGood = r.invert ? diff < 0 : diff > 0;
+              const diffTone = diff === 0 ? "text-muted-foreground" : diffGood ? "text-emerald-300" : "text-red-300";
               return (
-                <tr key={r.key} className={`border-t border-white/5 ${r.bold ? "bg-white/[0.03]" : ""}`}>
-                  <td className={`p-3 ${r.bold ? "font-semibold" : ""}`}>{r.label}</td>
-                  <td className="p-3 font-mono">{fmtSAR(a)}</td>
-                  <td className="p-3 font-mono">{fmtSAR(b)}</td>
-                  <td className={`p-3 font-mono ${diff >= 0 ? "text-emerald-300" : "text-red-300"}`}>{diff >= 0 ? "+" : ""}{fmtSAR(diff)}</td>
-                  <td className={`p-3 font-mono inline-flex items-center gap-1 ${tone}`}>
-                    <Ico size={12} /> {pct == null ? "—" : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`}
+                <tr key={r.key} className={`border-t border-white/5 ${r.bold ? "bg-white/[0.04]" : ""}`}>
+                  <td className={`p-3 ${r.bold ? "font-bold text-foreground" : ""}`}>{r.label}</td>
+                  <td className={`p-3 font-mono tabular-nums ${r.bold ? "font-bold" : ""}`}>{fmtSAR(a)}</td>
+                  <td className={`p-3 font-mono tabular-nums ${r.bold ? "font-bold" : ""}`}>{fmtSAR(b)}</td>
+                  <td className={`p-3 font-mono tabular-nums ${diffTone}`}>
+                    <span dir="ltr" className="inline-block">{diff >= 0 ? "+" : ""}{fmtSAR(diff)}</span>
+                  </td>
+                  <td className={`p-3 font-mono tabular-nums ${tone}`}>
+                    <span dir="ltr" className="inline-flex items-center gap-1">
+                      <Ico size={12} /> {pct == null ? "—" : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`}
+                    </span>
                   </td>
                 </tr>
               );
@@ -138,16 +144,16 @@ function ComparePage() {
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <div className="text-sm font-semibold mb-3">مقارنة رسومية</div>
-        <div className="h-72">
+        <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
+            <BarChart data={chartData} margin={{ top: 8, right: 12, left: 8, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="label" tick={{ fill: "#888", fontSize: 10 }} />
-              <YAxis tick={{ fill: "#888", fontSize: 10 }} width={70} />
+              <XAxis dataKey="label" tick={{ fill: "#aaa", fontSize: 10 }} interval={0} angle={-15} textAnchor="end" height={60} />
+              <YAxis tick={{ fill: "#888", fontSize: 10 }} width={80} tickFormatter={(v) => new Intl.NumberFormat("en-US", { notation: "compact" }).format(Number(v))} />
               <Tooltip contentStyle={{ background: "#0d1520", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }} formatter={(v: any) => fmtSAR(Number(v))} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey={formatMonthAr(monthA)} fill="#7cc7b7" radius={[6, 6, 0, 0]} />
-              <Bar dataKey={formatMonthAr(monthB)} fill="#d4b26a" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="a" name={legendA} fill="#7cc7b7" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="b" name={legendB} fill="#d4b26a" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
