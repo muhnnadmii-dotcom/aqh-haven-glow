@@ -152,6 +152,20 @@ function FinanceDashboard() {
     });
   }, [capital, allIncomes, allExpenses, ownerDrawCatId]);
 
+  // Live cash = manually-entered cash_actual + income/expense movements after the anchor date
+  const liveCash = useMemo(() => {
+    const allOp = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id !== ownerDrawCatId) : allExpenses;
+    const allDrawsAll = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
+    return computeLiveCash({
+      cashActual: Number(manual?.cash_actual ?? 0),
+      anchorDate: manual?.cash_anchor_date ?? null,
+      incomes: allIncomes as any,
+      operating: allOp as any,
+      draws: allDrawsAll as any,
+    });
+  }, [manual, allIncomes, allExpenses, ownerDrawCatId]);
+  const liveNetWorth = liveCash + Number(manual?.inventory_value ?? 0) + Number(manual?.assets_value ?? 0);
+
 
   // Time series
   const series = useMemo(() => buildTimeSeries(incomes, excludeDraws ? operating : expenses, range),
