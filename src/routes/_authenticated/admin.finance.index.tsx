@@ -94,18 +94,24 @@ function FinanceDashboard() {
     const drawsFrom = new Date(); drawsFrom.setMonth(drawsFrom.getMonth() - 5); drawsFrom.setDate(1);
     const drawsFromStr = `${drawsFrom.getFullYear()}-${String(drawsFrom.getMonth() + 1).padStart(2, "0")}-01`;
 
-    const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }] = await Promise.all([
+    const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }, capRows, { data: allInc }, { data: allExp }] = await Promise.all([
       buildIncQ(range),
       buildExpQ(range),
       buildIncQ(prev),
       buildExpQ(prev),
       supabase.from("finance_expenses").select("expense_date, amount, main_category_id").is("deleted_at", null).gte("expense_date", drawsFromStr),
+      listCapital().catch(() => [] as CapitalEntry[]),
+      supabase.from("finance_incomes").select("income_date, amount").is("deleted_at", null),
+      supabase.from("finance_expenses").select("expense_date, amount, main_category_id").is("deleted_at", null),
     ]);
     setIncomes(inc ?? []);
     setExpenses(exp ?? []);
     setPrevIncomes(incP ?? []);
     setPrevExpenses(expP ?? []);
     setAllDraws(drawsRaw ?? []);
+    setCapital(capRows ?? []);
+    setAllIncomes(allInc ?? []);
+    setAllExpenses(allExp ?? []);
     setLoading(false);
   }, [range, prev, fMain, fSupplier, fSource, fAccount]);
 
