@@ -41,12 +41,12 @@ export async function createCapital(row: {
 }
 
 export async function updateCapital(id: string, patch: Partial<Omit<CapitalEntry, "id">>) {
-  const { error } = await supabase.from(TABLE).update(patch).eq("id", id);
+  const { error } = await (supabase.from(TABLE) as any).update(patch).eq("id", id);
   if (error) throw error;
 }
 
 export async function deleteCapital(id: string) {
-  const { error } = await supabase.from(TABLE).delete().eq("id", id);
+  const { error } = await (supabase.from(TABLE) as any).delete().eq("id", id);
   if (error) throw error;
 }
 
