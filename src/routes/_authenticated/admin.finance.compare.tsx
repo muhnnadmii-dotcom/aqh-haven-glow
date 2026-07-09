@@ -52,18 +52,24 @@ function ComparePage() {
   const A = useMemo(() => summarize(incA, expA, ownerDrawCatId), [incA, expA, ownerDrawCatId]);
   const B = useMemo(() => summarize(incB, expB, ownerDrawCatId), [incB, expB, ownerDrawCatId]);
 
+  const labelA = formatMonthAr(monthA);
+  const labelB = formatMonthAr(monthB);
+  const sameLabel = labelA === labelB;
+  const legendA = sameLabel ? `${labelA} (A)` : labelA;
+  const legendB = sameLabel ? `${labelB} (B)` : labelB;
+
   const rows: { key: "income" | "operating" | "netOp" | "draws" | "netAfter"; label: string; invert: boolean; bold?: boolean }[] = [
     { key: "income", label: "إجمالي الدخل", invert: false },
     { key: "operating", label: "مصروفات التشغيل", invert: true },
     { key: "netOp", label: "صافي الربح قبل التوزيع", invert: false, bold: true },
-    { key: "draws", label: "توزيع الأرباح (سحوبات المالك)", invert: false },
+    { key: "draws", label: "توزيع الأرباح (سحوبات المالك)", invert: true },
     { key: "netAfter", label: "الصافي بعد التوزيع", invert: false, bold: true },
   ];
 
   const chartData = rows.map((r) => ({
     label: r.label,
-    [formatMonthAr(monthA)]: (A as any)[r.key],
-    [formatMonthAr(monthB)]: (B as any)[r.key],
+    a: (A as any)[r.key],
+    b: (B as any)[r.key],
   }));
 
   const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
