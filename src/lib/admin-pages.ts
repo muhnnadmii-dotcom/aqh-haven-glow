@@ -61,7 +61,9 @@ export const ADMIN_PAGES: AdminPageDef[] = [
   // Admin
   { key: "/admin/staff", label: "الموظفين", group: "admin" },
   { key: "/admin/roles", label: "إدارة الصلاحيات", group: "admin" },
+  { key: "/admin/security", label: "الأمان و 2FA", group: "admin" },
 ];
+
 
 export const ADMIN_PAGE_LABELS: Record<string, string> =
   Object.fromEntries(ADMIN_PAGES.map((p) => [p.key, p.label]));
