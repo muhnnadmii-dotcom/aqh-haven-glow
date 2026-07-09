@@ -11,6 +11,7 @@ import {
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { useAllowedPages } from "@/lib/use-allowed-pages";
 import { ADMIN_PAGES } from "@/lib/admin-pages";
+import { AdminMfaGate } from "@/components/admin/AdminMfaGate";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
@@ -25,9 +26,17 @@ export const Route = createFileRoute("/_authenticated/admin")({
       .limit(1)
       .maybeSingle();
     if (!r) throw redirect({ to: "/account" });
+    const { data: adminRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    return { isAdmin: !!adminRow };
   },
   component: AdminLayout,
 });
+
 
 type NavItem = { to: string; label: string; icon: any; exact?: boolean };
 type NavGroup = { key: string; label: string; items: NavItem[]; collapsible?: boolean; financeOnly?: boolean };
