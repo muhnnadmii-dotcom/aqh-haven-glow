@@ -5,6 +5,7 @@ import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { Plus, Eye, EyeOff, X, ArrowUp, ArrowDown, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { ACCOUNT_TYPES } from "@/lib/finance/constants";
+import { CapitalManager } from "@/components/finance/CapitalManager";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settings")({
   ssr: false,
