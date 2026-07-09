@@ -71,11 +71,13 @@ import { Route as AuthenticatedAdminInventoryCategoriesRouteImport } from './rou
 import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes/_authenticated/admin.inventory.catalog'
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
+import { Route as AuthenticatedAdminFinanceReportsRouteImport } from './routes/_authenticated/admin.finance.reports'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
 import { Route as AuthenticatedAdminFinanceImportBatchesRouteImport } from './routes/_authenticated/admin.finance.import-batches'
 import { Route as AuthenticatedAdminFinanceImportRouteImport } from './routes/_authenticated/admin.finance.import'
 import { Route as AuthenticatedAdminFinanceExportRouteImport } from './routes/_authenticated/admin.finance.export'
 import { Route as AuthenticatedAdminFinanceExpensesRouteImport } from './routes/_authenticated/admin.finance.expenses'
+import { Route as AuthenticatedAdminFinanceCompareRouteImport } from './routes/_authenticated/admin.finance.compare'
 import { Route as AuthenticatedAdminFinanceCategoriesRouteImport } from './routes/_authenticated/admin.finance.categories'
 import { Route as AuthenticatedAdminFinanceAuditRouteImport } from './routes/_authenticated/admin.finance.audit'
 import { Route as AuthenticatedAdminFinanceAttachmentsRouteImport } from './routes/_authenticated/admin.finance.attachments'
@@ -435,6 +437,12 @@ const AuthenticatedAdminFinanceSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceReportsRoute =
+  AuthenticatedAdminFinanceReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceIncomesRoute =
   AuthenticatedAdminFinanceIncomesRouteImport.update({
     id: '/incomes',
@@ -463,6 +471,12 @@ const AuthenticatedAdminFinanceExpensesRoute =
   AuthenticatedAdminFinanceExpensesRouteImport.update({
     id: '/expenses',
     path: '/expenses',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinanceCompareRoute =
+  AuthenticatedAdminFinanceCompareRouteImport.update({
+    id: '/compare',
+    path: '/compare',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
 const AuthenticatedAdminFinanceCategoriesRoute =
@@ -596,11 +610,13 @@ export interface FileRoutesByFullPath {
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -669,11 +685,13 @@ export interface FileRoutesByTo {
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -752,11 +770,13 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/_authenticated/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/_authenticated/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/_authenticated/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/_authenticated/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/_authenticated/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
   '/_authenticated/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/_authenticated/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/_authenticated/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/_authenticated/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -835,11 +855,13 @@ export interface FileRouteTypes {
     | '/admin/finance/attachments'
     | '/admin/finance/audit'
     | '/admin/finance/categories'
+    | '/admin/finance/compare'
     | '/admin/finance/expenses'
     | '/admin/finance/export'
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/reports'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
     | '/admin/inventory/catalog'
@@ -908,11 +930,13 @@ export interface FileRouteTypes {
     | '/admin/finance/attachments'
     | '/admin/finance/audit'
     | '/admin/finance/categories'
+    | '/admin/finance/compare'
     | '/admin/finance/expenses'
     | '/admin/finance/export'
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/reports'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
     | '/admin/inventory/catalog'
@@ -990,11 +1014,13 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/attachments'
     | '/_authenticated/admin/finance/audit'
     | '/_authenticated/admin/finance/categories'
+    | '/_authenticated/admin/finance/compare'
     | '/_authenticated/admin/finance/expenses'
     | '/_authenticated/admin/finance/export'
     | '/_authenticated/admin/finance/import'
     | '/_authenticated/admin/finance/import-batches'
     | '/_authenticated/admin/finance/incomes'
+    | '/_authenticated/admin/finance/reports'
     | '/_authenticated/admin/finance/settings'
     | '/_authenticated/admin/finance/suppliers'
     | '/_authenticated/admin/inventory/catalog'
@@ -1473,6 +1499,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/reports': {
+      id: '/_authenticated/admin/finance/reports'
+      path: '/reports'
+      fullPath: '/admin/finance/reports'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceReportsRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/incomes': {
       id: '/_authenticated/admin/finance/incomes'
       path: '/incomes'
@@ -1506,6 +1539,13 @@ declare module '@tanstack/react-router' {
       path: '/expenses'
       fullPath: '/admin/finance/expenses'
       preLoaderRoute: typeof AuthenticatedAdminFinanceExpensesRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/compare': {
+      id: '/_authenticated/admin/finance/compare'
+      path: '/compare'
+      fullPath: '/admin/finance/compare'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceCompareRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
     '/_authenticated/admin/finance/categories': {
@@ -1673,11 +1713,13 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceAttachmentsRoute: typeof AuthenticatedAdminFinanceAttachmentsRoute
   AuthenticatedAdminFinanceAuditRoute: typeof AuthenticatedAdminFinanceAuditRoute
   AuthenticatedAdminFinanceCategoriesRoute: typeof AuthenticatedAdminFinanceCategoriesRoute
+  AuthenticatedAdminFinanceCompareRoute: typeof AuthenticatedAdminFinanceCompareRoute
   AuthenticatedAdminFinanceExpensesRoute: typeof AuthenticatedAdminFinanceExpensesRoute
   AuthenticatedAdminFinanceExportRoute: typeof AuthenticatedAdminFinanceExportRoute
   AuthenticatedAdminFinanceImportRoute: typeof AuthenticatedAdminFinanceImportRoute
   AuthenticatedAdminFinanceImportBatchesRoute: typeof AuthenticatedAdminFinanceImportBatchesRoute
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
+  AuthenticatedAdminFinanceReportsRoute: typeof AuthenticatedAdminFinanceReportsRoute
   AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
   AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
   AuthenticatedAdminFinanceIndexRoute: typeof AuthenticatedAdminFinanceIndexRoute
@@ -1692,6 +1734,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
     AuthenticatedAdminFinanceAuditRoute: AuthenticatedAdminFinanceAuditRoute,
     AuthenticatedAdminFinanceCategoriesRoute:
       AuthenticatedAdminFinanceCategoriesRoute,
+    AuthenticatedAdminFinanceCompareRoute:
+      AuthenticatedAdminFinanceCompareRoute,
     AuthenticatedAdminFinanceExpensesRoute:
       AuthenticatedAdminFinanceExpensesRoute,
     AuthenticatedAdminFinanceExportRoute: AuthenticatedAdminFinanceExportRoute,
@@ -1700,6 +1744,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceImportBatchesRoute,
     AuthenticatedAdminFinanceIncomesRoute:
       AuthenticatedAdminFinanceIncomesRoute,
+    AuthenticatedAdminFinanceReportsRoute:
+      AuthenticatedAdminFinanceReportsRoute,
     AuthenticatedAdminFinanceSettingsRoute:
       AuthenticatedAdminFinanceSettingsRoute,
     AuthenticatedAdminFinanceSuppliersRoute:
@@ -1893,13 +1939,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

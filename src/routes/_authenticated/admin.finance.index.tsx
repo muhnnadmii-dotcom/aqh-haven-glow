@@ -15,6 +15,8 @@ import {
   type PeriodKey, resolveRange, previousRange, pctChange, sum, splitExpenses,
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
+import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
+import { Banknote, Coins } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/")({
   ssr: false,
@@ -44,6 +46,9 @@ function FinanceDashboard() {
   const [srcs, setSrcs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [drawer, setDrawer] = useState<DrawerSpec | null>(null);
+  const [capital, setCapital] = useState<CapitalEntry[]>([]);
+  const [allIncomes, setAllIncomes] = useState<any[]>([]);
+  const [allExpenses, setAllExpenses] = useState<any[]>([]);
 
   const range = useMemo(() => {
     if (pickedMonth) {
@@ -89,18 +94,24 @@ function FinanceDashboard() {
     const drawsFrom = new Date(); drawsFrom.setMonth(drawsFrom.getMonth() - 5); drawsFrom.setDate(1);
     const drawsFromStr = `${drawsFrom.getFullYear()}-${String(drawsFrom.getMonth() + 1).padStart(2, "0")}-01`;
 
-    const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }] = await Promise.all([
+    const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }, capRows, { data: allInc }, { data: allExp }] = await Promise.all([
       buildIncQ(range),
       buildExpQ(range),
       buildIncQ(prev),
       buildExpQ(prev),
       supabase.from("finance_expenses").select("expense_date, amount, main_category_id").is("deleted_at", null).gte("expense_date", drawsFromStr),
+      listCapital().catch(() => [] as CapitalEntry[]),
+      supabase.from("finance_incomes").select("income_date, amount").is("deleted_at", null),
+      supabase.from("finance_expenses").select("expense_date, amount, main_category_id").is("deleted_at", null),
     ]);
     setIncomes(inc ?? []);
     setExpenses(exp ?? []);
     setPrevIncomes(incP ?? []);
     setPrevExpenses(expP ?? []);
     setAllDraws(drawsRaw ?? []);
+    setCapital(capRows ?? []);
+    setAllIncomes(allInc ?? []);
+    setAllExpenses(allExp ?? []);
     setLoading(false);
   }, [range, prev, fMain, fSupplier, fSource, fAccount]);
 
@@ -121,6 +132,20 @@ function FinanceDashboard() {
   const pTotDraws = sum(prevDraws, (x: any) => x.amount);
   const pNetOp = pTotIncome - pTotOpExpense;
   const pNetAfterDraws = pNetOp - pTotDraws;
+
+  // Capital-aware headline numbers (based on all-time data, not filter range)
+  const investedCapital = useMemo(() => computeInvestedCapital(capital), [capital]);
+  const cashOnHand = useMemo(() => {
+    const allOp = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id !== ownerDrawCatId) : allExpenses;
+    const allDrawsAll = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
+    return computeCashOnHand({
+      capital,
+      incomes: allIncomes as any,
+      operating: allOp as any,
+      draws: allDrawsAll as any,
+    });
+  }, [capital, allIncomes, allExpenses, ownerDrawCatId]);
+
 
   // Time series
   const series = useMemo(() => buildTimeSeries(incomes, excludeDraws ? operating : expenses, range),
@@ -246,8 +271,33 @@ function FinanceDashboard() {
         </div>
       </div>
 
+      {/* Headline: cash on hand + invested capital (all-time, not filtered) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-5">
+          <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+            <span>الرصيد النقدي الحالي (كل الوقت)</span>
+            <Banknote size={16} className="text-gold" />
+          </div>
+          <div className={`mt-2 text-3xl font-semibold font-mono ${cashOnHand >= 0 ? "text-gold" : "text-red-300"}`}>
+            {fmtSAR(cashOnHand)} <span className="text-xs text-muted-foreground">ر.س</span>
+          </div>
+          <div className="mt-1 text-[10px] text-muted-foreground">= رأس المال + الدخل − المصروفات − السحوبات</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+            <span>رأس المال المستثمر</span>
+            <Coins size={16} className="text-sky-300" />
+          </div>
+          <div className="mt-2 text-3xl font-semibold text-sky-300 font-mono">
+            {fmtSAR(investedCapital)} <span className="text-xs text-muted-foreground">ر.س</span>
+          </div>
+          <div className="mt-1 text-[10px] text-muted-foreground">من إعدادات المالية · الرصيد الافتتاحي + الضخّات − السحوبات</div>
+        </div>
+      </div>
+
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+
         <Kpi icon={TrendingUp} label="إجمالي الدخل" value={fmtSAR(totIncome)} tone="text-emerald-300"
           change={pctChange(totIncome, pTotIncome)}
           onClick={() => open({ title: "الدخل", show: "income" })} />
