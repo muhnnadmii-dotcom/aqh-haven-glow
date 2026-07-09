@@ -115,7 +115,9 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/admin/staff", label: "الموظفين", icon: UserCog },
       { to: "/admin/roles", label: "إدارة الصلاحيات", icon: Shield },
+      { to: "/admin/security", label: "الأمان و 2FA", icon: ShieldCheck },
     ],
+
   },
 ];
 
