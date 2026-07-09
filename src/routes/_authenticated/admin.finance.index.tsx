@@ -295,11 +295,14 @@ function FinanceDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <BalanceCard
           icon={Banknote}
-          label="النقد الفعلي (صرافة/بنك)"
-          value={Number(manual?.cash_actual ?? 0)}
+          label="النقد الحالي (فعلي + حركات)"
+          value={liveCash}
           tone="text-gold"
           accent="border-gold/30 bg-gradient-to-br from-gold/10 to-transparent"
           onEdit={() => setEditField("cash_actual")}
+          hint={manual?.cash_anchor_date
+            ? `أساس ${fmtSAR(Number(manual.cash_actual ?? 0))} ر.س بتاريخ ${manual.cash_anchor_date}`
+            : "اضغط القلم لتحديد النقد الفعلي"}
         />
         <BalanceCard
           icon={Package}
@@ -318,10 +321,10 @@ function FinanceDashboard() {
         <BalanceCard
           icon={PiggyBank}
           label="إجمالي الثروة"
-          value={totalNetWorth(manual)}
+          value={liveNetWorth}
           tone="text-foreground"
           accent="border-white/20 bg-white/10"
-          hint="النقد + المخزون + الأصول"
+          hint="النقد الحالي + المخزون + الأصول"
         />
       </div>
 
