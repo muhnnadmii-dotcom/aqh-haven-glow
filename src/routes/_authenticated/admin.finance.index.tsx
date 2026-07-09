@@ -46,6 +46,9 @@ function FinanceDashboard() {
   const [srcs, setSrcs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [drawer, setDrawer] = useState<DrawerSpec | null>(null);
+  const [capital, setCapital] = useState<CapitalEntry[]>([]);
+  const [allIncomes, setAllIncomes] = useState<any[]>([]);
+  const [allExpenses, setAllExpenses] = useState<any[]>([]);
 
   const range = useMemo(() => {
     if (pickedMonth) {
