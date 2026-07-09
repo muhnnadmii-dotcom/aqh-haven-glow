@@ -301,8 +301,11 @@ function FinanceDashboard() {
           accent="border-gold/30 bg-gradient-to-br from-gold/10 to-transparent"
           onEdit={() => setEditField("cash_actual")}
           hint={manual?.cash_anchor_date
-            ? `أساس ${fmtSAR(Number(manual.cash_actual ?? 0))} ر.س بتاريخ ${manual.cash_anchor_date}`
+            ? `الأساس: ${fmtSAR(Number(manual.cash_actual ?? 0))} ر.س`
             : "اضغط القلم لتحديد النقد الفعلي"}
+          badge={manual?.cash_anchor_date
+            ? `منذ ${fmtArDate(manual.cash_anchor_date)}`
+            : undefined}
         />
         <BalanceCard
           icon={Package}
