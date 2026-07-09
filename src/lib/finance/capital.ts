@@ -35,7 +35,7 @@ export async function createCapital(row: {
   entry_date: string;
   note?: string | null;
 }) {
-  const { data, error } = await supabase.from(TABLE).insert(row).select().single();
+  const { data, error } = await (supabase.from(TABLE) as any).insert(row).select().single();
   if (error) throw error;
   return data as CapitalEntry;
 }
