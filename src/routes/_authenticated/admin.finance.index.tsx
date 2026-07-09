@@ -16,7 +16,7 @@ import {
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
-import { getManualBalances, updateManualBalances, totalNetWorth, type ManualBalances } from "@/lib/finance/manual-balances";
+import { getManualBalances, updateManualBalances, totalNetWorth, computeLiveCash, type ManualBalances } from "@/lib/finance/manual-balances";
 import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
 
