@@ -133,6 +133,20 @@ function FinanceDashboard() {
   const pNetOp = pTotIncome - pTotOpExpense;
   const pNetAfterDraws = pNetOp - pTotDraws;
 
+  // Capital-aware headline numbers (based on all-time data, not filter range)
+  const investedCapital = useMemo(() => computeInvestedCapital(capital), [capital]);
+  const cashOnHand = useMemo(() => {
+    const allOp = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id !== ownerDrawCatId) : allExpenses;
+    const allDrawsAll = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
+    return computeCashOnHand({
+      capital,
+      incomes: allIncomes as any,
+      operating: allOp as any,
+      draws: allDrawsAll as any,
+    });
+  }, [capital, allIncomes, allExpenses, ownerDrawCatId]);
+
+
   // Time series
   const series = useMemo(() => buildTimeSeries(incomes, excludeDraws ? operating : expenses, range),
     [incomes, operating, expenses, excludeDraws, range]);
