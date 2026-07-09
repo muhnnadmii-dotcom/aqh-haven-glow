@@ -7,6 +7,7 @@ export interface ManualBalances {
   cash_actual: number;
   inventory_value: number;
   assets_value: number;
+  cash_anchor_date: string | null;
   note: string | null;
   updated_at: string;
 }
@@ -32,4 +33,31 @@ export async function updateManualBalances(patch: Partial<Omit<ManualBalances, "
 export function totalNetWorth(b: ManualBalances | null): number {
   if (!b) return 0;
   return (Number(b.cash_actual) || 0) + (Number(b.inventory_value) || 0) + (Number(b.assets_value) || 0);
+}
+
+/**
+ * Live cash = manually-entered cash_actual (as of cash_anchor_date)
+ *           + income entries strictly after the anchor date
+ *           − operating expense entries strictly after the anchor date
+ *           − owner draw entries strictly after the anchor date
+ *
+ * Entries on or before the anchor date are assumed to already be reflected
+ * in the manually-counted cash figure.
+ */
+export function computeLiveCash(params: {
+  cashActual: number;
+  anchorDate: string | null;
+  incomes: { income_date: string; amount: number }[];
+  operating: { expense_date: string; amount: number }[];
+  draws: { expense_date: string; amount: number }[];
+}): number {
+  const { cashActual, anchorDate, incomes, operating, draws } = params;
+  if (!anchorDate) return cashActual;
+  const after = (d: string) => (d ?? "") > anchorDate;
+  const sumAfter = <T,>(rows: T[], date: (r: T) => string, amt: (r: T) => number) =>
+    rows.filter((r) => after(date(r))).reduce((a, r) => a + (Number(amt(r)) || 0), 0);
+  const inc = sumAfter(incomes, (r) => r.income_date, (r) => r.amount);
+  const opx = sumAfter(operating, (r) => r.expense_date, (r) => r.amount);
+  const dwx = sumAfter(draws, (r) => r.expense_date, (r) => r.amount);
+  return cashActual + inc - opx - dwx;
 }

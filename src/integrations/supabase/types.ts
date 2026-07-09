@@ -144,6 +144,7 @@ export type Database = {
         Row: {
           assets_value: number
           cash_actual: number
+          cash_anchor_date: string | null
           created_at: string
           id: string
           inventory_value: number
@@ -155,6 +156,7 @@ export type Database = {
         Insert: {
           assets_value?: number
           cash_actual?: number
+          cash_anchor_date?: string | null
           created_at?: string
           id?: string
           inventory_value?: number
@@ -166,6 +168,7 @@ export type Database = {
         Update: {
           assets_value?: number
           cash_actual?: number
+          cash_anchor_date?: string | null
           created_at?: string
           id?: string
           inventory_value?: number

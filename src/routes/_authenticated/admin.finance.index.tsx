@@ -16,7 +16,7 @@ import {
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
-import { getManualBalances, updateManualBalances, totalNetWorth, type ManualBalances } from "@/lib/finance/manual-balances";
+import { getManualBalances, updateManualBalances, totalNetWorth, computeLiveCash, type ManualBalances } from "@/lib/finance/manual-balances";
 import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -152,6 +152,20 @@ function FinanceDashboard() {
     });
   }, [capital, allIncomes, allExpenses, ownerDrawCatId]);
 
+  // Live cash = manually-entered cash_actual + income/expense movements after the anchor date
+  const liveCash = useMemo(() => {
+    const allOp = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id !== ownerDrawCatId) : allExpenses;
+    const allDrawsAll = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
+    return computeLiveCash({
+      cashActual: Number(manual?.cash_actual ?? 0),
+      anchorDate: manual?.cash_anchor_date ?? null,
+      incomes: allIncomes as any,
+      operating: allOp as any,
+      draws: allDrawsAll as any,
+    });
+  }, [manual, allIncomes, allExpenses, ownerDrawCatId]);
+  const liveNetWorth = liveCash + Number(manual?.inventory_value ?? 0) + Number(manual?.assets_value ?? 0);
+
 
   // Time series
   const series = useMemo(() => buildTimeSeries(incomes, excludeDraws ? operating : expenses, range),
@@ -281,11 +295,14 @@ function FinanceDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <BalanceCard
           icon={Banknote}
-          label="النقد الفعلي (صرافة/بنك)"
-          value={Number(manual?.cash_actual ?? 0)}
+          label="النقد الحالي (فعلي + حركات)"
+          value={liveCash}
           tone="text-gold"
           accent="border-gold/30 bg-gradient-to-br from-gold/10 to-transparent"
           onEdit={() => setEditField("cash_actual")}
+          hint={manual?.cash_anchor_date
+            ? `أساس ${fmtSAR(Number(manual.cash_actual ?? 0))} ر.س بتاريخ ${manual.cash_anchor_date}`
+            : "اضغط القلم لتحديد النقد الفعلي"}
         />
         <BalanceCard
           icon={Package}
@@ -304,10 +321,10 @@ function FinanceDashboard() {
         <BalanceCard
           icon={PiggyBank}
           label="إجمالي الثروة"
-          value={totalNetWorth(manual)}
+          value={liveNetWorth}
           tone="text-foreground"
           accent="border-white/20 bg-white/10"
-          hint="النقد + المخزون + الأصول"
+          hint="النقد الحالي + المخزون + الأصول"
         />
       </div>
 
