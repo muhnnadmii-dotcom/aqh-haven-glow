@@ -359,7 +359,14 @@ function FinanceDashboard() {
           current={Number(manual?.[editField] ?? 0)}
           onClose={() => setEditField(null)}
           onSaved={(val) => {
-            setManual((prev) => prev ? { ...prev, [editField]: val } : prev);
+            setManual((prev) => {
+              if (!prev) return prev;
+              const next = { ...prev, [editField]: val };
+              if (editField === "cash_actual") {
+                next.cash_anchor_date = new Date().toISOString().slice(0, 10);
+              }
+              return next;
+            });
             setEditField(null);
           }}
         />
