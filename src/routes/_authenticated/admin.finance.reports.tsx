@@ -135,7 +135,7 @@ function ReportsPage() {
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-[11px] tracking-[0.3em] text-gold/80 uppercase print:text-gray-600">Financial Report</div>
-            <h1 className="text-2xl font-semibold mt-1">قائمة الدخل — {formatMonthAr(month)}</h1>
+            <h1 className="text-2xl font-semibold mt-1">تقرير المقبوضات والمدفوعات — {formatMonthAr(month)}</h1>
             <div className="text-[12px] text-muted-foreground print:text-gray-600 mt-1">{businessName}</div>
           </div>
           <div className="text-right text-[11px] text-muted-foreground print:text-gray-600">
