@@ -182,15 +182,17 @@ export async function uploadOneAttachment(relatedType: FinanceAttachRelatedType,
   const path = `${relatedType}/${relatedId}/${Date.now()}_${safe}`;
   const up = await supabase.storage.from("finance-attachments").upload(path, file, { upsert: false });
   if (up.error) throw up.error;
-  const ins = await supabase.from("finance_attachments").insert({
+  const payload: any = {
     related_type: relatedType,
-    related_id: relatedId,
     file_url: path,
     file_name: file.name,
     file_type: file.type || null,
     attachment_type: attachmentType,
     uploaded_by: u.user?.id ?? null,
-  });
+  };
+  if (isBigintRelated(relatedType)) payload.related_bigint_id = Number(relatedId);
+  else payload.related_id = relatedId;
+  const ins = await supabase.from("finance_attachments").insert(payload);
   if (ins.error) throw ins.error;
 }
 
