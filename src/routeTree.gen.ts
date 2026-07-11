@@ -82,6 +82,7 @@ import { Route as AuthenticatedAdminFinanceJournalEntriesRouteImport } from './r
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
 import { Route as AuthenticatedAdminFinanceImportBatchesRouteImport } from './routes/_authenticated/admin.finance.import-batches'
 import { Route as AuthenticatedAdminFinanceImportRouteImport } from './routes/_authenticated/admin.finance.import'
+import { Route as AuthenticatedAdminFinanceGeneralLedgerRouteImport } from './routes/_authenticated/admin.finance.general-ledger'
 import { Route as AuthenticatedAdminFinanceExportRouteImport } from './routes/_authenticated/admin.finance.export'
 import { Route as AuthenticatedAdminFinanceExpensesRouteImport } from './routes/_authenticated/admin.finance.expenses'
 import { Route as AuthenticatedAdminFinanceCustomersRouteImport } from './routes/_authenticated/admin.finance.customers'
@@ -517,6 +518,12 @@ const AuthenticatedAdminFinanceImportRoute =
     path: '/import',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceGeneralLedgerRoute =
+  AuthenticatedAdminFinanceGeneralLedgerRouteImport.update({
+    id: '/general-ledger',
+    path: '/general-ledger',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceExportRoute =
   AuthenticatedAdminFinanceExportRouteImport.update({
     id: '/export',
@@ -715,6 +722,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/customers': typeof AuthenticatedAdminFinanceCustomersRoute
   '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
+  '/admin/finance/general-ledger': typeof AuthenticatedAdminFinanceGeneralLedgerRoute
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
@@ -804,6 +812,7 @@ export interface FileRoutesByTo {
   '/admin/finance/customers': typeof AuthenticatedAdminFinanceCustomersRoute
   '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
+  '/admin/finance/general-ledger': typeof AuthenticatedAdminFinanceGeneralLedgerRoute
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
@@ -903,6 +912,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/customers': typeof AuthenticatedAdminFinanceCustomersRoute
   '/_authenticated/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
   '/_authenticated/admin/finance/export': typeof AuthenticatedAdminFinanceExportRoute
+  '/_authenticated/admin/finance/general-ledger': typeof AuthenticatedAdminFinanceGeneralLedgerRoute
   '/_authenticated/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/_authenticated/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
@@ -1002,6 +1012,7 @@ export interface FileRouteTypes {
     | '/admin/finance/customers'
     | '/admin/finance/expenses'
     | '/admin/finance/export'
+    | '/admin/finance/general-ledger'
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
@@ -1091,6 +1102,7 @@ export interface FileRouteTypes {
     | '/admin/finance/customers'
     | '/admin/finance/expenses'
     | '/admin/finance/export'
+    | '/admin/finance/general-ledger'
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
@@ -1189,6 +1201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/customers'
     | '/_authenticated/admin/finance/expenses'
     | '/_authenticated/admin/finance/export'
+    | '/_authenticated/admin/finance/general-ledger'
     | '/_authenticated/admin/finance/import'
     | '/_authenticated/admin/finance/import-batches'
     | '/_authenticated/admin/finance/incomes'
@@ -1758,6 +1771,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceImportRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/general-ledger': {
+      id: '/_authenticated/admin/finance/general-ledger'
+      path: '/general-ledger'
+      fullPath: '/admin/finance/general-ledger'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceGeneralLedgerRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/export': {
       id: '/_authenticated/admin/finance/export'
       path: '/export'
@@ -1999,6 +2019,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceCustomersRoute: typeof AuthenticatedAdminFinanceCustomersRoute
   AuthenticatedAdminFinanceExpensesRoute: typeof AuthenticatedAdminFinanceExpensesRoute
   AuthenticatedAdminFinanceExportRoute: typeof AuthenticatedAdminFinanceExportRoute
+  AuthenticatedAdminFinanceGeneralLedgerRoute: typeof AuthenticatedAdminFinanceGeneralLedgerRoute
   AuthenticatedAdminFinanceImportRoute: typeof AuthenticatedAdminFinanceImportRoute
   AuthenticatedAdminFinanceImportBatchesRoute: typeof AuthenticatedAdminFinanceImportBatchesRoute
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
@@ -2038,6 +2059,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
     AuthenticatedAdminFinanceExpensesRoute:
       AuthenticatedAdminFinanceExpensesRoute,
     AuthenticatedAdminFinanceExportRoute: AuthenticatedAdminFinanceExportRoute,
+    AuthenticatedAdminFinanceGeneralLedgerRoute:
+      AuthenticatedAdminFinanceGeneralLedgerRoute,
     AuthenticatedAdminFinanceImportRoute: AuthenticatedAdminFinanceImportRoute,
     AuthenticatedAdminFinanceImportBatchesRoute:
       AuthenticatedAdminFinanceImportBatchesRoute,
