@@ -29,6 +29,8 @@ function ComparePage() {
   const [expA, setExpA] = useState<any[]>([]);
   const [incB, setIncB] = useState<any[]>([]);
   const [expB, setExpB] = useState<any[]>([]);
+  const [acctA, setAcctA] = useState<AccountingPerformance | null>(null);
+  const [acctB, setAcctB] = useState<AccountingPerformance | null>(null);
   const [loading, setLoading] = useState(true);
 
   const ownerDrawCatId = useMemo(() => cats.find((c) => c.system_slug === OWNER_DRAW_SLUG)?.id ?? null, [cats]);
@@ -37,15 +39,18 @@ function ComparePage() {
     (async () => {
       setLoading(true);
       const rA = monthRange(monthA), rB = monthRange(monthB);
-      const [{ data: c }, { data: ia }, { data: ea }, { data: ib }, { data: eb }] = await Promise.all([
+      const [{ data: c }, { data: ia }, { data: ea }, { data: ib }, { data: eb }, aA, aB] = await Promise.all([
         supabase.from("finance_categories").select("id, name, kind, system_slug").eq("is_active", true),
         supabase.from("finance_incomes").select("*").is("deleted_at", null).gte("income_date", rA.dateFrom!).lte("income_date", rA.dateTo!),
         supabase.from("finance_expenses").select("*").is("deleted_at", null).gte("expense_date", rA.dateFrom!).lte("expense_date", rA.dateTo!),
         supabase.from("finance_incomes").select("*").is("deleted_at", null).gte("income_date", rB.dateFrom!).lte("income_date", rB.dateTo!),
         supabase.from("finance_expenses").select("*").is("deleted_at", null).gte("expense_date", rB.dateFrom!).lte("expense_date", rB.dateTo!),
+        getAccountingPerformance(rA.dateFrom!, rA.dateTo!).catch(() => null),
+        getAccountingPerformance(rB.dateFrom!, rB.dateTo!).catch(() => null),
       ]);
       setCats(c ?? []);
       setIncA(ia ?? []); setExpA(ea ?? []); setIncB(ib ?? []); setExpB(eb ?? []);
+      setAcctA(aA); setAcctB(aB);
       setLoading(false);
     })();
   }, [monthA, monthB]);
