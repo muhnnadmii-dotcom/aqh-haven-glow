@@ -139,40 +139,61 @@ export type Database = {
       }
       aqh_business_settings: {
         Row: {
+          carried_forward_vat_credit: number
+          commercial_registration: string | null
           company_name: string | null
           company_sub: string | null
           default_vat_rate: number | null
           email: string | null
+          filing_frequency: string
+          first_tax_period_start: string | null
           id: number
           invoice_prefix: string
           logo_url: string | null
           phone: string | null
+          tax_address: string | null
+          tax_basis: string
           updated_at: string | null
           vat_number: string | null
+          vat_registered: boolean
         }
         Insert: {
+          carried_forward_vat_credit?: number
+          commercial_registration?: string | null
           company_name?: string | null
           company_sub?: string | null
           default_vat_rate?: number | null
           email?: string | null
+          filing_frequency?: string
+          first_tax_period_start?: string | null
           id?: number
           invoice_prefix?: string
           logo_url?: string | null
           phone?: string | null
+          tax_address?: string | null
+          tax_basis?: string
           updated_at?: string | null
           vat_number?: string | null
+          vat_registered?: boolean
         }
         Update: {
+          carried_forward_vat_credit?: number
+          commercial_registration?: string | null
           company_name?: string | null
           company_sub?: string | null
           default_vat_rate?: number | null
           email?: string | null
+          filing_frequency?: string
+          first_tax_period_start?: string | null
           id?: number
           invoice_prefix?: string
           logo_url?: string | null
           phone?: string | null
+          tax_address?: string | null
+          tax_basis?: string
           updated_at?: string | null
           vat_number?: string | null
+          vat_registered?: boolean
         }
         Relationships: []
       }
@@ -3254,6 +3275,101 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_periods: {
+        Row: {
+          carried_credit_in: number
+          carried_credit_out: number
+          carried_credit_used: number
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          end_date: string
+          filed_at: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["tax_period_status"]
+          updated_at: string
+        }
+        Insert: {
+          carried_credit_in?: number
+          carried_credit_out?: number
+          carried_credit_used?: number
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          end_date: string
+          filed_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["tax_period_status"]
+          updated_at?: string
+        }
+        Update: {
+          carried_credit_in?: number
+          carried_credit_out?: number
+          carried_credit_used?: number
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          end_date?: string
+          filed_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["tax_period_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tax_return_snapshots: {
+        Row: {
+          created_at: string
+          filed_at: string | null
+          filed_by: string | null
+          id: string
+          line_items: Json
+          override_reason: string | null
+          period_id: string
+          status: string
+          summary: Json
+        }
+        Insert: {
+          created_at?: string
+          filed_at?: string | null
+          filed_by?: string | null
+          id?: string
+          line_items?: Json
+          override_reason?: string | null
+          period_id: string
+          status?: string
+          summary?: Json
+        }
+        Update: {
+          created_at?: string
+          filed_at?: string | null
+          filed_by?: string | null
+          id?: string
+          line_items?: Json
+          override_reason?: string | null
+          period_id?: string
+          status?: string
+          summary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_return_snapshots_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "tax_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       testimonials: {
         Row: {
           body: string
@@ -3729,6 +3845,68 @@ export type Database = {
         Args: { p_invoice_id: number }
         Returns: undefined
       }
+      vat_get_excluded_invoices: {
+        Args: { p_period_id: string }
+        Returns: {
+          amount: number
+          exclusion_reason: string
+          invoice_date: string
+          invoice_id: number
+          party_name: string
+          reference: string
+          source: string
+          status: string
+          vat_amount: number
+        }[]
+      }
+      vat_get_period_summary: { Args: { p_period_id: string }; Returns: Json }
+      vat_get_purchase_lines: {
+        Args: { p_period_id: string }
+        Returns: {
+          deductible_vat_amount: number
+          has_attachment: boolean
+          internal_reference: string
+          invoice_date: string
+          invoice_id: number
+          non_deductible_reason: string
+          non_deductible_vat_amount: number
+          status: string
+          supplier_id: string
+          supplier_invoice_number: string
+          supplier_name: string
+          taxable_amount: number
+          vat_amount: number
+          vat_deductibility: string
+        }[]
+      }
+      vat_get_sales_lines: {
+        Args: { p_period_id: string }
+        Returns: {
+          customer_id: string
+          customer_name: string
+          invoice_date: string
+          invoice_id: number
+          invoice_number: string
+          status: string
+          tax_code: string
+          taxable_amount: number
+          total_amount: number
+          vat_amount: number
+        }[]
+      }
+      vat_mark_as_filed: {
+        Args: { p_override_reason?: string; p_period_id: string }
+        Returns: string
+      }
+      vat_validate_return: {
+        Args: { p_period_id: string }
+        Returns: {
+          code: string
+          message: string
+          related_id: number
+          severity: string
+        }[]
+      }
     }
     Enums: {
       accounting_period_status: "open" | "under_review" | "closed"
@@ -3874,6 +4052,13 @@ export type Database = {
         | "proposal_sent"
         | "approved"
       service_request_type: "design" | "visit" | "consultation" | "maintenance"
+      tax_period_status:
+        | "open"
+        | "under_review"
+        | "ready"
+        | "filed"
+        | "paid"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4162,6 +4347,14 @@ export const Constants = {
         "approved",
       ],
       service_request_type: ["design", "visit", "consultation", "maintenance"],
+      tax_period_status: [
+        "open",
+        "under_review",
+        "ready",
+        "filed",
+        "paid",
+        "closed",
+      ],
     },
   },
 } as const
