@@ -27,6 +27,8 @@ const tabs = [
   { to: "/admin/finance/quotes", label: "عروض الأسعار", icon: FileText },
   { to: "/admin/finance/incomes", label: "الدخل", icon: TrendingUp },
   { to: "/admin/finance/expenses", label: "المصروفات", icon: TrendingDown },
+  { to: "/admin/finance/accounts", label: "الحسابات المالية", icon: Wallet },
+  { to: "/admin/finance/owner-account", label: "جاري المالك", icon: ArrowLeftRight },
   { to: "/admin/finance/suppliers", label: "الموردين", icon: Truck },
   { to: "/admin/finance/categories", label: "التصنيفات", icon: Tags },
   { to: "/admin/finance/attachments", label: "المرفقات", icon: Paperclip },
