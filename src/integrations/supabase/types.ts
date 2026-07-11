@@ -2399,6 +2399,216 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_providers: {
+        Row: {
+          clearing_account_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          provider_code: Database["public"]["Enums"]["sales_payment_provider"]
+          provider_type: Database["public"]["Enums"]["payment_provider_type"]
+          rounding_tolerance: number
+          supplier_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          clearing_account_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          provider_code: Database["public"]["Enums"]["sales_payment_provider"]
+          provider_type: Database["public"]["Enums"]["payment_provider_type"]
+          rounding_tolerance?: number
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clearing_account_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          provider_code?: Database["public"]["Enums"]["sales_payment_provider"]
+          provider_type?: Database["public"]["Enums"]["payment_provider_type"]
+          rounding_tolerance?: number
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_providers_clearing_account_id_fkey"
+            columns: ["clearing_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_providers_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "finance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_settlement_lines: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          external_order_id: string | null
+          id: string
+          line_type: Database["public"]["Enums"]["payment_settlement_line_type"]
+          provider_transaction_id: string | null
+          raw_row: Json | null
+          sales_invoice_id: number | null
+          settlement_id: string
+          transaction_date: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          external_order_id?: string | null
+          id?: string
+          line_type: Database["public"]["Enums"]["payment_settlement_line_type"]
+          provider_transaction_id?: string | null
+          raw_row?: Json | null
+          sales_invoice_id?: number | null
+          settlement_id: string
+          transaction_date?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          external_order_id?: string | null
+          id?: string
+          line_type?: Database["public"]["Enums"]["payment_settlement_line_type"]
+          provider_transaction_id?: string | null
+          raw_row?: Json | null
+          sales_invoice_id?: number | null
+          settlement_id?: string
+          transaction_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_settlement_lines_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_settlement_lines_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "payment_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_settlements: {
+        Row: {
+          actual_bank_amount: number | null
+          attachment_id: string | null
+          bank_income_id: string | null
+          created_at: string
+          created_by: string | null
+          difference_amount: number
+          expected_net_amount: number
+          fees_before_vat: number
+          fees_vat_amount: number
+          gross_sales_amount: number
+          id: string
+          notes: string | null
+          other_deductions: number
+          payout_fee: number
+          period_end: string | null
+          period_start: string | null
+          provider_id: string
+          refunds_amount: number
+          reserve_held: number
+          reserve_released: number
+          settlement_date: string
+          settlement_reference: string | null
+          status: Database["public"]["Enums"]["payment_settlement_status"]
+          updated_at: string
+        }
+        Insert: {
+          actual_bank_amount?: number | null
+          attachment_id?: string | null
+          bank_income_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference_amount?: number
+          expected_net_amount?: number
+          fees_before_vat?: number
+          fees_vat_amount?: number
+          gross_sales_amount?: number
+          id?: string
+          notes?: string | null
+          other_deductions?: number
+          payout_fee?: number
+          period_end?: string | null
+          period_start?: string | null
+          provider_id: string
+          refunds_amount?: number
+          reserve_held?: number
+          reserve_released?: number
+          settlement_date: string
+          settlement_reference?: string | null
+          status?: Database["public"]["Enums"]["payment_settlement_status"]
+          updated_at?: string
+        }
+        Update: {
+          actual_bank_amount?: number | null
+          attachment_id?: string | null
+          bank_income_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference_amount?: number
+          expected_net_amount?: number
+          fees_before_vat?: number
+          fees_vat_amount?: number
+          gross_sales_amount?: number
+          id?: string
+          notes?: string | null
+          other_deductions?: number
+          payout_fee?: number
+          period_end?: string | null
+          period_start?: string | null
+          provider_id?: string
+          refunds_amount?: number
+          reserve_held?: number
+          reserve_released?: number
+          settlement_date?: string
+          settlement_reference?: string | null
+          status?: Database["public"]["Enums"]["payment_settlement_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_settlements_bank_income_id_fkey"
+            columns: ["bank_income_id"]
+            isOneToOne: false
+            referencedRelation: "finance_incomes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_settlements_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "payment_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -4522,6 +4732,27 @@ export type Database = {
         | "owner_contribution"
         | "owner_withdrawal"
         | "internal_transfer"
+      payment_provider_type: "payment_gateway" | "bnpl" | "marketplace"
+      payment_settlement_line_type:
+        | "sale"
+        | "refund"
+        | "fee"
+        | "fee_vat"
+        | "payout_fee"
+        | "adjustment"
+        | "reserve_held"
+        | "reserve_released"
+        | "rounding_difference"
+        | "unexplained_transfer_fee"
+      payment_settlement_status:
+        | "draft"
+        | "imported"
+        | "under_review"
+        | "matched"
+        | "partially_matched"
+        | "awaiting_payout"
+        | "paid"
+        | "cancelled"
       purchase_invoice_status:
         | "draft"
         | "under_review"
@@ -4840,6 +5071,29 @@ export const Constants = {
         "owner_contribution",
         "owner_withdrawal",
         "internal_transfer",
+      ],
+      payment_provider_type: ["payment_gateway", "bnpl", "marketplace"],
+      payment_settlement_line_type: [
+        "sale",
+        "refund",
+        "fee",
+        "fee_vat",
+        "payout_fee",
+        "adjustment",
+        "reserve_held",
+        "reserve_released",
+        "rounding_difference",
+        "unexplained_transfer_fee",
+      ],
+      payment_settlement_status: [
+        "draft",
+        "imported",
+        "under_review",
+        "matched",
+        "partially_matched",
+        "awaiting_payout",
+        "paid",
+        "cancelled",
       ],
       purchase_invoice_status: [
         "draft",
