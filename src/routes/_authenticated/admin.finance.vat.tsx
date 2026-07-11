@@ -10,7 +10,7 @@ const tabs = [
   { to: "/admin/finance/vat", label: "لوحة الضريبة", icon: LayoutDashboard, exact: true },
   { to: "/admin/finance/vat/sales", label: "ضريبة المبيعات", icon: TrendingUp },
   { to: "/admin/finance/vat/purchases", label: "ضريبة المشتريات", icon: ShoppingCart },
-  { to: "/admin/finance/vat/excluded", label: "الفواتير المستبعدة", icon: Ban },
+  { to: "/admin/finance/vat/excluded", label: "مستندات تنتظر المراجعة", icon: Ban },
   { to: "/admin/finance/vat/periods", label: "الفترات الضريبية", icon: CalendarRange },
   { to: "/admin/finance/vat/draft", label: "مسودة الإقرار", icon: FileEdit },
   { to: "/admin/finance/vat/filed", label: "الإقرارات السابقة", icon: FolderCheck },
