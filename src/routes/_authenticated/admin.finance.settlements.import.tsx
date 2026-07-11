@@ -130,7 +130,8 @@ type LineType =
   | "reserve_released"
   | "payout_fee"
   | "manual_adjustment"
-  | "unexplained_deduction";
+  | "unexplained_deduction"
+  | "wallet_top_up";
 
 const LINE_TYPE_LABEL: Record<LineType, string> = {
   sale: "بيع",
@@ -141,7 +142,11 @@ const LINE_TYPE_LABEL: Record<LineType, string> = {
   payout_fee: "رسوم تحويل",
   manual_adjustment: "تعديل يدوي من الوسيط",
   unexplained_deduction: "خصم غير مفسر",
+  wallet_top_up: "شحن محفظة الوسيط",
 };
+
+// Regex used to auto-detect wallet-top-up rows from description/payment method.
+const WALLET_TOPUP_RX = /(شحن\s*محفظة|wallet\s*top[\s-]*up|wallet\s*recharge|top\s*up\s*wallet)/i;
 
 type MatchStatus =
   | "matched_invoice"
@@ -151,7 +156,8 @@ type MatchStatus =
   | "order_not_found"
   | "needs_credit_note"
   | "unmatched_refund"
-  | "needs_classification";
+  | "needs_classification"
+  | "wallet_internal_transfer";
 
 const MATCH_LABEL: Record<MatchStatus, string> = {
   matched_invoice: "مطابق لفاتورة",
@@ -162,6 +168,7 @@ const MATCH_LABEL: Record<MatchStatus, string> = {
   needs_credit_note: "يحتاج إشعار دائن (استرجاع جزئي)",
   unmatched_refund: "استرجاع بدون عملية أصلية",
   needs_classification: "تعديل/خصم تسوية غير مرتبط بطلب",
+  wallet_internal_transfer: "تحويل داخلي إلى محفظة سلة",
 };
 
 const MATCH_TONE: Record<MatchStatus, string> = {
@@ -173,6 +180,7 @@ const MATCH_TONE: Record<MatchStatus, string> = {
   needs_credit_note: "text-amber-300",
   unmatched_refund: "text-red-300",
   needs_classification: "text-amber-300",
+  wallet_internal_transfer: "text-sky-300",
 };
 
 // Statuses that require review before FINAL CLOSE. Import commit is always allowed.
@@ -193,6 +201,7 @@ const REVIEW_LABEL: Record<ReviewReason, string> = {
   zero_amount: "قيمة = 0",
   amount_mismatch: "اختلاف مبالغ غير مفسر",
 };
+
 
 type ParsedLine = {
   rowNo: number;
@@ -240,6 +249,7 @@ function SettlementImportPage() {
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
   const [payoutFee, setPayoutFee] = useState("0");
+  const [sourceExpectedNet, setSourceExpectedNet] = useState("");
   const [statusFilter, setStatusFilter] = useState<MatchStatus | "">("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -336,7 +346,13 @@ function SettlementImportPage() {
 
       const reasons: ReviewReason[] = [];
       let line_type: LineType = "sale";
+      // Detect wallet top-up from description or payment method (Salla "شحن محفظة").
+      const looksLikeWalletTopUp =
+        (desc && WALLET_TOPUP_RX.test(desc)) ||
+        (paymethod && WALLET_TOPUP_RX.test(paymethod));
+
       if (gross == null) reasons.push("invalid_amount");
+      else if (looksLikeWalletTopUp) { line_type = "wallet_top_up"; }
       else if (gross === 0) { reasons.push("zero_amount"); line_type = "manual_adjustment"; }
       else if (gross < 0) {
         // Negative with order id → refund. Negative without order id → unexplained deduction (needs classification).
@@ -350,7 +366,16 @@ function SettlementImportPage() {
       const rawObj: Record<string, any> = {};
       headers.forEach((h, i) => { rawObj[String(h ?? `col_${i}`)] = raw[i] ?? null; });
 
-      const initialMatch: MatchStatus = orderId ? "order_not_found" : "needs_classification";
+      const initialMatch: MatchStatus =
+        line_type === "wallet_top_up"
+          ? "wallet_internal_transfer"
+          : orderId
+            ? "order_not_found"
+            : "needs_classification";
+
+      // Wallet top-ups carry no fees/VAT even if columns had residual values.
+      const feesFinal = line_type === "wallet_top_up" ? 0 : fees;
+      const feesVatFinal = line_type === "wallet_top_up" ? 0 : feesVat;
 
       return {
         rowNo,
@@ -360,8 +385,8 @@ function SettlementImportPage() {
         provider_transaction_id: txnId,
         description: desc,
         gross_amount: gross ?? 0,
-        fees_before_vat: fees,
-        fees_vat_amount: feesVat,
+        fees_before_vat: feesFinal,
+        fees_vat_amount: feesVatFinal,
         net_amount: net,
         net_before_vat_check: netBv,
         line_type,
@@ -374,6 +399,7 @@ function SettlementImportPage() {
       } as ParsedLine;
     });
   }
+
 
   async function goPreview() {
     if (!aoa.length) { toast.error("لم يتم رفع ملف"); return; }
@@ -471,9 +497,11 @@ function SettlementImportPage() {
       }
 
       for (const p of parsed) {
+        if (p.line_type === "wallet_top_up") continue;
         if (!p.external_order_id) { p.match_status = "needs_classification"; p.needs_review = true; }
       }
     }
+
 
     if (providerRow?.id) {
       const ref = settlementRef || `${provider}-${fileHash.slice(0, 12)}`;
@@ -494,14 +522,15 @@ function SettlementImportPage() {
     const counts: Record<MatchStatus, number> = {
       matched_invoice: 0, matched_cancelled_order: 0, cancelled_order_needs_refund_match: 0,
       order_found_invoice_missing: 0, order_not_found: 0, needs_credit_note: 0,
-      unmatched_refund: 0, needs_classification: 0,
+      unmatched_refund: 0, needs_classification: 0, wallet_internal_transfer: 0,
     };
-    let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0;
-    let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0, adjustmentsSigned = 0;
+    let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0, walletTopUps = 0;
+    let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0, adjustmentsSigned = 0, walletTopUpAbs = 0;
     for (const r of rows) {
       counts[r.match_status]++;
       if (r.line_type === "sale") { sales++; if (r.gross_amount > 0) gross = round2(gross + r.gross_amount); }
       else if (r.line_type === "refund") { refunds++; refundsAbs = round2(refundsAbs + Math.abs(r.gross_amount)); }
+      else if (r.line_type === "wallet_top_up") { walletTopUps++; walletTopUpAbs = round2(walletTopUpAbs + Math.abs(r.gross_amount)); }
       else { adjustments++; adjustmentsSigned = round2(adjustmentsSigned + r.gross_amount); }
       fees = round2(fees + r.fees_before_vat);
       feesVat = round2(feesVat + r.fees_vat_amount);
@@ -509,9 +538,20 @@ function SettlementImportPage() {
       if (r.needs_review) review++;
     }
     const payout = num0(payoutFee);
-    const expected = round2(gross - refundsAbs - fees - feesVat - payout + adjustmentsSigned);
-    return { count: rows.length, sales, refunds, adjustments, review, blocking, counts, gross, refundsAbs, fees, feesVat, adjustmentsSigned, expected };
-  }, [rows, payoutFee]);
+    // Wallet top-ups reduce payout to bank (they move funds into the Salla wallet asset).
+    const calculatedExpected = round2(gross - refundsAbs - fees - feesVat - payout - walletTopUpAbs + adjustmentsSigned);
+    const sourceExpected = parseAmount(sourceExpectedNet);
+    // Prefer the official amount from the provider screen when the two match within a rounding tolerance.
+    const roundingDiff = sourceExpected != null ? round2(sourceExpected - calculatedExpected) : 0;
+    const isRounding = sourceExpected != null && Math.abs(roundingDiff) <= 0.05;
+    const expected = sourceExpected != null ? sourceExpected : calculatedExpected;
+    return {
+      count: rows.length, sales, refunds, adjustments, walletTopUps, review, blocking, counts,
+      gross, refundsAbs, fees, feesVat, adjustmentsSigned, walletTopUpAbs,
+      calculatedExpected, sourceExpected, roundingDiff, isRounding, expected,
+    };
+  }, [rows, payoutFee, sourceExpectedNet]);
+
 
   async function commit() {
     if (!canManage) { toast.error("لا تملك صلاحية إدارة المالية"); return; }
@@ -542,6 +582,10 @@ function SettlementImportPage() {
           fees_before_vat: summary.fees,
           fees_vat_amount: summary.feesVat,
           payout_fee: num0(payoutFee),
+          wallet_top_up_amount: summary.walletTopUpAbs,
+          source_expected_net_amount: summary.sourceExpected,
+          calculated_expected_net_amount: summary.calculatedExpected,
+          expected_net_amount: summary.expected,
           status,
           notes: `استيراد من ملف: ${file?.name} — hash=${fileHash.slice(0, 16)} — صفوف: ${rows.length} (يحتاج مراجعة: ${summary.review}، حجب: ${summary.blocking})`,
           created_by: uid,
@@ -561,6 +605,14 @@ function SettlementImportPage() {
         amount: r.gross_amount,
         transaction_date: r.transaction_date,
         description: r.description ?? MATCH_LABEL[r.match_status],
+        // Persist wallet transfers pre-classified so the DB matcher doesn't flag them as needs_classification.
+        matching_status:
+          r.line_type === "wallet_top_up"
+            ? "classified"
+            : r.match_status === "wallet_internal_transfer"
+              ? "classified"
+              : undefined,
+        classification_reason: r.line_type === "wallet_top_up" ? "wallet_top_up" : undefined,
         raw_row: {
           ...r.raw,
           _match_status: r.match_status,
@@ -792,12 +844,23 @@ function SettlementImportPage() {
               <input type="number" step="0.01" value={payoutFee} onChange={(e) => setPayoutFee(e.target.value)}
                 className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
             </label>
+            <label className="block text-[11px]">صافي التسوية من شاشة الوسيط (المرجع الرسمي)
+              <input type="number" step="0.01" value={sourceExpectedNet} onChange={(e) => setSourceExpectedNet(e.target.value)}
+                placeholder="مثال: 3318.21"
+                className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+              {summary.sourceExpected != null && (
+                <span className={`mt-1 block text-[10px] ${summary.isRounding ? "text-emerald-300" : Math.abs(summary.roundingDiff) > 0.05 ? "text-red-300" : "text-muted-foreground"}`}>
+                  فرق مع المحسوب: {summary.roundingDiff.toFixed(2)} {summary.isRounding ? "(فرق تقريب مقبول)" : ""}
+                </span>
+              )}
+            </label>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <Kpi label="عدد الصفوف" value={String(summary.count)} />
             <Kpi label="مبيعات" value={String(summary.sales)} tone="text-emerald-300" />
             <Kpi label="مرتجعات" value={String(summary.refunds)} tone="text-amber-300" />
+            <Kpi label="شحن محفظة" value={String(summary.walletTopUps)} tone="text-sky-300" />
             <Kpi label="تعديلات" value={String(summary.adjustments)} tone="text-muted-foreground" />
             <Kpi label="مطابق لفاتورة" value={String(summary.counts.matched_invoice)} tone="text-emerald-300" />
             <Kpi label="طلب ملغي مطابق" value={String(summary.counts.matched_cancelled_order)} tone="text-sky-300" />
@@ -808,10 +871,13 @@ function SettlementImportPage() {
             <Kpi label="خصم غير مصنف" value={String(summary.counts.needs_classification)} tone={summary.counts.needs_classification ? "text-amber-300" : "text-muted-foreground"} />
             <Kpi label="إجمالي المبيعات" value={summary.gross.toFixed(2)} />
             <Kpi label="المرتجعات" value={summary.refundsAbs.toFixed(2)} />
+            <Kpi label="شحن محفظة (ر.س)" value={summary.walletTopUpAbs.toFixed(2)} tone="text-sky-300" />
             <Kpi label="الرسوم" value={summary.fees.toFixed(2)} />
             <Kpi label="ضريبة الرسوم" value={summary.feesVat.toFixed(2)} />
-            <Kpi label="صافي متوقع" value={summary.expected.toFixed(2)} tone="text-gold" />
+            <Kpi label="صافي محسوب" value={summary.calculatedExpected.toFixed(2)} />
+            <Kpi label="صافي رسمي / معتمد" value={summary.expected.toFixed(2)} tone="text-gold" />
           </div>
+
 
           {/* Filter by match status */}
           <div className="flex flex-wrap gap-2 items-center text-[11px]">
