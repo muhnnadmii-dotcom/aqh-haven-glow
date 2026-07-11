@@ -554,7 +554,7 @@ function SettlementImportPage() {
       // Insert lines
       const linesPayload = rows.map((r) => ({
         settlement_id: settlementId,
-        line_type: (r.line_type === "sale" ? "sale" : r.line_type === "refund" ? "refund" : "adjustment") as any,
+        line_type: r.line_type as any,
         external_order_id: r.external_order_id,
         sales_invoice_id: r.sales_invoice_id,
         provider_transaction_id: r.provider_transaction_id,
