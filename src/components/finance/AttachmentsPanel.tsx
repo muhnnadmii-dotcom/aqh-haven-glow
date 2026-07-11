@@ -8,7 +8,8 @@ type Att = { id: string; file_url: string; file_name: string; file_type: string 
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.csv";
 
-export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote";
+export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote" | "purchase_invoice";
+const isBigintRelated = (t: FinanceAttachRelatedType) => t === "purchase_invoice";
 
 export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relatedType: FinanceAttachRelatedType; relatedId: string; canManage: boolean }) {
   const [rows, setRows] = useState<Att[]>([]);
@@ -38,7 +39,9 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
   };
 
   const load = async () => {
-    const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", relatedType).eq("related_id", relatedId).order("created_at", { ascending: false });
+    const col = isBigintRelated(relatedType) ? "related_bigint_id" : "related_id";
+    const val: any = isBigintRelated(relatedType) ? Number(relatedId) : relatedId;
+    const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", relatedType).eq(col, val).order("created_at", { ascending: false });
     setRows((data as any) ?? []);
   };
   useEffect(() => { load(); }, [relatedType, relatedId]);
@@ -179,15 +182,17 @@ export async function uploadOneAttachment(relatedType: FinanceAttachRelatedType,
   const path = `${relatedType}/${relatedId}/${Date.now()}_${safe}`;
   const up = await supabase.storage.from("finance-attachments").upload(path, file, { upsert: false });
   if (up.error) throw up.error;
-  const ins = await supabase.from("finance_attachments").insert({
+  const payload: any = {
     related_type: relatedType,
-    related_id: relatedId,
     file_url: path,
     file_name: file.name,
     file_type: file.type || null,
     attachment_type: attachmentType,
     uploaded_by: u.user?.id ?? null,
-  });
+  };
+  if (isBigintRelated(relatedType)) payload.related_bigint_id = Number(relatedId);
+  else payload.related_id = relatedId;
+  const ins = await supabase.from("finance_attachments").insert(payload);
   if (ins.error) throw ins.error;
 }
 

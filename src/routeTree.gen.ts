@@ -73,6 +73,7 @@ import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
 import { Route as AuthenticatedAdminFinanceReportsRouteImport } from './routes/_authenticated/admin.finance.reports'
+import { Route as AuthenticatedAdminFinancePurchaseInvoicesReviewRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices-review'
 import { Route as AuthenticatedAdminFinanceOwnerAccountRouteImport } from './routes/_authenticated/admin.finance.owner-account'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
 import { Route as AuthenticatedAdminFinanceImportBatchesRouteImport } from './routes/_authenticated/admin.finance.import-batches'
@@ -94,9 +95,11 @@ import { Route as AuthenticatedAccountRequestsNewRouteImport } from './routes/_a
 import { Route as AuthenticatedAccountRequestsIdRouteImport } from './routes/_authenticated/account.requests.$id'
 import { Route as AuthenticatedAdminFinanceSalesInvoicesIndexRouteImport } from './routes/_authenticated/admin.finance.sales-invoices.index'
 import { Route as AuthenticatedAdminFinanceQuotesIndexRouteImport } from './routes/_authenticated/admin.finance.quotes.index'
+import { Route as AuthenticatedAdminFinancePurchaseInvoicesIndexRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices.index'
 import { Route as AuthenticatedAdminInventoryProductSkuRouteImport } from './routes/_authenticated/admin.inventory.product.$sku'
 import { Route as AuthenticatedAdminFinanceSalesInvoicesIdRouteImport } from './routes/_authenticated/admin.finance.sales-invoices.$id'
 import { Route as AuthenticatedAdminFinanceQuotesIdRouteImport } from './routes/_authenticated/admin.finance.quotes.$id'
+import { Route as AuthenticatedAdminFinancePurchaseInvoicesIdRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices.$id'
 
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
@@ -455,6 +458,12 @@ const AuthenticatedAdminFinanceReportsRoute =
     path: '/reports',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinancePurchaseInvoicesReviewRoute =
+  AuthenticatedAdminFinancePurchaseInvoicesReviewRouteImport.update({
+    id: '/purchase-invoices-review',
+    path: '/purchase-invoices-review',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceOwnerAccountRoute =
   AuthenticatedAdminFinanceOwnerAccountRouteImport.update({
     id: '/owner-account',
@@ -581,6 +590,12 @@ const AuthenticatedAdminFinanceQuotesIndexRoute =
     path: '/quotes/',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinancePurchaseInvoicesIndexRoute =
+  AuthenticatedAdminFinancePurchaseInvoicesIndexRouteImport.update({
+    id: '/purchase-invoices/',
+    path: '/purchase-invoices/',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminInventoryProductSkuRoute =
   AuthenticatedAdminInventoryProductSkuRouteImport.update({
     id: '/inventory/product/$sku',
@@ -597,6 +612,12 @@ const AuthenticatedAdminFinanceQuotesIdRoute =
   AuthenticatedAdminFinanceQuotesIdRouteImport.update({
     id: '/quotes/$id',
     path: '/quotes/$id',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinancePurchaseInvoicesIdRoute =
+  AuthenticatedAdminFinancePurchaseInvoicesIdRouteImport.update({
+    id: '/purchase-invoices/$id',
+    path: '/purchase-invoices/$id',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
 
@@ -662,6 +683,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
+  '/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -683,9 +705,11 @@ export interface FileRoutesByFullPath {
   '/admin/gallery/': typeof AuthenticatedAdminGalleryIndexRoute
   '/admin/inventory/': typeof AuthenticatedAdminInventoryIndexRoute
   '/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
+  '/admin/finance/purchase-invoices/$id': typeof AuthenticatedAdminFinancePurchaseInvoicesIdRoute
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
+  '/admin/finance/purchase-invoices/': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/admin/finance/quotes/': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/admin/finance/sales-invoices/': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
 }
@@ -743,6 +767,7 @@ export interface FileRoutesByTo {
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
+  '/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -764,9 +789,11 @@ export interface FileRoutesByTo {
   '/admin/gallery': typeof AuthenticatedAdminGalleryIndexRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryIndexRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsIndexRoute
+  '/admin/finance/purchase-invoices/$id': typeof AuthenticatedAdminFinancePurchaseInvoicesIdRoute
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
+  '/admin/finance/purchase-invoices': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/admin/finance/quotes': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/admin/finance/sales-invoices': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
 }
@@ -834,6 +861,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/_authenticated/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
+  '/_authenticated/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/_authenticated/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -855,9 +883,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/gallery/': typeof AuthenticatedAdminGalleryIndexRoute
   '/_authenticated/admin/inventory/': typeof AuthenticatedAdminInventoryIndexRoute
   '/_authenticated/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
+  '/_authenticated/admin/finance/purchase-invoices/$id': typeof AuthenticatedAdminFinancePurchaseInvoicesIdRoute
   '/_authenticated/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/_authenticated/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/_authenticated/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
+  '/_authenticated/admin/finance/purchase-invoices/': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/_authenticated/admin/finance/quotes/': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/_authenticated/admin/finance/sales-invoices/': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
 }
@@ -925,6 +955,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
     | '/admin/finance/owner-account'
+    | '/admin/finance/purchase-invoices-review'
     | '/admin/finance/reports'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
@@ -946,9 +977,11 @@ export interface FileRouteTypes {
     | '/admin/gallery/'
     | '/admin/inventory/'
     | '/admin/requests/'
+    | '/admin/finance/purchase-invoices/$id'
     | '/admin/finance/quotes/$id'
     | '/admin/finance/sales-invoices/$id'
     | '/admin/inventory/product/$sku'
+    | '/admin/finance/purchase-invoices/'
     | '/admin/finance/quotes/'
     | '/admin/finance/sales-invoices/'
   fileRoutesByTo: FileRoutesByTo
@@ -1006,6 +1039,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
     | '/admin/finance/owner-account'
+    | '/admin/finance/purchase-invoices-review'
     | '/admin/finance/reports'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
@@ -1027,9 +1061,11 @@ export interface FileRouteTypes {
     | '/admin/gallery'
     | '/admin/inventory'
     | '/admin/requests'
+    | '/admin/finance/purchase-invoices/$id'
     | '/admin/finance/quotes/$id'
     | '/admin/finance/sales-invoices/$id'
     | '/admin/inventory/product/$sku'
+    | '/admin/finance/purchase-invoices'
     | '/admin/finance/quotes'
     | '/admin/finance/sales-invoices'
   id:
@@ -1096,6 +1132,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/import-batches'
     | '/_authenticated/admin/finance/incomes'
     | '/_authenticated/admin/finance/owner-account'
+    | '/_authenticated/admin/finance/purchase-invoices-review'
     | '/_authenticated/admin/finance/reports'
     | '/_authenticated/admin/finance/settings'
     | '/_authenticated/admin/finance/suppliers'
@@ -1117,9 +1154,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/gallery/'
     | '/_authenticated/admin/inventory/'
     | '/_authenticated/admin/requests/'
+    | '/_authenticated/admin/finance/purchase-invoices/$id'
     | '/_authenticated/admin/finance/quotes/$id'
     | '/_authenticated/admin/finance/sales-invoices/$id'
     | '/_authenticated/admin/inventory/product/$sku'
+    | '/_authenticated/admin/finance/purchase-invoices/'
     | '/_authenticated/admin/finance/quotes/'
     | '/_authenticated/admin/finance/sales-invoices/'
   fileRoutesById: FileRoutesById
@@ -1591,6 +1630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceReportsRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/purchase-invoices-review': {
+      id: '/_authenticated/admin/finance/purchase-invoices-review'
+      path: '/purchase-invoices-review'
+      fullPath: '/admin/finance/purchase-invoices-review'
+      preLoaderRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/owner-account': {
       id: '/_authenticated/admin/finance/owner-account'
       path: '/owner-account'
@@ -1738,6 +1784,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceQuotesIndexRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/purchase-invoices/': {
+      id: '/_authenticated/admin/finance/purchase-invoices/'
+      path: '/purchase-invoices'
+      fullPath: '/admin/finance/purchase-invoices/'
+      preLoaderRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/inventory/product/$sku': {
       id: '/_authenticated/admin/inventory/product/$sku'
       path: '/inventory/product/$sku'
@@ -1757,6 +1810,13 @@ declare module '@tanstack/react-router' {
       path: '/quotes/$id'
       fullPath: '/admin/finance/quotes/$id'
       preLoaderRoute: typeof AuthenticatedAdminFinanceQuotesIdRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/purchase-invoices/$id': {
+      id: '/_authenticated/admin/finance/purchase-invoices/$id'
+      path: '/purchase-invoices/$id'
+      fullPath: '/admin/finance/purchase-invoices/$id'
+      preLoaderRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesIdRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
   }
@@ -1842,12 +1902,15 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceImportBatchesRoute: typeof AuthenticatedAdminFinanceImportBatchesRoute
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
   AuthenticatedAdminFinanceOwnerAccountRoute: typeof AuthenticatedAdminFinanceOwnerAccountRoute
+  AuthenticatedAdminFinancePurchaseInvoicesReviewRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   AuthenticatedAdminFinanceReportsRoute: typeof AuthenticatedAdminFinanceReportsRoute
   AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
   AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
   AuthenticatedAdminFinanceIndexRoute: typeof AuthenticatedAdminFinanceIndexRoute
+  AuthenticatedAdminFinancePurchaseInvoicesIdRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesIdRoute
   AuthenticatedAdminFinanceQuotesIdRoute: typeof AuthenticatedAdminFinanceQuotesIdRoute
   AuthenticatedAdminFinanceSalesInvoicesIdRoute: typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
+  AuthenticatedAdminFinancePurchaseInvoicesIndexRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   AuthenticatedAdminFinanceQuotesIndexRoute: typeof AuthenticatedAdminFinanceQuotesIndexRoute
   AuthenticatedAdminFinanceSalesInvoicesIndexRoute: typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
 }
@@ -1875,6 +1938,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceIncomesRoute,
     AuthenticatedAdminFinanceOwnerAccountRoute:
       AuthenticatedAdminFinanceOwnerAccountRoute,
+    AuthenticatedAdminFinancePurchaseInvoicesReviewRoute:
+      AuthenticatedAdminFinancePurchaseInvoicesReviewRoute,
     AuthenticatedAdminFinanceReportsRoute:
       AuthenticatedAdminFinanceReportsRoute,
     AuthenticatedAdminFinanceSettingsRoute:
@@ -1882,10 +1947,14 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
     AuthenticatedAdminFinanceSuppliersRoute:
       AuthenticatedAdminFinanceSuppliersRoute,
     AuthenticatedAdminFinanceIndexRoute: AuthenticatedAdminFinanceIndexRoute,
+    AuthenticatedAdminFinancePurchaseInvoicesIdRoute:
+      AuthenticatedAdminFinancePurchaseInvoicesIdRoute,
     AuthenticatedAdminFinanceQuotesIdRoute:
       AuthenticatedAdminFinanceQuotesIdRoute,
     AuthenticatedAdminFinanceSalesInvoicesIdRoute:
       AuthenticatedAdminFinanceSalesInvoicesIdRoute,
+    AuthenticatedAdminFinancePurchaseInvoicesIndexRoute:
+      AuthenticatedAdminFinancePurchaseInvoicesIndexRoute,
     AuthenticatedAdminFinanceQuotesIndexRoute:
       AuthenticatedAdminFinanceQuotesIndexRoute,
     AuthenticatedAdminFinanceSalesInvoicesIndexRoute:
