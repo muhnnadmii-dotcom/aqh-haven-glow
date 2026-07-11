@@ -123,6 +123,7 @@ import { Route as AuthenticatedAdminFinanceVatPeriodsRouteImport } from './route
 import { Route as AuthenticatedAdminFinanceVatFiledRouteImport } from './routes/_authenticated/admin.finance.vat.filed'
 import { Route as AuthenticatedAdminFinanceVatExcludedRouteImport } from './routes/_authenticated/admin.finance.vat.excluded'
 import { Route as AuthenticatedAdminFinanceVatDraftRouteImport } from './routes/_authenticated/admin.finance.vat.draft'
+import { Route as AuthenticatedAdminFinanceSettlementsImportBulkRouteImport } from './routes/_authenticated/admin.finance.settlements.import-bulk'
 import { Route as AuthenticatedAdminFinanceSettlementsImportRouteImport } from './routes/_authenticated/admin.finance.settlements.import'
 import { Route as AuthenticatedAdminFinanceSalesInvoicesIdRouteImport } from './routes/_authenticated/admin.finance.sales-invoices.$id'
 import { Route as AuthenticatedAdminFinanceQuotesIdRouteImport } from './routes/_authenticated/admin.finance.quotes.$id'
@@ -785,6 +786,12 @@ const AuthenticatedAdminFinanceVatDraftRoute =
     path: '/draft',
     getParentRoute: () => AuthenticatedAdminFinanceVatRoute,
   } as any)
+const AuthenticatedAdminFinanceSettlementsImportBulkRoute =
+  AuthenticatedAdminFinanceSettlementsImportBulkRouteImport.update({
+    id: '/import-bulk',
+    path: '/import-bulk',
+    getParentRoute: () => AuthenticatedAdminFinanceSettlementsRoute,
+  } as any)
 const AuthenticatedAdminFinanceSettlementsImportRoute =
   AuthenticatedAdminFinanceSettlementsImportRouteImport.update({
     id: '/import',
@@ -916,6 +923,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
+  '/admin/finance/settlements/import-bulk': typeof AuthenticatedAdminFinanceSettlementsImportBulkRoute
   '/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -1025,6 +1033,7 @@ export interface FileRoutesByTo {
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
+  '/admin/finance/settlements/import-bulk': typeof AuthenticatedAdminFinanceSettlementsImportBulkRoute
   '/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -1146,6 +1155,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/_authenticated/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/_authenticated/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
+  '/_authenticated/admin/finance/settlements/import-bulk': typeof AuthenticatedAdminFinanceSettlementsImportBulkRoute
   '/_authenticated/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/_authenticated/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/_authenticated/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -1267,6 +1277,7 @@ export interface FileRouteTypes {
     | '/admin/finance/quotes/$id'
     | '/admin/finance/sales-invoices/$id'
     | '/admin/finance/settlements/import'
+    | '/admin/finance/settlements/import-bulk'
     | '/admin/finance/vat/draft'
     | '/admin/finance/vat/excluded'
     | '/admin/finance/vat/filed'
@@ -1376,6 +1387,7 @@ export interface FileRouteTypes {
     | '/admin/finance/quotes/$id'
     | '/admin/finance/sales-invoices/$id'
     | '/admin/finance/settlements/import'
+    | '/admin/finance/settlements/import-bulk'
     | '/admin/finance/vat/draft'
     | '/admin/finance/vat/excluded'
     | '/admin/finance/vat/filed'
@@ -1496,6 +1508,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/quotes/$id'
     | '/_authenticated/admin/finance/sales-invoices/$id'
     | '/_authenticated/admin/finance/settlements/import'
+    | '/_authenticated/admin/finance/settlements/import-bulk'
     | '/_authenticated/admin/finance/vat/draft'
     | '/_authenticated/admin/finance/vat/excluded'
     | '/_authenticated/admin/finance/vat/filed'
@@ -2327,6 +2340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceVatDraftRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceVatRoute
     }
+    '/_authenticated/admin/finance/settlements/import-bulk': {
+      id: '/_authenticated/admin/finance/settlements/import-bulk'
+      path: '/import-bulk'
+      fullPath: '/admin/finance/settlements/import-bulk'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceSettlementsImportBulkRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceSettlementsRoute
+    }
     '/_authenticated/admin/finance/settlements/import': {
       id: '/_authenticated/admin/finance/settlements/import'
       path: '/import'
@@ -2427,6 +2447,7 @@ const AuthenticatedAdminDesignRouteWithChildren =
 
 interface AuthenticatedAdminFinanceSettlementsRouteChildren {
   AuthenticatedAdminFinanceSettlementsImportRoute: typeof AuthenticatedAdminFinanceSettlementsImportRoute
+  AuthenticatedAdminFinanceSettlementsImportBulkRoute: typeof AuthenticatedAdminFinanceSettlementsImportBulkRoute
   AuthenticatedAdminFinanceSettlementsIndexRoute: typeof AuthenticatedAdminFinanceSettlementsIndexRoute
 }
 
@@ -2434,6 +2455,8 @@ const AuthenticatedAdminFinanceSettlementsRouteChildren: AuthenticatedAdminFinan
   {
     AuthenticatedAdminFinanceSettlementsImportRoute:
       AuthenticatedAdminFinanceSettlementsImportRoute,
+    AuthenticatedAdminFinanceSettlementsImportBulkRoute:
+      AuthenticatedAdminFinanceSettlementsImportBulkRoute,
     AuthenticatedAdminFinanceSettlementsIndexRoute:
       AuthenticatedAdminFinanceSettlementsIndexRoute,
   }
