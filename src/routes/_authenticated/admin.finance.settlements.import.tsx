@@ -497,9 +497,11 @@ function SettlementImportPage() {
       }
 
       for (const p of parsed) {
+        if (p.line_type === "wallet_top_up") continue;
         if (!p.external_order_id) { p.match_status = "needs_classification"; p.needs_review = true; }
       }
     }
+
 
     if (providerRow?.id) {
       const ref = settlementRef || `${provider}-${fileHash.slice(0, 12)}`;
