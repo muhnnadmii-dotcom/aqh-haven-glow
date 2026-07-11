@@ -21,6 +21,9 @@ import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-re
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AccountingPanel } from "@/components/finance/AccountingPanel";
+import { CashExtraKpis } from "@/components/finance/CashExtraKpis";
+import { SettlementsPanel } from "@/components/finance/SettlementsPanel";
+import { VatDashPanel } from "@/components/finance/VatDashPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/")({
   ssr: false,
