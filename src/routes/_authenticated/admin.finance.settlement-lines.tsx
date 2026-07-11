@@ -168,18 +168,20 @@ function SettlementLinesPage() {
               <th className="text-start px-3 py-2">مرجع الوسيط / الفاتورة</th>
               <th className="text-start px-3 py-2">المبلغ</th>
               <th className="text-start px-3 py-2">حالة المطابقة</th>
+              <th className="text-start px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">لا توجد حركات</td></tr>
+              <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">لا توجد حركات</td></tr>
             )}
             {filtered.map((r) => {
               const inv = r.sales_invoice_id ? invoices[r.sales_invoice_id] : null;
               const ord = r.salla_order_id ? orders[r.salla_order_id] : null;
               const m = MATCH_LABEL[r.matching_status] ?? { text: r.matching_status ?? "غير مصنّف", tone: "text-muted-foreground" };
+              const needsClassify = !r.external_order_id && (r.matching_status === "needs_classification" || !r.matching_status);
               return (
-                <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+                <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 ${needsClassify ? "bg-amber-500/5" : ""}`}>
                   <td className="px-3 py-2">{r.transaction_date ?? "—"}</td>
                   <td className="px-3 py-2 text-muted-foreground">{stRef(r.settlement_id)}</td>
                   <td className="px-3 py-2">{LINE_LABEL[r.line_type] ?? r.line_type}</td>
@@ -195,6 +197,11 @@ function SettlementLinesPage() {
                   </td>
                   <td className="px-3 py-2 tabular-nums">{Number(r.amount).toFixed(2)}</td>
                   <td className={`px-3 py-2 ${m.tone}`}>{m.text}{inv ? ` ${inv.invoice_number}` : ""}</td>
+                  <td className="px-3 py-2">
+                    {needsClassify ? (
+                      <ClassifyLine row={r} onDone={load} />
+                    ) : null}
+                  </td>
                 </tr>
               );
             })}
