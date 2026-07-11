@@ -278,11 +278,21 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
+      // Normalize classification: when user picks a type, mark as at least "classified".
+      const txnType = f.transaction_type || null;
+      const accStatus = txnType
+        ? (f.accounting_status === "unclassified" ? "classified" : f.accounting_status)
+        : "unclassified";
+      const payload = {
+        ...f,
+        transaction_type: txnType,
+        accounting_status: accStatus,
+        internal_note: f.internal_note || null,
+      };
       if (isNew) {
-        // If user picked files, default attachment_status to attached; uploader+trigger will normalize.
         const status = pending.length > 0 ? "attached" : f.attachment_status;
         const { data: inserted, error } = await supabase.from("finance_incomes").insert({
-          ...f,
+          ...payload,
           attachment_status: status,
           amount: Number(f.amount),
           income_source_id: f.income_source_id || null,
@@ -303,7 +313,7 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
       } else {
         const patch: any = accountantOnly
           ? { accountant_status: f.accountant_status, accountant_note: f.accountant_note }
-          : { ...f, amount: Number(f.amount), income_source_id: f.income_source_id || null };
+          : { ...payload, amount: Number(f.amount), income_source_id: f.income_source_id || null };
         const { error } = await supabase.from("finance_incomes").update(patch).eq("id", row.id);
         if (error) throw error;
         toast.success("تم الحفظ");
