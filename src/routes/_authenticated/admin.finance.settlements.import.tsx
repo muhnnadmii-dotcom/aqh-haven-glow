@@ -469,20 +469,20 @@ function SettlementImportPage() {
       unmatched_refund: 0, orphan_line: 0,
     };
     let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0;
-    let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0;
+    let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0, adjustmentsSigned = 0;
     for (const r of rows) {
       counts[r.match_status]++;
       if (r.line_type === "sale") { sales++; if (r.gross_amount > 0) gross = round2(gross + r.gross_amount); }
       else if (r.line_type === "refund") { refunds++; refundsAbs = round2(refundsAbs + Math.abs(r.gross_amount)); }
-      else adjustments++;
+      else { adjustments++; adjustmentsSigned = round2(adjustmentsSigned + r.gross_amount); }
       fees = round2(fees + r.fees_before_vat);
       feesVat = round2(feesVat + r.fees_vat_amount);
       if (BLOCKING_STATUSES.has(r.match_status)) blocking++;
       if (r.needs_review) review++;
     }
     const payout = num0(payoutFee);
-    const expected = round2(gross - refundsAbs - fees - feesVat - payout);
-    return { count: rows.length, sales, refunds, adjustments, review, blocking, counts, gross, refundsAbs, fees, feesVat, expected };
+    const expected = round2(gross - refundsAbs - fees - feesVat - payout + adjustmentsSigned);
+    return { count: rows.length, sales, refunds, adjustments, review, blocking, counts, gross, refundsAbs, fees, feesVat, adjustmentsSigned, expected };
   }, [rows, payoutFee]);
 
   async function commit() {
