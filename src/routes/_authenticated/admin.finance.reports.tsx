@@ -55,7 +55,8 @@ function ReportsPage() {
   }, [month]);
 
   const { operating, draws } = useMemo(() => splitExpenses(expenses, ownerDrawCatId), [expenses, ownerDrawCatId]);
-  const totIncome = sum(incomes, (x: any) => x.amount);
+  const { operating: opIncomes } = useMemo(() => splitIncomes(incomes), [incomes]);
+  const totIncome = sum(opIncomes, (x: any) => x.amount);
   const totOp = sum(operating, (x: any) => x.amount);
   const totDraws = sum(draws, (x: any) => x.amount);
   const netOp = totIncome - totOp;
