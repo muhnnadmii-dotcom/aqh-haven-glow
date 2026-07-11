@@ -249,6 +249,7 @@ function SettlementImportPage() {
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
   const [payoutFee, setPayoutFee] = useState("0");
+  const [sourceExpectedNet, setSourceExpectedNet] = useState("");
   const [statusFilter, setStatusFilter] = useState<MatchStatus | "">("");
   const fileRef = useRef<HTMLInputElement>(null);
 
