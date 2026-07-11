@@ -12,7 +12,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area,
 } from "recharts";
 import {
-  type PeriodKey, resolveRange, previousRange, pctChange, sum, splitExpenses,
+  type PeriodKey, resolveRange, previousRange, pctChange, sum, splitExpenses, splitIncomes,
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
