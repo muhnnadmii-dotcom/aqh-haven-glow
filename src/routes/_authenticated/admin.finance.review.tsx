@@ -76,6 +76,8 @@ type Row = {
   related_transaction_id?: string | null;
   note?: string | null;
   internal_note?: string | null;
+  settlement_id?: string | null;
+  split_parent_id?: string | null;
   raw: any;
 };
 
