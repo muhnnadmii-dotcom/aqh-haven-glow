@@ -159,6 +159,15 @@ function IncomesPage() {
                 <td className="px-3 py-2 whitespace-nowrap">{r.income_date}</td>
                 <td className="px-3 py-2 font-mono">{fmtSAR(r.amount)}</td>
                 <td className="px-3 py-2">{sourceName(r.income_source_id)}</td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {r.transaction_type ? (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-white/10 bg-white/5">
+                      {incomingLabel(r.transaction_type)}
+                    </span>
+                  ) : (
+                    <span className="text-amber-300/80 text-[10px]">غير مصنف</span>
+                  )}
+                </td>
                 <td className="px-3 py-2">{labelOf(ACCOUNT_TYPES, r.account_type)}</td>
                 <td className="px-3 py-2">
                   <ReviewStatusEditor
