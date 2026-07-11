@@ -882,10 +882,34 @@ function SettlementImportPage() {
             {rows.length > 500 && <div className="text-[11px] text-muted-foreground p-2">عُرض أول 500 صف — سيتم استيراد الجميع.</div>}
           </div>
 
-          {summary.blocking > 0 && (
-            <div className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-[12px] text-red-200">
-              <AlertTriangle className="inline w-3.5 h-3.5 ml-1" />
-              يوجد {summary.blocking} سطر يحجب الاعتماد النهائي (طلبات غير موجودة، بيع ملغي بدون استرجاع، استرجاع بدون بيع، أو سطر بدون رقم طلب). سيتم إنشاء التسوية بحالة "قيد المراجعة" حتى تُعالج هذه الحالات.
+          {(summary.counts.needs_classification > 0 || summary.counts.order_not_found > 0 || summary.counts.cancelled_order_needs_refund_match > 0 || summary.counts.unmatched_refund > 0 || summary.counts.order_found_invoice_missing > 0 || summary.counts.needs_credit_note > 0) && (
+            <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-[12px] text-amber-100 space-y-1.5">
+              <div className="flex items-center gap-1.5 font-semibold">
+                <AlertTriangle size={14} /> نقاط المراجعة (لا تمنع الاستيراد)
+              </div>
+              <ul className="list-disc pr-4 space-y-0.5 text-[11.5px]">
+                {summary.counts.needs_classification > 0 && (
+                  <li><b>{summary.counts.needs_classification}</b> تعديل/خصم تسوية غير مرتبط بطلب — سيتم إدراجه كـ "خصم غير مفسر" ويؤثر مالياً في الصافي، ويُصنّف لاحقاً من صفحة الحركات.</li>
+                )}
+                {summary.counts.order_not_found > 0 && (
+                  <li><b>{summary.counts.order_not_found}</b> طلب مذكور في التسوية غير موجود في استيراد سلة — لا يمكن مطابقته حتى تُستورد طلبات سلة الشاملة.</li>
+                )}
+                {summary.counts.cancelled_order_needs_refund_match > 0 && (
+                  <li><b>{summary.counts.cancelled_order_needs_refund_match}</b> عملية بيع لطلب ملغي بانتظار مطابقة سطر الاسترجاع.</li>
+                )}
+                {summary.counts.unmatched_refund > 0 && (
+                  <li><b>{summary.counts.unmatched_refund}</b> استرجاع بدون عملية بيع أصلية معروفة.</li>
+                )}
+                {summary.counts.order_found_invoice_missing > 0 && (
+                  <li><b>{summary.counts.order_found_invoice_missing}</b> طلب معروف بدون فاتورة مبيعات — يُعالج من "إصلاح بيانات الفواتير المستوردة".</li>
+                )}
+                {summary.counts.needs_credit_note > 0 && (
+                  <li><b>{summary.counts.needs_credit_note}</b> استرجاع جزئي يحتاج إشعاراً دائناً.</li>
+                )}
+              </ul>
+              <div className="text-[11px] text-amber-200/80 pt-1 border-t border-amber-400/20 mt-1">
+                سيتم إنشاء التسوية بحالة "قيد المراجعة" ويُسمح باعتمادها المحاسبي فقط بعد معالجة النقاط أعلاه. الخصومات غير المصنفة تُوضع مؤقتاً في حساب "فروقات وتسويات معلقة" (2810).
+              </div>
             </div>
           )}
 
