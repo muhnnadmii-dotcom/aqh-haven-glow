@@ -94,6 +94,7 @@ import { Route as AuthenticatedAccountRequestsNewRouteImport } from './routes/_a
 import { Route as AuthenticatedAccountRequestsIdRouteImport } from './routes/_authenticated/account.requests.$id'
 import { Route as AuthenticatedAdminFinanceSalesInvoicesIndexRouteImport } from './routes/_authenticated/admin.finance.sales-invoices.index'
 import { Route as AuthenticatedAdminFinanceQuotesIndexRouteImport } from './routes/_authenticated/admin.finance.quotes.index'
+import { Route as AuthenticatedAdminFinancePurchaseInvoicesIndexRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices.index'
 import { Route as AuthenticatedAdminInventoryProductSkuRouteImport } from './routes/_authenticated/admin.inventory.product.$sku'
 import { Route as AuthenticatedAdminFinanceSalesInvoicesIdRouteImport } from './routes/_authenticated/admin.finance.sales-invoices.$id'
 import { Route as AuthenticatedAdminFinanceQuotesIdRouteImport } from './routes/_authenticated/admin.finance.quotes.$id'
@@ -581,6 +582,12 @@ const AuthenticatedAdminFinanceQuotesIndexRoute =
     path: '/quotes/',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinancePurchaseInvoicesIndexRoute =
+  AuthenticatedAdminFinancePurchaseInvoicesIndexRouteImport.update({
+    id: '/purchase-invoices/',
+    path: '/purchase-invoices/',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminInventoryProductSkuRoute =
   AuthenticatedAdminInventoryProductSkuRouteImport.update({
     id: '/inventory/product/$sku',
@@ -686,6 +693,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
+  '/admin/finance/purchase-invoices/': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/admin/finance/quotes/': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/admin/finance/sales-invoices/': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
 }
@@ -767,6 +775,7 @@ export interface FileRoutesByTo {
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
+  '/admin/finance/purchase-invoices': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/admin/finance/quotes': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/admin/finance/sales-invoices': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
 }
@@ -858,6 +867,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/_authenticated/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/_authenticated/admin/inventory/product/$sku': typeof AuthenticatedAdminInventoryProductSkuRoute
+  '/_authenticated/admin/finance/purchase-invoices/': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/_authenticated/admin/finance/quotes/': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/_authenticated/admin/finance/sales-invoices/': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
 }
@@ -949,6 +959,7 @@ export interface FileRouteTypes {
     | '/admin/finance/quotes/$id'
     | '/admin/finance/sales-invoices/$id'
     | '/admin/inventory/product/$sku'
+    | '/admin/finance/purchase-invoices/'
     | '/admin/finance/quotes/'
     | '/admin/finance/sales-invoices/'
   fileRoutesByTo: FileRoutesByTo
@@ -1030,6 +1041,7 @@ export interface FileRouteTypes {
     | '/admin/finance/quotes/$id'
     | '/admin/finance/sales-invoices/$id'
     | '/admin/inventory/product/$sku'
+    | '/admin/finance/purchase-invoices'
     | '/admin/finance/quotes'
     | '/admin/finance/sales-invoices'
   id:
@@ -1120,6 +1132,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/quotes/$id'
     | '/_authenticated/admin/finance/sales-invoices/$id'
     | '/_authenticated/admin/inventory/product/$sku'
+    | '/_authenticated/admin/finance/purchase-invoices/'
     | '/_authenticated/admin/finance/quotes/'
     | '/_authenticated/admin/finance/sales-invoices/'
   fileRoutesById: FileRoutesById
@@ -1738,6 +1751,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceQuotesIndexRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/purchase-invoices/': {
+      id: '/_authenticated/admin/finance/purchase-invoices/'
+      path: '/purchase-invoices'
+      fullPath: '/admin/finance/purchase-invoices/'
+      preLoaderRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/inventory/product/$sku': {
       id: '/_authenticated/admin/inventory/product/$sku'
       path: '/inventory/product/$sku'
@@ -1848,6 +1868,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceIndexRoute: typeof AuthenticatedAdminFinanceIndexRoute
   AuthenticatedAdminFinanceQuotesIdRoute: typeof AuthenticatedAdminFinanceQuotesIdRoute
   AuthenticatedAdminFinanceSalesInvoicesIdRoute: typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
+  AuthenticatedAdminFinancePurchaseInvoicesIndexRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   AuthenticatedAdminFinanceQuotesIndexRoute: typeof AuthenticatedAdminFinanceQuotesIndexRoute
   AuthenticatedAdminFinanceSalesInvoicesIndexRoute: typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
 }
@@ -1886,6 +1907,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceQuotesIdRoute,
     AuthenticatedAdminFinanceSalesInvoicesIdRoute:
       AuthenticatedAdminFinanceSalesInvoicesIdRoute,
+    AuthenticatedAdminFinancePurchaseInvoicesIndexRoute:
+      AuthenticatedAdminFinancePurchaseInvoicesIndexRoute,
     AuthenticatedAdminFinanceQuotesIndexRoute:
       AuthenticatedAdminFinanceQuotesIndexRoute,
     AuthenticatedAdminFinanceSalesInvoicesIndexRoute:
