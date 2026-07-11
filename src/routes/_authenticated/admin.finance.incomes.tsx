@@ -314,10 +314,23 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
   }, []);
 
   const t = f.transaction_type;
+  const isSaleLike = t === "customer_invoice_collection" || t === "direct_sale" || t === "cash_sale" || t === "customer_advance";
   const showInvoice = t === "customer_invoice_collection";
-  const showCollectionType = t === "customer_invoice_collection" || t === "cash_sale";
+  const showCollectionType = isSaleLike;
   const showRelated = t === "internal_transfer_in";
-  const showCustomer = t === "customer_invoice_collection" || t === "cash_sale" || t === "customer_refund" as any;
+  const showCustomer = isSaleLike || t === "customer_refund";
+  const showSupplier = t === "supplier_refund";
+  const showProvider = t === "payment_provider_settlement";
+
+  // Auto-derive business_relation when a type is picked (user can still override).
+  const setType = (newType: string) => {
+    const suggested = defaultBusinessRelation(newType);
+    setF({
+      ...f,
+      transaction_type: newType,
+      business_relation: suggested ?? f.business_relation,
+    });
+  };
 
   const save = async () => {
     setSaving(true);
@@ -343,6 +356,7 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
         note: f.note || null,
         transaction_type: txnType,
         accounting_status: accStatus,
+        business_relation: f.business_relation || "unclassified",
         attachment_status: attStatus,
         internal_review_status: f.internal_review_status,
         accountant_status: f.accountant_status,
@@ -352,6 +366,9 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
         sales_invoice_id: showInvoice ? (f.sales_invoice_id || null) : null,
         collection_type: showCollectionType ? (f.collection_type || null) : null,
         related_transaction_id: showRelated ? (f.related_transaction_id || null) : null,
+        supplier_id: showSupplier ? (f.supplier_id || null) : null,
+        payment_provider_id: showProvider ? (f.payment_provider_id || null) : null,
+        settlement_id: showProvider ? (f.settlement_id || null) : null,
       };
 
       if (isNew) {
