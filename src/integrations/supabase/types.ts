@@ -2564,6 +2564,7 @@ export type Database = {
           notes: string | null
           other_deductions: number
           payout_fee: number
+          payout_received_date: string | null
           payout_status: Database["public"]["Enums"]["payment_settlement_payout_status"]
           period_end: string | null
           period_start: string | null
@@ -2572,7 +2573,7 @@ export type Database = {
           report_reference: string | null
           reserve_held: number
           reserve_released: number
-          settlement_date: string
+          settlement_date: string | null
           settlement_reference: string | null
           source_file_name: string | null
           status: Database["public"]["Enums"]["payment_settlement_status"]
@@ -2595,6 +2596,7 @@ export type Database = {
           notes?: string | null
           other_deductions?: number
           payout_fee?: number
+          payout_received_date?: string | null
           payout_status?: Database["public"]["Enums"]["payment_settlement_payout_status"]
           period_end?: string | null
           period_start?: string | null
@@ -2603,7 +2605,7 @@ export type Database = {
           report_reference?: string | null
           reserve_held?: number
           reserve_released?: number
-          settlement_date: string
+          settlement_date?: string | null
           settlement_reference?: string | null
           source_file_name?: string | null
           status?: Database["public"]["Enums"]["payment_settlement_status"]
@@ -2626,6 +2628,7 @@ export type Database = {
           notes?: string | null
           other_deductions?: number
           payout_fee?: number
+          payout_received_date?: string | null
           payout_status?: Database["public"]["Enums"]["payment_settlement_payout_status"]
           period_end?: string | null
           period_start?: string | null
@@ -2634,7 +2637,7 @@ export type Database = {
           report_reference?: string | null
           reserve_held?: number
           reserve_released?: number
-          settlement_date?: string
+          settlement_date?: string | null
           settlement_reference?: string | null
           source_file_name?: string | null
           status?: Database["public"]["Enums"]["payment_settlement_status"]
@@ -4760,6 +4763,12 @@ export type Database = {
         }
       }
       cdn_recalc_totals: { Args: { p_note_id: number }; Returns: undefined }
+      clear_auto_imported_settlement_dates: {
+        Args: never
+        Returns: {
+          updated_count: number
+        }[]
+      }
       close_accounting_period: {
         Args: { p_period_id: string }
         Returns: undefined
@@ -4869,6 +4878,12 @@ export type Database = {
         }
         Returns: string
       }
+      preview_auto_imported_settlement_dates: {
+        Args: never
+        Returns: {
+          affected_count: number
+        }[]
+      }
       purchase_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
         Returns: undefined
@@ -4896,6 +4911,7 @@ export type Database = {
           notes: string | null
           other_deductions: number
           payout_fee: number
+          payout_received_date: string | null
           payout_status: Database["public"]["Enums"]["payment_settlement_payout_status"]
           period_end: string | null
           period_start: string | null
@@ -4904,7 +4920,7 @@ export type Database = {
           report_reference: string | null
           reserve_held: number
           reserve_released: number
-          settlement_date: string
+          settlement_date: string | null
           settlement_reference: string | null
           source_file_name: string | null
           status: Database["public"]["Enums"]["payment_settlement_status"]
