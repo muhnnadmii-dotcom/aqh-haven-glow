@@ -457,8 +457,12 @@ function ReviewCenter() {
                         {f.transferMissingCounterpart && <Dot color="cyan" title="تحويل بدون طرف مقابل" />}
                         {f.unlinkedInvoice && <Dot color="rose" title="بدون فاتورة" />}
                         {f.missingParty && <Dot color="pink" title="بدون طرف" />}
+                        {f.unlinkedProviderSettlement && <Dot color="rose" title={`${f.providerName} — بدون تسوية`} />}
+                        {r.settlement_id && <Badge variant="outline" className="text-[10px] px-1 py-0 bg-emerald-500/10 text-emerald-300 border-emerald-500/30">مرتبط بتسوية</Badge>}
+                        {f.isSplitChild && <Badge variant="outline" className="text-[10px] px-1 py-0 bg-blue-500/10 text-blue-300 border-blue-500/30">مقسّم</Badge>}
                       </div>
                     </td>
+
                     <td className="p-2 text-xs" onClick={() => setOpenRow(r)}>
                       {f.isCompleted
                         ? <Badge variant="outline" className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30">مكتمل</Badge>
