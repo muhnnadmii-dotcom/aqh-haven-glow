@@ -1019,3 +1019,94 @@ function BulkModal({ selected, accounts, categoriesAll, onClose, onDone }: any) 
     </div>
   );
 }
+
+// ================== Split Dialog ==================
+function SplitDialog({ row, onClose, onDone }: { row: Row; onClose: () => void; onDone: () => void }) {
+  const [parts, setParts] = useState<Array<{ amount: string; note: string }>>([
+    { amount: (row.amount / 2).toFixed(2), note: "" },
+    { amount: (row.amount / 2).toFixed(2), note: "" },
+  ]);
+  const [pending, setPending] = useState(false);
+  const total = parts.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const diff = row.amount - total;
+  const table = row.kind === "income" ? "finance_incomes" : "finance_expenses";
+  const dateField = row.kind === "income" ? "income_date" : "expense_date";
+
+  const setPart = (i: number, patch: any) => setParts((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  const addPart = () => setParts((prev) => [...prev, { amount: "0.00", note: "" }]);
+  const removePart = (i: number) => setParts((prev) => prev.filter((_, idx) => idx !== i));
+
+  const apply = async () => {
+    if (parts.length < 2) { toast.error("يجب أن يكون هناك جزءان على الأقل"); return; }
+    if (Math.abs(diff) > 0.01) { toast.error(`مجموع الأجزاء يجب أن يساوي مبلغ الأصل (فرق: ${diff.toFixed(2)})`); return; }
+    if (parts.some((p) => (Number(p.amount) || 0) <= 0)) { toast.error("كل جزء يجب أن يكون مبلغه أكبر من صفر"); return; }
+    setPending(true);
+    try {
+      const base: any = { ...row.raw };
+      delete base.id; delete base.created_at; delete base.updated_at;
+      base.split_parent_id = row.id;
+      base.accounting_status = "unclassified";
+      base.internal_review_status = "unreviewed";
+
+      const inserts = parts.map((p) => ({
+        ...base,
+        amount: Number(p.amount),
+        [dateField]: row.date,
+        internal_note: [row.internal_note, p.note].filter(Boolean).join(" · ") || null,
+      }));
+      const { error: insErr } = await supabase.from(table as any).insert(inserts);
+      if (insErr) throw insErr;
+
+      // Mark the parent as split (keeps amount/date intact; excluded from accounting via status)
+      const parentPatch: any = {
+        accounting_status: "excluded",
+        internal_review_status: "reviewed",
+        internal_note: [row.internal_note, `تم التقسيم إلى ${parts.length} أجزاء`].filter(Boolean).join(" · "),
+      };
+      const { error: updErr } = await supabase.from(table as any).update(parentPatch).eq("id", row.id);
+      if (updErr) throw updErr;
+
+      toast.success("تم التقسيم بنجاح");
+      onDone();
+    } catch (e: any) { toast.error(e.message); } finally { setPending(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-lg bg-background border border-white/10 rounded-xl p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm font-semibold flex items-center gap-2"><Split className="w-4 h-4" />تقسيم الحركة</div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-white"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="text-xs text-muted-foreground mb-3">
+          الأصل: <b>{SAR(row.amount)}</b> · {row.date} — لن يتم تعديل مبلغ أو تاريخ الحركة الأصلية؛ سيتم إنشاء أجزاء جديدة مربوطة بها واستبعادها من المحاسبة.
+        </div>
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {parts.map((p, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <input type="number" step="0.01" value={p.amount} onChange={(e) => setPart(i, { amount: e.target.value })} className="w-28 bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm" />
+              <input type="text" placeholder="ملاحظة (اختياري)" value={p.note} onChange={(e) => setPart(i, { note: e.target.value })} className="flex-1 bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm" />
+              {parts.length > 2 && <button onClick={() => removePart(i)} className="text-rose-300 hover:text-rose-200"><X className="w-4 h-4" /></button>}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between items-center mt-3 text-xs">
+          <button onClick={addPart} className="text-blue-300 hover:text-blue-200">+ إضافة جزء</button>
+          <div>
+            المجموع: <b>{SAR(total)}</b>
+            <span className={Math.abs(diff) < 0.01 ? "text-emerald-300 mr-2" : "text-amber-300 mr-2"}>
+              · فرق: {SAR(diff)}
+            </span>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={onClose}>إلغاء</Button>
+          <Button onClick={apply} disabled={pending || Math.abs(diff) > 0.01} className="bg-blue-600 hover:bg-blue-700 text-white">
+            {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : "تنفيذ التقسيم"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
