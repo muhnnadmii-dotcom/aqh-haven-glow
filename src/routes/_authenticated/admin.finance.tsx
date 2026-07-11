@@ -182,7 +182,7 @@ function FinanceLayout() {
                 <span>{s.label}</span>
                 <ChevronDown size={12} className="opacity-70" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="min-w-[220px]" dir="rtl">
+              <DropdownMenuContent align="start" className="min-w-[220px]">
                 <DropdownMenuLabel className="text-[11px] text-muted-foreground">
                   {s.label}
                 </DropdownMenuLabel>
