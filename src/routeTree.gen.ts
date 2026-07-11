@@ -70,6 +70,7 @@ import { Route as AuthenticatedAdminInventoryProductsRouteImport } from './route
 import { Route as AuthenticatedAdminInventoryExportRouteImport } from './routes/_authenticated/admin.inventory.export'
 import { Route as AuthenticatedAdminInventoryCategoriesRouteImport } from './routes/_authenticated/admin.inventory.categories'
 import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes/_authenticated/admin.inventory.catalog'
+import { Route as AuthenticatedAdminFinanceTrialBalanceRouteImport } from './routes/_authenticated/admin.finance.trial-balance'
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
 import { Route as AuthenticatedAdminFinanceReviewRouteImport } from './routes/_authenticated/admin.finance.review'
@@ -444,6 +445,12 @@ const AuthenticatedAdminInventoryCatalogRoute =
     path: '/inventory/catalog',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminFinanceTrialBalanceRoute =
+  AuthenticatedAdminFinanceTrialBalanceRouteImport.update({
+    id: '/trial-balance',
+    path: '/trial-balance',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceSuppliersRoute =
   AuthenticatedAdminFinanceSuppliersRouteImport.update({
     id: '/suppliers',
@@ -719,6 +726,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/review': typeof AuthenticatedAdminFinanceReviewRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
   '/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
   '/admin/inventory/export': typeof AuthenticatedAdminInventoryExportRoute
@@ -807,6 +815,7 @@ export interface FileRoutesByTo {
   '/admin/finance/review': typeof AuthenticatedAdminFinanceReviewRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
   '/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
   '/admin/inventory/export': typeof AuthenticatedAdminInventoryExportRoute
@@ -905,6 +914,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/review': typeof AuthenticatedAdminFinanceReviewRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/_authenticated/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/_authenticated/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
   '/_authenticated/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
   '/_authenticated/admin/inventory/export': typeof AuthenticatedAdminInventoryExportRoute
@@ -1003,6 +1013,7 @@ export interface FileRouteTypes {
     | '/admin/finance/review'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
+    | '/admin/finance/trial-balance'
     | '/admin/inventory/catalog'
     | '/admin/inventory/categories'
     | '/admin/inventory/export'
@@ -1091,6 +1102,7 @@ export interface FileRouteTypes {
     | '/admin/finance/review'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
+    | '/admin/finance/trial-balance'
     | '/admin/inventory/catalog'
     | '/admin/inventory/categories'
     | '/admin/inventory/export'
@@ -1188,6 +1200,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/review'
     | '/_authenticated/admin/finance/settings'
     | '/_authenticated/admin/finance/suppliers'
+    | '/_authenticated/admin/finance/trial-balance'
     | '/_authenticated/admin/inventory/catalog'
     | '/_authenticated/admin/inventory/categories'
     | '/_authenticated/admin/inventory/export'
@@ -1661,6 +1674,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminInventoryCatalogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/finance/trial-balance': {
+      id: '/_authenticated/admin/finance/trial-balance'
+      path: '/trial-balance'
+      fullPath: '/admin/finance/trial-balance'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceTrialBalanceRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/suppliers': {
       id: '/_authenticated/admin/finance/suppliers'
       path: '/suppliers'
@@ -1990,6 +2010,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceReviewRoute: typeof AuthenticatedAdminFinanceReviewRoute
   AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
   AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
+  AuthenticatedAdminFinanceTrialBalanceRoute: typeof AuthenticatedAdminFinanceTrialBalanceRoute
   AuthenticatedAdminFinanceIndexRoute: typeof AuthenticatedAdminFinanceIndexRoute
   AuthenticatedAdminFinancePurchaseInvoicesIdRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesIdRoute
   AuthenticatedAdminFinanceQuotesIdRoute: typeof AuthenticatedAdminFinanceQuotesIdRoute
@@ -2037,6 +2058,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceSettingsRoute,
     AuthenticatedAdminFinanceSuppliersRoute:
       AuthenticatedAdminFinanceSuppliersRoute,
+    AuthenticatedAdminFinanceTrialBalanceRoute:
+      AuthenticatedAdminFinanceTrialBalanceRoute,
     AuthenticatedAdminFinanceIndexRoute: AuthenticatedAdminFinanceIndexRoute,
     AuthenticatedAdminFinancePurchaseInvoicesIdRoute:
       AuthenticatedAdminFinancePurchaseInvoicesIdRoute,
