@@ -545,8 +545,9 @@ function Field({ label, children }: { label: string; children: any }) {
 }
 
 // ================== Row Drawer ==================
-function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchaseInvoices, incomes, expenses, onClose, onDone }: any) {
+function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchaseInvoices, settlements, providers, incomes, expenses, onClose, onDone }: any) {
   const [pending, setPending] = useState(false);
+  const [showSplit, setShowSplit] = useState(false);
   const [state, setState] = useState<any>({
     transaction_type: row.transaction_type ?? "",
     business_relation: row.business_relation ?? "unclassified",
@@ -557,6 +558,7 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
     sales_invoice_id: row.sales_invoice_id ?? "",
     purchase_invoice_id: row.purchase_invoice_id ?? "",
     related_transaction_id: row.related_transaction_id ?? "",
+    settlement_id: row.settlement_id ?? "",
     accounting_status: row.accounting_status ?? "unclassified",
     internal_review_status: row.internal_review_status ?? "unreviewed",
     internal_note: row.internal_note ?? "",
@@ -564,32 +566,66 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
   const table = row.kind === "income" ? "finance_incomes" : "finance_expenses";
   const typeMap = row.direction === "incoming" ? INCOMING_TYPE : OUTGOING_TYPE;
 
+  // Detect provider hint from note
+  const providerHint = useMemo(() => {
+    const hay = `${row.note ?? ""} ${row.internal_note ?? ""}`.toLowerCase();
+    return (providers as any[]).find((p: any) => {
+      const needles = [p.code, p.name, p.name?.replace(/\s+/g, "")].filter(Boolean).map((s: string) => String(s).toLowerCase());
+      return needles.some((n) => hay.includes(n));
+    });
+  }, [row, providers]);
+
+  // Candidate settlements: same provider (if any), and amount within tolerance
+  const settlementCandidates = useMemo(() => {
+    if (row.kind !== "income") return [];
+    const tol = providerHint?.rounding_tolerance ?? 5;
+    return (settlements as any[]).filter((s: any) => {
+      if (providerHint && s.provider_id !== providerHint.id) return false;
+      // exclude settlements already linked to another income
+      if (s.bank_income_id && s.bank_income_id !== row.id) return false;
+      const target = Number(s.actual_bank_amount ?? s.expected_net_amount) || 0;
+      return Math.abs(target - row.amount) <= Math.max(Number(tol) || 5, 5);
+    }).slice(0, 30);
+  }, [settlements, providerHint, row]);
+
+  const buildPayload = (overrides: any = {}) => {
+    const p: any = {
+      transaction_type: state.transaction_type || null,
+      business_relation: state.business_relation,
+      account_id: state.account_id || null,
+      account_type: state.account_type,
+      accounting_status: state.accounting_status,
+      internal_review_status: state.internal_review_status,
+      internal_note: state.internal_note || null,
+      related_transaction_id: state.related_transaction_id || null,
+      settlement_id: state.settlement_id || null,
+      ...overrides,
+    };
+    if (row.kind === "income") {
+      p.customer_id = state.customer_id || null;
+      p.sales_invoice_id = state.sales_invoice_id ? Number(state.sales_invoice_id) : null;
+    } else {
+      p.supplier_id = state.supplier_id || null;
+      p.purchase_invoice_id = state.purchase_invoice_id ? Number(state.purchase_invoice_id) : null;
+    }
+    return p;
+  };
+
   const save = async () => {
     setPending(true);
     try {
-      const payload: any = {
-        transaction_type: state.transaction_type || null,
-        business_relation: state.business_relation,
-        account_id: state.account_id || null,
-        account_type: state.account_type,
-        accounting_status: state.accounting_status,
-        internal_review_status: state.internal_review_status,
-        internal_note: state.internal_note || null,
-        related_transaction_id: state.related_transaction_id || null,
-      };
-      if (row.kind === "income") {
-        payload.customer_id = state.customer_id || null;
-        payload.sales_invoice_id = state.sales_invoice_id ? Number(state.sales_invoice_id) : null;
-      } else {
-        payload.supplier_id = state.supplier_id || null;
-        payload.purchase_invoice_id = state.purchase_invoice_id ? Number(state.purchase_invoice_id) : null;
-      }
+      const payload = buildPayload();
       const { error } = await supabase.from(table as any).update(payload).eq("id", row.id);
       if (error) throw error;
+      // If linking to a settlement, also update the settlement.bank_income_id (idempotent)
+      if (state.settlement_id && row.kind === "income" && state.settlement_id !== row.settlement_id) {
+        await supabase.from("payment_settlements" as any).update({ bank_income_id: row.id }).eq("id", state.settlement_id);
+      }
       toast.success("تم حفظ التعديلات");
       onDone();
     } catch (e: any) { toast.error(e.message); } finally { setPending(false); }
   };
+
 
   const markComplete = async () => {
     // Guard: must be classified
