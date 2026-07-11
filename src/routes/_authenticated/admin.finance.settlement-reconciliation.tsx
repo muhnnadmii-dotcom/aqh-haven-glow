@@ -147,7 +147,7 @@ function ReconciliationPage() {
     setLoading(true);
     const [p, s, i, a] = await Promise.all([
       supabase.from("payment_providers" as any).select("id,name,code").eq("is_active", true),
-      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,settlement_date,expected_net_amount,status,notes").order("settlement_date", { ascending: false }).limit(500),
+      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,report_reference,source_file_name,settlement_date,period_start,period_end,imported_at,expected_net_amount,gross_sales_amount,refunds_amount,fees_before_vat,fees_vat_amount,payout_fee,adjustments_amount,status,payout_status,notes").order("settlement_date", { ascending: false }).limit(500),
       supabase.from("finance_incomes" as any).select("id,income_date,amount,note,transaction_type,payment_provider_id,settlement_id,account_id").is("deleted_at", null).order("income_date", { ascending: false }).limit(500),
       supabase.from("settlement_bank_allocations" as any).select("*").eq("status", "confirmed"),
     ]);
