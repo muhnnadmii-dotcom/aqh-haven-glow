@@ -254,13 +254,23 @@ function Select({ v, onChange, ph, opts }: { v: string; onChange: (s: string) =>
   );
 }
 
+const COLLECTION_TYPES = [
+  { value: "invoice_collection", label: "تحصيل فاتورة" },
+  { value: "cash_sale", label: "بيع نقدي" },
+  { value: "advance_payment", label: "دفعة مقدمة" },
+  { value: "other", label: "أخرى" },
+];
+
 function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
   const isNew = !row;
   const accountantOnly = !roles.canManage && roles.canAccountant;
+  const canReview = roles.canManage || roles.canAccountant;
+
   const [f, setF] = useState({
     income_date: row?.income_date ?? new Date().toISOString().slice(0, 10),
     amount: row?.amount ?? 0,
     income_source_id: row?.income_source_id ?? "",
+    account_id: row?.account_id ?? "",
     account_type: row?.account_type ?? "business",
     note: row?.note ?? "",
     internal_review_status: row?.internal_review_status ?? "unreviewed",
@@ -270,50 +280,85 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     transaction_type: row?.transaction_type ?? "",
     accounting_status: row?.accounting_status ?? "unclassified",
     internal_note: row?.internal_note ?? "",
+    customer_id: row?.customer_id ?? "",
+    sales_invoice_id: row?.sales_invoice_id ?? "",
+    collection_type: row?.collection_type ?? "",
+    related_transaction_id: row?.related_transaction_id ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [showReview, setShowReview] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: accs }, { data: invs }] = await Promise.all([
+        supabase.from("finance_accounts").select("id, name, kind").eq("is_active", true).order("name"),
+        supabase.from("sales_invoices").select("id, invoice_number, customer_id, total_amount, issue_date").order("issue_date", { ascending: false }).limit(200),
+      ]);
+      setAccounts(accs ?? []);
+      setInvoices(invs ?? []);
+    })();
+  }, []);
+
+  const t = f.transaction_type;
+  const showInvoice = t === "customer_invoice_collection";
+  const showCollectionType = t === "customer_invoice_collection" || t === "cash_sale";
+  const showRelated = t === "internal_transfer_in";
+  const showCustomer = t === "customer_invoice_collection" || t === "cash_sale" || t === "customer_refund" as any;
 
   const save = async () => {
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
-      // Normalize classification: when user picks a type, mark as at least "classified".
       const txnType = f.transaction_type || null;
+      // Auto accounting_status: unclassified when txn type missing, else keep prior or classified
       const accStatus = txnType
         ? (f.accounting_status === "unclassified" ? "classified" : f.accounting_status)
         : "unclassified";
-      const payload = {
-        ...f,
+      // Auto attachment_status
+      const willHaveAttachment = isNew ? pending.length > 0 : f.attachment_status === "attached";
+      const attStatus = willHaveAttachment
+        ? "attached"
+        : (f.attachment_status === "not_required" ? "not_required" : "not_attached");
+
+      const base: any = {
+        income_date: f.income_date,
+        amount: Number(f.amount),
+        income_source_id: f.income_source_id || null,
+        account_id: f.account_id || null,
+        account_type: f.account_type,
+        note: f.note || null,
         transaction_type: txnType,
         accounting_status: accStatus,
+        attachment_status: attStatus,
+        internal_review_status: f.internal_review_status,
+        accountant_status: f.accountant_status,
+        accountant_note: f.accountant_note || null,
         internal_note: f.internal_note || null,
+        customer_id: showCustomer ? (f.customer_id || null) : null,
+        sales_invoice_id: showInvoice ? (f.sales_invoice_id || null) : null,
+        collection_type: showCollectionType ? (f.collection_type || null) : null,
+        related_transaction_id: showRelated ? (f.related_transaction_id || null) : null,
       };
+
       if (isNew) {
-        const status = pending.length > 0 ? "attached" : f.attachment_status;
         const { data: inserted, error } = await supabase.from("finance_incomes").insert({
-          ...payload,
-          attachment_status: status,
-          amount: Number(f.amount),
-          income_source_id: f.income_source_id || null,
+          ...base,
           month: f.income_date.slice(0, 7),
           created_by: u.user?.id ?? null,
         }).select("id").single();
         if (error) throw error;
         if (pending.length > 0 && inserted?.id) {
           const { failed } = await uploadPendingAttachments("income", inserted.id, pending);
-          if (failed > 0) {
-            toast.warning(`تم حفظ العملية، لكن تعذر رفع ${failed} مرفق. يمكنك رفعها من تفاصيل العملية.`);
-          } else {
-            toast.success("تم إنشاء العملية مع المرفقات");
-          }
-        } else {
-          toast.success("تم إنشاء العملية");
-        }
+          if (failed > 0) toast.warning(`تم الحفظ، تعذر رفع ${failed} مرفق.`);
+          else toast.success("تم إنشاء العملية مع المرفقات");
+        } else toast.success("تم إنشاء العملية");
       } else {
         const patch: any = accountantOnly
-          ? { accountant_status: f.accountant_status, accountant_note: f.accountant_note }
-          : { ...payload, amount: Number(f.amount), income_source_id: f.income_source_id || null };
+          ? { accountant_status: f.accountant_status, accountant_note: f.accountant_note || null }
+          : base;
         const { error } = await supabase.from("finance_incomes").update(patch).eq("id", row.id);
         if (error) throw error;
         toast.success("تم الحفظ");
@@ -328,78 +373,135 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-background border border-white/10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <div className="font-semibold">{isNew ? "إضافة دخل" : "تفاصيل عملية الدخل"}</div>
+          <div className="font-semibold">{isNew ? "إضافة مقبوض" : "تفاصيل عملية المقبوض"}</div>
           <button onClick={onClose} className="p-1.5 hover:bg-white/5 rounded"><X size={16} /></button>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="p-4 space-y-4">
           {row?.deleted_at && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-200 text-[11px] p-2">
               عملية مؤرشفة بتاريخ {new Date(row.deleted_at).toLocaleString("ar")}{row.delete_reason ? ` · السبب: ${row.delete_reason}` : ""}
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="التاريخ"><input type="date" disabled={accountantOnly} value={f.income_date} onChange={(e) => setF({ ...f, income_date: e.target.value })} className="inp" /></Field>
-            <Field label="المبلغ"><input type="number" step="0.01" disabled={accountantOnly} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value as any })} className="inp" /></Field>
-            <Field label="مصدر الدخل">
-              <select disabled={accountantOnly} value={f.income_source_id} onChange={(e) => setF({ ...f, income_source_id: e.target.value })} className="inp">
-                <option value="">—</option>
-                {sources.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </Field>
-            <Field label="نوع الحركة">
-              <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setF({ ...f, transaction_type: e.target.value })} className="inp">
-                <option value="">— اختر نوع الحركة —</option>
-                {INCOMING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </Field>
-            <Field label="حالة التصنيف">
-              <select disabled={accountantOnly} value={f.accounting_status} onChange={(e) => setF({ ...f, accounting_status: e.target.value })} className="inp">
-                {ACCOUNTING_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
-            </Field>
-            <Field label="نوع الحساب">
-              <select disabled={accountantOnly} value={f.account_type} onChange={(e) => setF({ ...f, account_type: e.target.value })} className="inp">
-                {ACCOUNT_TYPES.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
-              </select>
-            </Field>
-            <Field label="مراجعة داخلية">
-              <select disabled={accountantOnly} value={f.internal_review_status} onChange={(e) => setF({ ...f, internal_review_status: e.target.value })} className="inp">
-                {INTERNAL_REVIEW.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
-              </select>
-            </Field>
-            <Field label="حالة المحاسب">
-              <select value={f.accountant_status} onChange={(e) => setF({ ...f, accountant_status: e.target.value })} className="inp">
-                {ACCOUNTANT_STATUS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
-              </select>
-            </Field>
-            <Field label="حالة المرفق" wide>
-              <select disabled={accountantOnly} value={f.attachment_status} onChange={(e) => setF({ ...f, attachment_status: e.target.value })} className="inp">
-                {ATTACHMENT_STATUS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
-              </select>
-            </Field>
-          </div>
-          <Field label="الملاحظة"><textarea disabled={accountantOnly} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} className="inp min-h-[60px]" /></Field>
-          <Field label="ملاحظة المحاسب"><textarea value={f.accountant_note} onChange={(e) => setF({ ...f, accountant_note: e.target.value })} className="inp min-h-[60px]" /></Field>
-          <Field label="ملاحظة داخلية (للتصنيف)"><textarea disabled={accountantOnly} value={f.internal_note} onChange={(e) => setF({ ...f, internal_note: e.target.value })} className="inp min-h-[50px]" /></Field>
 
-          {isNew && roles.canManage && (
-            <PendingAttachmentsPicker items={pending} setItems={setPending} />
+          {/* Section 1: Movement */}
+          <SectionCard title="بيانات الحركة">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="التاريخ"><input type="date" disabled={accountantOnly} value={f.income_date} onChange={(e) => setF({ ...f, income_date: e.target.value })} className="inp" /></Field>
+              <Field label="المبلغ"><input type="number" step="0.01" disabled={accountantOnly} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value as any })} className="inp" /></Field>
+              <Field label="الحساب المالي">
+                <select disabled={accountantOnly} value={f.account_id} onChange={(e) => setF({ ...f, account_id: e.target.value })} className="inp">
+                  <option value="">— اختر —</option>
+                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </Field>
+              <Field label="نوع الحساب">
+                <select disabled={accountantOnly} value={f.account_type} onChange={(e) => setF({ ...f, account_type: e.target.value })} className="inp">
+                  {ACCOUNT_TYPES.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
+                </select>
+              </Field>
+              <Field label="نوع الحركة">
+                <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setF({ ...f, transaction_type: e.target.value })} className="inp">
+                  <option value="">— اختر —</option>
+                  {INCOMING_TYPES.map((tt) => <option key={tt.value} value={tt.value}>{tt.label}</option>)}
+                </select>
+              </Field>
+              <Field label="المصدر">
+                <select disabled={accountantOnly} value={f.income_source_id} onChange={(e) => setF({ ...f, income_source_id: e.target.value })} className="inp">
+                  <option value="">—</option>
+                  {sources.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </Field>
+              <Field label="البيان / المرجع" wide>
+                <input disabled={accountantOnly} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} className="inp" placeholder="وصف العملية أو رقم مرجعي" />
+              </Field>
+            </div>
+
+            {isNew && roles.canManage && (
+              <div className="mt-3"><PendingAttachmentsPicker items={pending} setItems={setPending} /></div>
+            )}
+            {!isNew && (
+              <div className="mt-3">
+                <AttachmentsPanel relatedType="income" relatedId={row.id} canManage={roles.canManage} />
+              </div>
+            )}
+          </SectionCard>
+
+          {/* Section 2: Link (conditional) */}
+          {(showInvoice || showCollectionType || showRelated) && (
+            <SectionCard title="الربط">
+              <div className="grid grid-cols-2 gap-3">
+                {showInvoice && (
+                  <Field label="فاتورة المبيعات" wide>
+                    <select disabled={accountantOnly} value={f.sales_invoice_id} onChange={(e) => {
+                      const inv = invoices.find((x) => x.id === e.target.value);
+                      setF({ ...f, sales_invoice_id: e.target.value, customer_id: inv?.customer_id ?? f.customer_id });
+                    }} className="inp">
+                      <option value="">— اختر فاتورة —</option>
+                      {invoices.map((inv) => <option key={inv.id} value={inv.id}>{inv.invoice_number} — {fmtSAR(inv.total_amount)} ({inv.issue_date})</option>)}
+                    </select>
+                  </Field>
+                )}
+                {showCollectionType && (
+                  <Field label="وسيط الدفع">
+                    <select disabled={accountantOnly} value={f.collection_type} onChange={(e) => setF({ ...f, collection_type: e.target.value })} className="inp">
+                      <option value="">—</option>
+                      {COLLECTION_TYPES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    </select>
+                  </Field>
+                )}
+                {showRelated && (
+                  <Field label="التحويل المرتبط (UUID)" wide>
+                    <input disabled={accountantOnly} value={f.related_transaction_id} onChange={(e) => setF({ ...f, related_transaction_id: e.target.value })} className="inp ltr" placeholder="معرف الحركة المقابلة" />
+                  </Field>
+                )}
+              </div>
+            </SectionCard>
           )}
 
-          {!isNew && (
-            <>
-              <AttachmentsPanel relatedType="income" relatedId={row.id} canManage={roles.canManage} />
-              <AuditPanel relatedType="finance_incomes" relatedId={row.id} />
-            </>
+          {/* Section 3: Review (collapsible, review perms only) */}
+          {canReview && (
+            <details className="rounded-xl border border-white/10 bg-white/[.03]" open={showReview} onToggle={(e) => setShowReview((e.target as HTMLDetailsElement).open)}>
+              <summary className="cursor-pointer px-3 py-2 text-[12px] font-semibold text-muted-foreground select-none">المراجعة</summary>
+              <div className="p-3 border-t border-white/10 grid grid-cols-2 gap-3">
+                <Field label="حالة التصنيف">
+                  <select disabled={accountantOnly} value={f.accounting_status} onChange={(e) => setF({ ...f, accounting_status: e.target.value })} className="inp">
+                    {ACCOUNTING_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                </Field>
+                <Field label="المراجعة الداخلية">
+                  <select disabled={accountantOnly} value={f.internal_review_status} onChange={(e) => setF({ ...f, internal_review_status: e.target.value })} className="inp">
+                    {INTERNAL_REVIEW.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
+                  </select>
+                </Field>
+                <Field label="حالة المحاسب">
+                  <select value={f.accountant_status} onChange={(e) => setF({ ...f, accountant_status: e.target.value })} className="inp">
+                    {ACCOUNTANT_STATUS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
+                  </select>
+                </Field>
+                <Field label="ملاحظة المحاسب" wide><textarea value={f.accountant_note} onChange={(e) => setF({ ...f, accountant_note: e.target.value })} className="inp min-h-[60px]" /></Field>
+                <Field label="ملاحظة داخلية (للتصنيف)" wide><textarea disabled={accountantOnly} value={f.internal_note} onChange={(e) => setF({ ...f, internal_note: e.target.value })} className="inp min-h-[50px]" /></Field>
+              </div>
+            </details>
           )}
+
+          {!isNew && <AuditPanel relatedType="finance_incomes" relatedId={row.id} />}
         </div>
         <div className="flex items-center justify-end gap-2 p-4 border-t border-white/10">
           <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] bg-white/5 hover:bg-white/10">إلغاء</button>
           <button disabled={saving} onClick={save} className="px-4 py-1.5 rounded-lg text-[12px] bg-gold/20 border border-gold/40 text-gold hover:bg-gold/30 disabled:opacity-50">{saving ? "..." : "حفظ"}</button>
         </div>
-        <style>{`.inp { width:100%; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); font-size:12px; } .inp:disabled{opacity:.6}`}</style>
+        <style>{`.inp { width:100%; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); font-size:12px; } .inp:disabled{opacity:.6} .inp.ltr{direction:ltr;text-align:left}`}</style>
       </div>
     </div>
+  );
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-xl border border-white/10 bg-white/[.03] p-3">
+      <div className="text-[12px] font-semibold text-gold/90 mb-3">{title}</div>
+      {children}
+    </section>
   );
 }
 
