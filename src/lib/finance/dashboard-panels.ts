@@ -170,7 +170,7 @@ export async function fetchVatPanel(): Promise<VatPanelData> {
   // Prefer active (non-filed) period; else latest
   const { data: periods } = await supabase
     .from("tax_periods")
-    .select("id, start_date, end_date, status, filing_deadline")
+    .select("id, start_date, end_date, due_date, status")
     .order("start_date", { ascending: false })
     .limit(20);
   if (!periods || periods.length === 0) {
@@ -184,9 +184,7 @@ export async function fetchVatPanel(): Promise<VatPanelData> {
 
   const { data: summary } = await supabase.rpc("vat_get_period_summary", { p_period_id: active.id });
   const s: any = summary ?? {};
-  const deadline = (active as any).filing_deadline
-    ? String((active as any).filing_deadline)
-    : deadlineFromEnd(String(active.end_date));
+  const deadline = active.due_date ? String(active.due_date) : deadlineFromEnd(String(active.end_date));
 
   return {
     period_id: active.id,
