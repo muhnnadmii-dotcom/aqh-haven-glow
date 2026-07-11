@@ -64,12 +64,11 @@ function ComparePage() {
   const legendA = sameLabel ? `${labelA} (A)` : labelA;
   const legendB = sameLabel ? `${labelB} (B)` : labelB;
 
-  type CashKey = "income" | "operating" | "netOp" | "personalIn" | "ownerDraws" | "netAfter";
+  type CashKey = "income" | "operating" | "netOp" | "ownerDraws" | "netAfter";
   const rows: { key: CashKey; label: string; invert: boolean; bold?: boolean }[] = [
     { key: "income", label: "إجمالي المقبوضات", invert: false },
     { key: "operating", label: "إجمالي المدفوعات", invert: true },
     { key: "netOp", label: "صافي التدفق قبل سحوبات المالك", invert: false, bold: true },
-    { key: "personalIn", label: "تحصيلات الحساب الشخصي", invert: false },
     { key: "ownerDraws", label: "مدفوعات المالك (سحوبات)", invert: true },
     { key: "netAfter", label: "صافي التدفق بعد سحوبات المالك", invert: false, bold: true },
   ];
