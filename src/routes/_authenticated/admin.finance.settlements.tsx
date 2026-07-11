@@ -66,9 +66,14 @@ function SettlementsPage() {
           <p className="text-[11px] text-muted-foreground mt-1">قائمة تسويات بوابات الدفع مع الصافي المتوقع والفعلي والفرق عن الحوالة البنكية.</p>
         </div>
         {roles.canManage && (
-          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold text-[12px] hover:bg-gold/25">
-            <Plus size={14} /> تسوية جديدة
-          </button>
+          <div className="flex items-center gap-2">
+            <Link to="/admin/finance/settlements/import" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/20 border border-gold/40 text-gold text-[12px] hover:bg-gold/30">
+              <Upload size={14} /> استيراد تسوية
+            </Link>
+            <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[12px] hover:bg-white/10">
+              <Plus size={14} /> تسوية جديدة
+            </button>
+          </div>
         )}
       </div>
 
