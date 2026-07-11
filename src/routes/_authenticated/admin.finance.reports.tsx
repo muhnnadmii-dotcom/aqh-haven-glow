@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtSAR, OWNER_DRAW_SLUG } from "@/lib/finance/constants";
-import { formatMonthAr, monthRange, splitExpenses, sum } from "@/lib/finance/dashboard-data";
+import { formatMonthAr, monthRange, splitExpenses, splitIncomes, sum } from "@/lib/finance/dashboard-data";
 import { exportXLSX } from "@/lib/finance/xlsx";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
 import { Download, Printer } from "lucide-react";
