@@ -72,8 +72,15 @@ function ExpensesPage() {
     if (fInternal && r.internal_review_status !== fInternal) return false;
     if (fAcct && r.accountant_status !== fAcct) return false;
     if (fAtt && r.attachment_status !== fAtt) return false;
+    if (fTxnType && r.transaction_type !== fTxnType) return false;
+    if (fAccStatus && (r.accounting_status ?? "unclassified") !== fAccStatus) return false;
     return true;
-  }), [rows, q, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, showDeleted]);
+  }), [rows, q, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, showDeleted]);
+
+  const unclassifiedCount = useMemo(
+    () => rows.filter((r) => !r.deleted_at && (r.accounting_status ?? "unclassified") === "unclassified").length,
+    [rows],
+  );
 
   const months = useMemo(() => Array.from(new Set(rows.map((r) => r.month).filter(Boolean))).sort().reverse(), [rows]);
   const total = filtered.reduce((a, b) => a + Number(b.amount ?? 0), 0);
