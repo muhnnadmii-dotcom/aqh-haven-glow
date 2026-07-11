@@ -437,6 +437,12 @@ function SalesImportPage() {
 
       for (const r of importable) {
         const invoiceNumber = `SALLA-${r.external_order_id}`;
+        const settlementStatus =
+          r.payment_provider === "tabby" || r.payment_provider === "tamara" || r.payment_provider === "salla_payments"
+            ? "pending"
+            : r.payment_provider === "bank_transfer"
+              ? "not_applicable"
+              : "manual_review";
         const row: any = {
           invoice_number: invoiceNumber,
           issue_date: r.order_date,
@@ -446,6 +452,8 @@ function SalesImportPage() {
           payment_status: r.payment_status === "paid" ? "paid" : "unpaid",
           sales_channel: "salla",
           payment_provider: r.payment_provider && r.payment_provider !== "unknown" ? r.payment_provider : null,
+          settlement_status: settlementStatus,
+          original_payment_method: r.payment_method_raw ?? null,
           external_order_id: r.external_order_id,
           external_invoice_number: r.external_invoice_number,
           customer_name_snapshot: r.customer_name,
@@ -465,7 +473,7 @@ function SalesImportPage() {
           data_completeness_status: "complete",
           import_batch_id: batchId,
           import_row_snapshot: r as any,
-          notes: r.payment_method_raw ? `طريقة الدفع: ${r.payment_method_raw}` : null,
+          notes: null,
         };
 
         const { error: iErr } = await (supabase as any)
