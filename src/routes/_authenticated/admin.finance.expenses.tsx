@@ -314,10 +314,20 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
+      const txnType = f.transaction_type || null;
+      const accStatus = txnType
+        ? (f.accounting_status === "unclassified" ? "classified" : f.accounting_status)
+        : "unclassified";
+      const payload = {
+        ...f,
+        transaction_type: txnType,
+        accounting_status: accStatus,
+        internal_note: f.internal_note || null,
+      };
       if (isNew) {
         const status = pending.length > 0 ? "attached" : f.attachment_status;
         const { data: inserted, error } = await supabase.from("finance_expenses").insert({
-          ...f,
+          ...payload,
           attachment_status: status,
           amount: Number(f.amount),
           supplier_id: f.supplier_id || null,
@@ -345,7 +355,7 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
               accountant_status: f.accountant_status,
               accountant_note: f.accountant_note,
             }
-          : { ...f, amount: Number(f.amount), supplier_id: f.supplier_id || null, main_category_id: f.main_category_id || null, sub_category_id: f.sub_category_id || null };
+          : { ...payload, amount: Number(f.amount), supplier_id: f.supplier_id || null, main_category_id: f.main_category_id || null, sub_category_id: f.sub_category_id || null };
         const { error } = await supabase.from("finance_expenses").update(patch).eq("id", row.id);
         if (error) throw error;
         toast.success("تم الحفظ");
