@@ -314,19 +314,14 @@ function SettlementImportPage() {
       else if (gross === 0) { reasons.push("zero_amount"); line_type = "adjustment"; }
       else if (gross < 0) { line_type = orderId ? "refund" : "adjustment"; }
 
-      if (!orderId && (line_type === "refund" || line_type === "adjustment") && gross !== 0) {
-        reasons.push("missing_order_id");
-      }
-      if (!orderId && line_type === "sale") reasons.push("missing_order_id");
-
-      // duplicate within file
       const dupKey = `${orderId ?? ""}|${gross ?? ""}|${txnId ?? ""}|${date ?? ""}`;
       if (seen.has(dupKey) && dupKey !== "|||") reasons.push("duplicate_line");
       seen.set(dupKey, rowNo);
 
-      // capture raw row as object for storage
       const rawObj: Record<string, any> = {};
       headers.forEach((h, i) => { rawObj[String(h ?? `col_${i}`)] = raw[i] ?? null; });
+
+      const initialMatch: MatchStatus = orderId ? "order_not_found" : "orphan_line";
 
       return {
         rowNo,
@@ -342,6 +337,8 @@ function SettlementImportPage() {
         net_before_vat_check: netBv,
         line_type,
         sales_invoice_id: null,
+        salla_order_status: null,
+        match_status: initialMatch,
         reasons,
         needs_review: reasons.length > 0,
         raw: rawObj,
@@ -356,28 +353,99 @@ function SettlementImportPage() {
 
     const parsed = buildRows();
 
-    // Match sales invoices by external_order_id (salla only meaningful)
-    const orderIds = Array.from(new Set(parsed.map((p) => p.external_order_id).filter(Boolean))) as string[];
+    // Group by order id for pair matching
+    const byOrder = new Map<string, ParsedLine[]>();
+    for (const p of parsed) {
+      if (!p.external_order_id) continue;
+      const arr = byOrder.get(p.external_order_id) ?? [];
+      arr.push(p);
+      byOrder.set(p.external_order_id, arr);
+    }
+    const orderIds = Array.from(byOrder.keys());
+
     if (orderIds.length) {
-      const { data: invs } = await (supabase as any)
-        .from("sales_invoices")
-        .select("id,external_order_id")
+      const invMap = new Map<string, number>();
+      const orderMap = new Map<string, { status: string | null; cancelled: boolean }>();
+      const chunkArr = <T,>(a: T[], n: number) => { const out: T[][] = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
+      for (const chunk of chunkArr(orderIds, 500)) {
+        const [invRes, orderRes] = await Promise.all([
+          (supabase as any).from("sales_invoices").select("id,external_order_id").in("external_order_id", chunk),
+          (supabase as any).from("salla_orders").select("external_order_id,order_status").in("external_order_id", chunk),
+        ]);
+        (invRes.data ?? []).forEach((r: any) => invMap.set(String(r.external_order_id), r.id));
+        (orderRes.data ?? []).forEach((r: any) => {
+          const st: string = r.order_status ?? "";
+          orderMap.set(String(r.external_order_id), { status: st, cancelled: /cancel|ملغى|ملغي|ملغاة|إلغاء|الغاء/i.test(st) });
+        });
+      }
+
+      // Also search other settlements for refund/sale counterparts (cross-file pairing)
+      const { data: crossLines } = await (supabase as any)
+        .from("payment_settlement_lines")
+        .select("external_order_id,line_type,amount")
         .in("external_order_id", orderIds);
-      const map = new Map<string, number>();
-      (invs ?? []).forEach((r: any) => map.set(String(r.external_order_id), r.id));
-      for (const p of parsed) {
-        if (p.external_order_id) {
-          const id = map.get(p.external_order_id);
-          if (id) p.sales_invoice_id = id;
-          else if (!p.reasons.includes("missing_order_id")) {
-            p.reasons.push("order_not_found");
-            p.needs_review = true;
+      const crossByOrder = new Map<string, { sales: number; refunds: number }>();
+      (crossLines ?? []).forEach((l: any) => {
+        const key = String(l.external_order_id);
+        const cur = crossByOrder.get(key) ?? { sales: 0, refunds: 0 };
+        if (l.line_type === "sale") cur.sales = round2(cur.sales + Number(l.amount));
+        else if (l.line_type === "refund") cur.refunds = round2(cur.refunds + Math.abs(Number(l.amount)));
+        crossByOrder.set(key, cur);
+      });
+
+      for (const [oid, lines] of byOrder) {
+        const invId = invMap.get(oid) ?? null;
+        const info = orderMap.get(oid);
+        const sales = lines.filter((l) => l.line_type === "sale");
+        const refunds = lines.filter((l) => l.line_type === "refund");
+        const totalSale = round2(sales.reduce((s, l) => s + l.gross_amount, 0));
+        const totalRefundAbs = round2(refunds.reduce((s, l) => s + Math.abs(l.gross_amount), 0));
+        const cross = crossByOrder.get(oid) ?? { sales: 0, refunds: 0 };
+        const combinedSales = round2(totalSale + cross.sales);
+        const combinedRefunds = round2(totalRefundAbs + cross.refunds);
+
+        for (const l of lines) {
+          l.sales_invoice_id = invId;
+          l.salla_order_status = info?.status ?? null;
+
+          if (info?.cancelled) {
+            if (Math.abs(combinedSales - combinedRefunds) <= 0.02 && combinedSales > 0) {
+              l.match_status = "matched_cancelled_order";
+            } else if (l.line_type === "sale") {
+              l.match_status = "cancelled_order_needs_refund_match";
+              l.needs_review = true;
+            } else if (l.line_type === "refund") {
+              l.match_status = combinedSales > 0 ? "matched_cancelled_order" : "unmatched_refund";
+              if (combinedSales <= 0) l.needs_review = true;
+            } else {
+              l.match_status = "matched_cancelled_order";
+            }
+          } else if (invId) {
+            const partialRefund = l.line_type === "refund" && combinedRefunds > 0 && combinedRefunds + 0.02 < combinedSales;
+            if (partialRefund) {
+              l.match_status = "needs_credit_note";
+              l.needs_review = true;
+            } else {
+              l.match_status = "matched_invoice";
+            }
+          } else if (info) {
+            l.match_status = "order_found_invoice_missing";
+            l.needs_review = true;
+          } else if (l.line_type === "refund") {
+            l.match_status = "unmatched_refund";
+            l.needs_review = true;
+          } else {
+            l.match_status = "order_not_found";
+            l.needs_review = true;
           }
         }
       }
+
+      for (const p of parsed) {
+        if (!p.external_order_id) { p.match_status = "orphan_line"; p.needs_review = true; }
+      }
     }
 
-    // Check duplicate file (same reference already used for provider)
     if (providerRow?.id) {
       const ref = settlementRef || `${provider}-${fileHash.slice(0, 12)}`;
       const { data: dup } = await (supabase as any)
@@ -386,9 +454,7 @@ function SettlementImportPage() {
         .eq("provider_id", providerRow.id)
         .eq("settlement_reference", ref)
         .maybeSingle();
-      if (dup) {
-        toast.warning("يوجد تسوية بنفس المرجع لهذه البوابة — غيّر المرجع قبل الاعتماد");
-      }
+      if (dup) toast.warning("يوجد تسوية بنفس المرجع لهذه البوابة — غيّر المرجع قبل الاعتماد");
     }
 
     setRows(parsed);
@@ -396,22 +462,26 @@ function SettlementImportPage() {
   }
 
   const summary = useMemo(() => {
-    let sales = 0, refunds = 0, adjustments = 0, matched = 0, notFound = 0, dupes = 0, review = 0;
+    const counts: Record<MatchStatus, number> = {
+      matched_invoice: 0, matched_cancelled_order: 0, cancelled_order_needs_refund_match: 0,
+      order_found_invoice_missing: 0, order_not_found: 0, needs_credit_note: 0,
+      unmatched_refund: 0, orphan_line: 0,
+    };
+    let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0;
     let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0;
     for (const r of rows) {
+      counts[r.match_status]++;
       if (r.line_type === "sale") { sales++; if (r.gross_amount > 0) gross = round2(gross + r.gross_amount); }
       else if (r.line_type === "refund") { refunds++; refundsAbs = round2(refundsAbs + Math.abs(r.gross_amount)); }
       else adjustments++;
       fees = round2(fees + r.fees_before_vat);
       feesVat = round2(feesVat + r.fees_vat_amount);
-      if (r.sales_invoice_id) matched++;
-      if (r.reasons.includes("order_not_found")) notFound++;
-      if (r.reasons.includes("duplicate_line")) dupes++;
+      if (BLOCKING_STATUSES.has(r.match_status)) blocking++;
       if (r.needs_review) review++;
     }
     const payout = num0(payoutFee);
     const expected = round2(gross - refundsAbs - fees - feesVat - payout);
-    return { count: rows.length, sales, refunds, adjustments, matched, notFound, dupes, review, gross, refundsAbs, fees, feesVat, expected };
+    return { count: rows.length, sales, refunds, adjustments, review, blocking, counts, gross, refundsAbs, fees, feesVat, expected };
   }, [rows, payoutFee]);
 
   async function commit() {
