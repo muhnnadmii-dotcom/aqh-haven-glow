@@ -304,6 +304,13 @@ function ReconciliationPage() {
     await load();
   };
 
+  const recalcSettlement = async (settlementId: string) => {
+    const { error } = await supabase.rpc("recalculate_settlement_totals" as any, { _settlement_id: settlementId });
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم إعادة احتساب التسوية");
+    await load();
+  };
+
   // KPIs
   const kpis = useMemo(() => {
     const totals = { awaiting: 0, unmatched: 0, partial: 0, full: 0, unallocated: 0, roundingDiff: 0, unknownDiff: 0 };
