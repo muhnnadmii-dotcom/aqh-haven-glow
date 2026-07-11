@@ -187,9 +187,13 @@ function ReviewCenter() {
     const missingParty = r.kind === "income"
       ? (r.transaction_type === "customer_invoice_collection" && !r.customer_id)
       : (r.transaction_type === "supplier_invoice_payment" && !r.supplier_id);
+    const pm = providerMatch(r);
+    const unlinkedProviderSettlement = r.kind === "income" && !!pm && !r.settlement_id;
+    const isSplitChild = !!r.split_parent_id;
     const isCompleted = r.internal_review_status === "reviewed" && r.accounting_status === "reviewed";
-    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, isCompleted };
+    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
   };
+
 
   // Filters
   const [chip, setChip] = useState<string>("unclassified");
