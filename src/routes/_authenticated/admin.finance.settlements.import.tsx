@@ -130,7 +130,8 @@ type LineType =
   | "reserve_released"
   | "payout_fee"
   | "manual_adjustment"
-  | "unexplained_deduction";
+  | "unexplained_deduction"
+  | "wallet_top_up";
 
 const LINE_TYPE_LABEL: Record<LineType, string> = {
   sale: "بيع",
@@ -141,7 +142,11 @@ const LINE_TYPE_LABEL: Record<LineType, string> = {
   payout_fee: "رسوم تحويل",
   manual_adjustment: "تعديل يدوي من الوسيط",
   unexplained_deduction: "خصم غير مفسر",
+  wallet_top_up: "شحن محفظة الوسيط",
 };
+
+// Regex used to auto-detect wallet-top-up rows from description/payment method.
+const WALLET_TOPUP_RX = /(شحن\s*محفظة|wallet\s*top[\s-]*up|wallet\s*recharge|top\s*up\s*wallet)/i;
 
 type MatchStatus =
   | "matched_invoice"
@@ -151,7 +156,8 @@ type MatchStatus =
   | "order_not_found"
   | "needs_credit_note"
   | "unmatched_refund"
-  | "needs_classification";
+  | "needs_classification"
+  | "wallet_internal_transfer";
 
 const MATCH_LABEL: Record<MatchStatus, string> = {
   matched_invoice: "مطابق لفاتورة",
@@ -162,6 +168,7 @@ const MATCH_LABEL: Record<MatchStatus, string> = {
   needs_credit_note: "يحتاج إشعار دائن (استرجاع جزئي)",
   unmatched_refund: "استرجاع بدون عملية أصلية",
   needs_classification: "تعديل/خصم تسوية غير مرتبط بطلب",
+  wallet_internal_transfer: "تحويل داخلي إلى محفظة سلة",
 };
 
 const MATCH_TONE: Record<MatchStatus, string> = {
@@ -173,6 +180,7 @@ const MATCH_TONE: Record<MatchStatus, string> = {
   needs_credit_note: "text-amber-300",
   unmatched_refund: "text-red-300",
   needs_classification: "text-amber-300",
+  wallet_internal_transfer: "text-sky-300",
 };
 
 // Statuses that require review before FINAL CLOSE. Import commit is always allowed.
@@ -193,6 +201,7 @@ const REVIEW_LABEL: Record<ReviewReason, string> = {
   zero_amount: "قيمة = 0",
   amount_mismatch: "اختلاف مبالغ غير مفسر",
 };
+
 
 type ParsedLine = {
   rowNo: number;
