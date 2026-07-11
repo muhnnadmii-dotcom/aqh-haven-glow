@@ -8,6 +8,7 @@ import { ArrowRight, CheckCircle2, Loader2, Plus, Printer, Trash2, XCircle, Link
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
+import { CreditDebitNotesPanel } from "@/components/finance/CreditDebitNotesPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/sales-invoices/$id")({
   ssr: false,
@@ -388,6 +389,16 @@ function SalesInvoiceEditor() {
 
       {/* Attachments */}
       <AttachmentsPanel relatedType="quote" relatedId={String(invoiceId)} canManage={isDraft || !isCancelled} />
+
+      {/* Credit & Debit Notes */}
+      {!isDraft && !isCancelled && (
+        <CreditDebitNotesPanel
+          invoiceId={invoiceId}
+          invoiceKind="sales"
+          partyId={header.customer_id ?? null}
+          invoiceTotal={Number(header.total_amount ?? 0)}
+        />
+      )}
 
       {showLinkModal && (
         <LinkCollectionModal

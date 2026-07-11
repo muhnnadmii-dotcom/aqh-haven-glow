@@ -8,6 +8,7 @@ import { ArrowRight, CheckCircle2, Loader2, Plus, Trash2, XCircle, Link2, AlertT
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
+import { CreditDebitNotesPanel } from "@/components/finance/CreditDebitNotesPanel";
 import {
   PURCHASE_TYPE_LABEL,
   PURCHASE_STATUS_LABEL,
@@ -464,6 +465,16 @@ function PurchaseInvoiceEditor() {
 
       {/* Attachments */}
       <AttachmentsPanel relatedType="purchase_invoice" relatedId={String(invoiceId)} canManage={canEdit} />
+
+      {/* Credit & Debit Notes */}
+      {!canEdit && header.status !== "cancelled" && (
+        <CreditDebitNotesPanel
+          invoiceId={invoiceId}
+          invoiceKind="purchase"
+          partyId={header.supplier_id ?? null}
+          invoiceTotal={Number(header.total_amount ?? 0)}
+        />
+      )}
 
       {showLinkModal && (
         <LinkPaymentModal invoiceId={invoiceId} supplierId={header.supplier_id} onClose={() => setShowLinkModal(false)} onDone={() => { setShowLinkModal(false); refetchLinked(); qc.invalidateQueries({ queryKey: ["purchase_invoice", invoiceId] }); }} />
