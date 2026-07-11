@@ -22,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance")({
 
 const tabs = [
   { to: "/admin/finance", label: "لوحة المالية", icon: LayoutDashboard, exact: true },
+  { to: "/admin/finance/review", label: "مركز مراجعة الحركات", icon: Inbox },
   { to: "/admin/finance/compare", label: "مقارنة الأشهر", icon: GitCompare },
   { to: "/admin/finance/reports", label: "التقارير", icon: BarChart3 },
   { to: "/admin/finance/quotes", label: "عروض الأسعار", icon: FileText },
