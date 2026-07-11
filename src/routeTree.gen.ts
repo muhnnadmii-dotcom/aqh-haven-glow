@@ -111,6 +111,7 @@ import { Route as AuthenticatedAccountTanksIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAccountRequestsNewRouteImport } from './routes/_authenticated/account.requests.new'
 import { Route as AuthenticatedAccountRequestsIdRouteImport } from './routes/_authenticated/account.requests.$id'
 import { Route as AuthenticatedAdminFinanceVatIndexRouteImport } from './routes/_authenticated/admin.finance.vat.index'
+import { Route as AuthenticatedAdminFinanceSettlementsIndexRouteImport } from './routes/_authenticated/admin.finance.settlements.index'
 import { Route as AuthenticatedAdminFinanceSalesInvoicesIndexRouteImport } from './routes/_authenticated/admin.finance.sales-invoices.index'
 import { Route as AuthenticatedAdminFinanceQuotesIndexRouteImport } from './routes/_authenticated/admin.finance.quotes.index'
 import { Route as AuthenticatedAdminFinancePurchaseInvoicesIndexRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices.index'
@@ -711,6 +712,12 @@ const AuthenticatedAdminFinanceVatIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAdminFinanceVatRoute,
   } as any)
+const AuthenticatedAdminFinanceSettlementsIndexRoute =
+  AuthenticatedAdminFinanceSettlementsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminFinanceSettlementsRoute,
+  } as any)
 const AuthenticatedAdminFinanceSalesInvoicesIndexRoute =
   AuthenticatedAdminFinanceSalesInvoicesIndexRouteImport.update({
     id: '/sales-invoices/',
@@ -911,6 +918,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/purchase-invoices/': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/admin/finance/quotes/': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/admin/finance/sales-invoices/': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
+  '/admin/finance/settlements/': typeof AuthenticatedAdminFinanceSettlementsIndexRoute
   '/admin/finance/vat/': typeof AuthenticatedAdminFinanceVatIndexRoute
 }
 export interface FileRoutesByTo {
@@ -983,7 +991,6 @@ export interface FileRoutesByTo {
   '/admin/finance/sales-review': typeof AuthenticatedAdminFinanceSalesReviewRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/settlement-lines': typeof AuthenticatedAdminFinanceSettlementLinesRoute
-  '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRouteWithChildren
   '/admin/finance/settlements-review': typeof AuthenticatedAdminFinanceSettlementsReviewRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
@@ -1019,6 +1026,7 @@ export interface FileRoutesByTo {
   '/admin/finance/purchase-invoices': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/admin/finance/quotes': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/admin/finance/sales-invoices': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
+  '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsIndexRoute
   '/admin/finance/vat': typeof AuthenticatedAdminFinanceVatIndexRoute
 }
 export interface FileRoutesById {
@@ -1138,6 +1146,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/purchase-invoices/': typeof AuthenticatedAdminFinancePurchaseInvoicesIndexRoute
   '/_authenticated/admin/finance/quotes/': typeof AuthenticatedAdminFinanceQuotesIndexRoute
   '/_authenticated/admin/finance/sales-invoices/': typeof AuthenticatedAdminFinanceSalesInvoicesIndexRoute
+  '/_authenticated/admin/finance/settlements/': typeof AuthenticatedAdminFinanceSettlementsIndexRoute
   '/_authenticated/admin/finance/vat/': typeof AuthenticatedAdminFinanceVatIndexRoute
 }
 export interface FileRouteTypes {
@@ -1257,6 +1266,7 @@ export interface FileRouteTypes {
     | '/admin/finance/purchase-invoices/'
     | '/admin/finance/quotes/'
     | '/admin/finance/sales-invoices/'
+    | '/admin/finance/settlements/'
     | '/admin/finance/vat/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1329,7 +1339,6 @@ export interface FileRouteTypes {
     | '/admin/finance/sales-review'
     | '/admin/finance/settings'
     | '/admin/finance/settlement-lines'
-    | '/admin/finance/settlements'
     | '/admin/finance/settlements-review'
     | '/admin/finance/suppliers'
     | '/admin/finance/trial-balance'
@@ -1365,6 +1374,7 @@ export interface FileRouteTypes {
     | '/admin/finance/purchase-invoices'
     | '/admin/finance/quotes'
     | '/admin/finance/sales-invoices'
+    | '/admin/finance/settlements'
     | '/admin/finance/vat'
   id:
     | '__root__'
@@ -1483,6 +1493,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/purchase-invoices/'
     | '/_authenticated/admin/finance/quotes/'
     | '/_authenticated/admin/finance/sales-invoices/'
+    | '/_authenticated/admin/finance/settlements/'
     | '/_authenticated/admin/finance/vat/'
   fileRoutesById: FileRoutesById
 }
@@ -2219,6 +2230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceVatIndexRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceVatRoute
     }
+    '/_authenticated/admin/finance/settlements/': {
+      id: '/_authenticated/admin/finance/settlements/'
+      path: '/'
+      fullPath: '/admin/finance/settlements/'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceSettlementsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceSettlementsRoute
+    }
     '/_authenticated/admin/finance/sales-invoices/': {
       id: '/_authenticated/admin/finance/sales-invoices/'
       path: '/sales-invoices'
@@ -2389,12 +2407,15 @@ const AuthenticatedAdminDesignRouteWithChildren =
 
 interface AuthenticatedAdminFinanceSettlementsRouteChildren {
   AuthenticatedAdminFinanceSettlementsImportRoute: typeof AuthenticatedAdminFinanceSettlementsImportRoute
+  AuthenticatedAdminFinanceSettlementsIndexRoute: typeof AuthenticatedAdminFinanceSettlementsIndexRoute
 }
 
 const AuthenticatedAdminFinanceSettlementsRouteChildren: AuthenticatedAdminFinanceSettlementsRouteChildren =
   {
     AuthenticatedAdminFinanceSettlementsImportRoute:
       AuthenticatedAdminFinanceSettlementsImportRoute,
+    AuthenticatedAdminFinanceSettlementsIndexRoute:
+      AuthenticatedAdminFinanceSettlementsIndexRoute,
   }
 
 const AuthenticatedAdminFinanceSettlementsRouteWithChildren =
@@ -2741,3 +2762,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
