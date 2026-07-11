@@ -494,8 +494,8 @@ function SettlementImportPage() {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id ?? null;
 
-      const hasReview = summary.review > 0;
-      const status = hasReview ? "under_review" : "imported";
+      const hasBlocking = summary.blocking > 0;
+      const status = hasBlocking ? "under_review" : "imported";
 
       const { data: s, error: sErr } = await (supabase as any)
         .from("payment_settlements")
@@ -509,7 +509,7 @@ function SettlementImportPage() {
           fees_vat_amount: summary.feesVat,
           payout_fee: num0(payoutFee),
           status,
-          notes: `استيراد من ملف: ${file?.name} — hash=${fileHash.slice(0, 16)} — صفوف: ${rows.length} (تحتاج مراجعة: ${summary.review})`,
+          notes: `استيراد من ملف: ${file?.name} — hash=${fileHash.slice(0, 16)} — صفوف: ${rows.length} (يحتاج مراجعة: ${summary.review}، حجب: ${summary.blocking})`,
           created_by: uid,
         })
         .select("id")
@@ -526,11 +526,13 @@ function SettlementImportPage() {
         provider_transaction_id: r.provider_transaction_id,
         amount: r.gross_amount,
         transaction_date: r.transaction_date,
-        description: r.description ?? (r.reasons.length ? r.reasons.map((x) => REVIEW_LABEL[x]).join("، ") : null),
+        description: r.description ?? MATCH_LABEL[r.match_status],
         raw_row: {
           ...r.raw,
+          _match_status: r.match_status,
           _needs_review: r.needs_review,
           _reasons: r.reasons,
+          _salla_order_status: r.salla_order_status,
           _fees_before_vat: r.fees_before_vat,
           _fees_vat_amount: r.fees_vat_amount,
           _net_amount: r.net_amount,
