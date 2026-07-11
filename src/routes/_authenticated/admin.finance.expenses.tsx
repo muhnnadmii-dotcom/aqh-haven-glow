@@ -191,6 +191,15 @@ function ExpensesPage() {
                 <td className="px-3 py-2">{supName(r.supplier_id) !== "—" ? supName(r.supplier_id) : r.supplier_name || "—"}</td>
                 <td className="px-3 py-2">{catName(r.main_category_id)}</td>
                 <td className="px-3 py-2">{catName(r.sub_category_id)}</td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {r.transaction_type ? (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-white/10 bg-white/5">
+                      {outgoingLabel(r.transaction_type)}
+                    </span>
+                  ) : (
+                    <span className="text-amber-300/80 text-[10px]">غير مصنف</span>
+                  )}
+                </td>
                 <td className="px-3 py-2">
                   <ReviewStatusEditor
                     table="finance_expenses"
