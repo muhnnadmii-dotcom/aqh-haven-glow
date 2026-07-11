@@ -318,25 +318,23 @@ function SalesImportPage() {
       const cancelled = isCancelled(orderStatus);
       const provider = detectProvider(paymentMethodRaw);
 
-      // review reasons
-      const reasons: ReviewReason[] = [];
-      let hardError = false;
-      if (!orderId) { reasons.push("missing_required_data"); hardError = true; }
-      if (!dateStr) { reasons.push("missing_required_data"); hardError = true; }
-      if (gross == null) { reasons.push("invalid_amount"); hardError = true; }
-      if (cancelled) reasons.push("cancelled_order");
-      if (gross != null && gross === 0) reasons.push("zero_total");
-      if (!paymentMethodRaw) reasons.push("missing_payment_method");
-      if (!invoiceNumber) reasons.push("missing_invoice_number");
+      // تجميع القضايا (issues) بدون تصنيف نهائي حتى نطبق المكررات
+      const issues: DataIssue[] = [];
+      if (!orderId) issues.push("missing_order_id");
+      if (!dateStr) issues.push("invalid_date");
+      if (gross == null) issues.push("invalid_amount");
+      if (gross != null && gross < 0 && !cancelled) issues.push("invalid_amount");
+      if (cancelled) issues.push("cancelled_order");
+      if (gross != null && gross === 0) issues.push("zero_total");
+      if (!paymentMethodRaw) issues.push("missing_payment_method");
+      if (!invoiceNumber) issues.push("missing_invoice_number");
 
-      // حالة الدفع المستنتجة
+      // حالة الدفع المستنتجة (لا تعتمد على وجود رقم فاتورة)
       let paymentStatus: PaymentStatus = "unknown";
       let statusSource: "inferred" | "unknown" = "unknown";
-      if (!cancelled && gross != null && gross > 0 && paymentMethodRaw && invoiceNumber) {
+      if (!cancelled && gross != null && gross > 0 && paymentMethodRaw) {
         paymentStatus = "paid";
         statusSource = "inferred";
-      } else if (!paymentMethodRaw) {
-        paymentStatus = "unknown";
       }
 
       return {
@@ -360,9 +358,10 @@ function SalesImportPage() {
         total_discount: totalDiscount,
         cancelled,
         duplicate: false,
-        review_reasons: reasons,
-        needs_review: reasons.length > 0,
-        hard_error: hardError,
+        issues,
+        classification: "ready_to_import", // مبدئي — سيُعاد تصنيفه أدناه
+        tax_document_status: invoiceNumber ? "present" : "missing",
+        vat_return_eligible: !!invoiceNumber && !cancelled,
       };
     });
 
@@ -373,8 +372,7 @@ function SalesImportPage() {
       const prev = seen.get(r.external_order_id);
       if (prev != null) {
         r.duplicate = true;
-        if (!r.review_reasons.includes("duplicate_order")) r.review_reasons.push("duplicate_order");
-        r.needs_review = true;
+        if (!r.issues.includes("duplicate_order")) r.issues.push("duplicate_order");
       } else {
         seen.set(r.external_order_id, r.rowNo);
       }
@@ -392,22 +390,39 @@ function SalesImportPage() {
       parsed.forEach((r) => {
         if (r.external_order_id && existSet.has(r.external_order_id)) {
           r.duplicate = true;
-          if (!r.review_reasons.includes("duplicate_order")) r.review_reasons.push("duplicate_order");
-          r.needs_review = true;
+          if (!r.issues.includes("duplicate_order")) r.issues.push("duplicate_order");
         }
       });
     }
 
+    // تصنيف نهائي بالأولوية: blocking > duplicate > cancelled > missing_tax_doc > ready
+    parsed.forEach((r) => {
+      const hardBlocking =
+        !r.external_order_id ||
+        !r.order_date ||
+        r.original_gross_amount == null ||
+        (r.original_gross_amount != null && r.original_gross_amount < 0 && !r.cancelled);
+      if (hardBlocking) r.classification = "blocking_review";
+      else if (r.duplicate) r.classification = "skipped_duplicate";
+      else if (r.cancelled) r.classification = "cancelled_order";
+      else if (!r.external_invoice_number) r.classification = "importable_missing_tax_document";
+      else r.classification = "ready_to_import";
+    });
+
     setRows(parsed);
-    // اختيار افتراضي: الصفوف الصالحة فقط
+    // اختيار افتراضي: جاهز + مسودة مستند ناقص
     const auto = new Set<number>();
-    parsed.forEach((r) => { if (!r.needs_review && !r.hard_error) auto.add(r.rowNo); });
+    parsed.forEach((r) => {
+      if (r.classification === "ready_to_import" || r.classification === "importable_missing_tax_document") auto.add(r.rowNo);
+    });
     setSelected(auto);
 
-    const ok = parsed.filter((r) => !r.needs_review && !r.hard_error).length;
-    const rev = parsed.filter((r) => r.needs_review || r.hard_error).length;
-    toast.success(`تم تحضير ${parsed.length} صف — صالح: ${ok}، يحتاج مراجعة: ${rev}`);
+    const buckets = countBuckets(parsed);
+    toast.success(
+      `تم تحضير ${parsed.length} صف — جاهز: ${buckets.ready_to_import}، مسودة ناقصة: ${buckets.importable_missing_tax_document}، ملغي: ${buckets.cancelled_order}، مكرر: ${buckets.skipped_duplicate}، أخطاء: ${buckets.blocking_review}`
+    );
   }
+
 
   const stats = useMemo(() => {
     const total = rows.length;
