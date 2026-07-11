@@ -211,6 +211,22 @@ function ReconciliationPage() {
     });
   }, [incomes, iFilterProvider, iFilterAlloc, iShowAll, iSearch, incomeAlloc]);
 
+  const selSettlementForSort = useMemo(() => settlements.find(s => s.id === selSettlementId) || null, [settlements, selSettlementId]);
+  const incomesSorted = useMemo(() => {
+    if (!selSettlementForSort) return incomesFiltered;
+    const s = selSettlementForSort;
+    const expected = Number(s.expected_net_amount);
+    const score = (inc: Income) => {
+      const sameProvider = inc.payment_provider_id === s.provider_id ? 0 : 100;
+      const remaining = Number(inc.amount) - (incomeAlloc[inc.id] ?? 0);
+      const amountDiff = Math.abs(remaining - expected);
+      const amountScore = amountDiff <= 0.05 ? 0 : amountDiff <= 20 ? 5 : amountDiff <= 200 ? 20 : 50;
+      const dateScore = Math.min(30, daysBetween(s.settlement_date, inc.income_date));
+      return sameProvider + amountScore + dateScore;
+    };
+    return [...incomesFiltered].sort((a, b) => score(a) - score(b));
+  }, [incomesFiltered, selSettlementForSort, incomeAlloc]);
+
   const selSettlement = useMemo(() => settlements.find(s => s.id === selSettlementId) || null, [settlements, selSettlementId]);
   const selIncome = useMemo(() => incomes.find(i => i.id === selIncomeId) || null, [incomes, selIncomeId]);
 
