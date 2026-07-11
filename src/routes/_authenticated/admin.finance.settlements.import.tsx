@@ -839,6 +839,13 @@ function SettlementImportPage() {
             {rows.length > 500 && <div className="text-[11px] text-muted-foreground p-2">عُرض أول 500 صف — سيتم استيراد الجميع.</div>}
           </div>
 
+          {summary.blocking > 0 && (
+            <div className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-[12px] text-red-200">
+              <AlertTriangle className="inline w-3.5 h-3.5 ml-1" />
+              يوجد {summary.blocking} سطر يحجب الاعتماد النهائي (طلبات غير موجودة، بيع ملغي بدون استرجاع، استرجاع بدون بيع، أو سطر بدون رقم طلب). سيتم إنشاء التسوية بحالة "قيد المراجعة" حتى تُعالج هذه الحالات.
+            </div>
+          )}
+
           <div className="flex justify-between">
             <button onClick={() => setStep(2)} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">رجوع للتعيين</button>
             <div className="flex items-center gap-2">
