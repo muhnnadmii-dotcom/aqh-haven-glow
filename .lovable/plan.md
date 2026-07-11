@@ -1,85 +1,108 @@
-# تطوير لوحة المالية — تقسيم إلى نقد ومحاسبي
+# وحدة ضريبة القيمة المضافة (VAT)
 
-## نطاق العمل
-تعديل على النظام المالي القائم فقط. الاحتفاظ بالتصميم الحالي (RTL، الوضع الداكن، البطاقات، الرسومات) وإعادة استخدام المكونات الحالية (`FinanceRowsDrawer`، `dashboard-data.ts`، Recharts، `capital.ts`، `manual-balances.ts`).
+نظام داخلي مستقل، مبني على الفواتير المعتمدة فقط (accrual). لا زاتكا، لا تقديم إلكتروني، لا XML/QR.
 
-## 1. تقسيم لوحة المالية إلى تبويبين
-داخل `admin.finance.index.tsx` نفس الصفحة، إضافة `Tabs`:
+## 1. تعديلات قاعدة البيانات (migration واحدة)
 
-### تبويب "لوحة النقد" (افتراضي)
-يستخدم نفس البطاقات الحالية دون تغيير مظهرها، مع إعادة تنظيم:
-- رصيد الحسابات (من `finance_accounts` + `computeLiveCash`)
-- إجمالي المقبوضات / المدفوعات / صافي التدفق (موجودة)
-- التدفق النقدي التشغيلي = مقبوضات تشغيلية − مدفوعات تشغيلية (استبعاد `transaction_type` من مجموعة owner_contribution/withdrawal/internal_transfer)
-- مساهمات المالك / سحوبات المالك / التحويلات الداخلية (بطاقات منفصلة موجودة جزئيًا)
-- تحصيلات النشاط في الحساب الشخصي: `finance_incomes` حيث `account.account_owner_type='owner'` و`business_relation='business'`
-- مبالغ مستحقة للمالك / صافي جاري المالك (من `get_owner_current_account` الموجودة)
-- الحركات غير المصنفة (موجودة)
-- آخر الحركات + أرصدة الحسابات + رسم المقبوضات/المدفوعات (موجودة)
+### إعدادات المنشأة — إضافة أعمدة إلى `aqh_business_settings`
+كلها nullable / defaults آمنة:
+- `vat_registered boolean default false`
+- `vat_number text`
+- `default_vat_rate numeric(5,2) default 15`
+- `filing_frequency text default 'monthly'` — CHECK (monthly, quarterly)
+- `first_tax_period_start date`
+- `tax_basis text default 'accrual'` — CHECK (accrual, cash)
+- `carried_forward_vat_credit numeric(14,2) default 0`
+- `commercial_registration text`
+- `tax_address text`
+(`company_name` موجود مسبقًا)
 
-### تبويب "لوحة الأداء المحاسبي" (جديد)
-مصدر البيانات: `sales_invoices` المعتمدة، `purchase_invoices` المعتمدة، و`journal_entry_lines` للقيود المرحّلة عبر `get_trial_balance`.
+### جدول جديد: `tax_periods`
+- `id uuid pk`, `start_date`, `end_date`, `due_date`
+- `status tax_period_status` enum: open, under_review, ready, filed, paid, closed
+- `carried_credit_in/used/out numeric(14,2) default 0`
+- `filed_at, paid_at timestamptz nullable`, `notes text`
+- `UNIQUE (start_date, end_date)` لمنع التكرار
+- created_at/updated_at + trigger touch
 
-RPC جديد `get_accounting_performance(p_from date, p_to date)` يعيد:
-- `gross_sales`, `sales_discounts`, `net_sales` من `sales_invoices` (approved/partially_paid/paid)
-- `cogs` من رصيد حساب `cost_of_goods_sold` (إن وُجد رصيد، وإلا `NULL`)
-- `gross_profit` = net_sales − cogs (فقط إذا cogs ليس NULL)
-- `operating_expenses` من مجاميع حسابات النوع `expense` (باستثناء `owner_drawings`)
-- `net_profit` = gross_profit − operating_expenses
-- `ar_balance` من `accounts_receivable`, `ap_balance` من `accounts_payable`
-- `inventory_value` من `aqh_finance_manual_balances.inventory_value` (أو حساب inventory إن وجد)
-- `output_vat`, `deductible_input_vat` من `sales_invoices.vat_amount` و`purchase_invoices.deductible_vat_amount`
-- `net_vat` = output − deductible
+### جدول جديد: `tax_return_snapshots`
+لتجميد أرقام الإقرار عند marked_as_filed:
+- `id uuid pk`, `period_id uuid fk tax_periods`
+- `status text` (draft, under_review, approved_internally, marked_as_filed)
+- `summary jsonb` — كل خانات الإقرار
+- `line_items jsonb` — تفاصيل المستندات المشاركة
+- `filed_at, filed_by`, `override_reason text`
+- `UNIQUE (period_id, status='marked_as_filed')` عبر partial index
 
-عند غياب COGS تعرض البطاقة "غير مكتمل — يحتاج ربط تكلفة المخزون" ولا يحسب مجمل الربح.
+### دوال DB (SECURITY DEFINER، صلاحيات finance فقط)
+- `vat_get_period_summary(p_period_id)` → الأرقام الحية للوحة والمسودة
+- `vat_get_sales_lines(p_period_id, p_filter)` → صفوف ضريبة المبيعات
+- `vat_get_purchase_lines(p_period_id, p_filter)` → صفوف ضريبة المشتريات
+- `vat_get_excluded_invoices(p_period_id)` → مع سبب الاستبعاد
+- `vat_validate_return(p_period_id)` → أخطاء حرجة + تحذيرات
+- `vat_mark_as_filed(p_period_id, p_override_reason)` → snapshot + سجل audit
 
-## 2. صفحة مقارنة الأشهر (`admin.finance.compare.tsx`)
-تقسيم إلى قسمين:
-- **مقارنة نقدية**: مقبوضات، مدفوعات، صافي تدفق، تحصيلات الحساب الشخصي، مدفوعات المالك (توسيع الجدول الحالي)
-- **مقارنة محاسبية**: مبيعات، تكلفة مبيعات، مصروفات، صافي ربح، ضريبة مخرجات، ضريبة مدخلات (استدعاء `get_accounting_performance` لكل شهر)
+### الأمن
+- RLS على `tax_periods` و`tax_return_snapshots`: قراءة/كتابة للـ finance roles فقط عبر `private.has_any_finance_role()`
+- GRANT SELECT/INSERT/UPDATE على `authenticated` مع policies
+- audit logs في `finance_audit_logs` عند: إنشاء فترة، اعتماد داخلي، marked_as_filed، تعديل carried_credit
 
-## 3. قابلية التتبع (Drill-down)
-كل بطاقة تفتح `FinanceRowsDrawer` أو Drawer جديد مماثل يعرض السجلات المصدر مع الفترة والفلاتر المطبقة. لا تفتح بطاقة بدون سجلات فعلية.
+## 2. مصدر الأرقام (accrual فقط الآن)
 
-للبطاقات المحاسبية: Drawer جديد `AccountingRowsDrawer` يعرض القيود من `journal_entry_lines` مع رقم القيد والتاريخ والوصف والمبلغ.
-
-## 4. التقارير (`admin.finance.reports.tsx`)
-- إعادة تسمية التقرير الحالي إلى "تقرير المقبوضات والمدفوعات (نقدي)"
-- إضافة تقرير جديد "قائمة الدخل" (Income Statement): صافي المبيعات، تكلفة المبيعات، مجمل الربح، المصروفات التشغيلية، صافي الربح — يعتمد على `get_accounting_performance`. سحوبات المالك مستثناة.
-
-## تفاصيل تقنية
-
-### Migration
+المخرجات (مبيعات):
 ```sql
-CREATE OR REPLACE FUNCTION public.get_accounting_performance(p_from date, p_to date)
-RETURNS TABLE(
-  gross_sales numeric, sales_discounts numeric, net_sales numeric,
-  cogs numeric, gross_profit numeric,
-  operating_expenses numeric, net_profit numeric,
-  ar_balance numeric, ap_balance numeric, inventory_value numeric,
-  output_vat numeric, deductible_input_vat numeric, net_vat numeric
-) LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,private AS $$ ... $$;
--- REVOKE من public/anon، GRANT للأدوار المالية عبر has_any_finance_role
+FROM sales_invoices
+WHERE status IN ('approved','partially_paid','paid')
+  AND COALESCE(supply_date, issue_date) BETWEEN period.start AND period.end
 ```
-كل الأرقام `numeric(14,2)`.
+تُصنّف عبر `sales_invoice_items.tax_code`: standard_15 / zero / exempt / out_of_scope.
 
-### الملفات المعدلة/المنشأة
-- **معدل**: `src/routes/_authenticated/admin.finance.index.tsx` (تبويبات)، `admin.finance.compare.tsx` (قسم محاسبي)، `admin.finance.reports.tsx` (تقرير قائمة الدخل)
-- **جديد**: `src/lib/finance/accounting-performance.ts` (استدعاء RPC + أنواع)، `src/components/finance/AccountingRowsDrawer.tsx`
-- **جديد**: migration واحدة لإنشاء RPC
+المدخلات (مشتريات):
+```sql
+FROM purchase_invoices
+WHERE status IN ('approved','partially_paid','paid')
+  AND COALESCE(supply_date, issue_date) BETWEEN period.start AND period.end
+```
+مقسّم حسب `vat_deductibility`: fully/partially/non/pending. غير القابل للخصم يظهر لكن لا يخصم من المستحق.
 
-### القيود على التنفيذ
-- لا تعديل على الجداول أو الأعمدة الموجودة
-- لا حذف بيانات
-- لا بيانات تجريبية
-- Grants: `REVOKE ALL FROM PUBLIC, anon`; `GRANT EXECUTE TO authenticated` (مع فحص الدور داخل الدالة)
-- decimal دقيق (`numeric`)
+**الأساس النقدي**: يعرض banner تنبيه، ويحوّل تلقائيًا للـ accrual داخليًا مع رسالة. لا تُنفَّذ حسابات نقدية.
 
-## طريقة الاختبار
-1. فتح `/admin/finance` — التبديل بين تبويب النقد والمحاسبي
-2. اختيار شهر يحوي فواتير مبيعات معتمدة والتحقق من ظهور صافي المبيعات
-3. حالة عدم توفر COGS → عرض رسالة "غير مكتمل"
-4. الضغط على أي بطاقة → فتح Drawer بالسجلات
-5. `/admin/finance/compare` → عرض قسمي المقارنة
-6. `/admin/finance/reports` → توليد "قائمة الدخل" وتصديرها
-7. التأكد أن سحوبات المالك لا تظهر ضمن مصروفات قائمة الدخل
+## 3. الصفحات (7)
+
+كلها تحت `/admin/finance/vat/*` وتلتزم بنفس تصميم صفحات المالية الحالية (RTL، dark، gold accent، cards/tables الحالية).
+
+1. **لوحة الضريبة** `admin.finance.vat.index.tsx`
+   - Period picker + KPI cards: مبيعات خاضعة، مخرجات، مشتريات خاضعة، مدخلات، قابل للخصم، صافي المستحق/الدائن
+   - عدادات فرعية: تنتظر مراجعة، بدون مرفق، مكررة/مشتبه بها
+2. **ضريبة المبيعات** `admin.finance.vat.sales.tsx`
+3. **ضريبة المشتريات** `admin.finance.vat.purchases.tsx`
+4. **الفواتير المستبعدة** `admin.finance.vat.excluded.tsx`
+5. **الفترات الضريبية** `admin.finance.vat.periods.tsx`
+6. **مسودة الإقرار** `admin.finance.vat.draft.tsx` — مع validator أخطاء/تحذيرات + زر marked_as_filed
+7. **الإقرارات السابقة** `admin.finance.vat.filed.tsx` — عرض snapshots المجمّدة
+
+جميع KPIs والصفوف قابلة للنقر لفتح drawer يعرض المستندات المكوّنة للرقم (تتبع الأرقام).
+
+## 4. تصدير
+- Excel: sales / purchases / excluded (باستخدام `exportXLSX` الموجودة)
+- PDF: طباعة المسودة عبر `window.print()` (نفس آلية reports الحالية)
+
+## 5. القائمة
+إضافة مجموعة "ضريبة القيمة المضافة" في sidebar admin مع الروابط السبعة.
+
+## 6. الحماية من التكرار
+- زر marked_as_filed idempotent: يتحقق من وجود snapshot بنفس period_id قبل الإدراج
+- إنشاء الفترة: UNIQUE constraint + upsert
+- كل RPC كتابة تحقق من الصلاحية + audit log
+
+## نقاط لن تُنفَّذ (حسب الطلب)
+- ربط زاتكا / فوترة إلكترونية / XML / QR
+- تقديم آلي للإقرار
+- منطق الأساس النقدي الكامل (نُعرض banner فقط ونحوّل إلى accrual)
+
+## معايير القبول (checklist للاختبار)
+1. ✅ ضريبة المخرجات من `sales_invoices` معتمدة فقط
+2. ✅ ضريبة المدخلات من `purchase_invoices` معتمدة فقط
+3. ✅ non_deductible يظهر لكن لا يخصم من المستحق
+4. ✅ drawer تتبع كل رقم إلى مستنداته
+5. ✅ snapshot مجمّد بعد marked_as_filed — لا يتأثر بتعديلات لاحقة

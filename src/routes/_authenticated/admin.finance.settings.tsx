@@ -141,10 +141,17 @@ function BusinessSettingsCard() {
       company_name: row.company_name || null,
       company_sub: row.company_sub || null,
       vat_number: row.vat_number || null,
+      commercial_registration: row.commercial_registration || null,
+      tax_address: row.tax_address || null,
       phone: row.phone || null,
       email: row.email || null,
       logo_url: row.logo_url || null,
       default_vat_rate: row.default_vat_rate ?? 15,
+      vat_registered: !!row.vat_registered,
+      filing_frequency: row.filing_frequency || "monthly",
+      first_tax_period_start: row.first_tax_period_start || null,
+      tax_basis: row.tax_basis || "accrual",
+      carried_forward_vat_credit: Number(row.carried_forward_vat_credit ?? 0),
     };
     const { error } = await supabase.from("aqh_business_settings" as any).upsert(payload);
     setSaving(false);
@@ -161,11 +168,66 @@ function BusinessSettingsCard() {
         <Field label="اسم الشركة" value={row.company_name ?? ""} onChange={(v) => set("company_name", v)} />
         <Field label="الوصف الفرعي" value={row.company_sub ?? ""} onChange={(v) => set("company_sub", v)} />
         <Field label="الرقم الضريبي" value={row.vat_number ?? ""} onChange={(v) => set("vat_number", v)} />
+        <Field label="السجل التجاري" value={row.commercial_registration ?? ""} onChange={(v) => set("commercial_registration", v)} />
+        <Field label="عنوان الضريبة" value={row.tax_address ?? ""} onChange={(v) => set("tax_address", v)} />
         <Field label="الجوال" value={row.phone ?? ""} onChange={(v) => set("phone", v)} />
         <Field label="البريد" value={row.email ?? ""} onChange={(v) => set("email", v)} />
         <Field label="رابط الشعار (اختياري)" value={row.logo_url ?? ""} onChange={(v) => set("logo_url", v)} />
         <Field label="نسبة الضريبة الافتراضية %" type="number" value={String(row.default_vat_rate ?? 15)} onChange={(v) => set("default_vat_rate", Number(v))} />
       </div>
+
+      <div className="pt-3 mt-1 border-t border-white/10">
+        <div className="text-sm font-semibold mb-2">إعدادات ضريبة القيمة المضافة</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[12px]">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={!!row.vat_registered}
+              onChange={(e) => set("vat_registered", e.target.checked)}
+              className="accent-gold"
+            />
+            <span>المنشأة مسجلة في ضريبة القيمة المضافة</span>
+          </label>
+          <label className="block">
+            <div className="text-[11px] text-muted-foreground mb-1">تكرار الإقرار</div>
+            <select
+              value={row.filing_frequency ?? "monthly"}
+              onChange={(e) => set("filing_frequency", e.target.value)}
+              className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px]"
+            >
+              <option value="monthly">شهري</option>
+              <option value="quarterly">ربع سنوي</option>
+            </select>
+          </label>
+          <label className="block">
+            <div className="text-[11px] text-muted-foreground mb-1">بداية أول فترة ضريبية</div>
+            <input
+              type="date"
+              value={row.first_tax_period_start ?? ""}
+              onChange={(e) => set("first_tax_period_start", e.target.value)}
+              className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px]"
+            />
+          </label>
+          <label className="block">
+            <div className="text-[11px] text-muted-foreground mb-1">أساس احتساب الضريبة</div>
+            <select
+              value={row.tax_basis ?? "accrual"}
+              onChange={(e) => set("tax_basis", e.target.value)}
+              className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px]"
+            >
+              <option value="accrual">استحقاق (الفواتير)</option>
+              <option value="cash">نقدي (المقبوضات/المدفوعات)</option>
+            </select>
+          </label>
+          <Field
+            label="رصيد ضريبي دائن مرحّل (افتتاحي)"
+            type="number"
+            value={String(row.carried_forward_vat_credit ?? 0)}
+            onChange={(v) => set("carried_forward_vat_credit", Number(v))}
+          />
+        </div>
+      </div>
+
       <div className="flex justify-end">
         <button onClick={save} disabled={saving} className="px-4 py-1.5 rounded-lg text-[12px] bg-gold/20 border border-gold/40 text-gold disabled:opacity-50">
           {saving ? "جاري الحفظ…" : "حفظ بيانات النشاط"}
