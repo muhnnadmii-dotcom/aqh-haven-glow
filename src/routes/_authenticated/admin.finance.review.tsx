@@ -628,38 +628,24 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
 
 
   const markComplete = async () => {
-    // Guard: must be classified
     if (!state.transaction_type || state.business_relation === "unclassified") {
       toast.error("لا يمكن الإكمال — الحركة غير مصنفة بالكامل");
       return;
     }
-    setState({ ...state, accounting_status: "reviewed", internal_review_status: "reviewed" });
-    // save immediately with reviewed
     setPending(true);
     try {
-      const payload: any = {
-        transaction_type: state.transaction_type || null,
-        business_relation: state.business_relation,
-        account_id: state.account_id || null,
-        account_type: state.account_type,
-        accounting_status: "reviewed",
-        internal_review_status: "reviewed",
-        internal_note: state.internal_note || null,
-        related_transaction_id: state.related_transaction_id || null,
-      };
-      if (row.kind === "income") {
-        payload.customer_id = state.customer_id || null;
-        payload.sales_invoice_id = state.sales_invoice_id ? Number(state.sales_invoice_id) : null;
-      } else {
-        payload.supplier_id = state.supplier_id || null;
-        payload.purchase_invoice_id = state.purchase_invoice_id ? Number(state.purchase_invoice_id) : null;
-      }
+      const payload = buildPayload({ accounting_status: "reviewed", internal_review_status: "reviewed" });
       const { error } = await supabase.from(table as any).update(payload).eq("id", row.id);
       if (error) throw error;
+      if (state.settlement_id && row.kind === "income" && state.settlement_id !== row.settlement_id) {
+        await supabase.from("payment_settlements" as any).update({ bank_income_id: row.id }).eq("id", state.settlement_id);
+      }
+      setState({ ...state, accounting_status: "reviewed", internal_review_status: "reviewed" });
       toast.success("تم اعتماد المراجعة");
       onDone();
     } catch (e: any) { toast.error(e.message); } finally { setPending(false); }
   };
+
 
   // Quick actions
   const applyQuick = (patch: any) => setState((s: any) => ({ ...s, ...patch }));
