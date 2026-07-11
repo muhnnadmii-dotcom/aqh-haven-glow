@@ -161,8 +161,62 @@ function ComparePage() {
         </table>
       </div>
 
+      <div className="text-sm font-semibold text-gold/90 mt-2">مقارنة محاسبية</div>
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+        {!acctA || !acctB ? (
+          <div className="p-4 text-xs text-muted-foreground">غير متاح — تعذر تحميل بيانات الأداء المحاسبي</div>
+        ) : (
+          <table className="w-full text-[13px]">
+            <thead className="bg-white/5 text-[11px] text-muted-foreground">
+              <tr>
+                <th className="text-right p-3">البند</th>
+                <th className="text-right p-3">{labelA}</th>
+                <th className="text-right p-3">{labelB}</th>
+                <th className="text-right p-3">الفرق</th>
+                <th className="text-right p-3">النمو %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {acctRows.map((r) => {
+                const rawA = (acctA as any)[r.key];
+                const rawB = (acctB as any)[r.key];
+                const a = rawA == null ? 0 : Number(rawA);
+                const b = rawB == null ? 0 : Number(rawB);
+                const diff = b - a;
+                const pct = pctChange(b, a);
+                const dir = pct == null ? 0 : pct > 0.5 ? 1 : pct < -0.5 ? -1 : 0;
+                const good = r.invert ? dir < 0 : dir > 0;
+                const bad = r.invert ? dir > 0 : dir < 0;
+                const tone = dir === 0 ? "text-muted-foreground" : good ? "text-emerald-300" : bad ? "text-red-300" : "";
+                const Ico = dir === 0 ? Minus : dir > 0 ? ArrowUpRight : ArrowDownRight;
+                const diffGood = r.invert ? diff < 0 : diff > 0;
+                const diffTone = diff === 0 ? "text-muted-foreground" : diffGood ? "text-emerald-300" : "text-red-300";
+                const unavailable = rawA == null || rawB == null;
+                return (
+                  <tr key={r.key} className={`border-t border-white/5 ${r.bold ? "bg-white/[0.04]" : ""}`}>
+                    <td className={`p-3 ${r.bold ? "font-bold text-foreground" : ""}`}>{r.label}</td>
+                    <td className={`p-3 font-mono tabular-nums ${r.bold ? "font-bold" : ""}`}>{rawA == null ? "—" : fmtSAR(a)}</td>
+                    <td className={`p-3 font-mono tabular-nums ${r.bold ? "font-bold" : ""}`}>{rawB == null ? "—" : fmtSAR(b)}</td>
+                    <td className={`p-3 font-mono tabular-nums ${diffTone}`}>
+                      {unavailable ? "—" : <span dir="ltr">{diff >= 0 ? "+" : ""}{fmtSAR(diff)}</span>}
+                    </td>
+                    <td className={`p-3 font-mono tabular-nums ${tone}`}>
+                      {unavailable ? "—" : (
+                        <span dir="ltr" className="inline-flex items-center gap-1">
+                          <Ico size={12} /> {pct == null ? "—" : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-        <div className="text-sm font-semibold mb-3">مقارنة رسومية</div>
+        <div className="text-sm font-semibold mb-3">مقارنة رسومية (نقدي)</div>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 8, right: 12, left: 8, bottom: 40 }}>
