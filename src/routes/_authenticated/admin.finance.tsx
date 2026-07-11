@@ -46,6 +46,7 @@ const tabs = [
   { to: "/admin/finance/periods", label: "الفترات المحاسبية", icon: CalendarRange },
   { to: "/admin/finance/trial-balance", label: "ميزان المراجعة", icon: Scale },
   { to: "/admin/finance/general-ledger", label: "دفتر الأستاذ", icon: ScrollText },
+  { to: "/admin/finance/vat", label: "ضريبة القيمة المضافة", icon: Percent },
   { to: "/admin/finance/settings", label: "الإعدادات", icon: Cog },
 ];
 
