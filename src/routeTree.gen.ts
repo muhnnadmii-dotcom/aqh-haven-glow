@@ -121,6 +121,7 @@ import { Route as AuthenticatedAdminFinanceVatPeriodsRouteImport } from './route
 import { Route as AuthenticatedAdminFinanceVatFiledRouteImport } from './routes/_authenticated/admin.finance.vat.filed'
 import { Route as AuthenticatedAdminFinanceVatExcludedRouteImport } from './routes/_authenticated/admin.finance.vat.excluded'
 import { Route as AuthenticatedAdminFinanceVatDraftRouteImport } from './routes/_authenticated/admin.finance.vat.draft'
+import { Route as AuthenticatedAdminFinanceSettlementsImportRouteImport } from './routes/_authenticated/admin.finance.settlements.import'
 import { Route as AuthenticatedAdminFinanceSalesInvoicesIdRouteImport } from './routes/_authenticated/admin.finance.sales-invoices.$id'
 import { Route as AuthenticatedAdminFinanceQuotesIdRouteImport } from './routes/_authenticated/admin.finance.quotes.$id'
 import { Route as AuthenticatedAdminFinancePurchaseInvoicesIdRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices.$id'
@@ -770,6 +771,12 @@ const AuthenticatedAdminFinanceVatDraftRoute =
     path: '/draft',
     getParentRoute: () => AuthenticatedAdminFinanceVatRoute,
   } as any)
+const AuthenticatedAdminFinanceSettlementsImportRoute =
+  AuthenticatedAdminFinanceSettlementsImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => AuthenticatedAdminFinanceSettlementsRoute,
+  } as any)
 const AuthenticatedAdminFinanceSalesInvoicesIdRoute =
   AuthenticatedAdminFinanceSalesInvoicesIdRouteImport.update({
     id: '/sales-invoices/$id',
@@ -867,7 +874,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/sales-review': typeof AuthenticatedAdminFinanceSalesReviewRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/settlement-lines': typeof AuthenticatedAdminFinanceSettlementLinesRoute
-  '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRoute
+  '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRouteWithChildren
   '/admin/finance/settlements-review': typeof AuthenticatedAdminFinanceSettlementsReviewRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
@@ -893,6 +900,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/purchase-invoices/$id': typeof AuthenticatedAdminFinancePurchaseInvoicesIdRoute
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
+  '/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
   '/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -975,7 +983,7 @@ export interface FileRoutesByTo {
   '/admin/finance/sales-review': typeof AuthenticatedAdminFinanceSalesReviewRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/settlement-lines': typeof AuthenticatedAdminFinanceSettlementLinesRoute
-  '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRoute
+  '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRouteWithChildren
   '/admin/finance/settlements-review': typeof AuthenticatedAdminFinanceSettlementsReviewRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
@@ -1000,6 +1008,7 @@ export interface FileRoutesByTo {
   '/admin/finance/purchase-invoices/$id': typeof AuthenticatedAdminFinancePurchaseInvoicesIdRoute
   '/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
+  '/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
   '/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -1092,7 +1101,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/sales-review': typeof AuthenticatedAdminFinanceSalesReviewRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/settlement-lines': typeof AuthenticatedAdminFinanceSettlementLinesRoute
-  '/_authenticated/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRoute
+  '/_authenticated/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRouteWithChildren
   '/_authenticated/admin/finance/settlements-review': typeof AuthenticatedAdminFinanceSettlementsReviewRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/_authenticated/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
@@ -1118,6 +1127,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/purchase-invoices/$id': typeof AuthenticatedAdminFinancePurchaseInvoicesIdRoute
   '/_authenticated/admin/finance/quotes/$id': typeof AuthenticatedAdminFinanceQuotesIdRoute
   '/_authenticated/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
+  '/_authenticated/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
   '/_authenticated/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/_authenticated/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/_authenticated/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -1236,6 +1246,7 @@ export interface FileRouteTypes {
     | '/admin/finance/purchase-invoices/$id'
     | '/admin/finance/quotes/$id'
     | '/admin/finance/sales-invoices/$id'
+    | '/admin/finance/settlements/import'
     | '/admin/finance/vat/draft'
     | '/admin/finance/vat/excluded'
     | '/admin/finance/vat/filed'
@@ -1343,6 +1354,7 @@ export interface FileRouteTypes {
     | '/admin/finance/purchase-invoices/$id'
     | '/admin/finance/quotes/$id'
     | '/admin/finance/sales-invoices/$id'
+    | '/admin/finance/settlements/import'
     | '/admin/finance/vat/draft'
     | '/admin/finance/vat/excluded'
     | '/admin/finance/vat/filed'
@@ -1460,6 +1472,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/purchase-invoices/$id'
     | '/_authenticated/admin/finance/quotes/$id'
     | '/_authenticated/admin/finance/sales-invoices/$id'
+    | '/_authenticated/admin/finance/settlements/import'
     | '/_authenticated/admin/finance/vat/draft'
     | '/_authenticated/admin/finance/vat/excluded'
     | '/_authenticated/admin/finance/vat/filed'
@@ -2276,6 +2289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceVatDraftRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceVatRoute
     }
+    '/_authenticated/admin/finance/settlements/import': {
+      id: '/_authenticated/admin/finance/settlements/import'
+      path: '/import'
+      fullPath: '/admin/finance/settlements/import'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceSettlementsImportRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceSettlementsRoute
+    }
     '/_authenticated/admin/finance/sales-invoices/$id': {
       id: '/_authenticated/admin/finance/sales-invoices/$id'
       path: '/sales-invoices/$id'
@@ -2367,6 +2387,21 @@ const AuthenticatedAdminDesignRouteWithChildren =
     AuthenticatedAdminDesignRouteChildren,
   )
 
+interface AuthenticatedAdminFinanceSettlementsRouteChildren {
+  AuthenticatedAdminFinanceSettlementsImportRoute: typeof AuthenticatedAdminFinanceSettlementsImportRoute
+}
+
+const AuthenticatedAdminFinanceSettlementsRouteChildren: AuthenticatedAdminFinanceSettlementsRouteChildren =
+  {
+    AuthenticatedAdminFinanceSettlementsImportRoute:
+      AuthenticatedAdminFinanceSettlementsImportRoute,
+  }
+
+const AuthenticatedAdminFinanceSettlementsRouteWithChildren =
+  AuthenticatedAdminFinanceSettlementsRoute._addFileChildren(
+    AuthenticatedAdminFinanceSettlementsRouteChildren,
+  )
+
 interface AuthenticatedAdminFinanceVatRouteChildren {
   AuthenticatedAdminFinanceVatDraftRoute: typeof AuthenticatedAdminFinanceVatDraftRoute
   AuthenticatedAdminFinanceVatExcludedRoute: typeof AuthenticatedAdminFinanceVatExcludedRoute
@@ -2429,7 +2464,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceSalesReviewRoute: typeof AuthenticatedAdminFinanceSalesReviewRoute
   AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
   AuthenticatedAdminFinanceSettlementLinesRoute: typeof AuthenticatedAdminFinanceSettlementLinesRoute
-  AuthenticatedAdminFinanceSettlementsRoute: typeof AuthenticatedAdminFinanceSettlementsRoute
+  AuthenticatedAdminFinanceSettlementsRoute: typeof AuthenticatedAdminFinanceSettlementsRouteWithChildren
   AuthenticatedAdminFinanceSettlementsReviewRoute: typeof AuthenticatedAdminFinanceSettlementsReviewRoute
   AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
   AuthenticatedAdminFinanceTrialBalanceRoute: typeof AuthenticatedAdminFinanceTrialBalanceRoute
@@ -2498,7 +2533,7 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
     AuthenticatedAdminFinanceSettlementLinesRoute:
       AuthenticatedAdminFinanceSettlementLinesRoute,
     AuthenticatedAdminFinanceSettlementsRoute:
-      AuthenticatedAdminFinanceSettlementsRoute,
+      AuthenticatedAdminFinanceSettlementsRouteWithChildren,
     AuthenticatedAdminFinanceSettlementsReviewRoute:
       AuthenticatedAdminFinanceSettlementsReviewRoute,
     AuthenticatedAdminFinanceSuppliersRoute:
