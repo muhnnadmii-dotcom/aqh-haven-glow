@@ -116,6 +116,7 @@ function ComparePage() {
         <MonthPicker value={monthB} onChange={setMonthB} label="الشهر B" />
       </div>
 
+      <div className="text-sm font-semibold text-gold/90 mt-2">مقارنة نقدية</div>
       <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
         <table className="w-full text-[13px]">
           <thead className="bg-white/5 text-[11px] text-muted-foreground">
