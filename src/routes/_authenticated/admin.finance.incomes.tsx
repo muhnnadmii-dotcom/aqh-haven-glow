@@ -287,11 +287,14 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     attachment_status: row?.attachment_status ?? "not_attached",
     transaction_type: row?.transaction_type ?? "",
     accounting_status: row?.accounting_status ?? "unclassified",
+    business_relation: row?.business_relation ?? "unclassified",
     internal_note: row?.internal_note ?? "",
     customer_id: row?.customer_id ?? "",
     sales_invoice_id: row?.sales_invoice_id ?? "",
     collection_type: row?.collection_type ?? "",
     related_transaction_id: row?.related_transaction_id ?? "",
+    payment_provider_id: row?.payment_provider_id ?? "",
+    settlement_id: row?.settlement_id ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
