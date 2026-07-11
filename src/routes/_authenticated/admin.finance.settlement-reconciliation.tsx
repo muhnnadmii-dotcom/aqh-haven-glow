@@ -394,21 +394,39 @@ function ReconciliationPage() {
               const remaining = Number(s.expected_net_amount) - used;
               const isSel = s.id === selSettlementId;
               const cls = isSel ? "bg-amber-500/10 border-r-2 border-amber-500" : "hover:bg-white/5";
+              const providerName = providerById[s.provider_id]?.name ?? "—";
               return (
                 <li key={s.id}>
                   <button onClick={() => setSelSettlementId(s.id)} className={`w-full text-right p-3 text-xs space-y-1 ${cls}`}>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-amber-400">{providerById[s.provider_id]?.name ?? "—"}</span>
-                      <span className="text-muted-foreground">{s.settlement_date}</span>
+                      <span className="font-semibold text-amber-400 truncate">{displayRef(s, providerName)}</span>
+                      <span className="text-muted-foreground shrink-0">{s.settlement_date}</span>
                     </div>
-                    <div className="text-muted-foreground">مرجع: {s.settlement_reference ?? "—"}</div>
+                    {s.source_file_name && (
+                      <div className="text-[10px] text-muted-foreground truncate">📎 {s.source_file_name}</div>
+                    )}
                     <div className="flex justify-between">
                       <span>المتوقع: <b className="text-white">{fmt(s.expected_net_amount)}</b></span>
                       <span>مخصص: <b className="text-blue-300">{fmt(used)}</b></span>
                     </div>
-                    <div className="flex justify-between">
+                    {Math.abs(Number(s.adjustments_amount || 0)) > 0.005 && (
+                      <div className="text-[10px] text-purple-300">تسويات: {fmt(s.adjustments_amount)}</div>
+                    )}
+                    <div className="flex justify-between items-center gap-2">
                       <span>المتبقي: <b className={remaining > 0.05 ? "text-amber-300" : "text-emerald-300"}>{fmt(remaining)}</b></span>
-                      <span className="text-muted-foreground">{STATUS_LABEL[s.status] ?? s.status}</span>
+                      <span className="flex items-center gap-1">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">{STATUS_LABEL[s.status] ?? s.status}</span>
+                        {s.payout_status && s.payout_status !== s.status && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-300">{s.payout_status}</span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-end" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); recalcSettlement(s.id); }}
+                        className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-muted-foreground hover:bg-white/5 hover:text-white"
+                        title="إعادة قراءة كل سطور التسوية وإعادة حساب الإجماليات"
+                      >↻ إعادة احتساب</button>
                     </div>
                   </button>
                 </li>
