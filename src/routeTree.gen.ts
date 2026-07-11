@@ -81,6 +81,7 @@ import { Route as AuthenticatedAdminFinanceReviewRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminFinanceReportsRouteImport } from './routes/_authenticated/admin.finance.reports'
 import { Route as AuthenticatedAdminFinancePurchaseInvoicesReviewRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices-review'
 import { Route as AuthenticatedAdminFinancePeriodsRouteImport } from './routes/_authenticated/admin.finance.periods'
+import { Route as AuthenticatedAdminFinancePaymentProvidersRouteImport } from './routes/_authenticated/admin.finance.payment-providers'
 import { Route as AuthenticatedAdminFinanceOwnerAccountRouteImport } from './routes/_authenticated/admin.finance.owner-account'
 import { Route as AuthenticatedAdminFinanceJournalEntriesRouteImport } from './routes/_authenticated/admin.finance.journal-entries'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
@@ -524,6 +525,12 @@ const AuthenticatedAdminFinancePeriodsRoute =
     path: '/periods',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinancePaymentProvidersRoute =
+  AuthenticatedAdminFinancePaymentProvidersRouteImport.update({
+    id: '/payment-providers',
+    path: '/payment-providers',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceOwnerAccountRoute =
   AuthenticatedAdminFinanceOwnerAccountRouteImport.update({
     id: '/owner-account',
@@ -813,6 +820,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/admin/finance/journal-entries': typeof AuthenticatedAdminFinanceJournalEntriesRoute
   '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
+  '/admin/finance/payment-providers': typeof AuthenticatedAdminFinancePaymentProvidersRoute
   '/admin/finance/periods': typeof AuthenticatedAdminFinancePeriodsRoute
   '/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
@@ -915,6 +923,7 @@ export interface FileRoutesByTo {
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/admin/finance/journal-entries': typeof AuthenticatedAdminFinanceJournalEntriesRoute
   '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
+  '/admin/finance/payment-providers': typeof AuthenticatedAdminFinancePaymentProvidersRoute
   '/admin/finance/periods': typeof AuthenticatedAdminFinancePeriodsRoute
   '/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
@@ -1026,6 +1035,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
   '/_authenticated/admin/finance/journal-entries': typeof AuthenticatedAdminFinanceJournalEntriesRoute
   '/_authenticated/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
+  '/_authenticated/admin/finance/payment-providers': typeof AuthenticatedAdminFinancePaymentProvidersRoute
   '/_authenticated/admin/finance/periods': typeof AuthenticatedAdminFinancePeriodsRoute
   '/_authenticated/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/_authenticated/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
@@ -1138,6 +1148,7 @@ export interface FileRouteTypes {
     | '/admin/finance/incomes'
     | '/admin/finance/journal-entries'
     | '/admin/finance/owner-account'
+    | '/admin/finance/payment-providers'
     | '/admin/finance/periods'
     | '/admin/finance/purchase-invoices-review'
     | '/admin/finance/reports'
@@ -1240,6 +1251,7 @@ export interface FileRouteTypes {
     | '/admin/finance/incomes'
     | '/admin/finance/journal-entries'
     | '/admin/finance/owner-account'
+    | '/admin/finance/payment-providers'
     | '/admin/finance/periods'
     | '/admin/finance/purchase-invoices-review'
     | '/admin/finance/reports'
@@ -1350,6 +1362,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/incomes'
     | '/_authenticated/admin/finance/journal-entries'
     | '/_authenticated/admin/finance/owner-account'
+    | '/_authenticated/admin/finance/payment-providers'
     | '/_authenticated/admin/finance/periods'
     | '/_authenticated/admin/finance/purchase-invoices-review'
     | '/_authenticated/admin/finance/reports'
@@ -1918,6 +1931,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinancePeriodsRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/payment-providers': {
+      id: '/_authenticated/admin/finance/payment-providers'
+      path: '/payment-providers'
+      fullPath: '/admin/finance/payment-providers'
+      preLoaderRoute: typeof AuthenticatedAdminFinancePaymentProvidersRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/owner-account': {
       id: '/_authenticated/admin/finance/owner-account'
       path: '/owner-account'
@@ -2297,6 +2317,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
   AuthenticatedAdminFinanceJournalEntriesRoute: typeof AuthenticatedAdminFinanceJournalEntriesRoute
   AuthenticatedAdminFinanceOwnerAccountRoute: typeof AuthenticatedAdminFinanceOwnerAccountRoute
+  AuthenticatedAdminFinancePaymentProvidersRoute: typeof AuthenticatedAdminFinancePaymentProvidersRoute
   AuthenticatedAdminFinancePeriodsRoute: typeof AuthenticatedAdminFinancePeriodsRoute
   AuthenticatedAdminFinancePurchaseInvoicesReviewRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   AuthenticatedAdminFinanceReportsRoute: typeof AuthenticatedAdminFinanceReportsRoute
@@ -2348,6 +2369,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceJournalEntriesRoute,
     AuthenticatedAdminFinanceOwnerAccountRoute:
       AuthenticatedAdminFinanceOwnerAccountRoute,
+    AuthenticatedAdminFinancePaymentProvidersRoute:
+      AuthenticatedAdminFinancePaymentProvidersRoute,
     AuthenticatedAdminFinancePeriodsRoute:
       AuthenticatedAdminFinancePeriodsRoute,
     AuthenticatedAdminFinancePurchaseInvoicesReviewRoute:
