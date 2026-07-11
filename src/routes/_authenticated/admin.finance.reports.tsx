@@ -84,15 +84,15 @@ function ReportsPage() {
     const label = formatMonthAr(month);
     exportXLSX(`تقرير-${month}.xlsx`, [
       {
-        name: `قائمة الدخل ${label}`,
+        name: `المقبوضات والمدفوعات ${label}`,
         headers: ["البند", "المبلغ (ر.س)"],
         rows: [
-          ["إجمالي الدخل", totIncome],
-          ["إجمالي مصروفات التشغيل", -totOp],
+          ["إجمالي المقبوضات", totIncome],
+          ["إجمالي المدفوعات", -totOp],
           ...catRows.map((c) => [`— ${c.name}`, -c.total] as [string, number]),
-          ["صافي الربح قبل التوزيع", netOp],
-          ["توزيع الأرباح (سحوبات المالك)", -totDraws],
-          ["الصافي بعد التوزيع", netAfter],
+          ["صافي التدفق قبل سحوبات المالك", netOp],
+          ["سحوبات المالك", -totDraws],
+          ["صافي التدفق بعد سحوبات المالك", netAfter],
         ],
       },
       {
