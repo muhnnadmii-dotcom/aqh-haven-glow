@@ -146,14 +146,14 @@ function ReportsPage() {
 
         <table className="w-full text-[13px] mb-8">
           <tbody>
-            <TR label="إجمالي الدخل" v={totIncome} tone="text-emerald-300 print:text-black" bold />
-            <TR label="مصروفات التشغيل" v={-totOp} tone="text-red-300 print:text-black" />
+            <TR label="إجمالي المقبوضات" v={totIncome} tone="text-emerald-300 print:text-black" bold />
+            <TR label="إجمالي المدفوعات" v={-totOp} tone="text-red-300 print:text-black" />
             {catRows.map((c) => (
               <TR key={c.id} label={`— ${c.name}`} v={-c.total} muted />
             ))}
-            <TR label="صافي الربح قبل التوزيع" v={netOp} tone={netOp >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
-            <TR label="توزيع الأرباح (سحوبات المالك)" v={-totDraws} tone="text-gold print:text-black" />
-            <TR label="الصافي بعد التوزيع" v={netAfter} tone={netAfter >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
+            <TR label="صافي التدفق قبل سحوبات المالك" v={netOp} tone={netOp >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
+            <TR label="سحوبات المالك" v={-totDraws} tone="text-gold print:text-black" />
+            <TR label="صافي التدفق بعد سحوبات المالك" v={netAfter} tone={netAfter >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
           </tbody>
         </table>
 
