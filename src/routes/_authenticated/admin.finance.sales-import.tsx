@@ -424,12 +424,25 @@ function SalesImportPage() {
   }
 
 
+  const buckets = useMemo(() => countBuckets(rows), [rows]);
+  const issueCounts = useMemo(() => {
+    const acc: Record<DataIssue, number> = {
+      missing_invoice_number: 0, missing_payment_method: 0, cancelled_order: 0,
+      duplicate_order: 0, zero_total: 0, invalid_amount: 0,
+      missing_order_id: 0, invalid_date: 0, conflicting_existing_order: 0,
+    };
+    rows.forEach((r) => r.issues.forEach((k) => { acc[k] = (acc[k] ?? 0) + 1; }));
+    return acc;
+  }, [rows]);
+
+  const canImportRow = (r: ParsedRow) =>
+    r.classification === "ready_to_import" || r.classification === "importable_missing_tax_document";
+
   const stats = useMemo(() => {
     const total = rows.length;
-    const valid = rows.filter((r) => !r.needs_review && !r.hard_error).length;
-    const review = rows.filter((r) => r.needs_review || r.hard_error).length;
-    const selectedValid = rows.filter((r) => selected.has(r.rowNo) && !r.needs_review && !r.hard_error).length;
-    return { total, valid, review, selectedValid };
+    const importable = rows.filter(canImportRow).length;
+    const selectedImportable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r)).length;
+    return { total, importable, selectedImportable };
   }, [rows, selected]);
 
   function toggleRow(rowNo: number, canSelect: boolean) {
@@ -440,9 +453,9 @@ function SalesImportPage() {
       return n;
     });
   }
-  function selectAllValid() {
+  function selectAllImportable() {
     const n = new Set<number>();
-    rows.forEach((r) => { if (!r.needs_review && !r.hard_error) n.add(r.rowNo); });
+    rows.forEach((r) => { if (canImportRow(r)) n.add(r.rowNo); });
     setSelected(n);
   }
   function clearSelection() { setSelected(new Set()); }
@@ -450,9 +463,23 @@ function SalesImportPage() {
   async function commit() {
     if (!rows.length) return;
     if (!canWrite) { toast.error("لا تملك صلاحية الاستيراد"); return; }
-    // فرض القاعدة: فقط الصفوف الصالحة والمحددة
-    const importable = rows.filter((r) => selected.has(r.rowNo) && !r.needs_review && !r.hard_error);
-    if (!importable.length) { toast.error("لا توجد صفوف صالحة محددة للاعتماد"); return; }
+    const importable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r));
+    if (!importable.length) { toast.error("لا توجد صفوف قابلة للاستيراد ضمن التحديد"); return; }
+
+    const readyCount = importable.filter((r) => r.classification === "ready_to_import").length;
+    const missingDocCount = importable.filter((r) => r.classification === "importable_missing_tax_document").length;
+    const cancelledCount = buckets.cancelled_order;
+    const dupCount = buckets.skipped_duplicate;
+    const blockCount = buckets.blocking_review;
+
+    const ok = window.confirm(
+      `سيتم استيراد ${importable.length} طلب كمسودة فاتورة:\n` +
+      `• جاهز للاستيراد: ${readyCount}\n` +
+      `• مسودات بمستند ضريبي ناقص: ${missingDocCount}\n\n` +
+      `سيتم حفظ ${cancelledCount} طلب ملغي كسجل طلب فقط (بدون فاتورة نشطة).\n` +
+      `سيتم تجاوز ${dupCount} مكرر و ${blockCount} خطأ.\n\nمتابعة؟`
+    );
+    if (!ok) return;
 
     setCommitting(true);
     try {
@@ -477,16 +504,24 @@ function SalesImportPage() {
       const batchId = batchRow.id as string;
 
       let inserted = 0;
+      let insertedDraftMissingDoc = 0;
       const failed: { rowNo: number; error: string }[] = [];
 
       for (const r of importable) {
-        const invoiceNumber = `SALLA-${r.external_order_id}`;
+        // رقم عرض داخلي — لا نضع external_invoice_number إن كان ناقصاً
+        const invoiceNumber = r.external_invoice_number
+          ? `SALLA-${r.external_order_id}`
+          : `SALLA-${r.external_order_id}`;
+        const missingDoc = r.classification === "importable_missing_tax_document";
         const settlementStatus =
           r.payment_provider === "tabby" || r.payment_provider === "tamara" || r.payment_provider === "salla_payments"
             ? "pending"
             : r.payment_provider === "bank_transfer"
               ? "not_applicable"
               : "manual_review";
+        const noteParts: string[] = [];
+        if (missingDoc) noteParts.push("مسودة — رقم الفاتورة الضريبية مفقود، لا تدخل الإقرار الضريبي حتى الاستكمال");
+        if (!r.payment_method_raw) noteParts.push("طريقة الدفع غير معروفة");
         const row: any = {
           invoice_number: invoiceNumber,
           issue_date: r.order_date,
@@ -499,7 +534,7 @@ function SalesImportPage() {
           settlement_status: settlementStatus,
           original_payment_method: r.payment_method_raw ?? null,
           external_order_id: r.external_order_id,
-          external_invoice_number: r.external_invoice_number,
+          external_invoice_number: r.external_invoice_number, // يبقى null إن كان مفقوداً
           customer_name_snapshot: r.customer_name,
           order_status: r.order_status,
           original_gross_amount: r.original_gross_amount,
@@ -514,10 +549,10 @@ function SalesImportPage() {
           total_amount: r.original_gross_amount ?? 0,
           paid_amount: r.payment_status === "paid" ? (r.original_gross_amount ?? 0) : 0,
           remaining_amount: r.payment_status === "paid" ? 0 : (r.original_gross_amount ?? 0),
-          data_completeness_status: "complete",
+          data_completeness_status: missingDoc ? "missing_original_invoice" : "complete",
           import_batch_id: batchId,
           import_row_snapshot: r as any,
-          notes: null,
+          notes: noteParts.length ? noteParts.join(" · ") : null,
         };
 
         const { error: iErr } = await (supabase as any)
@@ -527,13 +562,12 @@ function SalesImportPage() {
           .single();
         if (iErr) { failed.push({ rowNo: r.rowNo, error: iErr.message }); continue; }
         inserted++;
+        if (missingDoc) insertedDraftMissingDoc++;
       }
 
-      const duplicates = rows.filter((r) => r.duplicate).length;
-      const reviewRows = rows.filter((r) => r.needs_review || r.hard_error).length;
       const errorRows = failed.length;
 
-      // Upsert ALL parsed rows into salla_orders (including cancelled) for settlement matching
+      // Upsert ALL parsed rows into salla_orders (يشمل الملغية والمكررة) لأغراض مطابقة التسويات
       const orderPayloads = rows
         .filter((r) => r.external_order_id)
         .map((r) => ({
@@ -557,21 +591,29 @@ function SalesImportPage() {
 
       await (supabase as any).from("sales_import_batches").update({
         imported_rows: inserted,
-        duplicate_rows: duplicates,
-        needs_review_rows: reviewRows,
+        duplicate_rows: buckets.skipped_duplicate,
+        needs_review_rows: buckets.blocking_review,
         error_rows: errorRows,
-        summary_json: { headerRow, headers, failed, salla_orders_upserted: orderPayloads.length },
+        summary_json: {
+          headerRow, headers, failed,
+          salla_orders_upserted: orderPayloads.length,
+          buckets, issue_counts: issueCounts,
+          drafts_missing_tax_document: insertedDraftMissingDoc,
+          cancelled_saved_as_orders: buckets.cancelled_order,
+        },
       }).eq("id", batchId);
 
       await (supabase as any).from("finance_audit_logs").insert({
         related_type: "sales_import_batches",
         related_id: batchId,
         action: "commit_sales_import",
-        note: `salla · file=${file?.name} inserted=${inserted} dupes=${duplicates} review=${reviewRows} errors=${errorRows}`,
+        note: `salla · file=${file?.name} inserted=${inserted} draft_missing_doc=${insertedDraftMissingDoc} cancelled=${buckets.cancelled_order} dupes=${buckets.skipped_duplicate} blocking=${buckets.blocking_review} errors=${errorRows}`,
         changed_by: uid,
       });
 
-      toast.success(`تم استيراد ${inserted} فاتورة. تجاهل مراجعة: ${reviewRows}، مكررة: ${duplicates}، أخطاء: ${errorRows}.`);
+      toast.success(
+        `تم استيراد ${inserted} طلب (${insertedDraftMissingDoc} بمستند ناقص). ملغي محفوظ كسجل: ${buckets.cancelled_order}، مكرر متجاوز: ${buckets.skipped_duplicate}، خطأ: ${buckets.blocking_review + errorRows}.`
+      );
       setRows([]); setSelected(new Set()); setFile(null); setSheets([]); setSheet(""); setAoa([]); setMapping({});
       if (fileRef.current) fileRef.current.value = "";
     } catch (e: any) {
@@ -580,6 +622,7 @@ function SalesImportPage() {
       setCommitting(false);
     }
   }
+
 
   async function saveTemplate() {
     const name = templateName.trim();
