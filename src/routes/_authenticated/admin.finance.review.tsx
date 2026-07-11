@@ -795,6 +795,57 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
             </div>
           )}
 
+          {/* Settlement linking for income rows */}
+          {row.kind === "income" && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
+              <div className="text-sm font-semibold mb-2 flex items-center gap-2">
+                <Landmark className="w-4 h-4" />
+                ربط بتسوية بوابة دفع {providerHint && <Badge variant="outline" className="text-[10px] bg-white/5 border-white/20">اقتراح: {providerHint.name}</Badge>}
+              </div>
+              {state.settlement_id ? (
+                <div className="flex items-center justify-between p-2 rounded bg-emerald-500/10 border border-emerald-500/30">
+                  <div className="text-xs">
+                    مرتبط بتسوية:{" "}
+                    <b className="font-mono">
+                      {(settlements as any[]).find((s: any) => s.id === state.settlement_id)?.settlement_reference
+                        ?? state.settlement_id.slice(0, 8)}
+                    </b>
+                  </div>
+                  <button className="text-xs text-rose-300 hover:text-rose-200" onClick={() => setState({ ...state, settlement_id: "" })}>إلغاء الربط</button>
+                </div>
+              ) : settlementCandidates.length === 0 ? (
+                <div className="text-xs text-muted-foreground">لا توجد تسويات متطابقة (نفس البوابة والمبلغ ضمن هامش التقريب).</div>
+              ) : (
+                <div className="space-y-1 max-h-56 overflow-y-auto">
+                  {settlementCandidates.map((s: any) => {
+                    const p = (providers as any[]).find((pp: any) => pp.id === s.provider_id);
+                    const diff = row.amount - Number(s.actual_bank_amount ?? s.expected_net_amount ?? 0);
+                    return (
+                      <label key={s.id} className={`flex items-center justify-between p-2 rounded cursor-pointer border ${state.settlement_id === s.id ? "bg-rose-500/20 border-rose-500/50" : "border-white/5 hover:bg-white/5"}`}>
+                        <div className="flex-1">
+                          <div className="text-xs flex items-center gap-2">
+                            <b>{p?.name ?? "—"}</b>
+                            <span className="text-muted-foreground">{s.settlement_date}</span>
+                            <span className="font-mono text-[10px] text-muted-foreground">{s.settlement_reference ?? s.id.slice(0, 6)}</span>
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            متوقع: {SAR(s.expected_net_amount)} · فعلي: {s.actual_bank_amount != null ? SAR(s.actual_bank_amount) : "—"}
+                            {Math.abs(diff) > 0.01 && <span className="text-amber-300"> · فرق مع الحركة: {SAR(diff)}</span>}
+                          </div>
+                        </div>
+                        <input type="radio" checked={state.settlement_id === s.id} onChange={() => setState({ ...state, settlement_id: s.id })} />
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="text-[10px] text-muted-foreground mt-2">
+                لن يتم إنشاء حركة جديدة — سيتم فقط ربط هذه الحركة بالتسوية المختارة.
+              </div>
+            </div>
+          )}
+
+
           <Field label="ملاحظة داخلية">
             <Textarea value={state.internal_note} onChange={(e) => setState({ ...state, internal_note: e.target.value })} rows={2} className="bg-black/40 border-white/10 text-sm" />
           </Field>
