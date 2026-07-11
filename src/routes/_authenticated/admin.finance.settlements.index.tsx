@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
-import { Plus, X, ChevronLeft, Upload } from "lucide-react";
+import { Plus, X, ChevronLeft, Upload, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/")({
@@ -67,6 +67,7 @@ function SettlementsPage() {
         </div>
         {roles.canManage && (
           <div className="flex items-center gap-2">
+            <RematchAllButton onDone={load} />
             <Link to="/admin/finance/settlements/import" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/20 border border-gold/40 text-gold text-[12px] hover:bg-gold/30">
               <Upload size={14} /> استيراد تسوية
             </Link>
@@ -267,5 +268,53 @@ function SettlementForm({ providers, onClose, onSaved }: { providers: any[]; onC
         </div>
       </div>
     </div>
+  );
+}
+
+function RematchAllButton({ onDone }: { onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<any | null>(null);
+  const run = async () => {
+    setBusy(true);
+    const { data, error } = await (supabase as any).rpc("rematch_settlement_lines_preview", { _settlement_id: null });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setPreview(data);
+  };
+  const apply = async () => {
+    if (!confirm("سيتم إعادة مطابقة جميع حركات التسويات (بدون تغيير أي مبالغ). متابعة؟")) return;
+    setBusy(true);
+    const { data, error } = await (supabase as any).rpc("rematch_settlement_lines_apply", { _settlement_id: null });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(`تم تحديث ${data?.updated ?? 0} حركة`);
+    setPreview(null);
+    onDone();
+  };
+  return (
+    <>
+      <button onClick={run} disabled={busy} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[12px] hover:bg-white/10 disabled:opacity-50">
+        <RefreshCcw size={14} /> إعادة مطابقة الكل
+      </button>
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPreview(null)}>
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0b1220] p-4 space-y-3" dir="rtl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-sm font-semibold">معاينة إعادة المطابقة</div>
+            <div className="text-[12px] text-muted-foreground">
+              إجمالي الحركات: <b>{preview.total_lines}</b> · مع رقم طلب: <b>{preview.with_external_order}</b>
+            </div>
+            <div className="rounded-lg bg-white/5 border border-white/10 p-2 text-[12px] space-y-1">
+              {Object.entries(preview.by_status ?? {}).map(([k, v]) => (
+                <div key={k} className="flex justify-between"><span>{k}</span><b>{v as any}</b></div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setPreview(null)} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">إلغاء</button>
+              <button onClick={apply} disabled={busy} className="px-3 py-1.5 rounded bg-emerald-600/80 text-white text-[12px] disabled:opacity-50">تنفيذ</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
