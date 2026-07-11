@@ -299,9 +299,11 @@ function FinanceDashboard() {
       </div>
 
       <Tabs defaultValue="cash" className="space-y-5">
-        <TabsList className="bg-white/5 border border-white/10">
+        <TabsList className="bg-white/5 border border-white/10 flex-wrap">
           <TabsTrigger value="cash">لوحة النقد</TabsTrigger>
-          <TabsTrigger value="accounting">لوحة الأداء المحاسبي</TabsTrigger>
+          <TabsTrigger value="accounting">لوحة الأداء</TabsTrigger>
+          <TabsTrigger value="settlements">لوحة التسويات</TabsTrigger>
+          <TabsTrigger value="vat">لوحة الضريبة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cash" className="space-y-5 mt-0">
