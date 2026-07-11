@@ -232,8 +232,8 @@ function SalesBatchesPage() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: number | string; tone?: "blue" | "amber" | "red" }) {
-  const t = tone === "blue" ? "text-blue-300" : tone === "amber" ? "text-amber-300" : tone === "red" ? "text-red-300" : "";
+function Stat({ label, value, tone }: { label: string; value: number | string; tone?: "blue" | "amber" | "red" | "emerald" }) {
+  const t = tone === "blue" ? "text-blue-300" : tone === "amber" ? "text-amber-300" : tone === "red" ? "text-red-300" : tone === "emerald" ? "text-emerald-300" : "";
   return (
     <div className="rounded-lg bg-black/30 border border-white/10 p-2">
       <div className="text-[10px] text-muted-foreground">{label}</div>
