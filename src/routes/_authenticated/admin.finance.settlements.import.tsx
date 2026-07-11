@@ -847,11 +847,11 @@ function SettlementImportPage() {
               </thead>
               <tbody>
                 {rows.filter((r) => !statusFilter || r.match_status === statusFilter).slice(0, 500).map((r) => (
-                  <tr key={r.rowNo} className={`border-t border-white/5 ${BLOCKING_STATUSES.has(r.match_status) ? "bg-red-500/5" : r.needs_review ? "bg-amber-500/5" : ""}`}>
+                  <tr key={r.rowNo} className={`border-t border-white/5 ${r.match_status === "needs_classification" ? "bg-amber-500/10" : REVIEW_STATUSES.has(r.match_status) ? "bg-amber-500/5" : ""}`}>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.rowNo}</td>
                     <td className="px-2 py-1.5">{r.external_order_id ?? "—"}</td>
                     <td className="px-2 py-1.5">{r.transaction_date ?? "—"}</td>
-                    <td className="px-2 py-1.5">{r.line_type === "sale" ? "بيع" : r.line_type === "refund" ? "مرتجع" : "تعديل"}</td>
+                    <td className="px-2 py-1.5">{LINE_TYPE_LABEL[r.line_type]}</td>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.original_payment_method ?? "—"}</td>
                     <td className="px-2 py-1.5 tabular-nums">{r.gross_amount.toFixed(2)}</td>
                     <td className="px-2 py-1.5 tabular-nums">{r.fees_before_vat.toFixed(2)}</td>
