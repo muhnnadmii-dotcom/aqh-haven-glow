@@ -503,9 +503,12 @@ function SettlementImportPage() {
         .insert({
           provider_id: providerRow.id,
           settlement_reference: ref,
+          report_reference: settlementRef || null,
+          source_file_name: file?.name ?? null,
           settlement_date: settlementDate,
           gross_sales_amount: summary.gross,
           refunds_amount: summary.refundsAbs,
+          adjustments_amount: summary.adjustmentsSigned,
           fees_before_vat: summary.fees,
           fees_vat_amount: summary.feesVat,
           payout_fee: num0(payoutFee),
