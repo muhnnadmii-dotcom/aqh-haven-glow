@@ -101,6 +101,23 @@ const MATCH_COLOR: Record<string, string> = {
 const fmt = (n: number) => new Intl.NumberFormat("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
 const daysBetween = (a: string, b: string) => Math.abs(Math.floor((new Date(a).getTime() - new Date(b).getTime()) / 86400000));
 
+function isTechnicalRef(ref: string | null | undefined) {
+  if (!ref) return true;
+  // e.g. "salla_payments-0acfe154b75b" — provider code + hash
+  return /^[a-z0-9_]+-[a-f0-9]{6,}$/i.test(ref.trim());
+}
+
+function displayRef(s: Settlement, providerName: string) {
+  const realRef = s.report_reference && s.report_reference.trim() ? s.report_reference.trim() : null;
+  if (realRef) return `${providerName} — تسوية #${realRef}`;
+  const fileMatch = s.source_file_name?.match(/#?(\d{5,})/);
+  if (fileMatch) return `${providerName} — تسوية #${fileMatch[1]}`;
+  if (!isTechnicalRef(s.settlement_reference)) return `${providerName} — ${s.settlement_reference}`;
+  if (s.source_file_name) return `${providerName} — ${s.source_file_name}`;
+  const date = s.imported_at ? new Date(s.imported_at).toLocaleDateString("ar-SA") : s.settlement_date;
+  return `${providerName} — استيراد ${date}`;
+}
+
 function ReconciliationPage() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
