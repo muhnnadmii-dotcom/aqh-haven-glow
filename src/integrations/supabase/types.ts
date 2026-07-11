@@ -1191,6 +1191,51 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_accounts: {
+        Row: {
+          account_kind: Database["public"]["Enums"]["finance_account_kind"]
+          account_owner_type: Database["public"]["Enums"]["finance_account_owner_type"]
+          allow_business_transactions: boolean
+          created_at: string
+          id: string
+          include_in_company_cash_balance: boolean
+          is_active: boolean
+          name: string
+          name_ar: string | null
+          notes: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          account_kind?: Database["public"]["Enums"]["finance_account_kind"]
+          account_owner_type?: Database["public"]["Enums"]["finance_account_owner_type"]
+          allow_business_transactions?: boolean
+          created_at?: string
+          id?: string
+          include_in_company_cash_balance?: boolean
+          is_active?: boolean
+          name: string
+          name_ar?: string | null
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          account_kind?: Database["public"]["Enums"]["finance_account_kind"]
+          account_owner_type?: Database["public"]["Enums"]["finance_account_owner_type"]
+          allow_business_transactions?: boolean
+          created_at?: string
+          id?: string
+          include_in_company_cash_balance?: boolean
+          is_active?: boolean
+          name?: string
+          name_ar?: string | null
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       finance_attachments: {
         Row: {
           attachment_type: string | null
@@ -1312,12 +1357,14 @@ export type Database = {
       }
       finance_expenses: {
         Row: {
+          account_id: string | null
           account_type: Database["public"]["Enums"]["finance_account_type"]
           accountant_note: string | null
           accountant_status: Database["public"]["Enums"]["finance_accountant_status"]
           accounting_status: Database["public"]["Enums"]["finance_accounting_status"]
           amount: number
           attachment_status: Database["public"]["Enums"]["finance_attachment_status"]
+          business_relation: Database["public"]["Enums"]["finance_business_relation"]
           created_at: string
           created_by: string | null
           delete_reason: string | null
@@ -1343,12 +1390,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
           account_type?: Database["public"]["Enums"]["finance_account_type"]
           accountant_note?: string | null
           accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
           accounting_status?: Database["public"]["Enums"]["finance_accounting_status"]
           amount: number
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
+          business_relation?: Database["public"]["Enums"]["finance_business_relation"]
           created_at?: string
           created_by?: string | null
           delete_reason?: string | null
@@ -1374,12 +1423,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
           account_type?: Database["public"]["Enums"]["finance_account_type"]
           accountant_note?: string | null
           accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
           accounting_status?: Database["public"]["Enums"]["finance_accounting_status"]
           amount?: number
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
+          business_relation?: Database["public"]["Enums"]["finance_business_relation"]
           created_at?: string
           created_by?: string | null
           delete_reason?: string | null
@@ -1405,6 +1456,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "finance_expenses_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "finance_expenses_main_category_id_fkey"
             columns: ["main_category_id"]
@@ -1514,14 +1572,17 @@ export type Database = {
       }
       finance_incomes: {
         Row: {
+          account_id: string | null
           account_type: Database["public"]["Enums"]["finance_account_type"]
           accountant_note: string | null
           accountant_status: Database["public"]["Enums"]["finance_accountant_status"]
           accounting_status: Database["public"]["Enums"]["finance_accounting_status"]
           amount: number
           attachment_status: Database["public"]["Enums"]["finance_attachment_status"]
+          business_relation: Database["public"]["Enums"]["finance_business_relation"]
           created_at: string
           created_by: string | null
+          customer_id: string | null
           delete_reason: string | null
           deleted_at: string | null
           deleted_by: string | null
@@ -1534,6 +1595,7 @@ export type Database = {
           month: string
           note: string | null
           related_transaction_id: string | null
+          sales_invoice_id: number | null
           transaction_direction: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type:
             | Database["public"]["Enums"]["finance_incoming_type"]
@@ -1541,14 +1603,17 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
           account_type?: Database["public"]["Enums"]["finance_account_type"]
           accountant_note?: string | null
           accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
           accounting_status?: Database["public"]["Enums"]["finance_accounting_status"]
           amount: number
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
+          business_relation?: Database["public"]["Enums"]["finance_business_relation"]
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           delete_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1561,6 +1626,7 @@ export type Database = {
           month: string
           note?: string | null
           related_transaction_id?: string | null
+          sales_invoice_id?: number | null
           transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type?:
             | Database["public"]["Enums"]["finance_incoming_type"]
@@ -1568,14 +1634,17 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
           account_type?: Database["public"]["Enums"]["finance_account_type"]
           accountant_note?: string | null
           accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
           accounting_status?: Database["public"]["Enums"]["finance_accounting_status"]
           amount?: number
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
+          business_relation?: Database["public"]["Enums"]["finance_business_relation"]
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           delete_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1588,6 +1657,7 @@ export type Database = {
           month?: string
           note?: string | null
           related_transaction_id?: string | null
+          sales_invoice_id?: number | null
           transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type?:
             | Database["public"]["Enums"]["finance_incoming_type"]
@@ -1596,10 +1666,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "finance_incomes_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "finance_incomes_income_source_id_fkey"
             columns: ["income_source_id"]
             isOneToOne: false
             referencedRelation: "finance_income_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_incomes_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "aqh_quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -2766,6 +2850,18 @@ export type Database = {
           page_key: string
         }[]
       }
+      get_owner_current_account: {
+        Args: never
+        Returns: {
+          amount_due_from_owner: number
+          amount_due_to_owner: number
+          collected_by_owner: number
+          company_to_owner: number
+          net_owner_balance: number
+          owner_to_company: number
+          paid_by_owner: number
+        }[]
+      }
       i_have_any_custom_role: { Args: never; Returns: boolean }
     }
     Enums: {
@@ -2779,6 +2875,13 @@ export type Database = {
         | "finance_export"
         | "finance_settings"
       assignment_status: "unassigned" | "assigned" | "accepted" | "transferred"
+      finance_account_kind:
+        | "bank"
+        | "cash"
+        | "wallet"
+        | "payment_gateway"
+        | "other"
+      finance_account_owner_type: "company" | "owner"
       finance_account_type: "business" | "personal"
       finance_accountant_status:
         | "not_reviewed"
@@ -2787,6 +2890,12 @@ export type Database = {
         | "needs_fix"
       finance_accounting_status: "unclassified" | "classified" | "reviewed"
       finance_attachment_status: "attached" | "not_attached" | "not_required"
+      finance_business_relation:
+        | "business"
+        | "personal"
+        | "owner_settlement"
+        | "internal_transfer"
+        | "unclassified"
       finance_category_kind: "main" | "sub"
       finance_incoming_type:
         | "customer_invoice_collection"
@@ -2961,6 +3070,14 @@ export const Constants = {
         "finance_settings",
       ],
       assignment_status: ["unassigned", "assigned", "accepted", "transferred"],
+      finance_account_kind: [
+        "bank",
+        "cash",
+        "wallet",
+        "payment_gateway",
+        "other",
+      ],
+      finance_account_owner_type: ["company", "owner"],
       finance_account_type: ["business", "personal"],
       finance_accountant_status: [
         "not_reviewed",
@@ -2970,6 +3087,13 @@ export const Constants = {
       ],
       finance_accounting_status: ["unclassified", "classified", "reviewed"],
       finance_attachment_status: ["attached", "not_attached", "not_required"],
+      finance_business_relation: [
+        "business",
+        "personal",
+        "owner_settlement",
+        "internal_transfer",
+        "unclassified",
+      ],
       finance_category_kind: ["main", "sub"],
       finance_incoming_type: [
         "customer_invoice_collection",

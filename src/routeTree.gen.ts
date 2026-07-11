@@ -73,6 +73,7 @@ import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
 import { Route as AuthenticatedAdminFinanceReportsRouteImport } from './routes/_authenticated/admin.finance.reports'
+import { Route as AuthenticatedAdminFinanceOwnerAccountRouteImport } from './routes/_authenticated/admin.finance.owner-account'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
 import { Route as AuthenticatedAdminFinanceImportBatchesRouteImport } from './routes/_authenticated/admin.finance.import-batches'
 import { Route as AuthenticatedAdminFinanceImportRouteImport } from './routes/_authenticated/admin.finance.import'
@@ -82,6 +83,7 @@ import { Route as AuthenticatedAdminFinanceCompareRouteImport } from './routes/_
 import { Route as AuthenticatedAdminFinanceCategoriesRouteImport } from './routes/_authenticated/admin.finance.categories'
 import { Route as AuthenticatedAdminFinanceAuditRouteImport } from './routes/_authenticated/admin.finance.audit'
 import { Route as AuthenticatedAdminFinanceAttachmentsRouteImport } from './routes/_authenticated/admin.finance.attachments'
+import { Route as AuthenticatedAdminFinanceAccountsRouteImport } from './routes/_authenticated/admin.finance.accounts'
 import { Route as AuthenticatedAdminDesignContactRouteImport } from './routes/_authenticated/admin.design.contact'
 import { Route as AuthenticatedAdminDesignAquariumConsultationRouteImport } from './routes/_authenticated/admin.design.aquarium-consultation'
 import { Route as AuthenticatedAdminDesignAboutRouteImport } from './routes/_authenticated/admin.design.about'
@@ -450,6 +452,12 @@ const AuthenticatedAdminFinanceReportsRoute =
     path: '/reports',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceOwnerAccountRoute =
+  AuthenticatedAdminFinanceOwnerAccountRouteImport.update({
+    id: '/owner-account',
+    path: '/owner-account',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceIncomesRoute =
   AuthenticatedAdminFinanceIncomesRouteImport.update({
     id: '/incomes',
@@ -502,6 +510,12 @@ const AuthenticatedAdminFinanceAttachmentsRoute =
   AuthenticatedAdminFinanceAttachmentsRouteImport.update({
     id: '/attachments',
     path: '/attachments',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
+const AuthenticatedAdminFinanceAccountsRoute =
+  AuthenticatedAdminFinanceAccountsRouteImport.update({
+    id: '/accounts',
+    path: '/accounts',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
 const AuthenticatedAdminDesignContactRoute =
@@ -615,6 +629,7 @@ export interface FileRoutesByFullPath {
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/admin/design/aquarium-consultation': typeof AuthenticatedAdminDesignAquariumConsultationRoute
   '/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
+  '/admin/finance/accounts': typeof AuthenticatedAdminFinanceAccountsRoute
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
@@ -624,6 +639,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -691,6 +707,7 @@ export interface FileRoutesByTo {
   '/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/admin/design/aquarium-consultation': typeof AuthenticatedAdminDesignAquariumConsultationRoute
   '/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
+  '/admin/finance/accounts': typeof AuthenticatedAdminFinanceAccountsRoute
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
@@ -700,6 +717,7 @@ export interface FileRoutesByTo {
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -777,6 +795,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/design/about': typeof AuthenticatedAdminDesignAboutRoute
   '/_authenticated/admin/design/aquarium-consultation': typeof AuthenticatedAdminDesignAquariumConsultationRoute
   '/_authenticated/admin/design/contact': typeof AuthenticatedAdminDesignContactRoute
+  '/_authenticated/admin/finance/accounts': typeof AuthenticatedAdminFinanceAccountsRoute
   '/_authenticated/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/_authenticated/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/_authenticated/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
@@ -786,6 +805,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/_authenticated/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/_authenticated/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/_authenticated/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -863,6 +883,7 @@ export interface FileRouteTypes {
     | '/admin/design/about'
     | '/admin/design/aquarium-consultation'
     | '/admin/design/contact'
+    | '/admin/finance/accounts'
     | '/admin/finance/attachments'
     | '/admin/finance/audit'
     | '/admin/finance/categories'
@@ -872,6 +893,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/owner-account'
     | '/admin/finance/reports'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
@@ -939,6 +961,7 @@ export interface FileRouteTypes {
     | '/admin/design/about'
     | '/admin/design/aquarium-consultation'
     | '/admin/design/contact'
+    | '/admin/finance/accounts'
     | '/admin/finance/attachments'
     | '/admin/finance/audit'
     | '/admin/finance/categories'
@@ -948,6 +971,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/owner-account'
     | '/admin/finance/reports'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
@@ -1024,6 +1048,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/design/about'
     | '/_authenticated/admin/design/aquarium-consultation'
     | '/_authenticated/admin/design/contact'
+    | '/_authenticated/admin/finance/accounts'
     | '/_authenticated/admin/finance/attachments'
     | '/_authenticated/admin/finance/audit'
     | '/_authenticated/admin/finance/categories'
@@ -1033,6 +1058,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/import'
     | '/_authenticated/admin/finance/import-batches'
     | '/_authenticated/admin/finance/incomes'
+    | '/_authenticated/admin/finance/owner-account'
     | '/_authenticated/admin/finance/reports'
     | '/_authenticated/admin/finance/settings'
     | '/_authenticated/admin/finance/suppliers'
@@ -1526,6 +1552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceReportsRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/owner-account': {
+      id: '/_authenticated/admin/finance/owner-account'
+      path: '/owner-account'
+      fullPath: '/admin/finance/owner-account'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceOwnerAccountRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/incomes': {
       id: '/_authenticated/admin/finance/incomes'
       path: '/incomes'
@@ -1587,6 +1620,13 @@ declare module '@tanstack/react-router' {
       path: '/attachments'
       fullPath: '/admin/finance/attachments'
       preLoaderRoute: typeof AuthenticatedAdminFinanceAttachmentsRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
+    '/_authenticated/admin/finance/accounts': {
+      id: '/_authenticated/admin/finance/accounts'
+      path: '/accounts'
+      fullPath: '/admin/finance/accounts'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceAccountsRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
     '/_authenticated/admin/design/contact': {
@@ -1730,6 +1770,7 @@ const AuthenticatedAdminDesignRouteWithChildren =
   )
 
 interface AuthenticatedAdminFinanceRouteChildren {
+  AuthenticatedAdminFinanceAccountsRoute: typeof AuthenticatedAdminFinanceAccountsRoute
   AuthenticatedAdminFinanceAttachmentsRoute: typeof AuthenticatedAdminFinanceAttachmentsRoute
   AuthenticatedAdminFinanceAuditRoute: typeof AuthenticatedAdminFinanceAuditRoute
   AuthenticatedAdminFinanceCategoriesRoute: typeof AuthenticatedAdminFinanceCategoriesRoute
@@ -1739,6 +1780,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceImportRoute: typeof AuthenticatedAdminFinanceImportRoute
   AuthenticatedAdminFinanceImportBatchesRoute: typeof AuthenticatedAdminFinanceImportBatchesRoute
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
+  AuthenticatedAdminFinanceOwnerAccountRoute: typeof AuthenticatedAdminFinanceOwnerAccountRoute
   AuthenticatedAdminFinanceReportsRoute: typeof AuthenticatedAdminFinanceReportsRoute
   AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
   AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -1749,6 +1791,8 @@ interface AuthenticatedAdminFinanceRouteChildren {
 
 const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChildren =
   {
+    AuthenticatedAdminFinanceAccountsRoute:
+      AuthenticatedAdminFinanceAccountsRoute,
     AuthenticatedAdminFinanceAttachmentsRoute:
       AuthenticatedAdminFinanceAttachmentsRoute,
     AuthenticatedAdminFinanceAuditRoute: AuthenticatedAdminFinanceAuditRoute,
@@ -1764,6 +1808,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceImportBatchesRoute,
     AuthenticatedAdminFinanceIncomesRoute:
       AuthenticatedAdminFinanceIncomesRoute,
+    AuthenticatedAdminFinanceOwnerAccountRoute:
+      AuthenticatedAdminFinanceOwnerAccountRoute,
     AuthenticatedAdminFinanceReportsRoute:
       AuthenticatedAdminFinanceReportsRoute,
     AuthenticatedAdminFinanceSettingsRoute:
