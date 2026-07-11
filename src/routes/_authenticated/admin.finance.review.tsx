@@ -251,7 +251,7 @@ function ReviewCenter() {
 
   // KPI counts
   const kpis = useMemo(() => {
-    let unclassified = 0, unlinked = 0, noAttach = 0, personal = 0, transfer = 0, completed = 0;
+    let unclassified = 0, unlinked = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
     rows.forEach((r) => {
       const f = flags(r);
       if (f.isUnclassified) unclassified++;
@@ -259,10 +259,17 @@ function ReviewCenter() {
       if (f.noAttachment) noAttach++;
       if (f.personalNeedsReview) personal++;
       if (f.transferMissingCounterpart) transfer++;
+      if (f.unlinkedProviderSettlement) providerUnlinked++;
       if (f.isCompleted) completed++;
     });
-    return { unclassified, unlinked, noAttach, personal, transfer, completed };
-  }, [rows]);
+    // Settlement diffs summary
+    const settlementDiffs = (settlements as any[]).filter((s) => {
+      const tol = (providers as any[]).find((p) => p.id === s.provider_id)?.rounding_tolerance ?? 0.05;
+      return s.actual_bank_amount != null && Math.abs(Number(s.difference_amount)) > Number(tol);
+    });
+    return { unclassified, unlinked, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
+  }, [rows, settlements, providers]);
+
 
   // Selection
   const [selected, setSelected] = useState<Set<string>>(new Set());
