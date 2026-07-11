@@ -869,7 +869,14 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
         </div>
 
         <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-white/10 p-3 flex justify-between gap-2">
-          <Button variant="outline" onClick={onClose}>إلغاء</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>إلغاء</Button>
+            {!row.split_parent_id && (
+              <Button variant="outline" onClick={() => setShowSplit(true)} disabled={pending} className="border-blue-500/40 text-blue-300 hover:bg-blue-500/10">
+                <Split className="w-4 h-4 ml-1" />تقسيم
+              </Button>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={save} disabled={pending}>{pending ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}</Button>
             <Button onClick={markComplete} disabled={pending} className="bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -878,9 +885,13 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
           </div>
         </div>
       </div>
+      {showSplit && (
+        <SplitDialog row={row} onClose={() => setShowSplit(false)} onDone={() => { setShowSplit(false); onDone(); }} />
+      )}
     </div>
   );
 }
+
 function QuickBtn({ children, onClick }: any) {
   return <button onClick={onClick} className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-md px-2 py-1">{children}</button>;
 }
