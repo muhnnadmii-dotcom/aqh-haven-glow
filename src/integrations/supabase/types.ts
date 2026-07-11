@@ -1063,6 +1063,172 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_debit_note_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: number
+          line_subtotal: number
+          line_tax_amount: number
+          line_total: number
+          note_id: number
+          original_invoice_item_id: number | null
+          quantity: number
+          sort_order: number
+          tax_code: Database["public"]["Enums"]["sales_invoice_tax_code"]
+          tax_rate: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: number
+          line_subtotal?: number
+          line_tax_amount?: number
+          line_total?: number
+          note_id: number
+          original_invoice_item_id?: number | null
+          quantity?: number
+          sort_order?: number
+          tax_code?: Database["public"]["Enums"]["sales_invoice_tax_code"]
+          tax_rate?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: number
+          line_subtotal?: number
+          line_tax_amount?: number
+          line_total?: number
+          note_id?: number
+          original_invoice_item_id?: number | null
+          quantity?: number
+          sort_order?: number
+          tax_code?: Database["public"]["Enums"]["sales_invoice_tax_code"]
+          tax_rate?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_debit_note_items_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "credit_debit_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_debit_notes: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          id: number
+          issue_date: string
+          note_number: string
+          note_type: Database["public"]["Enums"]["credit_debit_note_type"]
+          original_purchase_invoice_id: number | null
+          original_sales_invoice_id: number | null
+          overage_override_reason: string | null
+          reason: string
+          reversing_journal_entry_id: string | null
+          status: Database["public"]["Enums"]["credit_debit_note_status"]
+          subtotal: number
+          supplier_id: string | null
+          total_amount: number
+          updated_at: string
+          vat_amount: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          id?: number
+          issue_date?: string
+          note_number: string
+          note_type: Database["public"]["Enums"]["credit_debit_note_type"]
+          original_purchase_invoice_id?: number | null
+          original_sales_invoice_id?: number | null
+          overage_override_reason?: string | null
+          reason: string
+          reversing_journal_entry_id?: string | null
+          status?: Database["public"]["Enums"]["credit_debit_note_status"]
+          subtotal?: number
+          supplier_id?: string | null
+          total_amount?: number
+          updated_at?: string
+          vat_amount?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          id?: number
+          issue_date?: string
+          note_number?: string
+          note_type?: Database["public"]["Enums"]["credit_debit_note_type"]
+          original_purchase_invoice_id?: number | null
+          original_sales_invoice_id?: number | null
+          overage_override_reason?: string | null
+          reason?: string
+          reversing_journal_entry_id?: string | null
+          status?: Database["public"]["Enums"]["credit_debit_note_status"]
+          subtotal?: number
+          supplier_id?: string | null
+          total_amount?: number
+          updated_at?: string
+          vat_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_debit_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_original_purchase_invoice_id_fkey"
+            columns: ["original_purchase_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_original_sales_invoice_id_fkey"
+            columns: ["original_sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_debit_notes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "finance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_role_pages: {
         Row: {
           created_at: string
@@ -3630,6 +3796,40 @@ export type Database = {
     Functions: {
       acct_id: { Args: { p_key: string }; Returns: string }
       acct_should_post: { Args: { p_date: string }; Returns: boolean }
+      approve_credit_debit_note: {
+        Args: { p_note_id: number; p_override_reason?: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          id: number
+          issue_date: string
+          note_number: string
+          note_type: Database["public"]["Enums"]["credit_debit_note_type"]
+          original_purchase_invoice_id: number | null
+          original_sales_invoice_id: number | null
+          overage_override_reason: string | null
+          reason: string
+          reversing_journal_entry_id: string | null
+          status: Database["public"]["Enums"]["credit_debit_note_status"]
+          subtotal: number
+          supplier_id: string | null
+          total_amount: number
+          updated_at: string
+          vat_amount: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "credit_debit_notes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       approve_purchase_invoice: {
         Args: { p_invoice_id: number }
         Returns: {
@@ -3726,6 +3926,41 @@ export type Database = {
         Returns: number
       }
       aqh_next_quote_no: { Args: never; Returns: string }
+      cancel_credit_debit_note: {
+        Args: { p_note_id: number; p_reason: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          id: number
+          issue_date: string
+          note_number: string
+          note_type: Database["public"]["Enums"]["credit_debit_note_type"]
+          original_purchase_invoice_id: number | null
+          original_sales_invoice_id: number | null
+          overage_override_reason: string | null
+          reason: string
+          reversing_journal_entry_id: string | null
+          status: Database["public"]["Enums"]["credit_debit_note_status"]
+          subtotal: number
+          supplier_id: string | null
+          total_amount: number
+          updated_at: string
+          vat_amount: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "credit_debit_notes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cdn_recalc_totals: { Args: { p_note_id: number }; Returns: undefined }
       close_accounting_period: {
         Args: { p_period_id: string }
         Returns: undefined
@@ -3816,6 +4051,10 @@ export type Database = {
         }[]
       }
       i_have_any_custom_role: { Args: never; Returns: boolean }
+      next_credit_debit_note_number: {
+        Args: { p_type: Database["public"]["Enums"]["credit_debit_note_type"] }
+        Returns: string
+      }
       next_journal_entry_number: { Args: never; Returns: string }
       next_purchase_invoice_number: { Args: never; Returns: string }
       next_sales_invoice_number: { Args: never; Returns: string }
@@ -3921,6 +4160,12 @@ export type Database = {
         | "finance_settings"
       assignment_status: "unassigned" | "assigned" | "accepted" | "transferred"
       coa_account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
+      credit_debit_note_status: "draft" | "approved" | "cancelled"
+      credit_debit_note_type:
+        | "sales_credit_note"
+        | "sales_debit_note"
+        | "purchase_credit_note"
+        | "purchase_debit_note"
       finance_account_kind:
         | "bank"
         | "cash"
@@ -4199,6 +4444,13 @@ export const Constants = {
       ],
       assignment_status: ["unassigned", "assigned", "accepted", "transferred"],
       coa_account_type: ["asset", "liability", "equity", "revenue", "expense"],
+      credit_debit_note_status: ["draft", "approved", "cancelled"],
+      credit_debit_note_type: [
+        "sales_credit_note",
+        "sales_debit_note",
+        "purchase_credit_note",
+        "purchase_debit_note",
+      ],
       finance_account_kind: [
         "bank",
         "cash",
