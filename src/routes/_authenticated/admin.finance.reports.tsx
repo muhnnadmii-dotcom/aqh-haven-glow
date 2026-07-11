@@ -55,6 +55,10 @@ function ReportsPage() {
       setAllIncomes(allI ?? []);
       setAllExpenses(allE ?? []);
       if ((biz as any)?.company_name) setBusinessName((biz as any).company_name);
+      try {
+        const p = await getAccountingPerformance(r.dateFrom!, r.dateTo!);
+        setPerf(p);
+      } catch { setPerf(null); }
       setLoading(false);
     })();
   }, [month]);
