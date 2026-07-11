@@ -522,14 +522,15 @@ function SettlementImportPage() {
     const counts: Record<MatchStatus, number> = {
       matched_invoice: 0, matched_cancelled_order: 0, cancelled_order_needs_refund_match: 0,
       order_found_invoice_missing: 0, order_not_found: 0, needs_credit_note: 0,
-      unmatched_refund: 0, needs_classification: 0,
+      unmatched_refund: 0, needs_classification: 0, wallet_internal_transfer: 0,
     };
-    let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0;
-    let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0, adjustmentsSigned = 0;
+    let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0, walletTopUps = 0;
+    let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0, adjustmentsSigned = 0, walletTopUpAbs = 0;
     for (const r of rows) {
       counts[r.match_status]++;
       if (r.line_type === "sale") { sales++; if (r.gross_amount > 0) gross = round2(gross + r.gross_amount); }
       else if (r.line_type === "refund") { refunds++; refundsAbs = round2(refundsAbs + Math.abs(r.gross_amount)); }
+      else if (r.line_type === "wallet_top_up") { walletTopUps++; walletTopUpAbs = round2(walletTopUpAbs + Math.abs(r.gross_amount)); }
       else { adjustments++; adjustmentsSigned = round2(adjustmentsSigned + r.gross_amount); }
       fees = round2(fees + r.fees_before_vat);
       feesVat = round2(feesVat + r.fees_vat_amount);
@@ -537,9 +538,20 @@ function SettlementImportPage() {
       if (r.needs_review) review++;
     }
     const payout = num0(payoutFee);
-    const expected = round2(gross - refundsAbs - fees - feesVat - payout + adjustmentsSigned);
-    return { count: rows.length, sales, refunds, adjustments, review, blocking, counts, gross, refundsAbs, fees, feesVat, adjustmentsSigned, expected };
-  }, [rows, payoutFee]);
+    // Wallet top-ups reduce payout to bank (they move funds into the Salla wallet asset).
+    const calculatedExpected = round2(gross - refundsAbs - fees - feesVat - payout - walletTopUpAbs + adjustmentsSigned);
+    const sourceExpected = parseAmount(sourceExpectedNet);
+    // Prefer the official amount from the provider screen when the two match within a rounding tolerance.
+    const roundingDiff = sourceExpected != null ? round2(sourceExpected - calculatedExpected) : 0;
+    const isRounding = sourceExpected != null && Math.abs(roundingDiff) <= 0.05;
+    const expected = sourceExpected != null ? sourceExpected : calculatedExpected;
+    return {
+      count: rows.length, sales, refunds, adjustments, walletTopUps, review, blocking, counts,
+      gross, refundsAbs, fees, feesVat, adjustmentsSigned, walletTopUpAbs,
+      calculatedExpected, sourceExpected, roundingDiff, isRounding, expected,
+    };
+  }, [rows, payoutFee, sourceExpectedNet]);
+
 
   async function commit() {
     if (!canManage) { toast.error("لا تملك صلاحية إدارة المالية"); return; }
