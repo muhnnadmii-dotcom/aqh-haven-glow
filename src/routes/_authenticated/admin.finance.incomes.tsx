@@ -380,6 +380,7 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
           </div>
           <Field label="الملاحظة"><textarea disabled={accountantOnly} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} className="inp min-h-[60px]" /></Field>
           <Field label="ملاحظة المحاسب"><textarea value={f.accountant_note} onChange={(e) => setF({ ...f, accountant_note: e.target.value })} className="inp min-h-[60px]" /></Field>
+          <Field label="ملاحظة داخلية (للتصنيف)"><textarea disabled={accountantOnly} value={f.internal_note} onChange={(e) => setF({ ...f, internal_note: e.target.value })} className="inp min-h-[50px]" /></Field>
 
           {isNew && roles.canManage && (
             <PendingAttachmentsPicker items={pending} setItems={setPending} />
