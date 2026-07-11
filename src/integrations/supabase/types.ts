@@ -2828,6 +2828,57 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_fee_invoice_settlements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          matched_fee_amount: number
+          matched_vat_amount: number
+          notes: string | null
+          purchase_invoice_id: number
+          settlement_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          matched_fee_amount?: number
+          matched_vat_amount?: number
+          notes?: string | null
+          purchase_invoice_id: number
+          settlement_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          matched_fee_amount?: number
+          matched_vat_amount?: number
+          notes?: string | null
+          purchase_invoice_id?: number
+          settlement_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_fee_invoice_settlements_purchase_invoice_id_fkey"
+            columns: ["purchase_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_fee_invoice_settlements_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "payment_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_invoice_items: {
         Row: {
           created_at: string
@@ -2921,10 +2972,14 @@ export type Database = {
           discount_amount: number
           due_date: string | null
           duplicate_override_reason: string | null
+          fee_period_end: string | null
+          fee_period_start: string | null
           id: number
           internal_notes: string | null
           internal_reference: string
           issue_date: string
+          matched_fee_amount: number
+          matched_vat_amount: number
           non_deductible_reason:
             | Database["public"]["Enums"]["purchase_non_deductible_reason"]
             | null
@@ -2932,7 +2987,9 @@ export type Database = {
           notes: string | null
           paid_amount: number
           paid_from_personal_account: boolean
+          payment_provider_id: string | null
           payment_status: Database["public"]["Enums"]["purchase_payment_status"]
+          provider_invoice_number: string | null
           purchase_type: Database["public"]["Enums"]["purchase_type"]
           remaining_amount: number
           reviewed_by: string | null
@@ -2944,9 +3001,14 @@ export type Database = {
           supply_date: string | null
           taxable_amount: number
           total_amount: number
+          unmatched_fee_amount: number
+          unmatched_vat_amount: number
           updated_at: string
           vat_amount: number
           vat_deductibility: Database["public"]["Enums"]["purchase_vat_deductibility"]
+          vat_document_status:
+            | Database["public"]["Enums"]["vat_document_status"]
+            | null
         }
         Insert: {
           approved_at?: string | null
@@ -2961,10 +3023,14 @@ export type Database = {
           discount_amount?: number
           due_date?: string | null
           duplicate_override_reason?: string | null
+          fee_period_end?: string | null
+          fee_period_start?: string | null
           id?: number
           internal_notes?: string | null
           internal_reference: string
           issue_date?: string
+          matched_fee_amount?: number
+          matched_vat_amount?: number
           non_deductible_reason?:
             | Database["public"]["Enums"]["purchase_non_deductible_reason"]
             | null
@@ -2972,7 +3038,9 @@ export type Database = {
           notes?: string | null
           paid_amount?: number
           paid_from_personal_account?: boolean
+          payment_provider_id?: string | null
           payment_status?: Database["public"]["Enums"]["purchase_payment_status"]
+          provider_invoice_number?: string | null
           purchase_type?: Database["public"]["Enums"]["purchase_type"]
           remaining_amount?: number
           reviewed_by?: string | null
@@ -2984,9 +3052,14 @@ export type Database = {
           supply_date?: string | null
           taxable_amount?: number
           total_amount?: number
+          unmatched_fee_amount?: number
+          unmatched_vat_amount?: number
           updated_at?: string
           vat_amount?: number
           vat_deductibility?: Database["public"]["Enums"]["purchase_vat_deductibility"]
+          vat_document_status?:
+            | Database["public"]["Enums"]["vat_document_status"]
+            | null
         }
         Update: {
           approved_at?: string | null
@@ -3001,10 +3074,14 @@ export type Database = {
           discount_amount?: number
           due_date?: string | null
           duplicate_override_reason?: string | null
+          fee_period_end?: string | null
+          fee_period_start?: string | null
           id?: number
           internal_notes?: string | null
           internal_reference?: string
           issue_date?: string
+          matched_fee_amount?: number
+          matched_vat_amount?: number
           non_deductible_reason?:
             | Database["public"]["Enums"]["purchase_non_deductible_reason"]
             | null
@@ -3012,7 +3089,9 @@ export type Database = {
           notes?: string | null
           paid_amount?: number
           paid_from_personal_account?: boolean
+          payment_provider_id?: string | null
           payment_status?: Database["public"]["Enums"]["purchase_payment_status"]
+          provider_invoice_number?: string | null
           purchase_type?: Database["public"]["Enums"]["purchase_type"]
           remaining_amount?: number
           reviewed_by?: string | null
@@ -3024,11 +3103,23 @@ export type Database = {
           supply_date?: string | null
           taxable_amount?: number
           total_amount?: number
+          unmatched_fee_amount?: number
+          unmatched_vat_amount?: number
           updated_at?: string
           vat_amount?: number
           vat_deductibility?: Database["public"]["Enums"]["purchase_vat_deductibility"]
+          vat_document_status?:
+            | Database["public"]["Enums"]["vat_document_status"]
+            | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_invoices_payment_provider_id_fkey"
+            columns: ["payment_provider_id"]
+            isOneToOne: false
+            referencedRelation: "payment_providers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_invoices_supplier_id_fkey"
             columns: ["supplier_id"]
@@ -4314,10 +4405,14 @@ export type Database = {
           discount_amount: number
           due_date: string | null
           duplicate_override_reason: string | null
+          fee_period_end: string | null
+          fee_period_start: string | null
           id: number
           internal_notes: string | null
           internal_reference: string
           issue_date: string
+          matched_fee_amount: number
+          matched_vat_amount: number
           non_deductible_reason:
             | Database["public"]["Enums"]["purchase_non_deductible_reason"]
             | null
@@ -4325,7 +4420,9 @@ export type Database = {
           notes: string | null
           paid_amount: number
           paid_from_personal_account: boolean
+          payment_provider_id: string | null
           payment_status: Database["public"]["Enums"]["purchase_payment_status"]
+          provider_invoice_number: string | null
           purchase_type: Database["public"]["Enums"]["purchase_type"]
           remaining_amount: number
           reviewed_by: string | null
@@ -4337,9 +4434,14 @@ export type Database = {
           supply_date: string | null
           taxable_amount: number
           total_amount: number
+          unmatched_fee_amount: number
+          unmatched_vat_amount: number
           updated_at: string
           vat_amount: number
           vat_deductibility: Database["public"]["Enums"]["purchase_vat_deductibility"]
+          vat_document_status:
+            | Database["public"]["Enums"]["vat_document_status"]
+            | null
         }
         SetofOptions: {
           from: "*"
@@ -4556,6 +4658,10 @@ export type Database = {
       }
       purchase_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
+        Returns: undefined
+      }
+      recalc_provider_fee_invoice_matches: {
+        Args: { _invoice_id: number }
         Returns: undefined
       }
       reopen_accounting_period: {
@@ -4841,6 +4947,11 @@ export type Database = {
         | "filed"
         | "paid"
         | "closed"
+      vat_document_status:
+        | "valid"
+        | "missing"
+        | "invalid_buyer_tax_data"
+        | "pending_review"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5194,6 +5305,12 @@ export const Constants = {
         "filed",
         "paid",
         "closed",
+      ],
+      vat_document_status: [
+        "valid",
+        "missing",
+        "invalid_buyer_tax_data",
+        "pending_review",
       ],
     },
   },
