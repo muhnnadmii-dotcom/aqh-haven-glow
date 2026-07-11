@@ -3630,6 +3630,25 @@ export type Database = {
         Args: { p_batch_id: string }
         Returns: Json
       }
+      get_accounting_performance: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          ap_balance: number
+          ar_balance: number
+          cogs: number
+          cogs_available: boolean
+          deductible_input_vat: number
+          gross_profit: number
+          gross_sales: number
+          inventory_value: number
+          net_profit: number
+          net_sales: number
+          net_vat: number
+          operating_expenses: number
+          output_vat: number
+          sales_discounts: number
+        }[]
+      }
       get_general_ledger: {
         Args: { p_account_id: string; p_from: string; p_to: string }
         Returns: {

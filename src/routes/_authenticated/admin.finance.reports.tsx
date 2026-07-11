@@ -5,6 +5,7 @@ import { fmtSAR, OWNER_DRAW_SLUG } from "@/lib/finance/constants";
 import { formatMonthAr, monthRange, splitExpenses, splitIncomes, sum } from "@/lib/finance/dashboard-data";
 import { exportXLSX } from "@/lib/finance/xlsx";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
+import { getAccountingPerformance, type AccountingPerformance } from "@/lib/finance/accounting-performance";
 import { Download, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/reports")({
@@ -17,8 +18,11 @@ function ymNow(offset = 0) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+type ReportKind = "cash" | "income_statement";
+
 function ReportsPage() {
   const [month, setMonth] = useState(ymNow(0));
+  const [reportKind, setReportKind] = useState<ReportKind>("cash");
   const [cats, setCats] = useState<any[]>([]);
   const [incomes, setIncomes] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -26,6 +30,7 @@ function ReportsPage() {
   const [allIncomes, setAllIncomes] = useState<any[]>([]);
   const [allExpenses, setAllExpenses] = useState<any[]>([]);
   const [businessName, setBusinessName] = useState("Aqua Haven");
+  const [perf, setPerf] = useState<AccountingPerformance | null>(null);
   const [loading, setLoading] = useState(true);
 
   const ownerDrawCatId = useMemo(() => cats.find((c) => c.system_slug === OWNER_DRAW_SLUG)?.id ?? null, [cats]);
@@ -50,6 +55,10 @@ function ReportsPage() {
       setAllIncomes(allI ?? []);
       setAllExpenses(allE ?? []);
       if ((biz as any)?.company_name) setBusinessName((biz as any).company_name);
+      try {
+        const p = await getAccountingPerformance(r.dateFrom!, r.dateTo!);
+        setPerf(p);
+      } catch { setPerf(null); }
       setLoading(false);
     })();
   }, [month]);
@@ -115,7 +124,18 @@ function ReportsPage() {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-white/10 bg-white/5 p-3 flex flex-wrap items-center gap-3 print:hidden">
-        <span className="text-[11px] text-muted-foreground">شهر التقرير:</span>
+        <span className="text-[11px] text-muted-foreground">نوع التقرير:</span>
+        <div className="inline-flex rounded-lg overflow-hidden border border-white/10">
+          <button onClick={() => setReportKind("cash")}
+            className={`px-3 py-1.5 text-[12px] ${reportKind === "cash" ? "bg-gold/20 text-gold" : "bg-white/5 text-muted-foreground"}`}>
+            المقبوضات والمدفوعات (نقدي)
+          </button>
+          <button onClick={() => setReportKind("income_statement")}
+            className={`px-3 py-1.5 text-[12px] ${reportKind === "income_statement" ? "bg-gold/20 text-gold" : "bg-white/5 text-muted-foreground"}`}>
+            قائمة الدخل (محاسبي)
+          </button>
+        </div>
+        <span className="text-[11px] text-muted-foreground ms-3">شهر التقرير:</span>
         <select value={mm} onChange={(e) => setMonth(`${my}-${e.target.value}`)} className="px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border border-gold/40 text-gold">
           {MONTHS_AR.map((n, i) => <option key={i} value={String(i + 1).padStart(2, "0")}>{n}</option>)}
         </select>
@@ -136,7 +156,11 @@ function ReportsPage() {
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-[11px] tracking-[0.3em] text-gold/80 uppercase print:text-gray-600">Financial Report</div>
-            <h1 className="text-2xl font-semibold mt-1">تقرير المقبوضات والمدفوعات — {formatMonthAr(month)}</h1>
+            <h1 className="text-2xl font-semibold mt-1">
+              {reportKind === "cash"
+                ? `تقرير المقبوضات والمدفوعات (نقدي) — ${formatMonthAr(month)}`
+                : `قائمة الدخل (محاسبي) — ${formatMonthAr(month)}`}
+            </h1>
             <div className="text-[12px] text-muted-foreground print:text-gray-600 mt-1">{businessName}</div>
           </div>
           <div className="text-right text-[11px] text-muted-foreground print:text-gray-600">
@@ -145,28 +169,78 @@ function ReportsPage() {
           </div>
         </div>
 
-        <table className="w-full text-[13px] mb-8">
-          <tbody>
-            <TR label="إجمالي المقبوضات" v={totIncome} tone="text-emerald-300 print:text-black" bold />
-            <TR label="إجمالي المدفوعات" v={-totOp} tone="text-red-300 print:text-black" />
-            {catRows.map((c) => (
-              <TR key={c.id} label={`— ${c.name}`} v={-c.total} muted />
-            ))}
-            <TR label="صافي التدفق قبل سحوبات المالك" v={netOp} tone={netOp >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
-            <TR label="سحوبات المالك" v={-totDraws} tone="text-gold print:text-black" />
-            <TR label="صافي التدفق بعد سحوبات المالك" v={netAfter} tone={netAfter >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
-          </tbody>
-        </table>
+        {reportKind === "cash" ? (
+          <>
+            <table className="w-full text-[13px] mb-8">
+              <tbody>
+                <TR label="إجمالي المقبوضات" v={totIncome} tone="text-emerald-300 print:text-black" bold />
+                <TR label="إجمالي المدفوعات" v={-totOp} tone="text-red-300 print:text-black" />
+                {catRows.map((c) => (
+                  <TR key={c.id} label={`— ${c.name}`} v={-c.total} muted />
+                ))}
+                <TR label="صافي التدفق قبل سحوبات المالك" v={netOp} tone={netOp >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
+                <TR label="سحوبات المالك" v={-totDraws} tone="text-gold print:text-black" />
+                <TR label="صافي التدفق بعد سحوبات المالك" v={netAfter} tone={netAfter >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
+              </tbody>
+            </table>
 
-        <div className="border-t border-white/10 print:border-gray-300 pt-4">
-          <h2 className="text-lg font-semibold mb-3">المركز النقدي</h2>
-          <table className="w-full text-[13px]">
-            <tbody>
-              <TR label="رأس المال المستثمر حتى نهاية الشهر" v={invested} />
-              <TR label="الرصيد النقدي في نهاية الشهر" v={cashAtEnd} tone={cashAtEnd >= 0 ? "text-gold print:text-black" : "text-red-300 print:text-black"} bold />
-            </tbody>
-          </table>
-        </div>
+            <div className="border-t border-white/10 print:border-gray-300 pt-4">
+              <h2 className="text-lg font-semibold mb-3">المركز النقدي</h2>
+              <table className="w-full text-[13px]">
+                <tbody>
+                  <TR label="رأس المال المستثمر حتى نهاية الشهر" v={invested} />
+                  <TR label="الرصيد النقدي في نهاية الشهر" v={cashAtEnd} tone={cashAtEnd >= 0 ? "text-gold print:text-black" : "text-red-300 print:text-black"} bold />
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 text-[11px] text-muted-foreground print:text-gray-600">
+              ملاحظة: هذا التقرير يعتمد على التدفقات النقدية الفعلية للشهر وليس أرباحًا محاسبية.
+            </div>
+          </>
+        ) : (
+          <>
+            {!perf ? (
+              <div className="text-[12px] text-muted-foreground">تعذر تحميل بيانات الأداء المحاسبي.</div>
+            ) : (
+              <>
+                <table className="w-full text-[13px] mb-6">
+                  <tbody>
+                    <TR label="المبيعات (قبل الضريبة)" v={Number(perf.gross_sales ?? 0)} tone="text-emerald-300 print:text-black" bold />
+                    <TR label="تكلفة المبيعات (COGS)" v={-Number(perf.cogs ?? 0)} tone="text-red-300 print:text-black" muted={perf.cogs == null} />
+                    <TR label="مجمل الربح" v={Number(perf.gross_profit ?? (Number(perf.gross_sales ?? 0) - Number(perf.cogs ?? 0)))}
+                      tone="text-emerald-300 print:text-black" bold divider />
+                    <TR label="المصروفات التشغيلية" v={-Number(perf.operating_expenses ?? 0)} tone="text-red-300 print:text-black" />
+                    <TR label="صافي الربح المحاسبي" v={Number(perf.net_profit ?? 0)}
+                      tone={Number(perf.net_profit ?? 0) >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
+                  </tbody>
+                </table>
+
+                <div className="border-t border-white/10 print:border-gray-300 pt-4">
+                  <h2 className="text-lg font-semibold mb-3">ذمم وضرائب</h2>
+                  <table className="w-full text-[13px]">
+                    <tbody>
+                      <TR label="ذمم مدينة (عملاء) — نهاية الفترة" v={Number(perf.ar_balance ?? 0)} />
+                      <TR label="ذمم دائنة (موردون) — نهاية الفترة" v={Number(perf.ap_balance ?? 0)} />
+                      <TR label="ضريبة المخرجات (مبيعات)" v={Number(perf.output_vat ?? 0)} />
+                      <TR label="ضريبة المدخلات القابلة للخصم" v={Number(perf.deductible_input_vat ?? 0)} />
+                      <TR label="صافي الضريبة المستحقة" v={Number(perf.net_vat ?? 0)} bold />
+                    </tbody>
+                  </table>
+                </div>
+
+                {perf.cogs == null && (
+                  <div className="mt-4 text-[11px] text-amber-300 print:text-gray-700">
+                    تنبيه: لم يتم إعداد حساب تكلفة المبيعات بعد، مجمل الربح قد يكون غير دقيق.
+                  </div>
+                )}
+                <div className="mt-2 text-[11px] text-muted-foreground print:text-gray-600">
+                  ملاحظة: يعتمد التقرير على القيود المحاسبية المرحّلة والفواتير المعتمدة خلال الفترة.
+                </div>
+              </>
+            )}
+          </>
+        )}
       </div>
 
       {loading && <div className="text-center text-xs text-muted-foreground">جاري التحميل…</div>}
