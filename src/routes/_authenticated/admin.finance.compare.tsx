@@ -166,7 +166,8 @@ function ComparePage() {
 
 function summarize(incomes: any[], expenses: any[], ownerDrawCatId: string | null) {
   const { operating, draws } = splitExpenses(expenses, ownerDrawCatId);
-  const income = sum(incomes, (x: any) => x.amount);
+  const { operating: opIn } = splitIncomes(incomes);
+  const income = sum(opIn, (x: any) => x.amount);
   const op = sum(operating, (x: any) => x.amount);
   const dw = sum(draws, (x: any) => x.amount);
   const netOp = income - op;
