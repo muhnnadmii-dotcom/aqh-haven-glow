@@ -45,11 +45,31 @@ export function sum<T>(arr: T[], get: (x: T) => number): number {
   return arr.reduce((a, b) => a + (Number(get(b)) || 0), 0);
 }
 
-/** Group expenses into operating vs owner-draw using the owner-draw main category id. */
+import { isOperatingExpense, isOperatingIncome, isOwnerDraw } from "@/lib/finance/transaction-types";
+
+/**
+ * Split expenses into operating, owner draws, and other non-operating
+ * (internal transfers out + loan payments). "operating" excludes both draws
+ * and other non-operating movements so it matches the cash-flow report.
+ */
 export function splitExpenses(expenses: any[], ownerDrawCatId: string | null) {
-  const draws = ownerDrawCatId ? expenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
-  const operating = ownerDrawCatId ? expenses.filter((e) => e.main_category_id !== ownerDrawCatId) : expenses;
-  return { operating, draws };
+  const draws = expenses.filter((e) => isOwnerDraw(e, ownerDrawCatId));
+  const operating = expenses.filter((e) => isOperatingExpense(e, ownerDrawCatId));
+  const nonOperating = expenses.filter(
+    (e) => !isOwnerDraw(e, ownerDrawCatId) && !isOperatingExpense(e, ownerDrawCatId),
+  );
+  return { operating, draws, nonOperating };
+}
+
+/**
+ * Split incomes: operating (real receipts) vs non-operating (owner
+ * contributions, internal transfers in, loans received). NULL type stays
+ * operating for backward compatibility with old rows.
+ */
+export function splitIncomes(incomes: any[]) {
+  const operating = incomes.filter((i) => isOperatingIncome(i));
+  const nonOperating = incomes.filter((i) => !isOperatingIncome(i));
+  return { operating, nonOperating };
 }
 
 /** Build a time series (day or month buckets) for income / operating expense / net. */
