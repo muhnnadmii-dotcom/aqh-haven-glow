@@ -83,6 +83,7 @@ import { Route as AuthenticatedAdminFinanceExportRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminFinanceExpensesRouteImport } from './routes/_authenticated/admin.finance.expenses'
 import { Route as AuthenticatedAdminFinanceCustomersRouteImport } from './routes/_authenticated/admin.finance.customers'
 import { Route as AuthenticatedAdminFinanceCompareRouteImport } from './routes/_authenticated/admin.finance.compare'
+import { Route as AuthenticatedAdminFinanceChartOfAccountsRouteImport } from './routes/_authenticated/admin.finance.chart-of-accounts'
 import { Route as AuthenticatedAdminFinanceCategoriesRouteImport } from './routes/_authenticated/admin.finance.categories'
 import { Route as AuthenticatedAdminFinanceAuditRouteImport } from './routes/_authenticated/admin.finance.audit'
 import { Route as AuthenticatedAdminFinanceAttachmentsRouteImport } from './routes/_authenticated/admin.finance.attachments'
@@ -519,6 +520,12 @@ const AuthenticatedAdminFinanceCompareRoute =
     path: '/compare',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceChartOfAccountsRoute =
+  AuthenticatedAdminFinanceChartOfAccountsRouteImport.update({
+    id: '/chart-of-accounts',
+    path: '/chart-of-accounts',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceCategoriesRoute =
   AuthenticatedAdminFinanceCategoriesRouteImport.update({
     id: '/categories',
@@ -682,6 +689,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/admin/finance/chart-of-accounts': typeof AuthenticatedAdminFinanceChartOfAccountsRoute
   '/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/admin/finance/customers': typeof AuthenticatedAdminFinanceCustomersRoute
   '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
@@ -767,6 +775,7 @@ export interface FileRoutesByTo {
   '/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/admin/finance/chart-of-accounts': typeof AuthenticatedAdminFinanceChartOfAccountsRoute
   '/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/admin/finance/customers': typeof AuthenticatedAdminFinanceCustomersRoute
   '/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
@@ -862,6 +871,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/attachments': typeof AuthenticatedAdminFinanceAttachmentsRoute
   '/_authenticated/admin/finance/audit': typeof AuthenticatedAdminFinanceAuditRoute
   '/_authenticated/admin/finance/categories': typeof AuthenticatedAdminFinanceCategoriesRoute
+  '/_authenticated/admin/finance/chart-of-accounts': typeof AuthenticatedAdminFinanceChartOfAccountsRoute
   '/_authenticated/admin/finance/compare': typeof AuthenticatedAdminFinanceCompareRoute
   '/_authenticated/admin/finance/customers': typeof AuthenticatedAdminFinanceCustomersRoute
   '/_authenticated/admin/finance/expenses': typeof AuthenticatedAdminFinanceExpensesRoute
@@ -957,6 +967,7 @@ export interface FileRouteTypes {
     | '/admin/finance/attachments'
     | '/admin/finance/audit'
     | '/admin/finance/categories'
+    | '/admin/finance/chart-of-accounts'
     | '/admin/finance/compare'
     | '/admin/finance/customers'
     | '/admin/finance/expenses'
@@ -1042,6 +1053,7 @@ export interface FileRouteTypes {
     | '/admin/finance/attachments'
     | '/admin/finance/audit'
     | '/admin/finance/categories'
+    | '/admin/finance/chart-of-accounts'
     | '/admin/finance/compare'
     | '/admin/finance/customers'
     | '/admin/finance/expenses'
@@ -1136,6 +1148,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/attachments'
     | '/_authenticated/admin/finance/audit'
     | '/_authenticated/admin/finance/categories'
+    | '/_authenticated/admin/finance/chart-of-accounts'
     | '/_authenticated/admin/finance/compare'
     | '/_authenticated/admin/finance/customers'
     | '/_authenticated/admin/finance/expenses'
@@ -1713,6 +1726,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceCompareRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/chart-of-accounts': {
+      id: '/_authenticated/admin/finance/chart-of-accounts'
+      path: '/chart-of-accounts'
+      fullPath: '/admin/finance/chart-of-accounts'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceChartOfAccountsRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/categories': {
       id: '/_authenticated/admin/finance/categories'
       path: '/categories'
@@ -1914,6 +1934,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceAttachmentsRoute: typeof AuthenticatedAdminFinanceAttachmentsRoute
   AuthenticatedAdminFinanceAuditRoute: typeof AuthenticatedAdminFinanceAuditRoute
   AuthenticatedAdminFinanceCategoriesRoute: typeof AuthenticatedAdminFinanceCategoriesRoute
+  AuthenticatedAdminFinanceChartOfAccountsRoute: typeof AuthenticatedAdminFinanceChartOfAccountsRoute
   AuthenticatedAdminFinanceCompareRoute: typeof AuthenticatedAdminFinanceCompareRoute
   AuthenticatedAdminFinanceCustomersRoute: typeof AuthenticatedAdminFinanceCustomersRoute
   AuthenticatedAdminFinanceExpensesRoute: typeof AuthenticatedAdminFinanceExpensesRoute
@@ -1945,6 +1966,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
     AuthenticatedAdminFinanceAuditRoute: AuthenticatedAdminFinanceAuditRoute,
     AuthenticatedAdminFinanceCategoriesRoute:
       AuthenticatedAdminFinanceCategoriesRoute,
+    AuthenticatedAdminFinanceChartOfAccountsRoute:
+      AuthenticatedAdminFinanceChartOfAccountsRoute,
     AuthenticatedAdminFinanceCompareRoute:
       AuthenticatedAdminFinanceCompareRoute,
     AuthenticatedAdminFinanceCustomersRoute:
