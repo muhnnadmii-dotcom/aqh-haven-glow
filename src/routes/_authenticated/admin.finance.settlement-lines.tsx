@@ -16,15 +16,28 @@ export const Route = createFileRoute("/_authenticated/admin/finance/settlement-l
 const LINE_LABEL: Record<string, string> = {
   sale: "مبيع",
   refund: "مرتجع",
+  chargeback: "اعتراض/Chargeback",
   fee: "رسوم",
   fee_vat: "ضريبة الرسوم",
   payout_fee: "رسوم تحويل",
   adjustment: "تسوية",
+  manual_adjustment: "تعديل يدوي من الوسيط",
+  unexplained_deduction: "خصم غير مفسر",
   reserve_held: "احتياطي محتجز",
   reserve_released: "احتياطي مُفرج عنه",
   rounding_difference: "فرق تقريب",
   unexplained_transfer_fee: "فرق تحويل غير مبرر",
 };
+
+const CLASSIFY_OPTIONS: { value: string; label: string }[] = [
+  { value: "refund", label: "استرجاع غير مرتبط" },
+  { value: "chargeback", label: "اعتراض/Chargeback" },
+  { value: "reserve_held", label: "احتياطي محتجز" },
+  { value: "reserve_released", label: "احتياطي مُفرج عنه" },
+  { value: "payout_fee", label: "رسوم تحويل" },
+  { value: "manual_adjustment", label: "تعديل يدوي من الوسيط" },
+  { value: "unexplained_deduction", label: "خصم غير مفسر" },
+];
 
 const MATCH_LABEL: Record<string, { text: string; tone: string }> = {
   matched_invoice: { text: "مطابق لفاتورة", tone: "text-emerald-400" },
@@ -32,6 +45,8 @@ const MATCH_LABEL: Record<string, { text: string; tone: string }> = {
   cancelled_order_needs_refund_match: { text: "طلب ملغي ينتظر الاسترجاع", tone: "text-amber-400" },
   order_found_invoice_missing: { text: "الطلب موجود بدون فاتورة", tone: "text-amber-400" },
   order_not_found: { text: "الطلب غير موجود", tone: "text-red-400" },
+  needs_classification: { text: "بحاجة تصنيف", tone: "text-amber-400" },
+  classified: { text: "مصنّف يدوياً", tone: "text-sky-400" },
   no_external_order_id: { text: "بدون رقم طلب", tone: "text-muted-foreground" },
 };
 
