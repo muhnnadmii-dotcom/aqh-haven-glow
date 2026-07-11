@@ -123,13 +123,52 @@ function detectHeaderRow(aoa: any[][], aliases: string[]): number {
 
 // ---------- row model ----------
 type LineType = "sale" | "refund" | "adjustment";
-type ReviewReason = "missing_order_id" | "invalid_amount" | "order_not_found" | "duplicate_line" | "zero_amount";
+type MatchStatus =
+  | "matched_invoice"
+  | "matched_cancelled_order"
+  | "cancelled_order_needs_refund_match"
+  | "order_found_invoice_missing"
+  | "order_not_found"
+  | "needs_credit_note"
+  | "unmatched_refund"
+  | "orphan_line";
+
+const MATCH_LABEL: Record<MatchStatus, string> = {
+  matched_invoice: "مطابق لفاتورة",
+  matched_cancelled_order: "طلب ملغي ومطابق",
+  cancelled_order_needs_refund_match: "طلب ملغي ينتظر مطابقة الاسترجاع",
+  order_found_invoice_missing: "الطلب موجود والفاتورة غير موجودة",
+  order_not_found: "الطلب غير موجود في استيراد سلة",
+  needs_credit_note: "يحتاج إشعار دائن (استرجاع جزئي)",
+  unmatched_refund: "استرجاع بدون عملية أصلية",
+  orphan_line: "سطر بدون رقم طلب",
+};
+
+const MATCH_TONE: Record<MatchStatus, string> = {
+  matched_invoice: "text-emerald-300",
+  matched_cancelled_order: "text-sky-300",
+  cancelled_order_needs_refund_match: "text-amber-300",
+  order_found_invoice_missing: "text-amber-300",
+  order_not_found: "text-red-300",
+  needs_credit_note: "text-amber-300",
+  unmatched_refund: "text-red-300",
+  orphan_line: "text-red-300",
+};
+
+// Statuses that BLOCK settlement approval (require human review before commit)
+const BLOCKING_STATUSES = new Set<MatchStatus>([
+  "order_not_found",
+  "cancelled_order_needs_refund_match",
+  "unmatched_refund",
+  "orphan_line",
+]);
+
+type ReviewReason = "invalid_amount" | "duplicate_line" | "zero_amount" | "amount_mismatch";
 const REVIEW_LABEL: Record<ReviewReason, string> = {
-  missing_order_id: "رقم طلب مفقود",
   invalid_amount: "قيمة غير صالحة",
-  order_not_found: "فاتورة سلة غير موجودة",
   duplicate_line: "سطر مكرر",
   zero_amount: "قيمة = 0",
+  amount_mismatch: "اختلاف مبالغ غير مفسر",
 };
 
 type ParsedLine = {
@@ -146,6 +185,8 @@ type ParsedLine = {
   net_before_vat_check: number | null;
   line_type: LineType;
   sales_invoice_id: number | null;
+  salla_order_status: string | null;
+  match_status: MatchStatus;
   reasons: ReviewReason[];
   needs_review: boolean;
   raw: Record<string, any>;
