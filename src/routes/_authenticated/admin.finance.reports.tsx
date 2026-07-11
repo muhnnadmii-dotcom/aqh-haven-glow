@@ -220,11 +220,11 @@ function ReportsPage() {
                   <h2 className="text-lg font-semibold mb-3">ذمم وضرائب</h2>
                   <table className="w-full text-[13px]">
                     <tbody>
-                      <TR label="ذمم مدينة (عملاء) — نهاية الفترة" v={Number(perf.accounts_receivable ?? 0)} />
-                      <TR label="ذمم دائنة (موردون) — نهاية الفترة" v={Number(perf.accounts_payable ?? 0)} />
+                      <TR label="ذمم مدينة (عملاء) — نهاية الفترة" v={Number(perf.ar_balance ?? 0)} />
+                      <TR label="ذمم دائنة (موردون) — نهاية الفترة" v={Number(perf.ap_balance ?? 0)} />
                       <TR label="ضريبة المخرجات (مبيعات)" v={Number(perf.output_vat ?? 0)} />
                       <TR label="ضريبة المدخلات القابلة للخصم" v={Number(perf.deductible_input_vat ?? 0)} />
-                      <TR label="صافي الضريبة المستحقة" v={Number(perf.net_vat_payable ?? 0)} bold />
+                      <TR label="صافي الضريبة المستحقة" v={Number(perf.net_vat ?? 0)} bold />
                     </tbody>
                   </table>
                 </div>
