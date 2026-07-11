@@ -37,6 +37,8 @@ function ExpensesPage() {
   const [fInternal, setFInternal] = useState("");
   const [fAcct, setFAcct] = useState("");
   const [fAtt, setFAtt] = useState("");
+  const [fTxnType, setFTxnType] = useState("");
+  const [fAccStatus, setFAccStatus] = useState("");
 
   const load = async () => {
     setLoading(true);
