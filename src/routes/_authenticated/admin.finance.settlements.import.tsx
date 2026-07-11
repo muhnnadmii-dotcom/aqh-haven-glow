@@ -605,6 +605,14 @@ function SettlementImportPage() {
         amount: r.gross_amount,
         transaction_date: r.transaction_date,
         description: r.description ?? MATCH_LABEL[r.match_status],
+        // Persist wallet transfers pre-classified so the DB matcher doesn't flag them as needs_classification.
+        matching_status:
+          r.line_type === "wallet_top_up"
+            ? "classified"
+            : r.match_status === "wallet_internal_transfer"
+              ? "classified"
+              : undefined,
+        classification_reason: r.line_type === "wallet_top_up" ? "wallet_top_up" : undefined,
         raw_row: {
           ...r.raw,
           _match_status: r.match_status,
