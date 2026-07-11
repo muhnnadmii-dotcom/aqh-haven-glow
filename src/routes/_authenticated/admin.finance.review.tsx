@@ -513,6 +513,7 @@ function KpiChip({ label, count, active, onClick, tone, icon: Icon }: any) {
     purple: "border-purple-500/40 text-purple-300 bg-purple-500/10",
     cyan: "border-cyan-500/40 text-cyan-300 bg-cyan-500/10",
     emerald: "border-emerald-500/40 text-emerald-300 bg-emerald-500/10",
+    rose: "border-rose-500/40 text-rose-300 bg-rose-500/10",
   };
   return (
     <button onClick={onClick} className={`rounded-xl border p-3 text-right transition ${active ? tones[tone] + " ring-2 ring-current/40" : "border-white/10 bg-white/5 hover:bg-white/10"}`}>
