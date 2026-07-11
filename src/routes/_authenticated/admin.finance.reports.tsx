@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtSAR, OWNER_DRAW_SLUG } from "@/lib/finance/constants";
-import { formatMonthAr, monthRange, splitExpenses, sum } from "@/lib/finance/dashboard-data";
+import { formatMonthAr, monthRange, splitExpenses, splitIncomes, sum } from "@/lib/finance/dashboard-data";
 import { exportXLSX } from "@/lib/finance/xlsx";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
 import { Download, Printer } from "lucide-react";
@@ -55,7 +55,8 @@ function ReportsPage() {
   }, [month]);
 
   const { operating, draws } = useMemo(() => splitExpenses(expenses, ownerDrawCatId), [expenses, ownerDrawCatId]);
-  const totIncome = sum(incomes, (x: any) => x.amount);
+  const { operating: opIncomes } = useMemo(() => splitIncomes(incomes), [incomes]);
+  const totIncome = sum(opIncomes, (x: any) => x.amount);
   const totOp = sum(operating, (x: any) => x.amount);
   const totDraws = sum(draws, (x: any) => x.amount);
   const netOp = totIncome - totOp;

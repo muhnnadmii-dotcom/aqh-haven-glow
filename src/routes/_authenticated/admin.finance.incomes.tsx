@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
-import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive } from "lucide-react";
+import { INCOMING_TYPES, ACCOUNTING_STATUSES, incomingLabel, accountingStatusLabel } from "@/lib/finance/transaction-types";
+import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
 import { AuditPanel } from "@/components/finance/AuditPanel";
@@ -33,6 +34,8 @@ function IncomesPage() {
   const [fInternal, setFInternal] = useState("");
   const [fAcct, setFAcct] = useState("");
   const [fAtt, setFAtt] = useState("");
+  const [fTxnType, setFTxnType] = useState("");
+  const [fAccStatus, setFAccStatus] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -57,8 +60,15 @@ function IncomesPage() {
     if (fInternal && r.internal_review_status !== fInternal) return false;
     if (fAcct && r.accountant_status !== fAcct) return false;
     if (fAtt && r.attachment_status !== fAtt) return false;
+    if (fTxnType && r.transaction_type !== fTxnType) return false;
+    if (fAccStatus && (r.accounting_status ?? "unclassified") !== fAccStatus) return false;
     return true;
-  }), [rows, q, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, sources, showDeleted]);
+  }), [rows, q, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, sources, showDeleted]);
+
+  const unclassifiedCount = useMemo(
+    () => rows.filter((r) => !r.deleted_at && (r.accounting_status ?? "unclassified") === "unclassified").length,
+    [rows],
+  );
 
   const months = useMemo(() => Array.from(new Set(rows.map((r) => r.month).filter(Boolean))).sort().reverse(), [rows]);
   const total = filtered.reduce((a, b) => a + Number(b.amount ?? 0), 0);
@@ -104,13 +114,24 @@ function IncomesPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/5 p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+      {unclassifiedCount > 0 && (
+        <button
+          onClick={() => setFAccStatus("unclassified")}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] ${fAccStatus === "unclassified" ? "bg-amber-500/20 border-amber-500/40 text-amber-200" : "bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20"}`}
+        >
+          <Tag size={13} /> حركات غير مصنفة: {unclassifiedCount}
+        </button>
+      )}
+
+      <div className="rounded-xl border border-white/10 bg-white/5 p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
         <label className="relative col-span-2 md:col-span-2">
           <Search size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث…" className="w-full pr-7 pl-2 py-1.5 rounded-lg bg-background/60 border border-white/10 text-[12px]" />
         </label>
         <Select v={fMonth} onChange={setFMonth} ph="الشهر" opts={months.map((m) => ({ value: m, label: m }))} />
         <Select v={fSource} onChange={setFSource} ph="مصدر الدخل" opts={sources.map((s) => ({ value: s.id, label: s.name }))} />
+        <Select v={fTxnType} onChange={setFTxnType} ph="نوع الحركة" opts={INCOMING_TYPES.map((t) => ({ value: t.value, label: t.label }))} />
+        <Select v={fAccStatus} onChange={setFAccStatus} ph="حالة التصنيف" opts={ACCOUNTING_STATUSES.map((s) => ({ value: s.value, label: s.label }))} />
         <Select v={fAccount} onChange={setFAccount} ph="نوع الحساب" opts={ACCOUNT_TYPES.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fInternal} onChange={setFInternal} ph="مراجعة داخلية" opts={INTERNAL_REVIEW.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fAcct} onChange={setFAcct} ph="حالة المحاسب" opts={ACCOUNTANT_STATUS.map((a) => ({ value: a.value, label: a.label }))} />
@@ -124,6 +145,7 @@ function IncomesPage() {
               <th className="text-start px-3 py-2">التاريخ</th>
               <th className="text-start px-3 py-2">المبلغ</th>
               <th className="text-start px-3 py-2">المصدر</th>
+              <th className="text-start px-3 py-2">نوع الحركة</th>
               <th className="text-start px-3 py-2">الحساب</th>
               <th className="text-start px-3 py-2">داخلي</th>
               <th className="text-start px-3 py-2">المحاسب</th>
@@ -137,6 +159,15 @@ function IncomesPage() {
                 <td className="px-3 py-2 whitespace-nowrap">{r.income_date}</td>
                 <td className="px-3 py-2 font-mono">{fmtSAR(r.amount)}</td>
                 <td className="px-3 py-2">{sourceName(r.income_source_id)}</td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {r.transaction_type ? (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-white/10 bg-white/5">
+                      {incomingLabel(r.transaction_type)}
+                    </span>
+                  ) : (
+                    <span className="text-amber-300/80 text-[10px]">غير مصنف</span>
+                  )}
+                </td>
                 <td className="px-3 py-2">{labelOf(ACCOUNT_TYPES, r.account_type)}</td>
                 <td className="px-3 py-2">
                   <ReviewStatusEditor
@@ -189,11 +220,11 @@ function IncomesPage() {
               </tr>
             ))}
             {filtered.length === 0 && !loading && (
-              <tr><td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">لا توجد بيانات</td></tr>
+              <tr><td colSpan={9} className="px-3 py-8 text-center text-muted-foreground">لا توجد بيانات</td></tr>
             )}
           </tbody>
           <tfoot className="bg-white/5 font-semibold">
-            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={6}></td></tr>
+            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={7}></td></tr>
           </tfoot>
         </table>
       </div>
@@ -236,6 +267,9 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     accountant_status: row?.accountant_status ?? "not_reviewed",
     accountant_note: row?.accountant_note ?? "",
     attachment_status: row?.attachment_status ?? "not_attached",
+    transaction_type: row?.transaction_type ?? "",
+    accounting_status: row?.accounting_status ?? "unclassified",
+    internal_note: row?.internal_note ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
@@ -244,11 +278,21 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
+      // Normalize classification: when user picks a type, mark as at least "classified".
+      const txnType = f.transaction_type || null;
+      const accStatus = txnType
+        ? (f.accounting_status === "unclassified" ? "classified" : f.accounting_status)
+        : "unclassified";
+      const payload = {
+        ...f,
+        transaction_type: txnType,
+        accounting_status: accStatus,
+        internal_note: f.internal_note || null,
+      };
       if (isNew) {
-        // If user picked files, default attachment_status to attached; uploader+trigger will normalize.
         const status = pending.length > 0 ? "attached" : f.attachment_status;
         const { data: inserted, error } = await supabase.from("finance_incomes").insert({
-          ...f,
+          ...payload,
           attachment_status: status,
           amount: Number(f.amount),
           income_source_id: f.income_source_id || null,
@@ -269,7 +313,7 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
       } else {
         const patch: any = accountantOnly
           ? { accountant_status: f.accountant_status, accountant_note: f.accountant_note }
-          : { ...f, amount: Number(f.amount), income_source_id: f.income_source_id || null };
+          : { ...payload, amount: Number(f.amount), income_source_id: f.income_source_id || null };
         const { error } = await supabase.from("finance_incomes").update(patch).eq("id", row.id);
         if (error) throw error;
         toast.success("تم الحفظ");
@@ -302,6 +346,17 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
                 {sources.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </Field>
+            <Field label="نوع الحركة">
+              <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setF({ ...f, transaction_type: e.target.value })} className="inp">
+                <option value="">— اختر نوع الحركة —</option>
+                {INCOMING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </Field>
+            <Field label="حالة التصنيف">
+              <select disabled={accountantOnly} value={f.accounting_status} onChange={(e) => setF({ ...f, accounting_status: e.target.value })} className="inp">
+                {ACCOUNTING_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </Field>
             <Field label="نوع الحساب">
               <select disabled={accountantOnly} value={f.account_type} onChange={(e) => setF({ ...f, account_type: e.target.value })} className="inp">
                 {ACCOUNT_TYPES.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
@@ -325,6 +380,7 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
           </div>
           <Field label="الملاحظة"><textarea disabled={accountantOnly} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} className="inp min-h-[60px]" /></Field>
           <Field label="ملاحظة المحاسب"><textarea value={f.accountant_note} onChange={(e) => setF({ ...f, accountant_note: e.target.value })} className="inp min-h-[60px]" /></Field>
+          <Field label="ملاحظة داخلية (للتصنيف)"><textarea disabled={accountantOnly} value={f.internal_note} onChange={(e) => setF({ ...f, internal_note: e.target.value })} className="inp min-h-[50px]" /></Field>
 
           {isNew && roles.canManage && (
             <PendingAttachmentsPicker items={pending} setItems={setPending} />

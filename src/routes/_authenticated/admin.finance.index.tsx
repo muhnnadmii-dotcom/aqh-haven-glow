@@ -12,7 +12,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area,
 } from "recharts";
 import {
-  type PeriodKey, resolveRange, previousRange, pctChange, sum, splitExpenses,
+  type PeriodKey, resolveRange, previousRange, pctChange, sum, splitExpenses, splitIncomes,
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
@@ -126,14 +126,16 @@ function FinanceDashboard() {
   // Derived aggregates
   const { operating, draws } = useMemo(() => splitExpenses(expenses, ownerDrawCatId), [expenses, ownerDrawCatId]);
   const { operating: prevOperating, draws: prevDraws } = useMemo(() => splitExpenses(prevExpenses, ownerDrawCatId), [prevExpenses, ownerDrawCatId]);
+  const { operating: opIncomes } = useMemo(() => splitIncomes(incomes), [incomes]);
+  const { operating: prevOpIncomes } = useMemo(() => splitIncomes(prevIncomes), [prevIncomes]);
 
-  const totIncome = sum(incomes, (x: any) => x.amount);
+  const totIncome = sum(opIncomes, (x: any) => x.amount);
   const totOpExpense = sum(operating, (x: any) => x.amount);
   const totDraws = sum(draws, (x: any) => x.amount);
   const netOp = totIncome - totOpExpense;
   const netAfterDraws = netOp - totDraws;
 
-  const pTotIncome = sum(prevIncomes, (x: any) => x.amount);
+  const pTotIncome = sum(prevOpIncomes, (x: any) => x.amount);
   const pTotOpExpense = sum(prevOperating, (x: any) => x.amount);
   const pTotDraws = sum(prevDraws, (x: any) => x.amount);
   const pNetOp = pTotIncome - pTotOpExpense;
