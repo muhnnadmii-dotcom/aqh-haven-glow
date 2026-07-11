@@ -27,6 +27,7 @@ const LINE_LABEL: Record<string, string> = {
   reserve_released: "احتياطي مُفرج عنه",
   rounding_difference: "فرق تقريب",
   unexplained_transfer_fee: "فرق تحويل غير مبرر",
+  wallet_top_up: "شحن محفظة الوسيط",
 };
 
 const CLASSIFY_OPTIONS: { value: string; label: string }[] = [
