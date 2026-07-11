@@ -1,5 +1,5 @@
 import { Link, Outlet, useRouterState, createFileRoute, redirect } from "@tanstack/react-router";
-import { LayoutDashboard, TrendingUp, TrendingDown, Truck, Tags, Paperclip, History, Download, Settings as Cog, Upload, Archive, FileText, GitCompare, BarChart3, Wallet, ArrowLeftRight, Receipt, Users, ShoppingCart, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, Truck, Tags, Paperclip, History, Download, Settings as Cog, Upload, Archive, FileText, GitCompare, BarChart3, Wallet, ArrowLeftRight, Receipt, Users, ShoppingCart, ClipboardCheck, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
 
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance")({
 
 const tabs = [
   { to: "/admin/finance", label: "لوحة المالية", icon: LayoutDashboard, exact: true },
+  { to: "/admin/finance/review", label: "مركز مراجعة الحركات", icon: Inbox },
   { to: "/admin/finance/compare", label: "مقارنة الأشهر", icon: GitCompare },
   { to: "/admin/finance/reports", label: "التقارير", icon: BarChart3 },
   { to: "/admin/finance/quotes", label: "عروض الأسعار", icon: FileText },
