@@ -3051,6 +3051,99 @@ export type Database = {
           },
         ]
       }
+      sales_import_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          duplicate_rows: number
+          error_rows: number
+          file_name: string
+          id: string
+          imported_rows: number
+          mapping_name: string | null
+          mapping_snapshot: Json | null
+          needs_review_rows: number
+          notes: string | null
+          sales_channel: Database["public"]["Enums"]["sales_channel_type"]
+          sheet_name: string | null
+          status: string
+          summary_json: Json | null
+          total_rows: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          duplicate_rows?: number
+          error_rows?: number
+          file_name: string
+          id?: string
+          imported_rows?: number
+          mapping_name?: string | null
+          mapping_snapshot?: Json | null
+          needs_review_rows?: number
+          notes?: string | null
+          sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          sheet_name?: string | null
+          status?: string
+          summary_json?: Json | null
+          total_rows?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          duplicate_rows?: number
+          error_rows?: number
+          file_name?: string
+          id?: string
+          imported_rows?: number
+          mapping_name?: string | null
+          mapping_snapshot?: Json | null
+          needs_review_rows?: number
+          notes?: string | null
+          sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          sheet_name?: string | null
+          status?: string
+          summary_json?: Json | null
+          total_rows?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sales_import_mappings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean
+          mapping: Json
+          name: string
+          sales_channel: Database["public"]["Enums"]["sales_channel_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          mapping: Json
+          name: string
+          sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          mapping?: Json
+          name?: string
+          sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sales_invoice_items: {
         Row: {
           created_at: string
@@ -3128,17 +3221,34 @@ export type Database = {
           created_by: string | null
           currency: string
           customer_id: string | null
+          customer_name_snapshot: string | null
+          data_completeness_status: Database["public"]["Enums"]["sales_data_completeness"]
           discount_amount: number
           due_date: string | null
+          external_invoice_number: string | null
+          external_order_id: string | null
           id: number
+          import_batch_id: string | null
+          import_row_snapshot: Json | null
           internal_notes: string | null
           invoice_number: string
           issue_date: string
+          net_amount: number | null
           notes: string | null
+          order_date: string | null
           order_id: string | null
+          order_status: string | null
+          original_gross_amount: number | null
           paid_amount: number
+          payment_provider:
+            | Database["public"]["Enums"]["sales_payment_provider"]
+            | null
           payment_status: Database["public"]["Enums"]["sales_invoice_payment_status"]
+          refund_amount: number
           remaining_amount: number
+          sales_channel: Database["public"]["Enums"]["sales_channel_type"]
+          shipping_before_vat: number
+          shipping_vat: number
           status: Database["public"]["Enums"]["sales_invoice_status"]
           subtotal: number
           supply_date: string | null
@@ -3154,17 +3264,34 @@ export type Database = {
           created_by?: string | null
           currency?: string
           customer_id?: string | null
+          customer_name_snapshot?: string | null
+          data_completeness_status?: Database["public"]["Enums"]["sales_data_completeness"]
           discount_amount?: number
           due_date?: string | null
+          external_invoice_number?: string | null
+          external_order_id?: string | null
           id?: number
+          import_batch_id?: string | null
+          import_row_snapshot?: Json | null
           internal_notes?: string | null
           invoice_number: string
           issue_date?: string
+          net_amount?: number | null
           notes?: string | null
+          order_date?: string | null
           order_id?: string | null
+          order_status?: string | null
+          original_gross_amount?: number | null
           paid_amount?: number
+          payment_provider?:
+            | Database["public"]["Enums"]["sales_payment_provider"]
+            | null
           payment_status?: Database["public"]["Enums"]["sales_invoice_payment_status"]
+          refund_amount?: number
           remaining_amount?: number
+          sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          shipping_before_vat?: number
+          shipping_vat?: number
           status?: Database["public"]["Enums"]["sales_invoice_status"]
           subtotal?: number
           supply_date?: string | null
@@ -3180,17 +3307,34 @@ export type Database = {
           created_by?: string | null
           currency?: string
           customer_id?: string | null
+          customer_name_snapshot?: string | null
+          data_completeness_status?: Database["public"]["Enums"]["sales_data_completeness"]
           discount_amount?: number
           due_date?: string | null
+          external_invoice_number?: string | null
+          external_order_id?: string | null
           id?: number
+          import_batch_id?: string | null
+          import_row_snapshot?: Json | null
           internal_notes?: string | null
           invoice_number?: string
           issue_date?: string
+          net_amount?: number | null
           notes?: string | null
+          order_date?: string | null
           order_id?: string | null
+          order_status?: string | null
+          original_gross_amount?: number | null
           paid_amount?: number
+          payment_provider?:
+            | Database["public"]["Enums"]["sales_payment_provider"]
+            | null
           payment_status?: Database["public"]["Enums"]["sales_invoice_payment_status"]
+          refund_amount?: number
           remaining_amount?: number
+          sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          shipping_before_vat?: number
+          shipping_vat?: number
           status?: Database["public"]["Enums"]["sales_invoice_status"]
           subtotal?: number
           supply_date?: string | null
@@ -3208,10 +3352,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_invoices_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "sales_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sales_invoices_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          credit_note_id: number | null
+          external_reference: string | null
+          has_credit_note: boolean
+          id: number
+          import_batch_id: string | null
+          invoice_id: number
+          notes: string | null
+          reason: string | null
+          refund_date: string
+          sales_channel: Database["public"]["Enums"]["sales_channel_type"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          credit_note_id?: number | null
+          external_reference?: string | null
+          has_credit_note?: boolean
+          id?: number
+          import_batch_id?: string | null
+          invoice_id: number
+          notes?: string | null
+          reason?: string | null
+          refund_date?: string
+          sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          credit_note_id?: number | null
+          external_reference?: string | null
+          has_credit_note?: boolean
+          id?: number
+          import_batch_id?: string | null
+          invoice_id?: number
+          notes?: string | null
+          reason?: string | null
+          refund_date?: string
+          sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_refunds_credit_note_id_fkey"
+            columns: ["credit_note_id"]
+            isOneToOne: false
+            referencedRelation: "credit_debit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_refunds_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "sales_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_refunds_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales_invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -3923,17 +4147,34 @@ export type Database = {
           created_by: string | null
           currency: string
           customer_id: string | null
+          customer_name_snapshot: string | null
+          data_completeness_status: Database["public"]["Enums"]["sales_data_completeness"]
           discount_amount: number
           due_date: string | null
+          external_invoice_number: string | null
+          external_order_id: string | null
           id: number
+          import_batch_id: string | null
+          import_row_snapshot: Json | null
           internal_notes: string | null
           invoice_number: string
           issue_date: string
+          net_amount: number | null
           notes: string | null
+          order_date: string | null
           order_id: string | null
+          order_status: string | null
+          original_gross_amount: number | null
           paid_amount: number
+          payment_provider:
+            | Database["public"]["Enums"]["sales_payment_provider"]
+            | null
           payment_status: Database["public"]["Enums"]["sales_invoice_payment_status"]
+          refund_amount: number
           remaining_amount: number
+          sales_channel: Database["public"]["Enums"]["sales_channel_type"]
+          shipping_before_vat: number
+          shipping_vat: number
           status: Database["public"]["Enums"]["sales_invoice_status"]
           subtotal: number
           supply_date: string | null
@@ -4116,6 +4357,10 @@ export type Database = {
         Returns: string
       }
       sales_invoice_recalc_totals: {
+        Args: { p_invoice_id: number }
+        Returns: undefined
+      }
+      sales_refunds_recalc: {
         Args: { p_invoice_id: number }
         Returns: undefined
       }
@@ -4315,6 +4560,13 @@ export type Database = {
         | "non_deductible"
         | "pending_review"
       request_status: "new" | "in_progress" | "closed"
+      sales_channel_type: "manual" | "salla" | "direct" | "other"
+      sales_data_completeness:
+        | "complete"
+        | "missing_original_invoice"
+        | "missing_tax_details"
+        | "needs_review"
+        | "needs_credit_note"
       sales_invoice_payment_status:
         | "unpaid"
         | "partially_paid"
@@ -4331,6 +4583,15 @@ export type Database = {
         | "zero_rated"
         | "exempt"
         | "out_of_scope"
+      sales_payment_provider:
+        | "salla_payments"
+        | "tabby"
+        | "tamara"
+        | "bank_transfer"
+        | "personal_account"
+        | "business_account"
+        | "cash"
+        | "other"
       service_request_status:
         | "new"
         | "in_review"
@@ -4623,6 +4884,14 @@ export const Constants = {
         "pending_review",
       ],
       request_status: ["new", "in_progress", "closed"],
+      sales_channel_type: ["manual", "salla", "direct", "other"],
+      sales_data_completeness: [
+        "complete",
+        "missing_original_invoice",
+        "missing_tax_details",
+        "needs_review",
+        "needs_credit_note",
+      ],
       sales_invoice_payment_status: [
         "unpaid",
         "partially_paid",
@@ -4641,6 +4910,16 @@ export const Constants = {
         "zero_rated",
         "exempt",
         "out_of_scope",
+      ],
+      sales_payment_provider: [
+        "salla_payments",
+        "tabby",
+        "tamara",
+        "bank_transfer",
+        "personal_account",
+        "business_account",
+        "cash",
+        "other",
       ],
       service_request_status: [
         "new",
