@@ -58,7 +58,13 @@ function SalesInvoicesList() {
       return (data ?? []) as any[];
     },
   });
-  const custName = (id: string | null) => customers.find((c) => c.id === id)?.full_name ?? "—";
+  const custName = (r: any) => {
+    if (r.customer_id) {
+      const found = customers.find((c) => c.id === r.customer_id)?.full_name;
+      if (found) return found;
+    }
+    return r.customer_name_snapshot || "—";
+  };
 
   const create = useMutation({
     mutationFn: async () => {
@@ -81,7 +87,7 @@ function SalesInvoicesList() {
   const filtered = useMemo(() => invoices.filter((r) => {
     if (q) {
       const s = q.toLowerCase();
-      const hay = `${r.invoice_number ?? ""} ${custName(r.customer_id)} ${r.notes ?? ""}`.toLowerCase();
+      const hay = `${r.invoice_number ?? ""} ${custName(r)} ${r.customer_name_snapshot ?? ""} ${r.notes ?? ""}`.toLowerCase();
       if (!hay.includes(s)) return false;
     }
     if (fStatus && r.status !== fStatus) return false;
@@ -179,7 +185,7 @@ function SalesInvoicesList() {
                     </Link>
                   </td>
                   <td className="p-2 whitespace-nowrap">{r.issue_date}</td>
-                  <td className="p-2">{custName(r.customer_id)}</td>
+                  <td className="p-2">{custName(r)}</td>
                   <td className="p-2">{SAR(r.taxable_amount)}</td>
                   <td className="p-2">{SAR(r.vat_amount)}</td>
                   <td className="p-2 font-semibold">{SAR(r.total_amount)}</td>
