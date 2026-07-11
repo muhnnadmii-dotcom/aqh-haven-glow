@@ -242,3 +242,64 @@ function SettlementLinesPage() {
     </div>
   );
 }
+
+function ClassifyLine({ row, onDone }: { row: any; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState<string>(row.line_type ?? "unexplained_deduction");
+  const [note, setNote] = useState<string>(row.classification_note ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await (supabase as any)
+      .from("payment_settlement_lines")
+      .update({
+        line_type: type,
+        matching_status: "classified",
+        classification_reason: type,
+        classification_note: note || null,
+        classified_at: new Date().toISOString(),
+        classified_by: u.user?.id ?? null,
+      })
+      .eq("id", row.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("تم تصنيف الحركة");
+    setOpen(false);
+    onDone();
+  };
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="px-2 py-1 rounded bg-amber-500/20 border border-amber-400/40 text-amber-200 text-[11px] hover:bg-amber-500/30">
+        تصنيف الحركة
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setOpen(false)}>
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0b1220] p-4 space-y-3" dir="rtl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-sm font-semibold">تصنيف حركة تسوية غير مرتبطة بطلب</div>
+            <div className="text-[11px] text-muted-foreground">
+              المبلغ: <b className="tabular-nums">{Number(row.amount).toFixed(2)}</b> · التاريخ: {row.transaction_date ?? "—"}
+            </div>
+            <label className="block text-[11px]">نوع الحركة الصحيح
+              <select value={type} onChange={(e) => setType(e.target.value)} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]">
+                {CLASSIFY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </label>
+            <label className="block text-[11px]">ملاحظة (اختياري)
+              <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+            </label>
+            <div className="text-[11px] text-muted-foreground">
+              لن يتغير المبلغ ولا أي روابط أخرى. سيتم فقط تحديث نوع الحركة وحالتها.
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setOpen(false)} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">إلغاء</button>
+              <button disabled={saving} onClick={save} className="px-3 py-1.5 rounded bg-emerald-600/80 text-white text-[12px] disabled:opacity-50">{saving ? "…" : "حفظ التصنيف"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
