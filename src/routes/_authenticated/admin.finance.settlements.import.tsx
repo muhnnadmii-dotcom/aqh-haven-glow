@@ -123,13 +123,52 @@ function detectHeaderRow(aoa: any[][], aliases: string[]): number {
 
 // ---------- row model ----------
 type LineType = "sale" | "refund" | "adjustment";
-type ReviewReason = "missing_order_id" | "invalid_amount" | "order_not_found" | "duplicate_line" | "zero_amount";
+type MatchStatus =
+  | "matched_invoice"
+  | "matched_cancelled_order"
+  | "cancelled_order_needs_refund_match"
+  | "order_found_invoice_missing"
+  | "order_not_found"
+  | "needs_credit_note"
+  | "unmatched_refund"
+  | "orphan_line";
+
+const MATCH_LABEL: Record<MatchStatus, string> = {
+  matched_invoice: "مطابق لفاتورة",
+  matched_cancelled_order: "طلب ملغي ومطابق",
+  cancelled_order_needs_refund_match: "طلب ملغي ينتظر مطابقة الاسترجاع",
+  order_found_invoice_missing: "الطلب موجود والفاتورة غير موجودة",
+  order_not_found: "الطلب غير موجود في استيراد سلة",
+  needs_credit_note: "يحتاج إشعار دائن (استرجاع جزئي)",
+  unmatched_refund: "استرجاع بدون عملية أصلية",
+  orphan_line: "سطر بدون رقم طلب",
+};
+
+const MATCH_TONE: Record<MatchStatus, string> = {
+  matched_invoice: "text-emerald-300",
+  matched_cancelled_order: "text-sky-300",
+  cancelled_order_needs_refund_match: "text-amber-300",
+  order_found_invoice_missing: "text-amber-300",
+  order_not_found: "text-red-300",
+  needs_credit_note: "text-amber-300",
+  unmatched_refund: "text-red-300",
+  orphan_line: "text-red-300",
+};
+
+// Statuses that BLOCK settlement approval (require human review before commit)
+const BLOCKING_STATUSES = new Set<MatchStatus>([
+  "order_not_found",
+  "cancelled_order_needs_refund_match",
+  "unmatched_refund",
+  "orphan_line",
+]);
+
+type ReviewReason = "invalid_amount" | "duplicate_line" | "zero_amount" | "amount_mismatch";
 const REVIEW_LABEL: Record<ReviewReason, string> = {
-  missing_order_id: "رقم طلب مفقود",
   invalid_amount: "قيمة غير صالحة",
-  order_not_found: "فاتورة سلة غير موجودة",
   duplicate_line: "سطر مكرر",
   zero_amount: "قيمة = 0",
+  amount_mismatch: "اختلاف مبالغ غير مفسر",
 };
 
 type ParsedLine = {
@@ -146,6 +185,8 @@ type ParsedLine = {
   net_before_vat_check: number | null;
   line_type: LineType;
   sales_invoice_id: number | null;
+  salla_order_status: string | null;
+  match_status: MatchStatus;
   reasons: ReviewReason[];
   needs_review: boolean;
   raw: Record<string, any>;
@@ -174,6 +215,7 @@ function SettlementImportPage() {
   const [settlementRef, setSettlementRef] = useState("");
   const [settlementDate, setSettlementDate] = useState(new Date().toISOString().slice(0, 10));
   const [payoutFee, setPayoutFee] = useState("0");
+  const [statusFilter, setStatusFilter] = useState<MatchStatus | "">("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const providerLabel = PROVIDERS.find((p) => p.code === provider)?.label ?? "";
@@ -273,19 +315,14 @@ function SettlementImportPage() {
       else if (gross === 0) { reasons.push("zero_amount"); line_type = "adjustment"; }
       else if (gross < 0) { line_type = orderId ? "refund" : "adjustment"; }
 
-      if (!orderId && (line_type === "refund" || line_type === "adjustment") && gross !== 0) {
-        reasons.push("missing_order_id");
-      }
-      if (!orderId && line_type === "sale") reasons.push("missing_order_id");
-
-      // duplicate within file
       const dupKey = `${orderId ?? ""}|${gross ?? ""}|${txnId ?? ""}|${date ?? ""}`;
       if (seen.has(dupKey) && dupKey !== "|||") reasons.push("duplicate_line");
       seen.set(dupKey, rowNo);
 
-      // capture raw row as object for storage
       const rawObj: Record<string, any> = {};
       headers.forEach((h, i) => { rawObj[String(h ?? `col_${i}`)] = raw[i] ?? null; });
+
+      const initialMatch: MatchStatus = orderId ? "order_not_found" : "orphan_line";
 
       return {
         rowNo,
@@ -301,6 +338,8 @@ function SettlementImportPage() {
         net_before_vat_check: netBv,
         line_type,
         sales_invoice_id: null,
+        salla_order_status: null,
+        match_status: initialMatch,
         reasons,
         needs_review: reasons.length > 0,
         raw: rawObj,
@@ -315,28 +354,99 @@ function SettlementImportPage() {
 
     const parsed = buildRows();
 
-    // Match sales invoices by external_order_id (salla only meaningful)
-    const orderIds = Array.from(new Set(parsed.map((p) => p.external_order_id).filter(Boolean))) as string[];
+    // Group by order id for pair matching
+    const byOrder = new Map<string, ParsedLine[]>();
+    for (const p of parsed) {
+      if (!p.external_order_id) continue;
+      const arr = byOrder.get(p.external_order_id) ?? [];
+      arr.push(p);
+      byOrder.set(p.external_order_id, arr);
+    }
+    const orderIds = Array.from(byOrder.keys());
+
     if (orderIds.length) {
-      const { data: invs } = await (supabase as any)
-        .from("sales_invoices")
-        .select("id,external_order_id")
+      const invMap = new Map<string, number>();
+      const orderMap = new Map<string, { status: string | null; cancelled: boolean }>();
+      const chunkArr = <T,>(a: T[], n: number) => { const out: T[][] = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
+      for (const chunk of chunkArr(orderIds, 500)) {
+        const [invRes, orderRes] = await Promise.all([
+          (supabase as any).from("sales_invoices").select("id,external_order_id").in("external_order_id", chunk),
+          (supabase as any).from("salla_orders").select("external_order_id,order_status").in("external_order_id", chunk),
+        ]);
+        (invRes.data ?? []).forEach((r: any) => invMap.set(String(r.external_order_id), r.id));
+        (orderRes.data ?? []).forEach((r: any) => {
+          const st: string = r.order_status ?? "";
+          orderMap.set(String(r.external_order_id), { status: st, cancelled: /cancel|ملغى|ملغي|ملغاة|إلغاء|الغاء/i.test(st) });
+        });
+      }
+
+      // Also search other settlements for refund/sale counterparts (cross-file pairing)
+      const { data: crossLines } = await (supabase as any)
+        .from("payment_settlement_lines")
+        .select("external_order_id,line_type,amount")
         .in("external_order_id", orderIds);
-      const map = new Map<string, number>();
-      (invs ?? []).forEach((r: any) => map.set(String(r.external_order_id), r.id));
-      for (const p of parsed) {
-        if (p.external_order_id) {
-          const id = map.get(p.external_order_id);
-          if (id) p.sales_invoice_id = id;
-          else if (!p.reasons.includes("missing_order_id")) {
-            p.reasons.push("order_not_found");
-            p.needs_review = true;
+      const crossByOrder = new Map<string, { sales: number; refunds: number }>();
+      (crossLines ?? []).forEach((l: any) => {
+        const key = String(l.external_order_id);
+        const cur = crossByOrder.get(key) ?? { sales: 0, refunds: 0 };
+        if (l.line_type === "sale") cur.sales = round2(cur.sales + Number(l.amount));
+        else if (l.line_type === "refund") cur.refunds = round2(cur.refunds + Math.abs(Number(l.amount)));
+        crossByOrder.set(key, cur);
+      });
+
+      for (const [oid, lines] of byOrder) {
+        const invId = invMap.get(oid) ?? null;
+        const info = orderMap.get(oid);
+        const sales = lines.filter((l) => l.line_type === "sale");
+        const refunds = lines.filter((l) => l.line_type === "refund");
+        const totalSale = round2(sales.reduce((s, l) => s + l.gross_amount, 0));
+        const totalRefundAbs = round2(refunds.reduce((s, l) => s + Math.abs(l.gross_amount), 0));
+        const cross = crossByOrder.get(oid) ?? { sales: 0, refunds: 0 };
+        const combinedSales = round2(totalSale + cross.sales);
+        const combinedRefunds = round2(totalRefundAbs + cross.refunds);
+
+        for (const l of lines) {
+          l.sales_invoice_id = invId;
+          l.salla_order_status = info?.status ?? null;
+
+          if (info?.cancelled) {
+            if (Math.abs(combinedSales - combinedRefunds) <= 0.02 && combinedSales > 0) {
+              l.match_status = "matched_cancelled_order";
+            } else if (l.line_type === "sale") {
+              l.match_status = "cancelled_order_needs_refund_match";
+              l.needs_review = true;
+            } else if (l.line_type === "refund") {
+              l.match_status = combinedSales > 0 ? "matched_cancelled_order" : "unmatched_refund";
+              if (combinedSales <= 0) l.needs_review = true;
+            } else {
+              l.match_status = "matched_cancelled_order";
+            }
+          } else if (invId) {
+            const partialRefund = l.line_type === "refund" && combinedRefunds > 0 && combinedRefunds + 0.02 < combinedSales;
+            if (partialRefund) {
+              l.match_status = "needs_credit_note";
+              l.needs_review = true;
+            } else {
+              l.match_status = "matched_invoice";
+            }
+          } else if (info) {
+            l.match_status = "order_found_invoice_missing";
+            l.needs_review = true;
+          } else if (l.line_type === "refund") {
+            l.match_status = "unmatched_refund";
+            l.needs_review = true;
+          } else {
+            l.match_status = "order_not_found";
+            l.needs_review = true;
           }
         }
       }
+
+      for (const p of parsed) {
+        if (!p.external_order_id) { p.match_status = "orphan_line"; p.needs_review = true; }
+      }
     }
 
-    // Check duplicate file (same reference already used for provider)
     if (providerRow?.id) {
       const ref = settlementRef || `${provider}-${fileHash.slice(0, 12)}`;
       const { data: dup } = await (supabase as any)
@@ -345,9 +455,7 @@ function SettlementImportPage() {
         .eq("provider_id", providerRow.id)
         .eq("settlement_reference", ref)
         .maybeSingle();
-      if (dup) {
-        toast.warning("يوجد تسوية بنفس المرجع لهذه البوابة — غيّر المرجع قبل الاعتماد");
-      }
+      if (dup) toast.warning("يوجد تسوية بنفس المرجع لهذه البوابة — غيّر المرجع قبل الاعتماد");
     }
 
     setRows(parsed);
@@ -355,22 +463,26 @@ function SettlementImportPage() {
   }
 
   const summary = useMemo(() => {
-    let sales = 0, refunds = 0, adjustments = 0, matched = 0, notFound = 0, dupes = 0, review = 0;
+    const counts: Record<MatchStatus, number> = {
+      matched_invoice: 0, matched_cancelled_order: 0, cancelled_order_needs_refund_match: 0,
+      order_found_invoice_missing: 0, order_not_found: 0, needs_credit_note: 0,
+      unmatched_refund: 0, orphan_line: 0,
+    };
+    let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0;
     let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0;
     for (const r of rows) {
+      counts[r.match_status]++;
       if (r.line_type === "sale") { sales++; if (r.gross_amount > 0) gross = round2(gross + r.gross_amount); }
       else if (r.line_type === "refund") { refunds++; refundsAbs = round2(refundsAbs + Math.abs(r.gross_amount)); }
       else adjustments++;
       fees = round2(fees + r.fees_before_vat);
       feesVat = round2(feesVat + r.fees_vat_amount);
-      if (r.sales_invoice_id) matched++;
-      if (r.reasons.includes("order_not_found")) notFound++;
-      if (r.reasons.includes("duplicate_line")) dupes++;
+      if (BLOCKING_STATUSES.has(r.match_status)) blocking++;
       if (r.needs_review) review++;
     }
     const payout = num0(payoutFee);
     const expected = round2(gross - refundsAbs - fees - feesVat - payout);
-    return { count: rows.length, sales, refunds, adjustments, matched, notFound, dupes, review, gross, refundsAbs, fees, feesVat, expected };
+    return { count: rows.length, sales, refunds, adjustments, review, blocking, counts, gross, refundsAbs, fees, feesVat, expected };
   }, [rows, payoutFee]);
 
   async function commit() {
@@ -383,8 +495,8 @@ function SettlementImportPage() {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id ?? null;
 
-      const hasReview = summary.review > 0;
-      const status = hasReview ? "under_review" : "imported";
+      const hasBlocking = summary.blocking > 0;
+      const status = hasBlocking ? "under_review" : "imported";
 
       const { data: s, error: sErr } = await (supabase as any)
         .from("payment_settlements")
@@ -398,7 +510,7 @@ function SettlementImportPage() {
           fees_vat_amount: summary.feesVat,
           payout_fee: num0(payoutFee),
           status,
-          notes: `استيراد من ملف: ${file?.name} — hash=${fileHash.slice(0, 16)} — صفوف: ${rows.length} (تحتاج مراجعة: ${summary.review})`,
+          notes: `استيراد من ملف: ${file?.name} — hash=${fileHash.slice(0, 16)} — صفوف: ${rows.length} (يحتاج مراجعة: ${summary.review}، حجب: ${summary.blocking})`,
           created_by: uid,
         })
         .select("id")
@@ -415,11 +527,13 @@ function SettlementImportPage() {
         provider_transaction_id: r.provider_transaction_id,
         amount: r.gross_amount,
         transaction_date: r.transaction_date,
-        description: r.description ?? (r.reasons.length ? r.reasons.map((x) => REVIEW_LABEL[x]).join("، ") : null),
+        description: r.description ?? MATCH_LABEL[r.match_status],
         raw_row: {
           ...r.raw,
+          _match_status: r.match_status,
           _needs_review: r.needs_review,
           _reasons: r.reasons,
+          _salla_order_status: r.salla_order_status,
           _fees_before_vat: r.fees_before_vat,
           _fees_vat_amount: r.fees_vat_amount,
           _net_amount: r.net_amount,
@@ -643,15 +757,32 @@ function SettlementImportPage() {
             <Kpi label="مبيعات" value={String(summary.sales)} tone="text-emerald-300" />
             <Kpi label="مرتجعات" value={String(summary.refunds)} tone="text-amber-300" />
             <Kpi label="تعديلات" value={String(summary.adjustments)} tone="text-muted-foreground" />
-            <Kpi label="مطابقة" value={String(summary.matched)} tone="text-emerald-300" />
-            <Kpi label="طلبات غير موجودة" value={String(summary.notFound)} tone="text-red-300" />
-            <Kpi label="مكررة" value={String(summary.dupes)} tone="text-amber-300" />
-            <Kpi label="تحتاج مراجعة" value={String(summary.review)} tone={summary.review ? "text-red-300" : "text-muted-foreground"} />
+            <Kpi label="مطابق لفاتورة" value={String(summary.counts.matched_invoice)} tone="text-emerald-300" />
+            <Kpi label="طلب ملغي مطابق" value={String(summary.counts.matched_cancelled_order)} tone="text-sky-300" />
+            <Kpi label="ينتظر استرجاع" value={String(summary.counts.cancelled_order_needs_refund_match)} tone="text-amber-300" />
+            <Kpi label="طلب بدون فاتورة" value={String(summary.counts.order_found_invoice_missing)} tone="text-amber-300" />
+            <Kpi label="طلب غير موجود" value={String(summary.counts.order_not_found)} tone="text-red-300" />
+            <Kpi label="حجب اعتماد" value={String(summary.blocking)} tone={summary.blocking ? "text-red-300" : "text-muted-foreground"} />
             <Kpi label="إجمالي المبيعات" value={summary.gross.toFixed(2)} />
             <Kpi label="المرتجعات" value={summary.refundsAbs.toFixed(2)} />
             <Kpi label="الرسوم" value={summary.fees.toFixed(2)} />
             <Kpi label="ضريبة الرسوم" value={summary.feesVat.toFixed(2)} />
             <Kpi label="صافي متوقع" value={summary.expected.toFixed(2)} tone="text-gold" />
+          </div>
+
+          {/* Filter by match status */}
+          <div className="flex flex-wrap gap-2 items-center text-[11px]">
+            <span className="text-muted-foreground">فلتر:</span>
+            <button
+              onClick={() => setStatusFilter("")}
+              className={`px-2 py-1 rounded border ${statusFilter === "" ? "bg-gold/20 border-gold/40 text-gold" : "bg-white/5 border-white/10"}`}
+            >الكل ({rows.length})</button>
+            {(Object.keys(MATCH_LABEL) as MatchStatus[]).filter((k) => summary.counts[k] > 0).map((k) => (
+              <button key={k}
+                onClick={() => setStatusFilter(k)}
+                className={`px-2 py-1 rounded border ${statusFilter === k ? "bg-gold/20 border-gold/40 text-gold" : "bg-white/5 border-white/10"}`}
+              >{MATCH_LABEL[k]} ({summary.counts[k]})</button>
+            ))}
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
@@ -668,12 +799,12 @@ function SettlementImportPage() {
                   <th className="text-start px-2 py-1.5">ضريبة الرسوم</th>
                   <th className="text-start px-2 py-1.5">صافي السطر</th>
                   <th className="text-start px-2 py-1.5">الفاتورة</th>
-                  <th className="text-start px-2 py-1.5">الحالة</th>
+                  <th className="text-start px-2 py-1.5">حالة المطابقة</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.slice(0, 500).map((r) => (
-                  <tr key={r.rowNo} className={`border-t border-white/5 ${r.needs_review ? "bg-amber-500/5" : ""}`}>
+                {rows.filter((r) => !statusFilter || r.match_status === statusFilter).slice(0, 500).map((r) => (
+                  <tr key={r.rowNo} className={`border-t border-white/5 ${BLOCKING_STATUSES.has(r.match_status) ? "bg-red-500/5" : r.needs_review ? "bg-amber-500/5" : ""}`}>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.rowNo}</td>
                     <td className="px-2 py-1.5">{r.external_order_id ?? "—"}</td>
                     <td className="px-2 py-1.5">{r.transaction_date ?? "—"}</td>
@@ -683,11 +814,23 @@ function SettlementImportPage() {
                     <td className="px-2 py-1.5 tabular-nums">{r.fees_before_vat.toFixed(2)}</td>
                     <td className="px-2 py-1.5 tabular-nums">{r.fees_vat_amount.toFixed(2)}</td>
                     <td className="px-2 py-1.5 tabular-nums">{(r.net_amount ?? (r.gross_amount - r.fees_before_vat - r.fees_vat_amount)).toFixed(2)}</td>
-                    <td className="px-2 py-1.5">{r.sales_invoice_id ? <span className="text-emerald-300">#{r.sales_invoice_id}</span> : <span className="text-muted-foreground">—</span>}</td>
                     <td className="px-2 py-1.5">
-                      {r.needs_review
-                        ? <span className="inline-flex items-center gap-1 text-amber-300"><AlertTriangle size={11} /> {r.reasons.map((x) => REVIEW_LABEL[x]).join("، ")}</span>
-                        : <span className="inline-flex items-center gap-1 text-emerald-300"><CheckCircle2 size={11} /> سليم</span>}
+                      {r.sales_invoice_id
+                        ? <span className="text-emerald-300">#{r.sales_invoice_id}</span>
+                        : r.match_status === "matched_cancelled_order"
+                          ? <span className="text-sky-300">— (ملغي)</span>
+                          : <span className="text-muted-foreground">—</span>}
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <span className={`inline-flex items-center gap-1 ${MATCH_TONE[r.match_status]}`}>
+                        {BLOCKING_STATUSES.has(r.match_status)
+                          ? <AlertTriangle size={11} />
+                          : r.match_status === "matched_invoice" || r.match_status === "matched_cancelled_order"
+                            ? <CheckCircle2 size={11} />
+                            : <AlertTriangle size={11} />}
+                        {MATCH_LABEL[r.match_status]}
+                        {r.reasons.length > 0 && <span className="text-muted-foreground">· {r.reasons.map((x) => REVIEW_LABEL[x]).join("، ")}</span>}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -695,6 +838,13 @@ function SettlementImportPage() {
             </table>
             {rows.length > 500 && <div className="text-[11px] text-muted-foreground p-2">عُرض أول 500 صف — سيتم استيراد الجميع.</div>}
           </div>
+
+          {summary.blocking > 0 && (
+            <div className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-[12px] text-red-200">
+              <AlertTriangle className="inline w-3.5 h-3.5 ml-1" />
+              يوجد {summary.blocking} سطر يحجب الاعتماد النهائي (طلبات غير موجودة، بيع ملغي بدون استرجاع، استرجاع بدون بيع، أو سطر بدون رقم طلب). سيتم إنشاء التسوية بحالة "قيد المراجعة" حتى تُعالج هذه الحالات.
+            </div>
+          )}
 
           <div className="flex justify-between">
             <button onClick={() => setStep(2)} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">رجوع للتعيين</button>

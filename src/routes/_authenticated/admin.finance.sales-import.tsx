@@ -489,12 +489,34 @@ function SalesImportPage() {
       const reviewRows = rows.filter((r) => r.needs_review || r.hard_error).length;
       const errorRows = failed.length;
 
+      // Upsert ALL parsed rows into salla_orders (including cancelled) for settlement matching
+      const orderPayloads = rows
+        .filter((r) => r.external_order_id)
+        .map((r) => ({
+          external_order_id: String(r.external_order_id),
+          order_status: r.order_status,
+          payment_status: r.payment_status,
+          original_total: r.original_gross_amount,
+          refund_total: 0,
+          payment_method: r.payment_method_raw,
+          invoice_number: r.external_invoice_number,
+          cancellation_date: r.cancelled ? r.order_date : null,
+          order_date: r.order_date,
+          customer_name: r.customer_name,
+          batch_id: batchId,
+          raw_snapshot: r as any,
+        }));
+      const oChunk = 500;
+      for (let i = 0; i < orderPayloads.length; i += oChunk) {
+        await (supabase as any).from("salla_orders").upsert(orderPayloads.slice(i, i + oChunk), { onConflict: "external_order_id" });
+      }
+
       await (supabase as any).from("sales_import_batches").update({
         imported_rows: inserted,
         duplicate_rows: duplicates,
         needs_review_rows: reviewRows,
         error_rows: errorRows,
-        summary_json: { headerRow, headers, failed },
+        summary_json: { headerRow, headers, failed, salla_orders_upserted: orderPayloads.length },
       }).eq("id", batchId);
 
       await (supabase as any).from("finance_audit_logs").insert({
