@@ -79,6 +79,7 @@ const sections: MenuSection[] = [
       { to: "/admin/finance/owner-account", label: "جاري المالك" },
       { to: "/admin/finance/payment-providers", label: "بوابات الدفع" },
       { to: "/admin/finance/settlements", label: "التسويات" },
+      { to: "/admin/finance/settlement-reconciliation", label: "مطابقة التسويات والحوالات" },
       { to: "/admin/finance/settlement-lines", label: "حركات التسويات" },
       { to: "/admin/finance/provider-balances", label: "أرصدة معلقة" },
       { to: "/admin/finance/settlements-review", label: "تسويات تحتاج مراجعة" },
