@@ -1710,6 +1710,7 @@ export type Database = {
           related_transaction_id: string | null
           sales_invoice_id: number | null
           settlement_id: string | null
+          split_parent_id: string | null
           sub_category_id: string | null
           supplier_id: string | null
           supplier_name: string | null
@@ -1752,6 +1753,7 @@ export type Database = {
           related_transaction_id?: string | null
           sales_invoice_id?: number | null
           settlement_id?: string | null
+          split_parent_id?: string | null
           sub_category_id?: string | null
           supplier_id?: string | null
           supplier_name?: string | null
@@ -1794,6 +1796,7 @@ export type Database = {
           related_transaction_id?: string | null
           sales_invoice_id?: number | null
           settlement_id?: string | null
+          split_parent_id?: string | null
           sub_category_id?: string | null
           supplier_id?: string | null
           supplier_name?: string | null
@@ -1830,6 +1833,13 @@ export type Database = {
             columns: ["sales_invoice_id"]
             isOneToOne: false
             referencedRelation: "sales_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_split_parent_id_fkey"
+            columns: ["split_parent_id"]
+            isOneToOne: false
+            referencedRelation: "finance_expenses"
             referencedColumns: ["id"]
           },
           {
@@ -1963,6 +1973,7 @@ export type Database = {
           related_transaction_id: string | null
           sales_invoice_id: number | null
           settlement_id: string | null
+          split_parent_id: string | null
           supplier_id: string | null
           transaction_direction: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type:
@@ -2000,6 +2011,7 @@ export type Database = {
           related_transaction_id?: string | null
           sales_invoice_id?: number | null
           settlement_id?: string | null
+          split_parent_id?: string | null
           supplier_id?: string | null
           transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type?:
@@ -2037,6 +2049,7 @@ export type Database = {
           related_transaction_id?: string | null
           sales_invoice_id?: number | null
           settlement_id?: string | null
+          split_parent_id?: string | null
           supplier_id?: string | null
           transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type?:
@@ -2064,6 +2077,13 @@ export type Database = {
             columns: ["sales_invoice_id"]
             isOneToOne: false
             referencedRelation: "aqh_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_incomes_split_parent_id_fkey"
+            columns: ["split_parent_id"]
+            isOneToOne: false
+            referencedRelation: "finance_incomes"
             referencedColumns: ["id"]
           },
           {
