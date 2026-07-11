@@ -48,6 +48,7 @@ const MATCH_LABEL: Record<string, { text: string; tone: string }> = {
   order_not_found: { text: "الطلب غير موجود", tone: "text-red-400" },
   needs_classification: { text: "بحاجة تصنيف", tone: "text-amber-400" },
   classified: { text: "مصنّف يدوياً", tone: "text-sky-400" },
+  wallet_internal_transfer: { text: "تحويل داخلي إلى محفظة سلة", tone: "text-sky-400" },
   no_external_order_id: { text: "بدون رقم طلب", tone: "text-muted-foreground" },
 };
 
