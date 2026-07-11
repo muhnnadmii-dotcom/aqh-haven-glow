@@ -2484,9 +2484,11 @@ export type Database = {
           external_order_id: string | null
           id: string
           line_type: Database["public"]["Enums"]["payment_settlement_line_type"]
+          matching_status: string | null
           provider_transaction_id: string | null
           raw_row: Json | null
           sales_invoice_id: number | null
+          salla_order_id: string | null
           settlement_id: string
           transaction_date: string | null
         }
@@ -2497,9 +2499,11 @@ export type Database = {
           external_order_id?: string | null
           id?: string
           line_type: Database["public"]["Enums"]["payment_settlement_line_type"]
+          matching_status?: string | null
           provider_transaction_id?: string | null
           raw_row?: Json | null
           sales_invoice_id?: number | null
+          salla_order_id?: string | null
           settlement_id: string
           transaction_date?: string | null
         }
@@ -2510,9 +2514,11 @@ export type Database = {
           external_order_id?: string | null
           id?: string
           line_type?: Database["public"]["Enums"]["payment_settlement_line_type"]
+          matching_status?: string | null
           provider_transaction_id?: string | null
           raw_row?: Json | null
           sales_invoice_id?: number | null
+          salla_order_id?: string | null
           settlement_id?: string
           transaction_date?: string | null
         }
@@ -2522,6 +2528,13 @@ export type Database = {
             columns: ["sales_invoice_id"]
             isOneToOne: false
             referencedRelation: "sales_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_settlement_lines_salla_order_id_fkey"
+            columns: ["salla_order_id"]
+            isOneToOne: false
+            referencedRelation: "salla_orders"
             referencedColumns: ["id"]
           },
           {
@@ -4845,6 +4858,7 @@ export type Database = {
       next_journal_entry_number: { Args: never; Returns: string }
       next_purchase_invoice_number: { Args: never; Returns: string }
       next_sales_invoice_number: { Args: never; Returns: string }
+      normalize_order_id: { Args: { _v: string }; Returns: string }
       post_journal_entry: {
         Args: {
           p_description: string
@@ -4906,6 +4920,14 @@ export type Database = {
       recompute_settlement_status: {
         Args: { _settlement_id: string }
         Returns: undefined
+      }
+      rematch_settlement_lines_apply: {
+        Args: { _settlement_id?: string }
+        Returns: Json
+      }
+      rematch_settlement_lines_preview: {
+        Args: { _settlement_id?: string }
+        Returns: Json
       }
       reopen_accounting_period: {
         Args: { p_period_id: string; p_reason: string }
