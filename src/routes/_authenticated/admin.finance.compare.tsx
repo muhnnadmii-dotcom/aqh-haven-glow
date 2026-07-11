@@ -64,12 +64,24 @@ function ComparePage() {
   const legendA = sameLabel ? `${labelA} (A)` : labelA;
   const legendB = sameLabel ? `${labelB} (B)` : labelB;
 
-  const rows: { key: "income" | "operating" | "netOp" | "draws" | "netAfter"; label: string; invert: boolean; bold?: boolean }[] = [
+  type CashKey = "income" | "operating" | "netOp" | "personalIn" | "ownerDraws" | "netAfter";
+  const rows: { key: CashKey; label: string; invert: boolean; bold?: boolean }[] = [
     { key: "income", label: "إجمالي المقبوضات", invert: false },
     { key: "operating", label: "إجمالي المدفوعات", invert: true },
     { key: "netOp", label: "صافي التدفق قبل سحوبات المالك", invert: false, bold: true },
-    { key: "draws", label: "سحوبات المالك", invert: true },
+    { key: "personalIn", label: "تحصيلات الحساب الشخصي", invert: false },
+    { key: "ownerDraws", label: "مدفوعات المالك (سحوبات)", invert: true },
     { key: "netAfter", label: "صافي التدفق بعد سحوبات المالك", invert: false, bold: true },
+  ];
+
+  type AcctKey = "gross_sales" | "cogs" | "operating_expenses" | "net_profit" | "output_vat" | "deductible_input_vat";
+  const acctRows: { key: AcctKey; label: string; invert: boolean; bold?: boolean }[] = [
+    { key: "gross_sales", label: "المبيعات (قبل الضريبة)", invert: false },
+    { key: "cogs", label: "تكلفة المبيعات", invert: true },
+    { key: "operating_expenses", label: "المصروفات التشغيلية", invert: true },
+    { key: "net_profit", label: "صافي الربح المحاسبي", invert: false, bold: true },
+    { key: "output_vat", label: "ضريبة المخرجات", invert: true },
+    { key: "deductible_input_vat", label: "ضريبة المدخلات القابلة للخصم", invert: false },
   ];
 
   const chartData = rows.map((r) => ({
