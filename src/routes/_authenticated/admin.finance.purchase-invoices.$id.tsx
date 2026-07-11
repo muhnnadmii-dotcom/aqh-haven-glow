@@ -347,6 +347,51 @@ function PurchaseInvoiceEditor() {
         </Field>
       </div>
 
+      {/* Payment provider fee invoice block */}
+      <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm">فاتورة رسوم بوابة دفع (اختياري)</h3>
+          <div className="text-[11px] text-muted-foreground">استخدم هذا القسم لفواتير سلة/تابي/تمارا الشهرية.</div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Field label="بوابة الدفع">
+            <select value={header.payment_provider_id ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, payment_provider_id: e.target.value || null })} className="w-full bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm">
+              <option value="">— لا يوجد —</option>
+              {paymentProviders.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </Field>
+          <Field label="رقم فاتورة المزود">
+            <Input value={header.provider_invoice_number ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, provider_invoice_number: e.target.value })} className="bg-black/40 border-white/10" />
+          </Field>
+          <Field label="حالة المستند الضريبي">
+            <select value={header.vat_document_status ?? "pending_review"} disabled={!canEdit} onChange={(e) => setHeader({ ...header, vat_document_status: e.target.value })} className="w-full bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm">
+              <option value="pending_review">بانتظار المراجعة</option>
+              <option value="valid">مستند سليم</option>
+              <option value="missing">مفقود</option>
+              <option value="invalid_buyer_tax_data">بيانات المشتري ناقصة</option>
+            </select>
+          </Field>
+          <Field label="بداية فترة الرسوم">
+            <Input type="date" value={header.fee_period_start ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, fee_period_start: e.target.value })} className="bg-black/40 border-white/10" />
+          </Field>
+          <Field label="نهاية فترة الرسوم">
+            <Input type="date" value={header.fee_period_end ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, fee_period_end: e.target.value })} className="bg-black/40 border-white/10" />
+          </Field>
+          <Field label="مطابق / غير مطابق (رسوم)">
+            <div className="text-[12px] px-2 py-1.5 rounded bg-black/40 border border-white/10">
+              <span className="text-emerald-400 tabular-nums">{Number(header.matched_fee_amount ?? 0).toFixed(2)}</span>
+              <span className="text-muted-foreground mx-1">/</span>
+              <span className="text-amber-400 tabular-nums">{Number(header.unmatched_fee_amount ?? 0).toFixed(2)}</span>
+            </div>
+          </Field>
+        </div>
+        {header.vat_document_status === "invalid_buyer_tax_data" && (
+          <div className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded p-2">
+            بيانات المشتري الضريبية ناقصة — ضريبة هذه الفاتورة لن تدخل الإقرار تلقائيًا حتى يتم تصحيح المستند.
+          </div>
+        )}
+      </div>
+
       {/* Items */}
       <div className="rounded-xl bg-white/5 border border-white/10 p-4">
         <div className="flex items-center justify-between mb-3">
