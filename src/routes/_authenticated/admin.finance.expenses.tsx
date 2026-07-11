@@ -3,7 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, OWNER_DRAW_SLUG, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
-import { OUTGOING_TYPES, ACCOUNTING_STATUSES, outgoingLabel } from "@/lib/finance/transaction-types";
+import { OUTGOING_TYPES, ACCOUNTING_STATUSES, outgoingLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
+
+const BUSINESS_RELATIONS: { value: string; label: string }[] = [
+  { value: "business", label: "تخص النشاط" },
+  { value: "personal", label: "شخصية" },
+  { value: "owner_settlement", label: "تسوية مالك" },
+  { value: "internal_transfer", label: "تحويل داخلي" },
+  { value: "unclassified", label: "غير محددة" },
+];
 import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive, Wallet, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
@@ -314,10 +322,15 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
     attachment_status: row?.attachment_status ?? "not_attached",
     transaction_type: initialTxnType,
     accounting_status: row?.accounting_status ?? (initialTxnType ? "classified" : "unclassified"),
+    business_relation: row?.business_relation ?? (initialTxnType ? (defaultBusinessRelation(initialTxnType) ?? "unclassified") : "unclassified"),
     internal_note: row?.internal_note ?? "",
     purchase_invoice_id: row?.purchase_invoice_id ?? "",
     payment_type: row?.payment_type ?? "",
     related_transaction_id: row?.related_transaction_id ?? "",
+    customer_id: row?.customer_id ?? "",
+    sales_invoice_id: row?.sales_invoice_id ?? "",
+    payment_provider_id: row?.payment_provider_id ?? "",
+    settlement_id: row?.settlement_id ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
@@ -340,8 +353,19 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
 
   const t = f.transaction_type;
   const showPurchaseInvoice = t === "supplier_invoice_payment";
-  const showPaymentType = t !== "" && t !== "internal_transfer_out" && t !== "owner_withdrawal";
-  const showRelated = t === "internal_transfer_out" || t === "owner_withdrawal";
+  const showPaymentType = t !== "" && t !== "internal_transfer_out" && t !== "owner_withdrawal" && t !== "owner_reimbursement";
+  const showRelated = t === "internal_transfer_out" || t === "owner_withdrawal" || t === "owner_reimbursement";
+  const showCustomerRefund = t === "customer_refund";
+
+  // Auto-derive business_relation when a type is picked (user can still override).
+  const setType = (newType: string) => {
+    const suggested = defaultBusinessRelation(newType);
+    setF({
+      ...f,
+      transaction_type: newType,
+      business_relation: suggested ?? f.business_relation,
+    });
+  };
 
   const save = async () => {
     setSaving(true);
@@ -369,6 +393,7 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
         note: f.note || null,
         transaction_type: txnType,
         accounting_status: accStatus,
+        business_relation: f.business_relation || "unclassified",
         attachment_status: attStatus,
         internal_review_status: f.internal_review_status,
         accountant_status: f.accountant_status,
@@ -377,6 +402,10 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
         purchase_invoice_id: showPurchaseInvoice && f.purchase_invoice_id ? Number(f.purchase_invoice_id) : null,
         payment_type: showPaymentType ? (f.payment_type || null) : null,
         related_transaction_id: showRelated ? (f.related_transaction_id || null) : null,
+        customer_id: showCustomerRefund ? (f.customer_id || null) : null,
+        sales_invoice_id: showCustomerRefund && f.sales_invoice_id ? Number(f.sales_invoice_id) : null,
+        payment_provider_id: f.payment_provider_id || null,
+        settlement_id: f.settlement_id || null,
       };
 
       if (isNew) {
@@ -448,9 +477,14 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
               </Field>
               <Field label="البيان / الشيء المشترى" wide><input disabled={accountantOnly} value={f.item_name} onChange={(e) => setF({ ...f, item_name: e.target.value })} className="inp" /></Field>
               <Field label="نوع الحركة">
-                <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setF({ ...f, transaction_type: e.target.value })} className="inp">
+                <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setType(e.target.value)} className="inp">
                   <option value="">— اختر —</option>
                   {OUTGOING_TYPES.map((tt) => <option key={tt.value} value={tt.value}>{tt.label}</option>)}
+                </select>
+              </Field>
+              <Field label="علاقة العملية بالنشاط">
+                <select disabled={accountantOnly} value={f.business_relation} onChange={(e) => setF({ ...f, business_relation: e.target.value })} className="inp">
+                  {BUSINESS_RELATIONS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
                 </select>
               </Field>
               <Field label="المورد">

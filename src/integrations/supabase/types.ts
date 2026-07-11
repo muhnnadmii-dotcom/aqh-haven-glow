@@ -1688,6 +1688,7 @@ export type Database = {
           business_relation: Database["public"]["Enums"]["finance_business_relation"]
           created_at: string
           created_by: string | null
+          customer_id: string | null
           delete_reason: string | null
           deleted_at: string | null
           deleted_by: string | null
@@ -1701,11 +1702,14 @@ export type Database = {
           missing_purchase_invoice_reason: string | null
           month: string
           note: string | null
+          payment_provider_id: string | null
           payment_type:
             | Database["public"]["Enums"]["purchase_payment_type"]
             | null
           purchase_invoice_id: number | null
           related_transaction_id: string | null
+          sales_invoice_id: number | null
+          settlement_id: string | null
           sub_category_id: string | null
           supplier_id: string | null
           supplier_name: string | null
@@ -1726,6 +1730,7 @@ export type Database = {
           business_relation?: Database["public"]["Enums"]["finance_business_relation"]
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           delete_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1739,11 +1744,14 @@ export type Database = {
           missing_purchase_invoice_reason?: string | null
           month: string
           note?: string | null
+          payment_provider_id?: string | null
           payment_type?:
             | Database["public"]["Enums"]["purchase_payment_type"]
             | null
           purchase_invoice_id?: number | null
           related_transaction_id?: string | null
+          sales_invoice_id?: number | null
+          settlement_id?: string | null
           sub_category_id?: string | null
           supplier_id?: string | null
           supplier_name?: string | null
@@ -1764,6 +1772,7 @@ export type Database = {
           business_relation?: Database["public"]["Enums"]["finance_business_relation"]
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           delete_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1777,11 +1786,14 @@ export type Database = {
           missing_purchase_invoice_reason?: string | null
           month?: string
           note?: string | null
+          payment_provider_id?: string | null
           payment_type?:
             | Database["public"]["Enums"]["purchase_payment_type"]
             | null
           purchase_invoice_id?: number | null
           related_transaction_id?: string | null
+          sales_invoice_id?: number | null
+          settlement_id?: string | null
           sub_category_id?: string | null
           supplier_id?: string | null
           supplier_name?: string | null
@@ -1811,6 +1823,13 @@ export type Database = {
             columns: ["purchase_invoice_id"]
             isOneToOne: false
             referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales_invoices"
             referencedColumns: ["id"]
           },
           {
@@ -1940,8 +1959,11 @@ export type Database = {
           internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
           month: string
           note: string | null
+          payment_provider_id: string | null
           related_transaction_id: string | null
           sales_invoice_id: number | null
+          settlement_id: string | null
+          supplier_id: string | null
           transaction_direction: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type:
             | Database["public"]["Enums"]["finance_incoming_type"]
@@ -1974,8 +1996,11 @@ export type Database = {
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           month: string
           note?: string | null
+          payment_provider_id?: string | null
           related_transaction_id?: string | null
           sales_invoice_id?: number | null
+          settlement_id?: string | null
+          supplier_id?: string | null
           transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type?:
             | Database["public"]["Enums"]["finance_incoming_type"]
@@ -2008,8 +2033,11 @@ export type Database = {
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           month?: string
           note?: string | null
+          payment_provider_id?: string | null
           related_transaction_id?: string | null
           sales_invoice_id?: number | null
+          settlement_id?: string | null
+          supplier_id?: string | null
           transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
           transaction_type?:
             | Database["public"]["Enums"]["finance_incoming_type"]
@@ -2036,6 +2064,13 @@ export type Database = {
             columns: ["sales_invoice_id"]
             isOneToOne: false
             referencedRelation: "aqh_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_incomes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "finance_suppliers"
             referencedColumns: ["id"]
           },
         ]
@@ -4202,6 +4237,11 @@ export type Database = {
         | "loan_received"
         | "other_income"
         | "unclassified_incoming"
+        | "direct_sale"
+        | "customer_advance"
+        | "payment_provider_settlement"
+        | "owner_collection"
+        | "other_incoming"
       finance_internal_review: "unreviewed" | "reviewed"
       finance_outgoing_type:
         | "supplier_invoice_payment"
@@ -4214,6 +4254,11 @@ export type Database = {
         | "tax_or_government_payment"
         | "customer_refund"
         | "unclassified_outgoing"
+        | "direct_operating_expense"
+        | "salary_payment"
+        | "government_fee"
+        | "owner_reimbursement"
+        | "other_outgoing"
       finance_related_type:
         | "income"
         | "expense"
@@ -4491,6 +4536,11 @@ export const Constants = {
         "loan_received",
         "other_income",
         "unclassified_incoming",
+        "direct_sale",
+        "customer_advance",
+        "payment_provider_settlement",
+        "owner_collection",
+        "other_incoming",
       ],
       finance_internal_review: ["unreviewed", "reviewed"],
       finance_outgoing_type: [
@@ -4504,6 +4554,11 @@ export const Constants = {
         "tax_or_government_payment",
         "customer_refund",
         "unclassified_outgoing",
+        "direct_operating_expense",
+        "salary_payment",
+        "government_fee",
+        "owner_reimbursement",
+        "other_outgoing",
       ],
       finance_related_type: [
         "income",

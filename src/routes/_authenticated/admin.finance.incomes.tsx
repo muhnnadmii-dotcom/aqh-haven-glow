@@ -3,7 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
-import { INCOMING_TYPES, ACCOUNTING_STATUSES, incomingLabel, accountingStatusLabel } from "@/lib/finance/transaction-types";
+import { INCOMING_TYPES, ACCOUNTING_STATUSES, incomingLabel, accountingStatusLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
+
+const BUSINESS_RELATIONS: { value: string; label: string }[] = [
+  { value: "business", label: "تخص النشاط" },
+  { value: "personal", label: "شخصية" },
+  { value: "owner_settlement", label: "تسوية مالك" },
+  { value: "internal_transfer", label: "تحويل داخلي" },
+  { value: "unclassified", label: "غير محددة" },
+];
 import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
@@ -279,11 +287,15 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     attachment_status: row?.attachment_status ?? "not_attached",
     transaction_type: row?.transaction_type ?? "",
     accounting_status: row?.accounting_status ?? "unclassified",
+    business_relation: row?.business_relation ?? "unclassified",
     internal_note: row?.internal_note ?? "",
     customer_id: row?.customer_id ?? "",
     sales_invoice_id: row?.sales_invoice_id ?? "",
     collection_type: row?.collection_type ?? "",
     related_transaction_id: row?.related_transaction_id ?? "",
+    payment_provider_id: row?.payment_provider_id ?? "",
+    settlement_id: row?.settlement_id ?? "",
+    supplier_id: row?.supplier_id ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
@@ -303,10 +315,23 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
   }, []);
 
   const t = f.transaction_type;
+  const isSaleLike = t === "customer_invoice_collection" || t === "direct_sale" || t === "cash_sale" || t === "customer_advance";
   const showInvoice = t === "customer_invoice_collection";
-  const showCollectionType = t === "customer_invoice_collection" || t === "cash_sale";
+  const showCollectionType = isSaleLike;
   const showRelated = t === "internal_transfer_in";
-  const showCustomer = t === "customer_invoice_collection" || t === "cash_sale" || t === "customer_refund" as any;
+  const showCustomer = isSaleLike || t === "customer_refund";
+  const showSupplier = t === "supplier_refund";
+  const showProvider = t === "payment_provider_settlement";
+
+  // Auto-derive business_relation when a type is picked (user can still override).
+  const setType = (newType: string) => {
+    const suggested = defaultBusinessRelation(newType);
+    setF({
+      ...f,
+      transaction_type: newType,
+      business_relation: suggested ?? f.business_relation,
+    });
+  };
 
   const save = async () => {
     setSaving(true);
@@ -332,6 +357,7 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
         note: f.note || null,
         transaction_type: txnType,
         accounting_status: accStatus,
+        business_relation: f.business_relation || "unclassified",
         attachment_status: attStatus,
         internal_review_status: f.internal_review_status,
         accountant_status: f.accountant_status,
@@ -341,6 +367,9 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
         sales_invoice_id: showInvoice ? (f.sales_invoice_id || null) : null,
         collection_type: showCollectionType ? (f.collection_type || null) : null,
         related_transaction_id: showRelated ? (f.related_transaction_id || null) : null,
+        supplier_id: showSupplier ? (f.supplier_id || null) : null,
+        payment_provider_id: showProvider ? (f.payment_provider_id || null) : null,
+        settlement_id: showProvider ? (f.settlement_id || null) : null,
       };
 
       if (isNew) {
@@ -400,9 +429,14 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
                 </select>
               </Field>
               <Field label="نوع الحركة">
-                <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setF({ ...f, transaction_type: e.target.value })} className="inp">
+                <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setType(e.target.value)} className="inp">
                   <option value="">— اختر —</option>
                   {INCOMING_TYPES.map((tt) => <option key={tt.value} value={tt.value}>{tt.label}</option>)}
+                </select>
+              </Field>
+              <Field label="علاقة العملية بالنشاط">
+                <select disabled={accountantOnly} value={f.business_relation} onChange={(e) => setF({ ...f, business_relation: e.target.value })} className="inp">
+                  {BUSINESS_RELATIONS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
                 </select>
               </Field>
               <Field label="المصدر">
