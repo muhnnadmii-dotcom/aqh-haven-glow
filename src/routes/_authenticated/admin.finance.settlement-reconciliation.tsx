@@ -13,9 +13,21 @@ type Settlement = {
   id: string;
   provider_id: string;
   settlement_reference: string | null;
+  report_reference: string | null;
+  source_file_name: string | null;
   settlement_date: string;
+  period_start: string | null;
+  period_end: string | null;
+  imported_at: string | null;
   expected_net_amount: number;
+  gross_sales_amount: number;
+  refunds_amount: number;
+  fees_before_vat: number;
+  fees_vat_amount: number;
+  payout_fee: number;
+  adjustments_amount: number;
   status: string;
+  payout_status: string | null;
   notes: string | null;
 };
 
