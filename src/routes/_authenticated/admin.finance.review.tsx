@@ -147,7 +147,8 @@ function ReviewCenter() {
       internal_review_status: r.internal_review_status, attachment_status: r.attachment_status,
       account_id: r.account_id, account_type: r.account_type,
       customer_id: r.customer_id, sales_invoice_id: r.sales_invoice_id,
-      related_transaction_id: r.related_transaction_id, note: r.note, internal_note: r.internal_note, raw: r,
+      related_transaction_id: r.related_transaction_id, note: r.note, internal_note: r.internal_note,
+      settlement_id: r.settlement_id, split_parent_id: r.split_parent_id, raw: r,
     }));
     const exp = expenses.map((r: any): Row => ({
       kind: "expense", id: r.id, date: r.expense_date, amount: Number(r.amount) || 0,
@@ -156,10 +157,21 @@ function ReviewCenter() {
       internal_review_status: r.internal_review_status, attachment_status: r.attachment_status,
       account_id: r.account_id, account_type: r.account_type,
       supplier_id: r.supplier_id, purchase_invoice_id: r.purchase_invoice_id,
-      related_transaction_id: r.related_transaction_id, note: r.note, internal_note: r.internal_note, raw: r,
+      related_transaction_id: r.related_transaction_id, note: r.note, internal_note: r.internal_note,
+      settlement_id: r.settlement_id, split_parent_id: r.split_parent_id, raw: r,
     }));
     return [...inc, ...exp].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   }, [incomes, expenses]);
+
+  // Detect provider (Salla/Tabby/Tamara/...) from note
+  const providerMatch = (r: Row): { id: string; name: string } | null => {
+    const hay = `${r.note ?? ""} ${r.internal_note ?? ""}`.toLowerCase();
+    for (const p of providers as any[]) {
+      const needles = [p.code, p.name, p.name?.replace(/\s+/g, "")].filter(Boolean).map((s: string) => String(s).toLowerCase());
+      if (needles.some((n) => hay.includes(n))) return { id: p.id, name: p.name };
+    }
+    return null;
+  };
 
   // Flags per row
   const flags = (r: Row) => {
