@@ -221,7 +221,9 @@ function ReviewCenter() {
       if (chip === "no_attach" && !f.noAttachment) return false;
       if (chip === "personal" && !f.personalNeedsReview) return false;
       if (chip === "transfer" && !f.transferMissingCounterpart) return false;
+      if (chip === "provider_unlinked" && !f.unlinkedProviderSettlement) return false;
       if (chip === "completed" && !f.isCompleted) return false;
+
 
       if (fFrom && r.date < fFrom) return false;
       if (fTo && r.date > fTo) return false;
