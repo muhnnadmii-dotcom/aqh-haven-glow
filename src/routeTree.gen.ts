@@ -73,6 +73,7 @@ import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes
 import { Route as AuthenticatedAdminFinanceVatRouteImport } from './routes/_authenticated/admin.finance.vat'
 import { Route as AuthenticatedAdminFinanceTrialBalanceRouteImport } from './routes/_authenticated/admin.finance.trial-balance'
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
+import { Route as AuthenticatedAdminFinanceSettlementsRouteImport } from './routes/_authenticated/admin.finance.settlements'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
 import { Route as AuthenticatedAdminFinanceSalesReviewRouteImport } from './routes/_authenticated/admin.finance.sales-review'
 import { Route as AuthenticatedAdminFinanceSalesImportBatchesRouteImport } from './routes/_authenticated/admin.finance.sales-import-batches'
@@ -477,6 +478,12 @@ const AuthenticatedAdminFinanceSuppliersRoute =
     path: '/suppliers',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceSettlementsRoute =
+  AuthenticatedAdminFinanceSettlementsRouteImport.update({
+    id: '/settlements',
+    path: '/settlements',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceSettingsRoute =
   AuthenticatedAdminFinanceSettingsRouteImport.update({
     id: '/settings',
@@ -829,6 +836,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/sales-import-batches': typeof AuthenticatedAdminFinanceSalesImportBatchesRoute
   '/admin/finance/sales-review': typeof AuthenticatedAdminFinanceSalesReviewRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
+  '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/admin/finance/vat': typeof AuthenticatedAdminFinanceVatRouteWithChildren
@@ -932,6 +940,7 @@ export interface FileRoutesByTo {
   '/admin/finance/sales-import-batches': typeof AuthenticatedAdminFinanceSalesImportBatchesRoute
   '/admin/finance/sales-review': typeof AuthenticatedAdminFinanceSalesReviewRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
+  '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -1044,6 +1053,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/sales-import-batches': typeof AuthenticatedAdminFinanceSalesImportBatchesRoute
   '/_authenticated/admin/finance/sales-review': typeof AuthenticatedAdminFinanceSalesReviewRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
+  '/_authenticated/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
   '/_authenticated/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/_authenticated/admin/finance/vat': typeof AuthenticatedAdminFinanceVatRouteWithChildren
@@ -1157,6 +1167,7 @@ export interface FileRouteTypes {
     | '/admin/finance/sales-import-batches'
     | '/admin/finance/sales-review'
     | '/admin/finance/settings'
+    | '/admin/finance/settlements'
     | '/admin/finance/suppliers'
     | '/admin/finance/trial-balance'
     | '/admin/finance/vat'
@@ -1260,6 +1271,7 @@ export interface FileRouteTypes {
     | '/admin/finance/sales-import-batches'
     | '/admin/finance/sales-review'
     | '/admin/finance/settings'
+    | '/admin/finance/settlements'
     | '/admin/finance/suppliers'
     | '/admin/finance/trial-balance'
     | '/admin/inventory/catalog'
@@ -1371,6 +1383,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/sales-import-batches'
     | '/_authenticated/admin/finance/sales-review'
     | '/_authenticated/admin/finance/settings'
+    | '/_authenticated/admin/finance/settlements'
     | '/_authenticated/admin/finance/suppliers'
     | '/_authenticated/admin/finance/trial-balance'
     | '/_authenticated/admin/finance/vat'
@@ -1875,6 +1888,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceSuppliersRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/settlements': {
+      id: '/_authenticated/admin/finance/settlements'
+      path: '/settlements'
+      fullPath: '/admin/finance/settlements'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceSettlementsRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/settings': {
       id: '/_authenticated/admin/finance/settings'
       path: '/settings'
@@ -2326,6 +2346,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceSalesImportBatchesRoute: typeof AuthenticatedAdminFinanceSalesImportBatchesRoute
   AuthenticatedAdminFinanceSalesReviewRoute: typeof AuthenticatedAdminFinanceSalesReviewRoute
   AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
+  AuthenticatedAdminFinanceSettlementsRoute: typeof AuthenticatedAdminFinanceSettlementsRoute
   AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
   AuthenticatedAdminFinanceTrialBalanceRoute: typeof AuthenticatedAdminFinanceTrialBalanceRoute
   AuthenticatedAdminFinanceVatRoute: typeof AuthenticatedAdminFinanceVatRouteWithChildren
@@ -2386,6 +2407,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceSalesReviewRoute,
     AuthenticatedAdminFinanceSettingsRoute:
       AuthenticatedAdminFinanceSettingsRoute,
+    AuthenticatedAdminFinanceSettlementsRoute:
+      AuthenticatedAdminFinanceSettlementsRoute,
     AuthenticatedAdminFinanceSuppliersRoute:
       AuthenticatedAdminFinanceSuppliersRoute,
     AuthenticatedAdminFinanceTrialBalanceRoute:
