@@ -21,6 +21,9 @@ import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-re
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AccountingPanel } from "@/components/finance/AccountingPanel";
+import { CashExtraKpis } from "@/components/finance/CashExtraKpis";
+import { SettlementsPanel } from "@/components/finance/SettlementsPanel";
+import { VatDashPanel } from "@/components/finance/VatDashPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/")({
   ssr: false,
@@ -296,9 +299,11 @@ function FinanceDashboard() {
       </div>
 
       <Tabs defaultValue="cash" className="space-y-5">
-        <TabsList className="bg-white/5 border border-white/10">
+        <TabsList className="bg-white/5 border border-white/10 flex-wrap">
           <TabsTrigger value="cash">لوحة النقد</TabsTrigger>
-          <TabsTrigger value="accounting">لوحة الأداء المحاسبي</TabsTrigger>
+          <TabsTrigger value="accounting">لوحة الأداء</TabsTrigger>
+          <TabsTrigger value="settlements">لوحة التسويات</TabsTrigger>
+          <TabsTrigger value="vat">لوحة الضريبة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cash" className="space-y-5 mt-0">
@@ -514,10 +519,20 @@ function FinanceDashboard() {
 
       {loading && <div className="text-center text-xs text-muted-foreground">جاري التحميل…</div>}
       {drawer && <FinanceRowsDrawer spec={drawer} onClose={() => setDrawer(null)} />}
+
+      <CashExtraKpis from={range.dateFrom ?? null} to={range.dateTo ?? null} />
         </TabsContent>
 
         <TabsContent value="accounting" className="mt-0">
           <AccountingPanel from={range.dateFrom ?? "1970-01-01"} to={range.dateTo ?? new Date().toISOString().slice(0, 10)} />
+        </TabsContent>
+
+        <TabsContent value="settlements" className="mt-0">
+          <SettlementsPanel from={range.dateFrom ?? null} to={range.dateTo ?? null} />
+        </TabsContent>
+
+        <TabsContent value="vat" className="mt-0">
+          <VatDashPanel />
         </TabsContent>
       </Tabs>
     </div>
