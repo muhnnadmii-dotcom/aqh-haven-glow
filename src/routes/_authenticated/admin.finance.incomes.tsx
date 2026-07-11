@@ -220,11 +220,11 @@ function IncomesPage() {
               </tr>
             ))}
             {filtered.length === 0 && !loading && (
-              <tr><td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">لا توجد بيانات</td></tr>
+              <tr><td colSpan={9} className="px-3 py-8 text-center text-muted-foreground">لا توجد بيانات</td></tr>
             )}
           </tbody>
           <tfoot className="bg-white/5 font-semibold">
-            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={6}></td></tr>
+            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={7}></td></tr>
           </tfoot>
         </table>
       </div>
