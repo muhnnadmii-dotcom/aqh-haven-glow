@@ -22,6 +22,7 @@ type ReportKind = "cash" | "income_statement";
 
 function ReportsPage() {
   const [month, setMonth] = useState(ymNow(0));
+  const [reportKind, setReportKind] = useState<ReportKind>("cash");
   const [cats, setCats] = useState<any[]>([]);
   const [incomes, setIncomes] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -29,6 +30,7 @@ function ReportsPage() {
   const [allIncomes, setAllIncomes] = useState<any[]>([]);
   const [allExpenses, setAllExpenses] = useState<any[]>([]);
   const [businessName, setBusinessName] = useState("Aqua Haven");
+  const [perf, setPerf] = useState<AccountingPerformance | null>(null);
   const [loading, setLoading] = useState(true);
 
   const ownerDrawCatId = useMemo(() => cats.find((c) => c.system_slug === OWNER_DRAW_SLUG)?.id ?? null, [cats]);
