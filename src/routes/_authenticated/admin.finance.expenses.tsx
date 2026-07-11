@@ -393,6 +393,7 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
         note: f.note || null,
         transaction_type: txnType,
         accounting_status: accStatus,
+        business_relation: f.business_relation || "unclassified",
         attachment_status: attStatus,
         internal_review_status: f.internal_review_status,
         accountant_status: f.accountant_status,
@@ -401,6 +402,10 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
         purchase_invoice_id: showPurchaseInvoice && f.purchase_invoice_id ? Number(f.purchase_invoice_id) : null,
         payment_type: showPaymentType ? (f.payment_type || null) : null,
         related_transaction_id: showRelated ? (f.related_transaction_id || null) : null,
+        customer_id: showCustomerRefund ? (f.customer_id || null) : null,
+        sales_invoice_id: showCustomerRefund && f.sales_invoice_id ? Number(f.sales_invoice_id) : null,
+        payment_provider_id: f.payment_provider_id || null,
+        settlement_id: f.settlement_id || null,
       };
 
       if (isNew) {
