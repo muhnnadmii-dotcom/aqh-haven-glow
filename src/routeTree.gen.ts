@@ -76,6 +76,7 @@ import { Route as AuthenticatedAdminFinanceReviewRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminFinanceReportsRouteImport } from './routes/_authenticated/admin.finance.reports'
 import { Route as AuthenticatedAdminFinancePurchaseInvoicesReviewRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices-review'
 import { Route as AuthenticatedAdminFinanceOwnerAccountRouteImport } from './routes/_authenticated/admin.finance.owner-account'
+import { Route as AuthenticatedAdminFinanceJournalEntriesRouteImport } from './routes/_authenticated/admin.finance.journal-entries'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
 import { Route as AuthenticatedAdminFinanceImportBatchesRouteImport } from './routes/_authenticated/admin.finance.import-batches'
 import { Route as AuthenticatedAdminFinanceImportRouteImport } from './routes/_authenticated/admin.finance.import'
@@ -478,6 +479,12 @@ const AuthenticatedAdminFinanceOwnerAccountRoute =
     path: '/owner-account',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceJournalEntriesRoute =
+  AuthenticatedAdminFinanceJournalEntriesRouteImport.update({
+    id: '/journal-entries',
+    path: '/journal-entries',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceIncomesRoute =
   AuthenticatedAdminFinanceIncomesRouteImport.update({
     id: '/incomes',
@@ -697,6 +704,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/journal-entries': typeof AuthenticatedAdminFinanceJournalEntriesRoute
   '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
@@ -783,6 +791,7 @@ export interface FileRoutesByTo {
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/journal-entries': typeof AuthenticatedAdminFinanceJournalEntriesRoute
   '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
@@ -879,6 +888,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/_authenticated/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/_authenticated/admin/finance/journal-entries': typeof AuthenticatedAdminFinanceJournalEntriesRoute
   '/_authenticated/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/_authenticated/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   '/_authenticated/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
@@ -975,6 +985,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/journal-entries'
     | '/admin/finance/owner-account'
     | '/admin/finance/purchase-invoices-review'
     | '/admin/finance/reports'
@@ -1061,6 +1072,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/journal-entries'
     | '/admin/finance/owner-account'
     | '/admin/finance/purchase-invoices-review'
     | '/admin/finance/reports'
@@ -1156,6 +1168,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/import'
     | '/_authenticated/admin/finance/import-batches'
     | '/_authenticated/admin/finance/incomes'
+    | '/_authenticated/admin/finance/journal-entries'
     | '/_authenticated/admin/finance/owner-account'
     | '/_authenticated/admin/finance/purchase-invoices-review'
     | '/_authenticated/admin/finance/reports'
@@ -1677,6 +1690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceOwnerAccountRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/journal-entries': {
+      id: '/_authenticated/admin/finance/journal-entries'
+      path: '/journal-entries'
+      fullPath: '/admin/finance/journal-entries'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceJournalEntriesRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/incomes': {
       id: '/_authenticated/admin/finance/incomes'
       path: '/incomes'
@@ -1942,6 +1962,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceImportRoute: typeof AuthenticatedAdminFinanceImportRoute
   AuthenticatedAdminFinanceImportBatchesRoute: typeof AuthenticatedAdminFinanceImportBatchesRoute
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
+  AuthenticatedAdminFinanceJournalEntriesRoute: typeof AuthenticatedAdminFinanceJournalEntriesRoute
   AuthenticatedAdminFinanceOwnerAccountRoute: typeof AuthenticatedAdminFinanceOwnerAccountRoute
   AuthenticatedAdminFinancePurchaseInvoicesReviewRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
   AuthenticatedAdminFinanceReportsRoute: typeof AuthenticatedAdminFinanceReportsRoute
@@ -1980,6 +2001,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceImportBatchesRoute,
     AuthenticatedAdminFinanceIncomesRoute:
       AuthenticatedAdminFinanceIncomesRoute,
+    AuthenticatedAdminFinanceJournalEntriesRoute:
+      AuthenticatedAdminFinanceJournalEntriesRoute,
     AuthenticatedAdminFinanceOwnerAccountRoute:
       AuthenticatedAdminFinanceOwnerAccountRoute,
     AuthenticatedAdminFinancePurchaseInvoicesReviewRoute:
