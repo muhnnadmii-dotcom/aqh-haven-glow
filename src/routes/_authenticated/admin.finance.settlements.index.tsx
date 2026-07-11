@@ -73,6 +73,9 @@ function SettlementsPage() {
             <Link to="/admin/finance/settlements/import" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/20 border border-gold/40 text-gold text-[12px] hover:bg-gold/30">
               <Upload size={14} /> استيراد تسوية
             </Link>
+            <Link to="/admin/finance/settlements/import-bulk" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[12px] hover:bg-white/10">
+              <Upload size={14} /> استيراد جماعي
+            </Link>
             <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[12px] hover:bg-white/10">
               <Plus size={14} /> تسوية جديدة
             </button>
