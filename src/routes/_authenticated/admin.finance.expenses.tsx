@@ -168,6 +168,7 @@ function ExpensesPage() {
               <th className="text-start px-3 py-2">المورد</th>
               <th className="text-start px-3 py-2">رئيسي</th>
               <th className="text-start px-3 py-2">فرعي</th>
+              <th className="text-start px-3 py-2">نوع الحركة</th>
               <th className="text-start px-3 py-2">داخلي</th>
               <th className="text-start px-3 py-2">المحاسب</th>
               <th className="text-start px-3 py-2">المرفق</th>
