@@ -346,7 +346,13 @@ function SettlementImportPage() {
 
       const reasons: ReviewReason[] = [];
       let line_type: LineType = "sale";
+      // Detect wallet top-up from description or payment method (Salla "شحن محفظة").
+      const looksLikeWalletTopUp =
+        (desc && WALLET_TOPUP_RX.test(desc)) ||
+        (paymethod && WALLET_TOPUP_RX.test(paymethod));
+
       if (gross == null) reasons.push("invalid_amount");
+      else if (looksLikeWalletTopUp) { line_type = "wallet_top_up"; }
       else if (gross === 0) { reasons.push("zero_amount"); line_type = "manual_adjustment"; }
       else if (gross < 0) {
         // Negative with order id → refund. Negative without order id → unexplained deduction (needs classification).
@@ -360,7 +366,16 @@ function SettlementImportPage() {
       const rawObj: Record<string, any> = {};
       headers.forEach((h, i) => { rawObj[String(h ?? `col_${i}`)] = raw[i] ?? null; });
 
-      const initialMatch: MatchStatus = orderId ? "order_not_found" : "needs_classification";
+      const initialMatch: MatchStatus =
+        line_type === "wallet_top_up"
+          ? "wallet_internal_transfer"
+          : orderId
+            ? "order_not_found"
+            : "needs_classification";
+
+      // Wallet top-ups carry no fees/VAT even if columns had residual values.
+      const feesFinal = line_type === "wallet_top_up" ? 0 : fees;
+      const feesVatFinal = line_type === "wallet_top_up" ? 0 : feesVat;
 
       return {
         rowNo,
@@ -370,8 +385,8 @@ function SettlementImportPage() {
         provider_transaction_id: txnId,
         description: desc,
         gross_amount: gross ?? 0,
-        fees_before_vat: fees,
-        fees_vat_amount: feesVat,
+        fees_before_vat: feesFinal,
+        fees_vat_amount: feesVatFinal,
         net_amount: net,
         net_before_vat_check: netBv,
         line_type,
@@ -384,6 +399,7 @@ function SettlementImportPage() {
       } as ParsedLine;
     });
   }
+
 
   async function goPreview() {
     if (!aoa.length) { toast.error("لم يتم رفع ملف"); return; }
