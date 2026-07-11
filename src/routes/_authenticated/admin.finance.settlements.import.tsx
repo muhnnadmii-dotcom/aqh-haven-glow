@@ -122,7 +122,27 @@ function detectHeaderRow(aoa: any[][], aliases: string[]): number {
 }
 
 // ---------- row model ----------
-type LineType = "sale" | "refund" | "adjustment";
+type LineType =
+  | "sale"
+  | "refund"
+  | "chargeback"
+  | "reserve_held"
+  | "reserve_released"
+  | "payout_fee"
+  | "manual_adjustment"
+  | "unexplained_deduction";
+
+const LINE_TYPE_LABEL: Record<LineType, string> = {
+  sale: "بيع",
+  refund: "مرتجع",
+  chargeback: "اعتراض/Chargeback",
+  reserve_held: "احتياطي محتجز",
+  reserve_released: "احتياطي مُفرج عنه",
+  payout_fee: "رسوم تحويل",
+  manual_adjustment: "تعديل يدوي من الوسيط",
+  unexplained_deduction: "خصم غير مفسر",
+};
+
 type MatchStatus =
   | "matched_invoice"
   | "matched_cancelled_order"
@@ -131,17 +151,17 @@ type MatchStatus =
   | "order_not_found"
   | "needs_credit_note"
   | "unmatched_refund"
-  | "orphan_line";
+  | "needs_classification";
 
 const MATCH_LABEL: Record<MatchStatus, string> = {
   matched_invoice: "مطابق لفاتورة",
   matched_cancelled_order: "طلب ملغي ومطابق",
   cancelled_order_needs_refund_match: "طلب ملغي ينتظر مطابقة الاسترجاع",
-  order_found_invoice_missing: "الطلب موجود والفاتورة غير موجودة",
+  order_found_invoice_missing: "الطلب موجود بدون فاتورة",
   order_not_found: "الطلب غير موجود في استيراد سلة",
   needs_credit_note: "يحتاج إشعار دائن (استرجاع جزئي)",
   unmatched_refund: "استرجاع بدون عملية أصلية",
-  orphan_line: "سطر بدون رقم طلب",
+  needs_classification: "تعديل/خصم تسوية غير مرتبط بطلب",
 };
 
 const MATCH_TONE: Record<MatchStatus, string> = {
@@ -152,16 +172,19 @@ const MATCH_TONE: Record<MatchStatus, string> = {
   order_not_found: "text-red-300",
   needs_credit_note: "text-amber-300",
   unmatched_refund: "text-red-300",
-  orphan_line: "text-red-300",
+  needs_classification: "text-amber-300",
 };
 
-// Statuses that BLOCK settlement approval (require human review before commit)
-const BLOCKING_STATUSES = new Set<MatchStatus>([
+// Statuses that require review before FINAL CLOSE. Import commit is always allowed.
+const REVIEW_STATUSES = new Set<MatchStatus>([
   "order_not_found",
   "cancelled_order_needs_refund_match",
   "unmatched_refund",
-  "orphan_line",
+  "needs_classification",
+  "order_found_invoice_missing",
+  "needs_credit_note",
 ]);
+const BLOCKING_STATUSES = REVIEW_STATUSES;
 
 type ReviewReason = "invalid_amount" | "duplicate_line" | "zero_amount" | "amount_mismatch";
 const REVIEW_LABEL: Record<ReviewReason, string> = {
@@ -314,8 +337,11 @@ function SettlementImportPage() {
       const reasons: ReviewReason[] = [];
       let line_type: LineType = "sale";
       if (gross == null) reasons.push("invalid_amount");
-      else if (gross === 0) { reasons.push("zero_amount"); line_type = "adjustment"; }
-      else if (gross < 0) { line_type = orderId ? "refund" : "adjustment"; }
+      else if (gross === 0) { reasons.push("zero_amount"); line_type = "manual_adjustment"; }
+      else if (gross < 0) {
+        // Negative with order id → refund. Negative without order id → unexplained deduction (needs classification).
+        line_type = orderId ? "refund" : "unexplained_deduction";
+      }
 
       const dupKey = `${orderId ?? ""}|${gross ?? ""}|${txnId ?? ""}|${date ?? ""}`;
       if (seen.has(dupKey) && dupKey !== "|||") reasons.push("duplicate_line");
@@ -324,7 +350,7 @@ function SettlementImportPage() {
       const rawObj: Record<string, any> = {};
       headers.forEach((h, i) => { rawObj[String(h ?? `col_${i}`)] = raw[i] ?? null; });
 
-      const initialMatch: MatchStatus = orderId ? "order_not_found" : "orphan_line";
+      const initialMatch: MatchStatus = orderId ? "order_not_found" : "needs_classification";
 
       return {
         rowNo,
@@ -445,7 +471,7 @@ function SettlementImportPage() {
       }
 
       for (const p of parsed) {
-        if (!p.external_order_id) { p.match_status = "orphan_line"; p.needs_review = true; }
+        if (!p.external_order_id) { p.match_status = "needs_classification"; p.needs_review = true; }
       }
     }
 
@@ -468,7 +494,7 @@ function SettlementImportPage() {
     const counts: Record<MatchStatus, number> = {
       matched_invoice: 0, matched_cancelled_order: 0, cancelled_order_needs_refund_match: 0,
       order_found_invoice_missing: 0, order_not_found: 0, needs_credit_note: 0,
-      unmatched_refund: 0, orphan_line: 0,
+      unmatched_refund: 0, needs_classification: 0,
     };
     let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0;
     let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0, adjustmentsSigned = 0;
@@ -528,7 +554,7 @@ function SettlementImportPage() {
       // Insert lines
       const linesPayload = rows.map((r) => ({
         settlement_id: settlementId,
-        line_type: (r.line_type === "sale" ? "sale" : r.line_type === "refund" ? "refund" : "adjustment") as any,
+        line_type: r.line_type as any,
         external_order_id: r.external_order_id,
         sales_invoice_id: r.sales_invoice_id,
         provider_transaction_id: r.provider_transaction_id,
@@ -778,7 +804,8 @@ function SettlementImportPage() {
             <Kpi label="ينتظر استرجاع" value={String(summary.counts.cancelled_order_needs_refund_match)} tone="text-amber-300" />
             <Kpi label="طلب بدون فاتورة" value={String(summary.counts.order_found_invoice_missing)} tone="text-amber-300" />
             <Kpi label="طلب غير موجود" value={String(summary.counts.order_not_found)} tone="text-red-300" />
-            <Kpi label="حجب اعتماد" value={String(summary.blocking)} tone={summary.blocking ? "text-red-300" : "text-muted-foreground"} />
+            <Kpi label="بحاجة مراجعة" value={String(summary.review)} tone={summary.review ? "text-amber-300" : "text-muted-foreground"} />
+            <Kpi label="خصم غير مصنف" value={String(summary.counts.needs_classification)} tone={summary.counts.needs_classification ? "text-amber-300" : "text-muted-foreground"} />
             <Kpi label="إجمالي المبيعات" value={summary.gross.toFixed(2)} />
             <Kpi label="المرتجعات" value={summary.refundsAbs.toFixed(2)} />
             <Kpi label="الرسوم" value={summary.fees.toFixed(2)} />
@@ -820,11 +847,11 @@ function SettlementImportPage() {
               </thead>
               <tbody>
                 {rows.filter((r) => !statusFilter || r.match_status === statusFilter).slice(0, 500).map((r) => (
-                  <tr key={r.rowNo} className={`border-t border-white/5 ${BLOCKING_STATUSES.has(r.match_status) ? "bg-red-500/5" : r.needs_review ? "bg-amber-500/5" : ""}`}>
+                  <tr key={r.rowNo} className={`border-t border-white/5 ${r.match_status === "needs_classification" ? "bg-amber-500/10" : REVIEW_STATUSES.has(r.match_status) ? "bg-amber-500/5" : ""}`}>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.rowNo}</td>
                     <td className="px-2 py-1.5">{r.external_order_id ?? "—"}</td>
                     <td className="px-2 py-1.5">{r.transaction_date ?? "—"}</td>
-                    <td className="px-2 py-1.5">{r.line_type === "sale" ? "بيع" : r.line_type === "refund" ? "مرتجع" : "تعديل"}</td>
+                    <td className="px-2 py-1.5">{LINE_TYPE_LABEL[r.line_type]}</td>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.original_payment_method ?? "—"}</td>
                     <td className="px-2 py-1.5 tabular-nums">{r.gross_amount.toFixed(2)}</td>
                     <td className="px-2 py-1.5 tabular-nums">{r.fees_before_vat.toFixed(2)}</td>
@@ -855,10 +882,34 @@ function SettlementImportPage() {
             {rows.length > 500 && <div className="text-[11px] text-muted-foreground p-2">عُرض أول 500 صف — سيتم استيراد الجميع.</div>}
           </div>
 
-          {summary.blocking > 0 && (
-            <div className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-[12px] text-red-200">
-              <AlertTriangle className="inline w-3.5 h-3.5 ml-1" />
-              يوجد {summary.blocking} سطر يحجب الاعتماد النهائي (طلبات غير موجودة، بيع ملغي بدون استرجاع، استرجاع بدون بيع، أو سطر بدون رقم طلب). سيتم إنشاء التسوية بحالة "قيد المراجعة" حتى تُعالج هذه الحالات.
+          {(summary.counts.needs_classification > 0 || summary.counts.order_not_found > 0 || summary.counts.cancelled_order_needs_refund_match > 0 || summary.counts.unmatched_refund > 0 || summary.counts.order_found_invoice_missing > 0 || summary.counts.needs_credit_note > 0) && (
+            <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-[12px] text-amber-100 space-y-1.5">
+              <div className="flex items-center gap-1.5 font-semibold">
+                <AlertTriangle size={14} /> نقاط المراجعة (لا تمنع الاستيراد)
+              </div>
+              <ul className="list-disc pr-4 space-y-0.5 text-[11.5px]">
+                {summary.counts.needs_classification > 0 && (
+                  <li><b>{summary.counts.needs_classification}</b> تعديل/خصم تسوية غير مرتبط بطلب — سيتم إدراجه كـ "خصم غير مفسر" ويؤثر مالياً في الصافي، ويُصنّف لاحقاً من صفحة الحركات.</li>
+                )}
+                {summary.counts.order_not_found > 0 && (
+                  <li><b>{summary.counts.order_not_found}</b> طلب مذكور في التسوية غير موجود في استيراد سلة — لا يمكن مطابقته حتى تُستورد طلبات سلة الشاملة.</li>
+                )}
+                {summary.counts.cancelled_order_needs_refund_match > 0 && (
+                  <li><b>{summary.counts.cancelled_order_needs_refund_match}</b> عملية بيع لطلب ملغي بانتظار مطابقة سطر الاسترجاع.</li>
+                )}
+                {summary.counts.unmatched_refund > 0 && (
+                  <li><b>{summary.counts.unmatched_refund}</b> استرجاع بدون عملية بيع أصلية معروفة.</li>
+                )}
+                {summary.counts.order_found_invoice_missing > 0 && (
+                  <li><b>{summary.counts.order_found_invoice_missing}</b> طلب معروف بدون فاتورة مبيعات — يُعالج من "إصلاح بيانات الفواتير المستوردة".</li>
+                )}
+                {summary.counts.needs_credit_note > 0 && (
+                  <li><b>{summary.counts.needs_credit_note}</b> استرجاع جزئي يحتاج إشعاراً دائناً.</li>
+                )}
+              </ul>
+              <div className="text-[11px] text-amber-200/80 pt-1 border-t border-amber-400/20 mt-1">
+                سيتم إنشاء التسوية بحالة "قيد المراجعة" ويُسمح باعتمادها المحاسبي فقط بعد معالجة النقاط أعلاه. الخصومات غير المصنفة تُوضع مؤقتاً في حساب "فروقات وتسويات معلقة" (2810).
+              </div>
             </div>
           )}
 

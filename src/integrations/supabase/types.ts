@@ -2479,6 +2479,10 @@ export type Database = {
       payment_settlement_lines: {
         Row: {
           amount: number
+          classification_note: string | null
+          classification_reason: string | null
+          classified_at: string | null
+          classified_by: string | null
           created_at: string
           description: string | null
           external_order_id: string | null
@@ -2494,6 +2498,10 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          classification_note?: string | null
+          classification_reason?: string | null
+          classified_at?: string | null
+          classified_by?: string | null
           created_at?: string
           description?: string | null
           external_order_id?: string | null
@@ -2509,6 +2517,10 @@ export type Database = {
         }
         Update: {
           amount?: number
+          classification_note?: string | null
+          classification_reason?: string | null
+          classified_at?: string | null
+          classified_by?: string | null
           created_at?: string
           description?: string | null
           external_order_id?: string | null
@@ -5141,6 +5153,9 @@ export type Database = {
         | "reserve_released"
         | "rounding_difference"
         | "unexplained_transfer_fee"
+        | "chargeback"
+        | "manual_adjustment"
+        | "unexplained_deduction"
       payment_settlement_payout_status:
         | "awaiting_payout"
         | "received"
@@ -5508,6 +5523,9 @@ export const Constants = {
         "reserve_released",
         "rounding_difference",
         "unexplained_transfer_fee",
+        "chargeback",
+        "manual_adjustment",
+        "unexplained_deduction",
       ],
       payment_settlement_payout_status: [
         "awaiting_payout",

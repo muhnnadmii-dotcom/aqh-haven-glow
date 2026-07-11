@@ -16,15 +16,28 @@ export const Route = createFileRoute("/_authenticated/admin/finance/settlement-l
 const LINE_LABEL: Record<string, string> = {
   sale: "مبيع",
   refund: "مرتجع",
+  chargeback: "اعتراض/Chargeback",
   fee: "رسوم",
   fee_vat: "ضريبة الرسوم",
   payout_fee: "رسوم تحويل",
   adjustment: "تسوية",
+  manual_adjustment: "تعديل يدوي من الوسيط",
+  unexplained_deduction: "خصم غير مفسر",
   reserve_held: "احتياطي محتجز",
   reserve_released: "احتياطي مُفرج عنه",
   rounding_difference: "فرق تقريب",
   unexplained_transfer_fee: "فرق تحويل غير مبرر",
 };
+
+const CLASSIFY_OPTIONS: { value: string; label: string }[] = [
+  { value: "refund", label: "استرجاع غير مرتبط" },
+  { value: "chargeback", label: "اعتراض/Chargeback" },
+  { value: "reserve_held", label: "احتياطي محتجز" },
+  { value: "reserve_released", label: "احتياطي مُفرج عنه" },
+  { value: "payout_fee", label: "رسوم تحويل" },
+  { value: "manual_adjustment", label: "تعديل يدوي من الوسيط" },
+  { value: "unexplained_deduction", label: "خصم غير مفسر" },
+];
 
 const MATCH_LABEL: Record<string, { text: string; tone: string }> = {
   matched_invoice: { text: "مطابق لفاتورة", tone: "text-emerald-400" },
@@ -32,6 +45,8 @@ const MATCH_LABEL: Record<string, { text: string; tone: string }> = {
   cancelled_order_needs_refund_match: { text: "طلب ملغي ينتظر الاسترجاع", tone: "text-amber-400" },
   order_found_invoice_missing: { text: "الطلب موجود بدون فاتورة", tone: "text-amber-400" },
   order_not_found: { text: "الطلب غير موجود", tone: "text-red-400" },
+  needs_classification: { text: "بحاجة تصنيف", tone: "text-amber-400" },
+  classified: { text: "مصنّف يدوياً", tone: "text-sky-400" },
   no_external_order_id: { text: "بدون رقم طلب", tone: "text-muted-foreground" },
 };
 
@@ -153,18 +168,20 @@ function SettlementLinesPage() {
               <th className="text-start px-3 py-2">مرجع الوسيط / الفاتورة</th>
               <th className="text-start px-3 py-2">المبلغ</th>
               <th className="text-start px-3 py-2">حالة المطابقة</th>
+              <th className="text-start px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">لا توجد حركات</td></tr>
+              <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">لا توجد حركات</td></tr>
             )}
             {filtered.map((r) => {
               const inv = r.sales_invoice_id ? invoices[r.sales_invoice_id] : null;
               const ord = r.salla_order_id ? orders[r.salla_order_id] : null;
               const m = MATCH_LABEL[r.matching_status] ?? { text: r.matching_status ?? "غير مصنّف", tone: "text-muted-foreground" };
+              const needsClassify = !r.external_order_id && (r.matching_status === "needs_classification" || !r.matching_status);
               return (
-                <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+                <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 ${needsClassify ? "bg-amber-500/5" : ""}`}>
                   <td className="px-3 py-2">{r.transaction_date ?? "—"}</td>
                   <td className="px-3 py-2 text-muted-foreground">{stRef(r.settlement_id)}</td>
                   <td className="px-3 py-2">{LINE_LABEL[r.line_type] ?? r.line_type}</td>
@@ -180,6 +197,11 @@ function SettlementLinesPage() {
                   </td>
                   <td className="px-3 py-2 tabular-nums">{Number(r.amount).toFixed(2)}</td>
                   <td className={`px-3 py-2 ${m.tone}`}>{m.text}{inv ? ` ${inv.invoice_number}` : ""}</td>
+                  <td className="px-3 py-2">
+                    {needsClassify ? (
+                      <ClassifyLine row={r} onDone={load} />
+                    ) : null}
+                  </td>
                 </tr>
               );
             })}
@@ -218,5 +240,66 @@ function SettlementLinesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function ClassifyLine({ row, onDone }: { row: any; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState<string>(row.line_type ?? "unexplained_deduction");
+  const [note, setNote] = useState<string>(row.classification_note ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await (supabase as any)
+      .from("payment_settlement_lines")
+      .update({
+        line_type: type,
+        matching_status: "classified",
+        classification_reason: type,
+        classification_note: note || null,
+        classified_at: new Date().toISOString(),
+        classified_by: u.user?.id ?? null,
+      })
+      .eq("id", row.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("تم تصنيف الحركة");
+    setOpen(false);
+    onDone();
+  };
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="px-2 py-1 rounded bg-amber-500/20 border border-amber-400/40 text-amber-200 text-[11px] hover:bg-amber-500/30">
+        تصنيف الحركة
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setOpen(false)}>
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0b1220] p-4 space-y-3" dir="rtl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-sm font-semibold">تصنيف حركة تسوية غير مرتبطة بطلب</div>
+            <div className="text-[11px] text-muted-foreground">
+              المبلغ: <b className="tabular-nums">{Number(row.amount).toFixed(2)}</b> · التاريخ: {row.transaction_date ?? "—"}
+            </div>
+            <label className="block text-[11px]">نوع الحركة الصحيح
+              <select value={type} onChange={(e) => setType(e.target.value)} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]">
+                {CLASSIFY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </label>
+            <label className="block text-[11px]">ملاحظة (اختياري)
+              <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+            </label>
+            <div className="text-[11px] text-muted-foreground">
+              لن يتغير المبلغ ولا أي روابط أخرى. سيتم فقط تحديث نوع الحركة وحالتها.
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setOpen(false)} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">إلغاء</button>
+              <button disabled={saving} onClick={save} className="px-3 py-1.5 rounded bg-emerald-600/80 text-white text-[12px] disabled:opacity-50">{saving ? "…" : "حفظ التصنيف"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
