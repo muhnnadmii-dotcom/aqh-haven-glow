@@ -58,7 +58,13 @@ function SalesInvoicesList() {
       return (data ?? []) as any[];
     },
   });
-  const custName = (id: string | null) => customers.find((c) => c.id === id)?.full_name ?? "—";
+  const custName = (r: any) => {
+    if (r.customer_id) {
+      const found = customers.find((c) => c.id === r.customer_id)?.full_name;
+      if (found) return found;
+    }
+    return r.customer_name_snapshot || "—";
+  };
 
   const create = useMutation({
     mutationFn: async () => {
