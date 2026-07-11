@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { toast } from "sonner";
-import { Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, XCircle, Loader2, Save, RotateCcw } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, Loader2, Save, RotateCcw, Eye } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/sales-import")({
   ssr: false,
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/sales-import
 
 type ProviderKey =
   | "" | "salla_payments" | "tabby" | "tamara" | "bank_transfer"
-  | "personal_account" | "business_account" | "cash" | "other";
+  | "personal_account" | "business_account" | "cash" | "unknown" | "other";
 
 const PROVIDERS: { value: ProviderKey; label: string }[] = [
   { value: "", label: "— غير محدد —" },
@@ -21,46 +21,48 @@ const PROVIDERS: { value: ProviderKey; label: string }[] = [
   { value: "tabby", label: "تابي" },
   { value: "tamara", label: "تمارا" },
   { value: "bank_transfer", label: "تحويل بنكي" },
-  { value: "personal_account", label: "حساب شخصي" },
-  { value: "business_account", label: "حساب تجاري" },
-  { value: "cash", label: "نقدًا" },
-  { value: "other", label: "أخرى" },
+  { value: "unknown", label: "غير معروف" },
 ];
 
-// Provider auto-detection from Salla payment method text
+// طرق الدفع من ملف سلة → وسيط الدفع
 const PROVIDER_HINTS: [RegExp, ProviderKey][] = [
-  [/tabby|تابي/i, "tabby"],
   [/tamara|تمارا/i, "tamara"],
-  [/mada|apple ?pay|visa|master|credit|debit|stcpay|stc ?pay|checkout|payment|سلة|salla/i, "salla_payments"],
-  [/bank|تحويل|iban|swift/i, "bank_transfer"],
-  [/cash|نقد/i, "cash"],
+  [/tabby|تابي/i, "tabby"],
+  [/bank|حوالة|iban|swift|تحويل/i, "bank_transfer"],
+  [/mada|مدى|apple ?pay|visa|master|credit|debit|stcpay|stc ?pay|checkout|بطاقة|سلة|salla/i, "salla_payments"],
 ];
 
-function detectProvider(text: string | null): ProviderKey {
-  if (!text) return "";
-  for (const [rx, k] of PROVIDER_HINTS) if (rx.test(text)) return k;
-  return "";
+function detectProvider(text: string | null | undefined): ProviderKey {
+  const s = (text ?? "").toString().trim();
+  if (!s || s === "\\N" || s.toUpperCase() === "N/A") return "unknown";
+  for (const [rx, k] of PROVIDER_HINTS) if (rx.test(s)) return k;
+  return "unknown";
 }
 
-// Salla import fields
+// حقول الاستيراد (ترجم إلى الأعمدة الافتراضية في تصدير سلة)
 const FIELDS = [
-  { key: "external_order_id", label: "رقم الطلب", required: true, aliases: ["order id", "order_id", "order number", "رقم الطلب", "رقم طلب", "الطلب"] },
-  { key: "external_invoice_number", label: "رقم فاتورة سلة", required: false, aliases: ["invoice number", "invoice_no", "رقم الفاتورة", "فاتورة"] },
-  { key: "order_date", label: "تاريخ الطلب", required: true, aliases: ["order date", "date", "التاريخ", "تاريخ الطلب", "تاريخ"] },
-  { key: "customer_name", label: "اسم العميل", required: false, aliases: ["customer", "customer name", "اسم العميل", "العميل", "الاسم"] },
-  { key: "payment_method", label: "طريقة الدفع", required: false, aliases: ["payment method", "payment", "طريقة الدفع", "الدفع"] },
-  { key: "order_status", label: "حالة الطلب", required: false, aliases: ["status", "order status", "الحالة", "حالة الطلب"] },
-  { key: "payment_status", label: "حالة الدفع", required: false, aliases: ["payment status", "حالة الدفع"] },
-  { key: "original_gross_amount", label: "المبلغ الأصلي", required: true, aliases: ["total", "gross", "amount", "المبلغ الأصلي", "الإجمالي", "قيمة الطلب", "المبلغ"] },
-  { key: "refund_amount", label: "المسترجع", required: false, aliases: ["refund", "refunded", "المرتجع", "المسترجع", "استرجاع"] },
-  { key: "vat_amount", label: "ضريبة القيمة المضافة", required: false, aliases: ["vat", "tax", "ضريبة", "الضريبة"] },
-  { key: "shipping_before_vat", label: "الشحن قبل الضريبة", required: false, aliases: ["shipping", "shipping cost", "شحن", "الشحن", "الشحن قبل الضريبة"] },
-  { key: "shipping_vat", label: "ضريبة الشحن", required: false, aliases: ["shipping vat", "shipping tax", "ضريبة الشحن"] },
+  { key: "external_order_id", label: "رقم الطلب", required: true, aliases: ["رقم الطلب", "order id", "order_id", "order number", "رقم طلب", "الطلب"] },
+  { key: "customer_name", label: "اسم العميل", required: false, aliases: ["اسم العميل", "customer", "customer name", "العميل", "الاسم"] },
+  { key: "external_invoice_number", label: "رقم الفاتورة", required: false, aliases: ["رقم الفاتورة", "invoice number", "invoice_no", "فاتورة"] },
+  { key: "order_date", label: "تاريخ الطلب", required: true, aliases: ["تاريخ الطلب", "order date", "date", "التاريخ", "تاريخ"] },
+  { key: "order_status", label: "حالة الطلب", required: false, aliases: ["حالة الطلب", "status", "order status", "الحالة"] },
+  { key: "payment_method", label: "طريقة الدفع", required: false, aliases: ["طريقة الدفع", "payment method", "payment", "الدفع"] },
+  { key: "original_gross_amount", label: "إجمالي الطلب (شامل الضريبة)", required: true, aliases: ["إجمالي الطلب", "المبلغ الأصلي", "total", "gross", "amount", "الإجمالي", "قيمة الطلب", "المبلغ"] },
+  { key: "total_vat_amount", label: "الضريبة (إجمالي)", required: false, aliases: ["الضريبة", "إجمالي الضريبة", "vat", "tax", "ضريبة"] },
+  { key: "shipping_before_vat", label: "تكلفة الشحن (قبل الضريبة)", required: false, aliases: ["تكلفة الشحن", "الشحن", "shipping", "shipping cost", "شحن", "الشحن قبل الضريبة"] },
+  { key: "discount_coupon", label: "خصم الكوبون", required: false, aliases: ["قيمة خصم الكوبون", "خصم الكوبون", "coupon", "كوبون"] },
+  { key: "discount_offers", label: "خصم العروض الخاصة", required: false, aliases: ["قيمة خصم العروض الخاصة", "خصم العروض", "offers discount"] },
+  { key: "discount_abandoned", label: "خصم السلة المتروكة", required: false, aliases: ["قيمة عرض السلة المتروكة", "السلة المتروكة", "abandoned cart"] },
 ] as const;
 
 type FieldKey = typeof FIELDS[number]["key"];
 
 const normStr = (s: any) => (s == null ? "" : String(s)).trim().toLowerCase();
+const isBlank = (v: any) => {
+  if (v == null) return true;
+  const s = String(v).trim();
+  return s === "" || s === "\\N" || s.toUpperCase() === "N/A";
+};
 
 function autoMatch(headers: any[], aliases: readonly string[]): number {
   const hs = headers.map(normStr);
@@ -92,7 +94,7 @@ function detectHeaderRow(aoa: any[][]): number {
 }
 
 function parseDate(v: any): string | null {
-  if (v == null || v === "") return null;
+  if (isBlank(v)) return null;
   if (v instanceof Date && !isNaN(v.getTime())) {
     return `${v.getUTCFullYear()}-${String(v.getUTCMonth() + 1).padStart(2, "0")}-${String(v.getUTCDate()).padStart(2, "0")}`;
   }
@@ -102,7 +104,6 @@ function parseDate(v: any): string | null {
     return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
   }
   const s = String(v).trim();
-  if (!s) return null;
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
   if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
   const dmy = /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/.exec(s);
@@ -115,14 +116,42 @@ function parseDate(v: any): string | null {
   return isNaN(t.getTime()) ? null : `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
 }
 
+// دقيق مالي (خانتان عشريتان)
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 function parseAmount(v: any): number | null {
-  if (v == null || v === "") return null;
-  if (typeof v === "number" && isFinite(v)) return Math.round(v * 100) / 100;
+  if (isBlank(v)) return null;
+  if (typeof v === "number" && isFinite(v)) return round2(v);
   const s = String(v).replace(/[^\d\.\-,]/g, "").replace(/,/g, "");
   if (!s) return null;
   const n = Number(s);
-  return isFinite(n) ? Math.round(n * 100) / 100 : null;
+  return isFinite(n) ? round2(n) : null;
 }
+const amount0 = (v: any) => parseAmount(v) ?? 0;
+
+const CANCELLED_RX = /cancel|ملغى|ملغي|ملغاة|إلغاء|الغاء/i;
+const isCancelled = (s: string | null) => !!s && CANCELLED_RX.test(s);
+
+type ReviewReason =
+  | "cancelled_order"
+  | "zero_total"
+  | "missing_payment_method"
+  | "missing_invoice_number"
+  | "missing_required_data"
+  | "invalid_amount"
+  | "duplicate_order";
+
+const REVIEW_LABEL: Record<ReviewReason, string> = {
+  cancelled_order: "طلب ملغى",
+  zero_total: "إجمالي = 0",
+  missing_payment_method: "طريقة الدفع مفقودة",
+  missing_invoice_number: "رقم الفاتورة مفقود",
+  missing_required_data: "بيانات مطلوبة مفقودة",
+  invalid_amount: "قيمة غير صالحة",
+  duplicate_order: "طلب مكرر",
+};
+
+type PaymentStatus = "paid" | "unpaid" | "unknown";
 
 type Mapping = Partial<Record<FieldKey, number>>;
 type ParsedRow = {
@@ -131,20 +160,24 @@ type ParsedRow = {
   external_invoice_number: string | null;
   order_date: string | null;
   customer_name: string | null;
-  payment_method: string | null;
+  payment_method_raw: string | null;
   payment_provider: ProviderKey;
   order_status: string | null;
-  payment_status: string | null;
-  original_gross_amount: number | null;
-  refund_amount: number;
-  vat_amount: number;
+  payment_status: PaymentStatus;
+  payment_status_source: "inferred" | "unknown";
+  original_gross_amount: number | null;      // إجمالي الطلب شامل الضريبة
+  total_vat_amount: number;                   // إجمالي الضريبة
   shipping_before_vat: number;
-  shipping_vat: number;
-  net_amount: number | null;
-  errors: string[];
-  warnings: string[];
+  shipping_vat: number;                       // محسوبة
+  product_vat: number;                        // محسوبة
+  total_before_vat: number;                   // محسوبة
+  product_before_vat: number;                 // محسوبة
+  total_discount: number;
+  cancelled: boolean;
   duplicate: boolean;
-  completeness: "complete" | "missing_original_invoice" | "missing_tax_details" | "needs_review" | "needs_credit_note";
+  review_reasons: ReviewReason[];
+  needs_review: boolean;
+  hard_error: boolean;
 };
 
 function SalesImportPage() {
@@ -159,6 +192,8 @@ function SalesImportPage() {
   const [headers, setHeaders] = useState<any[]>([]);
   const [mapping, setMapping] = useState<Mapping>({});
   const [rows, setRows] = useState<ParsedRow[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [showOnlyReview, setShowOnlyReview] = useState(false);
   const [savedMappings, setSavedMappings] = useState<any[]>([]);
   const [templateName, setTemplateName] = useState("");
   const [committing, setCommitting] = useState(false);
@@ -200,6 +235,8 @@ function SalesImportPage() {
       if (idx >= 0) m[f.key] = idx;
     }
     setMapping(m);
+    setRows([]);
+    setSelected(new Set());
   }
 
   async function reparseSheet() {
@@ -227,63 +264,94 @@ function SalesImportPage() {
       const get = (k: FieldKey) => (mapping[k] != null ? raw[mapping[k]!] : null);
       const orderId = String(get("external_order_id") ?? "").trim() || null;
       const dateStr = parseDate(get("order_date"));
+      const invoiceRaw = get("external_invoice_number");
+      const invoiceNumber = isBlank(invoiceRaw) ? null : String(invoiceRaw).trim();
+      const orderStatus = isBlank(get("order_status")) ? null : String(get("order_status")).trim();
+      const paymentMethodRaw = isBlank(get("payment_method")) ? null : String(get("payment_method")).trim();
+
       const gross = parseAmount(get("original_gross_amount"));
-      const refund = parseAmount(get("refund_amount")) ?? 0;
-      const vat = parseAmount(get("vat_amount")) ?? 0;
-      const shipBefore = parseAmount(get("shipping_before_vat")) ?? 0;
-      const shipVat = parseAmount(get("shipping_vat")) ?? 0;
-      const paymentMethod = get("payment_method") == null ? null : String(get("payment_method"));
-      const provider = detectProvider(paymentMethod);
-      const errors: string[] = [];
-      const warnings: string[] = [];
-      if (!orderId) errors.push("رقم الطلب مفقود");
-      if (!dateStr) errors.push("تاريخ الطلب غير صالح");
-      if (gross == null) errors.push("المبلغ الأصلي مفقود");
-      if (refund < 0) errors.push("قيمة المرتجع سالبة");
-      if (gross != null && refund > gross) warnings.push("قيمة المرتجع تتجاوز الأصل");
-      if (vat === 0 && gross && gross > 0) warnings.push("لا توجد ضريبة");
+      const totalVat = amount0(get("total_vat_amount"));
+      const shipBefore = amount0(get("shipping_before_vat"));
 
-      const net = gross != null ? Math.round((gross - refund) * 100) / 100 : null;
+      // ضريبة الشحن محسوبة، ولا تتجاوز إجمالي ضريبة الطلب
+      const shippingVatRaw = round2(shipBefore * 0.15);
+      const shippingVat = round2(Math.min(totalVat, shippingVatRaw));
+      const productVat = round2(Math.max(totalVat - shippingVat, 0));
+      const totalBeforeVat = gross != null ? round2(gross - totalVat) : 0;
+      const productBeforeVat = gross != null ? round2(Math.max(totalBeforeVat - shipBefore, 0)) : 0;
 
-      let completeness: ParsedRow["completeness"] = "complete";
-      if (!get("external_invoice_number")) completeness = "missing_original_invoice";
-      if (vat === 0 && gross && gross > 0) completeness = "missing_tax_details";
-      if (refund > 0) completeness = "needs_credit_note";
-      if (warnings.length && completeness === "complete") completeness = "needs_review";
+      const totalDiscount = round2(
+        amount0(get("discount_coupon")) +
+        amount0(get("discount_offers")) +
+        amount0(get("discount_abandoned"))
+      );
+
+      const cancelled = isCancelled(orderStatus);
+      const provider = detectProvider(paymentMethodRaw);
+
+      // review reasons
+      const reasons: ReviewReason[] = [];
+      let hardError = false;
+      if (!orderId) { reasons.push("missing_required_data"); hardError = true; }
+      if (!dateStr) { reasons.push("missing_required_data"); hardError = true; }
+      if (gross == null) { reasons.push("invalid_amount"); hardError = true; }
+      if (cancelled) reasons.push("cancelled_order");
+      if (gross != null && gross === 0) reasons.push("zero_total");
+      if (!paymentMethodRaw) reasons.push("missing_payment_method");
+      if (!invoiceNumber) reasons.push("missing_invoice_number");
+
+      // حالة الدفع المستنتجة
+      let paymentStatus: PaymentStatus = "unknown";
+      let statusSource: "inferred" | "unknown" = "unknown";
+      if (!cancelled && gross != null && gross > 0 && paymentMethodRaw && invoiceNumber) {
+        paymentStatus = "paid";
+        statusSource = "inferred";
+      } else if (!paymentMethodRaw) {
+        paymentStatus = "unknown";
+      }
 
       return {
         rowNo: headerRow + 2 + idx,
         external_order_id: orderId,
-        external_invoice_number: get("external_invoice_number") ? String(get("external_invoice_number")).trim() : null,
+        external_invoice_number: invoiceNumber,
         order_date: dateStr,
-        customer_name: get("customer_name") ? String(get("customer_name")).trim() : null,
-        payment_method: paymentMethod,
+        customer_name: isBlank(get("customer_name")) ? null : String(get("customer_name")).trim(),
+        payment_method_raw: paymentMethodRaw,
         payment_provider: provider,
-        order_status: get("order_status") ? String(get("order_status")).trim() : null,
-        payment_status: get("payment_status") ? String(get("payment_status")).trim() : null,
+        order_status: orderStatus,
+        payment_status: paymentStatus,
+        payment_status_source: statusSource,
         original_gross_amount: gross,
-        refund_amount: refund,
-        vat_amount: vat,
+        total_vat_amount: totalVat,
         shipping_before_vat: shipBefore,
-        shipping_vat: shipVat,
-        net_amount: net,
-        errors,
-        warnings,
+        shipping_vat: shippingVat,
+        product_vat: productVat,
+        total_before_vat: totalBeforeVat,
+        product_before_vat: productBeforeVat,
+        total_discount: totalDiscount,
+        cancelled,
         duplicate: false,
-        completeness,
+        review_reasons: reasons,
+        needs_review: reasons.length > 0,
+        hard_error: hardError,
       };
     });
 
-    // Dedupe within file
+    // تكرار داخل الملف
     const seen = new Map<string, number>();
     parsed.forEach((r) => {
       if (!r.external_order_id) return;
       const prev = seen.get(r.external_order_id);
-      if (prev != null) r.duplicate = true;
-      else seen.set(r.external_order_id, r.rowNo);
+      if (prev != null) {
+        r.duplicate = true;
+        if (!r.review_reasons.includes("duplicate_order")) r.review_reasons.push("duplicate_order");
+        r.needs_review = true;
+      } else {
+        seen.set(r.external_order_id, r.rowNo);
+      }
     });
 
-    // Check DB for existing external_order_id
+    // تكرار من قاعدة البيانات
     const ids = parsed.map((r) => r.external_order_id).filter((x): x is string => !!x);
     if (ids.length) {
       const { data: existing } = await (supabase as any)
@@ -293,32 +361,60 @@ function SalesImportPage() {
         .in("external_order_id", ids);
       const existSet = new Set((existing || []).map((x: any) => x.external_order_id));
       parsed.forEach((r) => {
-        if (r.external_order_id && existSet.has(r.external_order_id)) r.duplicate = true;
+        if (r.external_order_id && existSet.has(r.external_order_id)) {
+          r.duplicate = true;
+          if (!r.review_reasons.includes("duplicate_order")) r.review_reasons.push("duplicate_order");
+          r.needs_review = true;
+        }
       });
     }
 
     setRows(parsed);
-    toast.success(`تم تحضير ${parsed.length} صف. راجع ثم اضغط اعتماد.`);
+    // اختيار افتراضي: الصفوف الصالحة فقط
+    const auto = new Set<number>();
+    parsed.forEach((r) => { if (!r.needs_review && !r.hard_error) auto.add(r.rowNo); });
+    setSelected(auto);
+
+    const ok = parsed.filter((r) => !r.needs_review && !r.hard_error).length;
+    const rev = parsed.filter((r) => r.needs_review || r.hard_error).length;
+    toast.success(`تم تحضير ${parsed.length} صف — صالح: ${ok}، يحتاج مراجعة: ${rev}`);
   }
 
   const stats = useMemo(() => {
     const total = rows.length;
-    const dupes = rows.filter((r) => r.duplicate).length;
-    const errs = rows.filter((r) => r.errors.length).length;
-    const review = rows.filter((r) => !r.duplicate && !r.errors.length && r.completeness !== "complete").length;
-    const ok = rows.filter((r) => !r.duplicate && !r.errors.length && r.completeness === "complete").length;
-    return { total, dupes, errs, review, ok, importable: ok + review };
-  }, [rows]);
+    const valid = rows.filter((r) => !r.needs_review && !r.hard_error).length;
+    const review = rows.filter((r) => r.needs_review || r.hard_error).length;
+    const selectedValid = rows.filter((r) => selected.has(r.rowNo) && !r.needs_review && !r.hard_error).length;
+    return { total, valid, review, selectedValid };
+  }, [rows, selected]);
+
+  function toggleRow(rowNo: number, canSelect: boolean) {
+    if (!canSelect) return;
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(rowNo)) n.delete(rowNo); else n.add(rowNo);
+      return n;
+    });
+  }
+  function selectAllValid() {
+    const n = new Set<number>();
+    rows.forEach((r) => { if (!r.needs_review && !r.hard_error) n.add(r.rowNo); });
+    setSelected(n);
+  }
+  function clearSelection() { setSelected(new Set()); }
 
   async function commit() {
     if (!rows.length) return;
     if (!canWrite) { toast.error("لا تملك صلاحية الاستيراد"); return; }
+    // فرض القاعدة: فقط الصفوف الصالحة والمحددة
+    const importable = rows.filter((r) => selected.has(r.rowNo) && !r.needs_review && !r.hard_error);
+    if (!importable.length) { toast.error("لا توجد صفوف صالحة محددة للاعتماد"); return; }
+
     setCommitting(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id ?? null;
 
-      // Insert batch first
       const { data: batchRow, error: bErr } = await (supabase as any)
         .from("sales_import_batches")
         .insert({
@@ -336,71 +432,54 @@ function SalesImportPage() {
       if (bErr) throw bErr;
       const batchId = batchRow.id as string;
 
-      const importable = rows.filter((r) => !r.duplicate && !r.errors.length);
       let inserted = 0;
       const failed: { rowNo: number; error: string }[] = [];
 
       for (const r of importable) {
         const invoiceNumber = `SALLA-${r.external_order_id}`;
-        const taxable = Math.max((r.original_gross_amount ?? 0) - r.vat_amount, 0);
         const row: any = {
           invoice_number: invoiceNumber,
           issue_date: r.order_date,
           supply_date: r.order_date,
           order_date: r.order_date,
           status: "draft",
-          payment_status: "unpaid",
+          payment_status: r.payment_status === "paid" ? "paid" : "unpaid",
           sales_channel: "salla",
-          payment_provider: r.payment_provider || null,
+          payment_provider: r.payment_provider && r.payment_provider !== "unknown" ? r.payment_provider : null,
           external_order_id: r.external_order_id,
           external_invoice_number: r.external_invoice_number,
           customer_name_snapshot: r.customer_name,
           order_status: r.order_status,
           original_gross_amount: r.original_gross_amount,
-          refund_amount: 0, // will be set by trigger when we insert sales_refunds
-          net_amount: r.net_amount,
+          refund_amount: 0,
+          net_amount: r.original_gross_amount,
           shipping_before_vat: r.shipping_before_vat,
           shipping_vat: r.shipping_vat,
-          subtotal: taxable,
-          discount_amount: 0,
-          taxable_amount: taxable,
-          vat_amount: r.vat_amount,
+          subtotal: r.total_before_vat,
+          discount_amount: r.total_discount,
+          taxable_amount: r.total_before_vat,
+          vat_amount: r.total_vat_amount,
           total_amount: r.original_gross_amount ?? 0,
-          paid_amount: 0,
-          remaining_amount: r.original_gross_amount ?? 0,
-          data_completeness_status: r.completeness,
+          paid_amount: r.payment_status === "paid" ? (r.original_gross_amount ?? 0) : 0,
+          remaining_amount: r.payment_status === "paid" ? 0 : (r.original_gross_amount ?? 0),
+          data_completeness_status: "complete",
           import_batch_id: batchId,
           import_row_snapshot: r as any,
-          notes: r.payment_method ? `طريقة الدفع: ${r.payment_method}` : null,
+          notes: r.payment_method_raw ? `طريقة الدفع: ${r.payment_method_raw}` : null,
         };
 
-        const { data: invRow, error: iErr } = await (supabase as any)
+        const { error: iErr } = await (supabase as any)
           .from("sales_invoices")
           .insert(row)
           .select("id")
           .single();
         if (iErr) { failed.push({ rowNo: r.rowNo, error: iErr.message }); continue; }
-
-        if (r.refund_amount > 0) {
-          const { error: rErr } = await (supabase as any).from("sales_refunds").insert({
-            invoice_id: invRow.id,
-            refund_date: r.order_date,
-            amount: r.refund_amount,
-            reason: "مرتجع من الاستيراد",
-            external_reference: r.external_order_id,
-            sales_channel: "salla",
-            has_credit_note: false,
-            import_batch_id: batchId,
-            created_by: uid,
-          });
-          if (rErr) failed.push({ rowNo: r.rowNo, error: `refund: ${rErr.message}` });
-        }
         inserted++;
       }
 
       const duplicates = rows.filter((r) => r.duplicate).length;
-      const errorRows = rows.filter((r) => r.errors.length).length + failed.length;
-      const reviewRows = importable.filter((r) => r.completeness !== "complete").length;
+      const reviewRows = rows.filter((r) => r.needs_review || r.hard_error).length;
+      const errorRows = failed.length;
 
       await (supabase as any).from("sales_import_batches").update({
         imported_rows: inserted,
@@ -410,7 +489,6 @@ function SalesImportPage() {
         summary_json: { headerRow, headers, failed },
       }).eq("id", batchId);
 
-      // Audit
       await (supabase as any).from("finance_audit_logs").insert({
         related_type: "sales_import_batches",
         related_id: batchId,
@@ -419,8 +497,8 @@ function SalesImportPage() {
         changed_by: uid,
       });
 
-      toast.success(`تم استيراد ${inserted} فاتورة. مكررة: ${duplicates}، مراجعة: ${reviewRows}، أخطاء: ${errorRows}.`);
-      setRows([]); setFile(null); setSheets([]); setSheet(""); setAoa([]); setMapping({});
+      toast.success(`تم استيراد ${inserted} فاتورة. تجاهل مراجعة: ${reviewRows}، مكررة: ${duplicates}، أخطاء: ${errorRows}.`);
+      setRows([]); setSelected(new Set()); setFile(null); setSheets([]); setSheet(""); setAoa([]); setMapping({});
       if (fileRef.current) fileRef.current.value = "";
     } catch (e: any) {
       toast.error(`فشل الاستيراد: ${e.message ?? e}`);
@@ -452,6 +530,11 @@ function SalesImportPage() {
     setMapping(t.mapping || {});
     toast.success(`تم تطبيق قالب: ${t.name}`);
   }
+
+  const visibleRows = useMemo(
+    () => showOnlyReview ? rows.filter((r) => r.needs_review || r.hard_error) : rows,
+    [rows, showOnlyReview]
+  );
 
   return (
     <div className="space-y-4" dir="rtl">
@@ -493,7 +576,7 @@ function SalesImportPage() {
           )}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          قناة البيع تُثبَّت على "سلة" ووسيط الدفع يُكتشف تلقائيًا من طريقة الدفع في الملف. لن يتم إنشاء فاتورة جديدة إذا كان رقم الطلب موجود مسبقًا.
+          قناة البيع = سلة. حالة الدفع تُستنتج من بيانات الطلب ولا تُشتق من حالة الطلب. ضريبة الشحن تُحسب من الشحن قبل الضريبة ولا تُضاف على إجمالي الضريبة.
         </p>
       </div>
 
@@ -503,14 +586,17 @@ function SalesImportPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
             {FIELDS.map((f) => (
               <div key={f.key} className="flex items-center gap-2 text-[12px]">
-                <div className="w-40 shrink-0">
+                <div className="w-56 shrink-0">
                   <span>{f.label}</span>
                   {f.required && <span className="text-red-400 mr-1">*</span>}
                 </div>
                 <select
                   className="inp flex-1"
                   value={mapping[f.key] ?? -1}
-                  onChange={(e) => setMapping({ ...mapping, [f.key]: Number(e.target.value) })}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setMapping({ ...mapping, [f.key]: v === -1 ? undefined : v } as Mapping);
+                  }}
                 >
                   <option value={-1}>— بدون —</option>
                   {headers.map((h, i) => <option key={i} value={i}>{String(h ?? `عمود ${i + 1}`)}</option>)}
@@ -540,66 +626,111 @@ function SalesImportPage() {
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <h3 className="text-sm font-semibold">معاينة ({rows.length} صف)</h3>
             <div className="flex items-center gap-2 text-[11px]">
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">صالح: {stats.ok}</span>
-              <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">مراجعة: {stats.review}</span>
-              <span className="px-2 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 text-orange-300">مكرر: {stats.dupes}</span>
-              <span className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/30 text-red-300">أخطاء: {stats.errs}</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">صالح: {stats.valid}</span>
+              <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">يحتاج مراجعة: {stats.review}</span>
+              <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300">محدد: {stats.selectedValid}</span>
             </div>
-            <button
-              onClick={commit}
-              disabled={committing || !canWrite || stats.importable === 0}
-              className="ml-auto px-4 py-2 rounded-lg bg-gold text-black text-[12px] font-semibold hover:bg-gold/90 disabled:opacity-50 inline-flex items-center gap-1.5"
-            >
-              {committing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-              اعتماد الاستيراد ({stats.importable})
-            </button>
-            <button onClick={() => setRows([])} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5">
-              <RotateCcw size={14} /> إلغاء
-            </button>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setShowOnlyReview((v) => !v)}
+                className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5"
+              >
+                <Eye size={14} /> {showOnlyReview ? "عرض الكل" : `مراجعة الصفوف المستبعدة (${stats.review})`}
+              </button>
+              <button onClick={selectAllValid} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px]">
+                تحديد كل الصالح
+              </button>
+              <button onClick={clearSelection} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px]">
+                مسح التحديد
+              </button>
+              <button
+                onClick={commit}
+                disabled={committing || !canWrite || stats.selectedValid === 0}
+                className="px-4 py-2 rounded-lg bg-gold text-black text-[12px] font-semibold hover:bg-gold/90 disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                {committing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                اعتماد الصفوف الصالحة ({stats.selectedValid})
+              </button>
+              <button onClick={() => { setRows([]); setSelected(new Set()); }} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5">
+                <RotateCcw size={14} /> إلغاء
+              </button>
+            </div>
           </div>
+
+          {stats.review >= 14 && (
+            <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-200">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <div>
+                يوجد {stats.review} صف يحتاج مراجعة. تم استبعادها من التحديد الافتراضي. راجعها قبل أي اعتماد يدوي.
+              </div>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full text-[11px]">
               <thead className="text-muted-foreground">
                 <tr className="border-b border-white/10">
+                  <th className="p-1.5 w-8"></th>
                   <th className="p-1.5 text-right">#</th>
                   <th className="p-1.5 text-right">الحالة</th>
                   <th className="p-1.5 text-right">رقم الطلب</th>
-                  <th className="p-1.5 text-right">تاريخ</th>
                   <th className="p-1.5 text-right">العميل</th>
+                  <th className="p-1.5 text-right">حالة الطلب</th>
+                  <th className="p-1.5 text-right">حالة الدفع</th>
+                  <th className="p-1.5 text-right">طريقة الدفع</th>
                   <th className="p-1.5 text-right">وسيط الدفع</th>
-                  <th className="p-1.5 text-right">الأصلي</th>
-                  <th className="p-1.5 text-right">المرتجع</th>
-                  <th className="p-1.5 text-right">الصافي</th>
-                  <th className="p-1.5 text-right">الضريبة</th>
-                  <th className="p-1.5 text-right">اكتمال</th>
-                  <th className="p-1.5 text-right">ملاحظات</th>
+                  <th className="p-1.5 text-right">إجمالي (شامل)</th>
+                  <th className="p-1.5 text-right">قبل الضريبة</th>
+                  <th className="p-1.5 text-right">إجمالي الضريبة</th>
+                  <th className="p-1.5 text-right">الشحن (قبل)</th>
+                  <th className="p-1.5 text-right">ضريبة الشحن</th>
+                  <th className="p-1.5 text-right">الخصومات</th>
+                  <th className="p-1.5 text-right">سبب المراجعة</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
-                  const badge = r.errors.length ? "bg-red-500/15 text-red-300 border-red-500/30"
-                    : r.duplicate ? "bg-orange-500/15 text-orange-300 border-orange-500/30"
-                    : r.completeness !== "complete" ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                {visibleRows.map((r) => {
+                  const rowStatus = r.hard_error ? "خطأ"
+                    : r.needs_review ? "مراجعة"
+                    : "صالح";
+                  const badge = r.hard_error ? "bg-red-500/15 text-red-300 border-red-500/30"
+                    : r.needs_review ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
                     : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
-                  const label = r.errors.length ? "خطأ" : r.duplicate ? "مكرر" : r.completeness !== "complete" ? "مراجعة" : "صالح";
+                  const canSelect = !r.needs_review && !r.hard_error;
+                  const isSel = selected.has(r.rowNo);
+                  const payStatusBadge = r.payment_status === "paid"
+                    ? "text-emerald-300"
+                    : r.payment_status === "unknown" ? "text-amber-300" : "text-muted-foreground";
                   return (
                     <tr key={r.rowNo} className="border-b border-white/5">
+                      <td className="p-1.5">
+                        <input
+                          type="checkbox"
+                          disabled={!canSelect}
+                          checked={isSel}
+                          onChange={() => toggleRow(r.rowNo, canSelect)}
+                        />
+                      </td>
                       <td className="p-1.5 text-muted-foreground">{r.rowNo}</td>
-                      <td className="p-1.5"><span className={`px-1.5 py-0.5 rounded border text-[10px] ${badge}`}>{label}</span></td>
+                      <td className="p-1.5"><span className={`px-1.5 py-0.5 rounded border text-[10px] ${badge}`}>{rowStatus}</span></td>
                       <td className="p-1.5 font-mono">{r.external_order_id ?? "—"}</td>
-                      <td className="p-1.5">{r.order_date ?? "—"}</td>
                       <td className="p-1.5">{r.customer_name ?? "—"}</td>
-                      <td className="p-1.5">{PROVIDERS.find((p) => p.value === r.payment_provider)?.label ?? "—"}</td>
+                      <td className="p-1.5">{r.order_status ?? "—"}</td>
+                      <td className={`p-1.5 ${payStatusBadge}`}>
+                        {r.payment_status === "paid" ? "مدفوع (مستنتج)" : r.payment_status === "unknown" ? "غير معروف" : "غير مدفوع"}
+                      </td>
+                      <td className="p-1.5">{r.payment_method_raw ?? "—"}</td>
+                      <td className="p-1.5">{PROVIDERS.find((p) => p.value === r.payment_provider)?.label ?? r.payment_provider}</td>
                       <td className="p-1.5">{r.original_gross_amount ?? "—"}</td>
-                      <td className="p-1.5">{r.refund_amount || "—"}</td>
-                      <td className="p-1.5">{r.net_amount ?? "—"}</td>
-                      <td className="p-1.5">{r.vat_amount || "—"}</td>
-                      <td className="p-1.5 text-[10px]">{r.completeness}</td>
-                      <td className="p-1.5 text-[10px] text-muted-foreground">
-                        {r.errors.map((x, i) => <div key={i} className="text-red-300">• {x}</div>)}
-                        {r.warnings.map((x, i) => <div key={`w${i}`} className="text-amber-300">• {x}</div>)}
-                        {r.duplicate && <div className="text-orange-300">• رقم الطلب موجود مسبقًا</div>}
+                      <td className="p-1.5">{r.total_before_vat || "—"}</td>
+                      <td className="p-1.5">{r.total_vat_amount || "—"}</td>
+                      <td className="p-1.5">{r.shipping_before_vat || "—"}</td>
+                      <td className="p-1.5">{r.shipping_vat || "—"}</td>
+                      <td className="p-1.5">{r.total_discount || "—"}</td>
+                      <td className="p-1.5 text-[10px] text-amber-200">
+                        {r.review_reasons.length
+                          ? r.review_reasons.map((x) => <div key={x}>• {REVIEW_LABEL[x]}</div>)
+                          : "—"}
                       </td>
                     </tr>
                   );
