@@ -387,7 +387,7 @@ function SalesInvoiceEditor() {
       </div>
 
       {/* Attachments */}
-      <AttachmentsPanel relatedType="quote" relatedId={String(invoiceId)} />
+      <AttachmentsPanel relatedType="quote" relatedId={String(invoiceId)} canManage={isDraft || !isCancelled} />
 
       {showLinkModal && (
         <LinkCollectionModal
