@@ -132,6 +132,15 @@ function ExpensesPage() {
         </div>
       </div>
 
+      {unclassifiedCount > 0 && (
+        <button
+          onClick={() => setFAccStatus("unclassified")}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] ${fAccStatus === "unclassified" ? "bg-amber-500/20 border-amber-500/40 text-amber-200" : "bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20"}`}
+        >
+          <Tag size={13} /> حركات غير مصنفة: {unclassifiedCount}
+        </button>
+      )}
+
       <div className="rounded-xl border border-white/10 bg-white/5 p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
         <label className="relative col-span-2 md:col-span-2">
           <Search size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -141,6 +150,8 @@ function ExpensesPage() {
         <Select v={fSup} onChange={setFSup} ph="المورد" opts={suppliers.map((s) => ({ value: s.id, label: s.name }))} />
         <Select v={fMain} onChange={(v) => { setFMain(v); setFSub(""); }} ph="تصنيف رئيسي" opts={mains.map((c) => ({ value: c.id, label: c.name }))} />
         <Select v={fSub} onChange={setFSub} ph="تصنيف فرعي" opts={subsForMain.map((c) => ({ value: c.id, label: c.name }))} />
+        <Select v={fTxnType} onChange={setFTxnType} ph="نوع الحركة" opts={OUTGOING_TYPES.map((t) => ({ value: t.value, label: t.label }))} />
+        <Select v={fAccStatus} onChange={setFAccStatus} ph="حالة التصنيف" opts={ACCOUNTING_STATUSES.map((s) => ({ value: s.value, label: s.label }))} />
         <Select v={fAccount} onChange={setFAccount} ph="نوع الحساب" opts={ACCOUNT_TYPES.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fInternal} onChange={setFInternal} ph="داخلي" opts={INTERNAL_REVIEW.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fAcct} onChange={setFAcct} ph="المحاسب" opts={ACCOUNTANT_STATUS.map((a) => ({ value: a.value, label: a.label }))} />
