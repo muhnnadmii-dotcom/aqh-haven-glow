@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_periods: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          label: string
+          reopen_reason: string | null
+          reopened_at: string | null
+          reopened_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["accounting_period_status"]
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          label: string
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["accounting_period_status"]
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          label?: string
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["accounting_period_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      accounting_settings: {
+        Row: {
+          accounting_start_date: string | null
+          auto_post_enabled: boolean
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          accounting_start_date?: string | null
+          auto_post_enabled?: boolean
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          accounting_start_date?: string | null
+          auto_post_enabled?: boolean
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           admin_notes: string | null
@@ -832,6 +898,65 @@ export type Database = {
           visible?: boolean
         }
         Relationships: []
+      }
+      chart_of_accounts: {
+        Row: {
+          account_subtype: string | null
+          account_type: Database["public"]["Enums"]["coa_account_type"]
+          allow_manual_entries: boolean
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_system: boolean
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          parent_id: string | null
+          system_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_subtype?: string | null
+          account_type: Database["public"]["Enums"]["coa_account_type"]
+          allow_manual_entries?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name_ar: string
+          name_en?: string | null
+          notes?: string | null
+          parent_id?: string | null
+          system_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_subtype?: string | null
+          account_type?: Database["public"]["Enums"]["coa_account_type"]
+          allow_manual_entries?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          parent_id?: string | null
+          system_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       consultation_requests: {
         Row: {
@@ -1808,6 +1933,169 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          entry_date: string
+          entry_number: string
+          id: string
+          period_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          reversal_entry_id: string | null
+          reversed_by_entry_id: string | null
+          source_id: string | null
+          source_type: Database["public"]["Enums"]["journal_source_type"]
+          status: Database["public"]["Enums"]["journal_entry_status"]
+          total_credit: number
+          total_debit: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date: string
+          entry_number: string
+          id?: string
+          period_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reversal_entry_id?: string | null
+          reversed_by_entry_id?: string | null
+          source_id?: string | null
+          source_type?: Database["public"]["Enums"]["journal_source_type"]
+          status?: Database["public"]["Enums"]["journal_entry_status"]
+          total_credit?: number
+          total_debit?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_number?: string
+          id?: string
+          period_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reversal_entry_id?: string | null
+          reversed_by_entry_id?: string | null
+          source_id?: string | null
+          source_type?: Database["public"]["Enums"]["journal_source_type"]
+          status?: Database["public"]["Enums"]["journal_entry_status"]
+          total_credit?: number
+          total_debit?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_entry_id_fkey"
+            columns: ["reversal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversed_by_entry_id_fkey"
+            columns: ["reversed_by_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entry_lines: {
+        Row: {
+          account_id: string
+          created_at: string
+          credit: number
+          customer_id: string | null
+          debit: number
+          description: string | null
+          finance_account_id: string | null
+          id: string
+          journal_entry_id: string
+          line_order: number
+          owner_settlement_reference: string | null
+          supplier_id: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          credit?: number
+          customer_id?: string | null
+          debit?: number
+          description?: string | null
+          finance_account_id?: string | null
+          id?: string
+          journal_entry_id: string
+          line_order?: number
+          owner_settlement_reference?: string | null
+          supplier_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          credit?: number
+          customer_id?: string | null
+          debit?: number
+          description?: string | null
+          finance_account_id?: string | null
+          id?: string
+          journal_entry_id?: string
+          line_order?: number
+          owner_settlement_reference?: string | null
+          supplier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entry_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_finance_account_id_fkey"
+            columns: ["finance_account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "finance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       maintenance_reports: {
         Row: {
@@ -3224,6 +3512,8 @@ export type Database = {
       }
     }
     Functions: {
+      acct_id: { Args: { p_key: string }; Returns: string }
+      acct_should_post: { Args: { p_date: string }; Returns: boolean }
       approve_purchase_invoice: {
         Args: { p_invoice_id: number }
         Returns: {
@@ -3320,6 +3610,11 @@ export type Database = {
         Returns: number
       }
       aqh_next_quote_no: { Args: never; Returns: string }
+      close_accounting_period: {
+        Args: { p_period_id: string }
+        Returns: undefined
+      }
+      ensure_accounting_period: { Args: { p_date: string }; Returns: string }
       finance_archive_import_batch: {
         Args: { p_batch_id: string; p_reason: string }
         Returns: Json
@@ -3334,6 +3629,18 @@ export type Database = {
       finance_restore_import_batch: {
         Args: { p_batch_id: string }
         Returns: Json
+      }
+      get_general_ledger: {
+        Args: { p_account_id: string; p_from: string; p_to: string }
+        Returns: {
+          credit: number
+          debit: number
+          description: string
+          entry_date: string
+          entry_id: string
+          entry_number: string
+          running_balance: number
+        }[]
       }
       get_home_hero_stats: {
         Args: never
@@ -3361,12 +3668,43 @@ export type Database = {
           paid_by_owner: number
         }[]
       }
+      get_trial_balance: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          account_id: string
+          account_type: Database["public"]["Enums"]["coa_account_type"]
+          balance: number
+          code: string
+          name_ar: string
+          total_credit: number
+          total_debit: number
+        }[]
+      }
       i_have_any_custom_role: { Args: never; Returns: boolean }
+      next_journal_entry_number: { Args: never; Returns: string }
       next_purchase_invoice_number: { Args: never; Returns: string }
       next_sales_invoice_number: { Args: never; Returns: string }
+      post_journal_entry: {
+        Args: {
+          p_description: string
+          p_entry_date: string
+          p_lines: Json
+          p_source_id: string
+          p_source_type: Database["public"]["Enums"]["journal_source_type"]
+        }
+        Returns: string
+      }
       purchase_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
         Returns: undefined
+      }
+      reopen_accounting_period: {
+        Args: { p_period_id: string; p_reason: string }
+        Returns: undefined
+      }
+      reverse_journal_entry: {
+        Args: { p_entry_id: string; p_reason: string }
+        Returns: string
       }
       sales_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
@@ -3374,6 +3712,7 @@ export type Database = {
       }
     }
     Enums: {
+      accounting_period_status: "open" | "under_review" | "closed"
       app_role:
         | "admin"
         | "customer"
@@ -3384,6 +3723,7 @@ export type Database = {
         | "finance_export"
         | "finance_settings"
       assignment_status: "unassigned" | "assigned" | "accepted" | "transferred"
+      coa_account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
       finance_account_kind:
         | "bank"
         | "cash"
@@ -3439,6 +3779,17 @@ export type Database = {
         | "quote"
         | "purchase_invoice"
       finance_transaction_direction: "incoming" | "outgoing"
+      journal_entry_status: "draft" | "posted" | "reversed"
+      journal_source_type:
+        | "manual"
+        | "sales_invoice_approval"
+        | "sales_invoice_collection"
+        | "owner_reimbursement"
+        | "purchase_invoice_approval"
+        | "purchase_invoice_payment"
+        | "owner_contribution"
+        | "owner_withdrawal"
+        | "internal_transfer"
       purchase_invoice_status:
         | "draft"
         | "under_review"
@@ -3631,6 +3982,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      accounting_period_status: ["open", "under_review", "closed"],
       app_role: [
         "admin",
         "customer",
@@ -3642,6 +3994,7 @@ export const Constants = {
         "finance_settings",
       ],
       assignment_status: ["unassigned", "assigned", "accepted", "transferred"],
+      coa_account_type: ["asset", "liability", "equity", "revenue", "expense"],
       finance_account_kind: [
         "bank",
         "cash",
@@ -3704,6 +4057,18 @@ export const Constants = {
         "purchase_invoice",
       ],
       finance_transaction_direction: ["incoming", "outgoing"],
+      journal_entry_status: ["draft", "posted", "reversed"],
+      journal_source_type: [
+        "manual",
+        "sales_invoice_approval",
+        "sales_invoice_collection",
+        "owner_reimbursement",
+        "purchase_invoice_approval",
+        "purchase_invoice_payment",
+        "owner_contribution",
+        "owner_withdrawal",
+        "internal_transfer",
+      ],
       purchase_invoice_status: [
         "draft",
         "under_review",
