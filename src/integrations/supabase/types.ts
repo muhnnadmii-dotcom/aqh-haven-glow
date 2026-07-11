@@ -4015,6 +4015,84 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement_bank_allocations: {
+        Row: {
+          allocated_amount: number
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          difference_amount: number
+          difference_note: string | null
+          difference_type:
+            | Database["public"]["Enums"]["settlement_allocation_difference_type"]
+            | null
+          id: string
+          reversal_reason: string | null
+          reversed_at: string | null
+          reversed_by: string | null
+          settlement_id: string
+          status: Database["public"]["Enums"]["settlement_allocation_status"]
+          transaction_id: string
+          updated_at: string
+        }
+        Insert: {
+          allocated_amount: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference_amount?: number
+          difference_note?: string | null
+          difference_type?:
+            | Database["public"]["Enums"]["settlement_allocation_difference_type"]
+            | null
+          id?: string
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+          settlement_id: string
+          status?: Database["public"]["Enums"]["settlement_allocation_status"]
+          transaction_id: string
+          updated_at?: string
+        }
+        Update: {
+          allocated_amount?: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference_amount?: number
+          difference_note?: string | null
+          difference_type?:
+            | Database["public"]["Enums"]["settlement_allocation_difference_type"]
+            | null
+          id?: string
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+          settlement_id?: string
+          status?: Database["public"]["Enums"]["settlement_allocation_status"]
+          transaction_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_bank_allocations_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "payment_settlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlement_bank_allocations_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "finance_incomes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_nav_links: {
         Row: {
           created_at: string
@@ -4446,6 +4524,17 @@ export type Database = {
       }
       acct_id: { Args: { p_key: string }; Returns: string }
       acct_should_post: { Args: { p_date: string }; Returns: boolean }
+      apply_settlement_allocation: {
+        Args: {
+          _allow_over_settlement?: boolean
+          _amount: number
+          _difference_note?: string
+          _difference_type?: Database["public"]["Enums"]["settlement_allocation_difference_type"]
+          _settlement_id: string
+          _transaction_id: string
+        }
+        Returns: string
+      }
       approve_credit_debit_note: {
         Args: { p_note_id: number; p_override_reason?: string }
         Returns: {
@@ -4733,6 +4822,7 @@ export type Database = {
         }[]
       }
       i_have_any_custom_role: { Args: never; Returns: boolean }
+      income_allocated_total: { Args: { _income_id: string }; Returns: number }
       next_credit_debit_note_number: {
         Args: { p_type: Database["public"]["Enums"]["credit_debit_note_type"] }
         Returns: string
@@ -4758,6 +4848,10 @@ export type Database = {
         Args: { _invoice_id: number }
         Returns: undefined
       }
+      recompute_settlement_status: {
+        Args: { _settlement_id: string }
+        Returns: undefined
+      }
       reopen_accounting_period: {
         Args: { p_period_id: string; p_reason: string }
         Returns: undefined
@@ -4765,6 +4859,10 @@ export type Database = {
       reverse_journal_entry: {
         Args: { p_entry_id: string; p_reason: string }
         Returns: string
+      }
+      reverse_settlement_allocation: {
+        Args: { _allocation_id: string; _reason: string }
+        Returns: undefined
       }
       sales_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
@@ -4776,6 +4874,10 @@ export type Database = {
       }
       salla_backfill_apply: { Args: never; Returns: Json }
       salla_backfill_preview: { Args: never; Returns: Json }
+      settlement_allocated_total: {
+        Args: { _settlement_id: string }
+        Returns: number
+      }
       vat_get_excluded_invoices: {
         Args: { p_period_id: string }
         Returns: {
@@ -4955,6 +5057,8 @@ export type Database = {
         | "awaiting_payout"
         | "paid"
         | "cancelled"
+        | "fully_matched"
+        | "closed"
       purchase_invoice_status:
         | "draft"
         | "under_review"
@@ -5041,6 +5145,17 @@ export type Database = {
         | "proposal_sent"
         | "approved"
       service_request_type: "design" | "visit" | "consultation" | "maintenance"
+      settlement_allocation_difference_type:
+        | "rounding_difference"
+        | "payout_fee"
+        | "bank_fee"
+        | "reserve_held"
+        | "reserve_released"
+        | "refund"
+        | "adjustment"
+        | "timing_difference"
+        | "unknown_difference"
+      settlement_allocation_status: "draft" | "confirmed" | "reversed"
       tax_period_status:
         | "open"
         | "under_review"
@@ -5306,6 +5421,8 @@ export const Constants = {
         "awaiting_payout",
         "paid",
         "cancelled",
+        "fully_matched",
+        "closed",
       ],
       purchase_invoice_status: [
         "draft",
@@ -5405,6 +5522,18 @@ export const Constants = {
         "approved",
       ],
       service_request_type: ["design", "visit", "consultation", "maintenance"],
+      settlement_allocation_difference_type: [
+        "rounding_difference",
+        "payout_fee",
+        "bank_fee",
+        "reserve_held",
+        "reserve_released",
+        "refund",
+        "adjustment",
+        "timing_difference",
+        "unknown_difference",
+      ],
+      settlement_allocation_status: ["draft", "confirmed", "reversed"],
       tax_period_status: [
         "open",
         "under_review",
