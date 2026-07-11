@@ -67,6 +67,7 @@ function SettlementsPage() {
         </div>
         {roles.canManage && (
           <div className="flex items-center gap-2">
+            <RematchAllButton onDone={load} />
             <Link to="/admin/finance/settlements/import" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/20 border border-gold/40 text-gold text-[12px] hover:bg-gold/30">
               <Upload size={14} /> استيراد تسوية
             </Link>
