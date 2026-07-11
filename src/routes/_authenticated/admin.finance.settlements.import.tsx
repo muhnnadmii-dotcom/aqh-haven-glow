@@ -494,7 +494,7 @@ function SettlementImportPage() {
     const counts: Record<MatchStatus, number> = {
       matched_invoice: 0, matched_cancelled_order: 0, cancelled_order_needs_refund_match: 0,
       order_found_invoice_missing: 0, order_not_found: 0, needs_credit_note: 0,
-      unmatched_refund: 0, orphan_line: 0,
+      unmatched_refund: 0, needs_classification: 0,
     };
     let sales = 0, refunds = 0, adjustments = 0, blocking = 0, review = 0;
     let gross = 0, refundsAbs = 0, fees = 0, feesVat = 0, adjustmentsSigned = 0;
