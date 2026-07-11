@@ -23,6 +23,22 @@ const TAX_LABEL: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   draft: "مسودة", approved: "معتمدة", partially_paid: "مدفوعة جزئيًا", paid: "مدفوعة", cancelled: "ملغاة",
 };
+const PROVIDER_LABEL: Record<string, string> = {
+  salla_payments: "سلة بايمنتس", tabby: "تابي", tamara: "تمارا", bank_transfer: "حوالة بنكية",
+  personal_account: "حساب شخصي", business_account: "حساب النشاط", cash: "نقدي", other: "أخرى",
+};
+const SETTLEMENT_LABEL: Record<string, string> = {
+  pending: "بانتظار التسوية", matched: "تمت المطابقة", not_applicable: "لا ينطبق", manual_review: "مراجعة يدوية",
+};
+
+function Info({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg bg-black/30 border border-white/10 p-2">
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+      <div className="text-sm mt-0.5">{children}</div>
+    </div>
+  );
+}
 
 type Item = {
   id?: number;
