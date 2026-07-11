@@ -311,14 +311,33 @@ function ReviewCenter() {
       </div>
 
       {/* KPI chips */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KpiChip label="إجمالي غير المصنف" count={kpis.unclassified} active={chip === "unclassified"} onClick={() => setChip("unclassified")} tone="amber" icon={AlertCircle} />
-        <KpiChip label="غير مرتبط" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        <KpiChip label="غير مصنف" count={kpis.unclassified} active={chip === "unclassified"} onClick={() => setChip("unclassified")} tone="amber" icon={AlertCircle} />
+        <KpiChip label="غير مرتبط بفاتورة/طرف" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
+        <KpiChip label="بوابات دفع بدون تسوية" count={kpis.providerUnlinked} active={chip === "provider_unlinked"} onClick={() => setChip("provider_unlinked")} tone="rose" icon={Landmark} />
         <KpiChip label="بدون مرفق" count={kpis.noAttach} active={chip === "no_attach"} onClick={() => setChip("no_attach")} tone="orange" icon={Paperclip} />
-        <KpiChip label="حساب شخصي يحتاج مراجعة" count={kpis.personal} active={chip === "personal"} onClick={() => setChip("personal")} tone="purple" icon={User} />
+        <KpiChip label="حساب شخصي بلا مراجعة" count={kpis.personal} active={chip === "personal"} onClick={() => setChip("personal")} tone="purple" icon={User} />
         <KpiChip label="تحويل غير مكتمل" count={kpis.transfer} active={chip === "transfer"} onClick={() => setChip("transfer")} tone="cyan" icon={ArrowLeftRight} />
         <KpiChip label="مكتمل" count={kpis.completed} active={chip === "completed"} onClick={() => setChip("completed")} tone="emerald" icon={CheckCircle2} />
       </div>
+
+      {/* Settlement diffs panel */}
+      {(kpis.settlementDiffs?.length ?? 0) > 0 && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
+          <div className="text-sm font-semibold text-rose-300 mb-2 flex items-center gap-2">
+            <TrendingDown className="w-4 h-4" /> فروقات تسوية غير مفسرة ({kpis.settlementDiffs.length})
+          </div>
+          <div className="text-xs text-muted-foreground grid grid-cols-1 md:grid-cols-2 gap-1">
+            {kpis.settlementDiffs.slice(0, 6).map((s: any) => (
+              <div key={s.id} className="flex justify-between border-b border-white/5 py-1">
+                <span>{s.settlement_date} · {(providers as any[]).find((p) => p.id === s.provider_id)?.name ?? "—"} · {s.settlement_reference ?? "—"}</span>
+                <span className="text-rose-300 tabular-nums">{Number(s.difference_amount).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {/* Filters */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 rounded-xl bg-white/5 border border-white/10 p-3">
