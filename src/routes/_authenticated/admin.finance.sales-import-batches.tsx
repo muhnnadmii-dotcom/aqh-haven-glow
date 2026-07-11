@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { FileSpreadsheet, RefreshCcw } from "lucide-react";
+import { FileSpreadsheet, RefreshCcw, Wrench, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/sales-import-batches")({
   ssr: false,
@@ -11,6 +12,9 @@ export const Route = createFileRoute("/_authenticated/admin/finance/sales-import
 function SalesBatchesPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [preview, setPreview] = useState<any | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [applied, setApplied] = useState<any | null>(null);
 
   async function load() {
     setLoading(true);
@@ -24,8 +28,70 @@ function SalesBatchesPage() {
   }
   useEffect(() => { load(); }, []);
 
+  async function runPreview() {
+    setBusy(true); setApplied(null);
+    const { data, error } = await (supabase as any).rpc("salla_backfill_preview");
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setPreview(data);
+  }
+
+  async function runApply() {
+    if (!confirm("سيتم تحديث الفواتير المستوردة الحالية (draft فقط) وإنشاء بنودها الملخصة. لا يتم اعتماد أي فاتورة تلقائيًا. متابعة؟")) return;
+    setBusy(true);
+    const { data, error } = await (supabase as any).rpc("salla_backfill_apply");
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setApplied(data);
+    setPreview(null);
+    toast.success("تم إصلاح بيانات الفواتير المستوردة.");
+  }
+
   return (
     <div className="space-y-4" dir="rtl">
+      {/* Backfill panel */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Wrench className="text-gold" size={18} />
+            <h2 className="text-sm font-semibold">إصلاح بيانات الفواتير المستوردة (سلة)</h2>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={runPreview} disabled={busy} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5 disabled:opacity-50">
+              {busy ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />} معاينة
+            </button>
+            <button
+              onClick={runApply}
+              disabled={busy || !preview}
+              className="px-3 py-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 text-white text-[12px] inline-flex items-center gap-1.5 disabled:opacity-50"
+            >
+              تنفيذ الإصلاح
+            </button>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-muted-foreground mb-3">
+          يقرأ اللقطة الأصلية لكل فاتورة سلة مستوردة ويعيد تعبئة الحقول الناقصة (وسيط الدفع، طريقة الدفع الأصلية، حالة التسوية، اسم العميل، الضريبة، الشحن) وينشئ بنودًا ملخصة عند غيابها. لا يعتمد أي فاتورة تلقائيًا ولا ينشئ فواتير مكررة.
+        </p>
+
+        {preview && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[12px]">
+            <Stat label="إجمالي فواتير سلة" value={preview.total_salla_invoices} />
+            <Stat label="سيتم تحديثها" value={preview.invoices_to_update} tone="blue" />
+            <Stat label="بحاجة إنشاء بنود" value={preview.items_to_create_invoices} tone="amber" />
+            <Stat label="بدون اسم عميل" value={preview.missing_customer_name} />
+            <Stat label="بدون ضريبة" value={preview.missing_vat} />
+            <Stat label="فرق بالمجاميع" value={preview.totals_mismatch} tone="red" />
+          </div>
+        )}
+
+        {applied && (
+          <div className="mt-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-[12px] text-emerald-200">
+            تم تحديث <b>{applied.invoices_updated}</b> فاتورة، وإنشاء <b>{applied.items_created}</b> بند. فروقات بالمجاميع: <b>{applied.totals_mismatch}</b>.
+          </div>
+        )}
+      </div>
+
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -76,6 +142,16 @@ function SalesBatchesPage() {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, tone }: { label: string; value: number | string; tone?: "blue" | "amber" | "red" }) {
+  const t = tone === "blue" ? "text-blue-300" : tone === "amber" ? "text-amber-300" : tone === "red" ? "text-red-300" : "";
+  return (
+    <div className="rounded-lg bg-black/30 border border-white/10 p-2">
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+      <div className={`text-base font-semibold mt-0.5 ${t}`}>{value ?? 0}</div>
     </div>
   );
 }

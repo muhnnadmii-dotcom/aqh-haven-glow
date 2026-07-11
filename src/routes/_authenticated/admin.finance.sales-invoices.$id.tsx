@@ -23,6 +23,22 @@ const TAX_LABEL: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   draft: "مسودة", approved: "معتمدة", partially_paid: "مدفوعة جزئيًا", paid: "مدفوعة", cancelled: "ملغاة",
 };
+const PROVIDER_LABEL: Record<string, string> = {
+  salla_payments: "سلة بايمنتس", tabby: "تابي", tamara: "تمارا", bank_transfer: "حوالة بنكية",
+  personal_account: "حساب شخصي", business_account: "حساب النشاط", cash: "نقدي", other: "أخرى",
+};
+const SETTLEMENT_LABEL: Record<string, string> = {
+  pending: "بانتظار التسوية", matched: "تمت المطابقة", not_applicable: "لا ينطبق", manual_review: "مراجعة يدوية",
+};
+
+function Info({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg bg-black/30 border border-white/10 p-2">
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+      <div className="text-sm mt-0.5">{children}</div>
+    </div>
+  );
+}
 
 type Item = {
   id?: number;
@@ -236,6 +252,37 @@ function SalesInvoiceEditor() {
           )}
         </div>
       </div>
+
+      {/* Salla / channel snapshot */}
+      {(header.sales_channel && header.sales_channel !== "manual") || header.external_order_id ? (
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm">بيانات المصدر</h3>
+            {header.customer_id ? null : (
+              <div className="text-[11px] text-amber-300">اسم العميل مأخوذ من لقطة الطلب — لم يتم ربط عميل بعد.</div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <Info label="اسم العميل">{header.customer_name_snapshot ?? "—"}</Info>
+            <Info label="قناة البيع">{header.sales_channel ?? "—"}</Info>
+            <Info label="رقم طلب سلة">{header.external_order_id ?? "—"}</Info>
+            <Info label="رقم فاتورة سلة">{header.external_invoice_number ?? "—"}</Info>
+            <Info label="تاريخ الطلب">{header.order_date ?? "—"}</Info>
+            <Info label="حالة الطلب">{header.order_status ?? "—"}</Info>
+            <Info label="طريقة الدفع الأصلية">{header.original_payment_method ?? "—"}</Info>
+            <Info label="وسيط الدفع">{PROVIDER_LABEL[header.payment_provider] ?? header.payment_provider ?? "—"}</Info>
+            <Info label="حالة التسوية">{SETTLEMENT_LABEL[header.settlement_status] ?? "—"}</Info>
+          </div>
+          {header.payment_status === "paid" &&
+            header.payment_provider &&
+            ["salla_payments", "tabby", "tamara"].includes(header.payment_provider) &&
+            header.settlement_status !== "matched" && (
+              <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 text-[12px] text-amber-200">
+                الفاتورة مدفوعة من العميل، لكن مبلغها لم تتم مطابقته مع تسوية وسيط الدفع بعد.
+              </div>
+            )}
+        </div>
+      ) : null}
 
       {/* Header form */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 rounded-xl bg-white/5 border border-white/10 p-4">
