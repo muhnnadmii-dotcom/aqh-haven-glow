@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
-import { Plus, X, ChevronLeft, Upload, RefreshCcw } from "lucide-react";
+import { Plus, X, ChevronLeft, Upload, RefreshCcw, Pencil, CalendarX } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/")({
@@ -39,6 +39,7 @@ function SettlementsPage() {
   const [filterProvider, setFilterProvider] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
 
   const load = async () => {
     const [s, p] = await Promise.all([
@@ -67,6 +68,7 @@ function SettlementsPage() {
         </div>
         {roles.canManage && (
           <div className="flex items-center gap-2">
+            <DateRepairButton onDone={load} />
             <RematchAllButton onDone={load} />
             <Link to="/admin/finance/settlements/import" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/20 border border-gold/40 text-gold text-[12px] hover:bg-gold/30">
               <Upload size={14} /> استيراد تسوية
@@ -114,7 +116,7 @@ function SettlementsPage() {
               const diff = Number(r.difference_amount);
               return (
                 <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
-                  <td className="px-3 py-2">{r.settlement_date}</td>
+                  <td className="px-3 py-2">{formatSettlementDate(r.settlement_date)}</td>
                   <td className="px-3 py-2">{providerName(r.provider_id)}</td>
                   <td className="px-3 py-2 text-muted-foreground">{r.settlement_reference ?? "—"}</td>
                   <td className="px-3 py-2 tabular-nums">{Number(r.gross_sales_amount).toFixed(2)}</td>
@@ -124,9 +126,16 @@ function SettlementsPage() {
                   <td className={`px-3 py-2 tabular-nums ${Math.abs(diff) > 0.05 ? "text-red-400" : "text-emerald-400"}`}>{diff.toFixed(2)}</td>
                   <td className={`px-3 py-2 ${STATUS_COLOR[r.status]}`}>{STATUS_LABEL[r.status]}</td>
                   <td className="px-3 py-2">
-                    <button onClick={() => window.location.assign(`/admin/finance/settlement-lines?settlement=${r.id}`)} className="inline-flex items-center gap-1 text-gold hover:underline">
-                      الحركات <ChevronLeft size={12} />
-                    </button>
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      {roles.canManage && (
+                        <button onClick={() => setEditing(r)} className="inline-flex items-center gap-1 text-muted-foreground hover:text-gold">
+                          <Pencil size={12} /> تعديل بيانات التسوية
+                        </button>
+                      )}
+                      <button onClick={() => window.location.assign(`/admin/finance/settlement-lines?settlement=${r.id}`)} className="inline-flex items-center gap-1 text-gold hover:underline">
+                        الحركات <ChevronLeft size={12} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -142,8 +151,19 @@ function SettlementsPage() {
           onSaved={() => { setCreating(false); load(); }}
         />
       )}
+      {editing && (
+        <SettlementMetaForm
+          settlement={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); load(); }}
+        />
+      )}
     </div>
   );
+}
+
+function formatSettlementDate(value: string | null | undefined) {
+  return value || "تاريخ التسوية غير محدد";
 }
 
 function SettlementForm({ providers, onClose, onSaved }: { providers: any[]; onClose: () => void; onSaved: () => void }) {
@@ -151,7 +171,7 @@ function SettlementForm({ providers, onClose, onSaved }: { providers: any[]; onC
   const [form, setForm] = useState({
     provider_id: providers[0]?.id ?? "",
     settlement_reference: "",
-    settlement_date: new Date().toISOString().slice(0, 10),
+    settlement_date: "",
     period_start: "",
     period_end: "",
     gross_sales_amount: "0",
@@ -181,7 +201,7 @@ function SettlementForm({ providers, onClose, onSaved }: { providers: any[]; onC
     const payload: any = {
       provider_id: form.provider_id,
       settlement_reference: form.settlement_reference || null,
-      settlement_date: form.settlement_date,
+      settlement_date: form.settlement_date || null,
       period_start: form.period_start || null,
       period_end: form.period_end || null,
       gross_sales_amount: Number(form.gross_sales_amount) || 0,
@@ -268,6 +288,117 @@ function SettlementForm({ providers, onClose, onSaved }: { providers: any[]; onC
         </div>
       </div>
     </div>
+  );
+}
+
+function SettlementMetaForm({ settlement, onClose, onSaved }: { settlement: any; onClose: () => void; onSaved: () => void }) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    settlement_reference: settlement.settlement_reference ?? "",
+    settlement_date: settlement.settlement_date ?? "",
+    period_start: settlement.period_start ?? "",
+    period_end: settlement.period_end ?? "",
+  });
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("payment_settlements" as any)
+      .update({
+        settlement_reference: form.settlement_reference.trim() || null,
+        settlement_date: form.settlement_date || null,
+        period_start: form.period_start || null,
+        period_end: form.period_end || null,
+      })
+      .eq("id", settlement.id);
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else { toast.success("تم تحديث بيانات التسوية"); onSaved(); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-xl border border-white/10 bg-[#0b1220] p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">تعديل بيانات التسوية</h3>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-[11px] text-muted-foreground">
+          هذا التعديل يغيّر المرجع والتواريخ فقط، ولا يغيّر المبالغ أو الحركات أو الروابط الحالية.
+        </div>
+        <label className="block text-[11px]">مرجع التسوية
+          <input value={form.settlement_reference} onChange={(e) => setForm({ ...form, settlement_reference: e.target.value })} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label className="block text-[11px]">تاريخ التسوية
+            <input type="date" value={form.settlement_date} onChange={(e) => setForm({ ...form, settlement_date: e.target.value })} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+            {!form.settlement_date && <span className="mt-1 block text-[10px] text-amber-300">تاريخ التسوية غير محدد</span>}
+          </label>
+          <label className="block text-[11px]">بداية الفترة
+            <input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+          </label>
+          <label className="block text-[11px]">نهاية الفترة
+            <input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+          </label>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <button onClick={onClose} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">إلغاء</button>
+          <button disabled={saving} onClick={save} className="px-3 py-1.5 rounded bg-gold/20 border border-gold/40 text-gold text-[12px] disabled:opacity-50">
+            {saving ? "…" : "حفظ"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DateRepairButton({ onDone }: { onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<any | null>(null);
+
+  const run = async () => {
+    setBusy(true);
+    const { data, error } = await (supabase as any).rpc("preview_auto_imported_settlement_dates");
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    const count = Array.isArray(data) ? data[0]?.affected_count : data?.affected_count;
+    setPreview({ affected_count: Number(count ?? 0) });
+  };
+
+  const apply = async () => {
+    setBusy(true);
+    const { data, error } = await (supabase as any).rpc("clear_auto_imported_settlement_dates");
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    const count = Array.isArray(data) ? data[0]?.updated_count : data?.updated_count;
+    toast.success(`تم تصحيح ${Number(count ?? 0)} تسوية`);
+    setPreview(null);
+    onDone();
+  };
+
+  return (
+    <>
+      <button onClick={run} disabled={busy} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[12px] hover:bg-white/10 disabled:opacity-50">
+        <CalendarX size={14} /> تصحيح تواريخ الاستيراد
+      </button>
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPreview(null)}>
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#0b1220] p-4 space-y-3" dir="rtl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-sm font-semibold">معاينة تصحيح تواريخ التسويات</div>
+            <div className="text-[12px] text-muted-foreground">
+              سيتم تحويل تاريخ التسوية إلى "غير محدد" لعدد <b>{preview.affected_count}</b> تسوية مطابقة لنمط تاريخ الاستيراد الخاطئ.
+            </div>
+            <div className="rounded-lg bg-white/5 border border-white/10 p-2 text-[11px] text-muted-foreground">
+              لن يتم تغيير تاريخ الاستيراد، المبالغ، الحركات، أو أي روابط حالية.
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setPreview(null)} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">إلغاء</button>
+              <button onClick={apply} disabled={busy || preview.affected_count <= 0} className="px-3 py-1.5 rounded bg-emerald-600/80 text-white text-[12px] disabled:opacity-50">تنفيذ</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
