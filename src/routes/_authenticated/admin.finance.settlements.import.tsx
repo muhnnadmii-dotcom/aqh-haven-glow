@@ -471,7 +471,7 @@ function SettlementImportPage() {
       }
 
       for (const p of parsed) {
-        if (!p.external_order_id) { p.match_status = "orphan_line"; p.needs_review = true; }
+        if (!p.external_order_id) { p.match_status = "needs_classification"; p.needs_review = true; }
       }
     }
 
