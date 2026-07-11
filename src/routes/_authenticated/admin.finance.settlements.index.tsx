@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
-import { Plus, X, ChevronLeft, Upload } from "lucide-react";
+import { Plus, X, ChevronLeft, Upload, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/")({
