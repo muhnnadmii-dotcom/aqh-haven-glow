@@ -31,7 +31,7 @@ const num0 = (v: any) => parseAmount(v) ?? 0;
 function parseDate(v: any): string | null {
   if (isBlank(v)) return null;
   if (v instanceof Date && !isNaN(v.getTime())) {
-    return `${v.getUTCFullYear()}-${String(v.getUTCMonth() + 1).padStart(2, "0")}-${String(v.getUTCDate()).padStart(2, "0")}`;
+    return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, "0")}-${String(v.getDate()).padStart(2, "0")}`;
   }
   if (typeof v === "number") {
     const d = XLSX.SSF.parse_date_code(v);
@@ -48,7 +48,7 @@ function parseDate(v: any): string | null {
     return `${y}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
   }
   const t = new Date(s);
-  return isNaN(t.getTime()) ? null : `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
+  return isNaN(t.getTime()) ? null : `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
 async function sha256Hex(buf: ArrayBuffer): Promise<string> {
   const h = await crypto.subtle.digest("SHA-256", buf);
@@ -213,7 +213,9 @@ function SettlementImportPage() {
   const [tplName, setTplName] = useState("");
   const [committing, setCommitting] = useState(false);
   const [settlementRef, setSettlementRef] = useState("");
-  const [settlementDate, setSettlementDate] = useState(new Date().toISOString().slice(0, 10));
+  const [settlementDate, setSettlementDate] = useState("");
+  const [periodStart, setPeriodStart] = useState("");
+  const [periodEnd, setPeriodEnd] = useState("");
   const [payoutFee, setPayoutFee] = useState("0");
   const [statusFilter, setStatusFilter] = useState<MatchStatus | "">("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -505,7 +507,9 @@ function SettlementImportPage() {
           settlement_reference: ref,
           report_reference: settlementRef || null,
           source_file_name: file?.name ?? null,
-          settlement_date: settlementDate,
+          settlement_date: settlementDate || null,
+          period_start: periodStart || null,
+          period_end: periodEnd || null,
           gross_sales_amount: summary.gross,
           refunds_amount: summary.refundsAbs,
           adjustments_amount: summary.adjustmentsSigned,
@@ -747,6 +751,15 @@ function SettlementImportPage() {
             </label>
             <label className="block text-[11px]">تاريخ التسوية
               <input type="date" value={settlementDate} onChange={(e) => setSettlementDate(e.target.value)}
+                className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+              {!settlementDate && <span className="mt-1 block text-[10px] text-amber-300">تاريخ التسوية غير محدد</span>}
+            </label>
+            <label className="block text-[11px]">بداية الفترة
+              <input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)}
+                className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+            </label>
+            <label className="block text-[11px]">نهاية الفترة
+              <input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)}
                 className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
             </label>
             <label className="block text-[11px]">رسوم التحويل (اختياري)
