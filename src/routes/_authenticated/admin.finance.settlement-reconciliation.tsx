@@ -449,10 +449,39 @@ function ReconciliationPage() {
               <div className="rounded border border-white/10 p-2 space-y-1 bg-black/20">
                 <div className="text-amber-400 font-semibold">التسوية المختارة</div>
                 <Row label="الوسيط" value={providerById[selSettlement.provider_id]?.name ?? "—"} />
-                <Row label="المرجع" value={selSettlement.settlement_reference ?? "—"} />
-                <Row label="التاريخ" value={selSettlement.settlement_date} />
-                <Row label="الصافي المتوقع" value={fmt(selSettlement.expected_net_amount)} bold />
-                <Row label="المتبقي للتخصيص" value={fmt(settleRemaining)} tone={settleRemaining > 0.05 ? "amber" : "emerald"} bold />
+                <Row label="المرجع" value={displayRef(selSettlement, providerById[selSettlement.provider_id]?.name ?? "—")} />
+                {selSettlement.source_file_name && <Row label="الملف المصدر" value={selSettlement.source_file_name} />}
+                <Row label="تاريخ التسوية" value={selSettlement.settlement_date} />
+                {selSettlement.imported_at && (
+                  <Row label="تاريخ الاستيراد" value={new Date(selSettlement.imported_at).toLocaleString("ar-SA")} />
+                )}
+                <div className="mt-2 pt-2 border-t border-white/5 space-y-0.5">
+                  <Row label="إجمالي المبيعات" value={fmt(selSettlement.gross_sales_amount)} />
+                  <Row label="المرتجعات" value={`− ${fmt(selSettlement.refunds_amount)}`} tone="red" />
+                  <Row label="الرسوم" value={`− ${fmt(Number(selSettlement.fees_before_vat) + Number(selSettlement.fees_vat_amount))}`} tone="red" />
+                  {Number(selSettlement.payout_fee || 0) > 0 && (
+                    <Row label="رسوم التحويل" value={`− ${fmt(selSettlement.payout_fee)}`} tone="red" />
+                  )}
+                  {Math.abs(Number(selSettlement.adjustments_amount || 0)) > 0.005 && (
+                    <Row label="تسويات إضافية" value={fmt(selSettlement.adjustments_amount)} tone={Number(selSettlement.adjustments_amount) < 0 ? "red" : "emerald"} />
+                  )}
+                </div>
+                <div className="mt-1 pt-1 border-t border-white/5">
+                  <Row label="الصافي المتوقع" value={fmt(selSettlement.expected_net_amount)} bold />
+                  <Row label="المتبقي للتخصيص" value={fmt(settleRemaining)} tone={settleRemaining > 0.05 ? "amber" : "emerald"} bold />
+                </div>
+                <div className="pt-1 flex justify-between items-center">
+                  <div className="flex gap-1 flex-wrap">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">مطابقة: {STATUS_LABEL[selSettlement.status] ?? selSettlement.status}</span>
+                    {selSettlement.payout_status && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-300">دفع: {selSettlement.payout_status}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => recalcSettlement(selSettlement.id)}
+                    className="text-[10px] px-2 py-0.5 rounded border border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+                  >↻ إعادة احتساب من السطور</button>
+                </div>
               </div>
             )}
             {selIncome && (
