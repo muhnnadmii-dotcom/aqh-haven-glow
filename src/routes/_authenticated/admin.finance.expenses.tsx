@@ -3,7 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, OWNER_DRAW_SLUG, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
-import { OUTGOING_TYPES, ACCOUNTING_STATUSES, outgoingLabel } from "@/lib/finance/transaction-types";
+import { OUTGOING_TYPES, ACCOUNTING_STATUSES, outgoingLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
+
+const BUSINESS_RELATIONS: { value: string; label: string }[] = [
+  { value: "business", label: "تخص النشاط" },
+  { value: "personal", label: "شخصية" },
+  { value: "owner_settlement", label: "تسوية مالك" },
+  { value: "internal_transfer", label: "تحويل داخلي" },
+  { value: "unclassified", label: "غير محددة" },
+];
 import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive, Wallet, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
