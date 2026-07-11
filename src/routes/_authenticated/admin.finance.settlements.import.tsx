@@ -836,12 +836,23 @@ function SettlementImportPage() {
               <input type="number" step="0.01" value={payoutFee} onChange={(e) => setPayoutFee(e.target.value)}
                 className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
             </label>
+            <label className="block text-[11px]">صافي التسوية من شاشة الوسيط (المرجع الرسمي)
+              <input type="number" step="0.01" value={sourceExpectedNet} onChange={(e) => setSourceExpectedNet(e.target.value)}
+                placeholder="مثال: 3318.21"
+                className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+              {summary.sourceExpected != null && (
+                <span className={`mt-1 block text-[10px] ${summary.isRounding ? "text-emerald-300" : Math.abs(summary.roundingDiff) > 0.05 ? "text-red-300" : "text-muted-foreground"}`}>
+                  فرق مع المحسوب: {summary.roundingDiff.toFixed(2)} {summary.isRounding ? "(فرق تقريب مقبول)" : ""}
+                </span>
+              )}
+            </label>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <Kpi label="عدد الصفوف" value={String(summary.count)} />
             <Kpi label="مبيعات" value={String(summary.sales)} tone="text-emerald-300" />
             <Kpi label="مرتجعات" value={String(summary.refunds)} tone="text-amber-300" />
+            <Kpi label="شحن محفظة" value={String(summary.walletTopUps)} tone="text-sky-300" />
             <Kpi label="تعديلات" value={String(summary.adjustments)} tone="text-muted-foreground" />
             <Kpi label="مطابق لفاتورة" value={String(summary.counts.matched_invoice)} tone="text-emerald-300" />
             <Kpi label="طلب ملغي مطابق" value={String(summary.counts.matched_cancelled_order)} tone="text-sky-300" />
@@ -852,10 +863,13 @@ function SettlementImportPage() {
             <Kpi label="خصم غير مصنف" value={String(summary.counts.needs_classification)} tone={summary.counts.needs_classification ? "text-amber-300" : "text-muted-foreground"} />
             <Kpi label="إجمالي المبيعات" value={summary.gross.toFixed(2)} />
             <Kpi label="المرتجعات" value={summary.refundsAbs.toFixed(2)} />
+            <Kpi label="شحن محفظة (ر.س)" value={summary.walletTopUpAbs.toFixed(2)} tone="text-sky-300" />
             <Kpi label="الرسوم" value={summary.fees.toFixed(2)} />
             <Kpi label="ضريبة الرسوم" value={summary.feesVat.toFixed(2)} />
-            <Kpi label="صافي متوقع" value={summary.expected.toFixed(2)} tone="text-gold" />
+            <Kpi label="صافي محسوب" value={summary.calculatedExpected.toFixed(2)} />
+            <Kpi label="صافي رسمي / معتمد" value={summary.expected.toFixed(2)} tone="text-gold" />
           </div>
+
 
           {/* Filter by match status */}
           <div className="flex flex-wrap gap-2 items-center text-[11px]">
