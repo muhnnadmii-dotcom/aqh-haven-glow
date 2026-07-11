@@ -242,7 +242,7 @@ function summarize(incomes: any[], expenses: any[], ownerDrawCatId: string | nul
   const income = sum(opIn, (x: any) => x.amount);
   const op = sum(operating, (x: any) => x.amount);
   const dw = sum(draws, (x: any) => x.amount);
-  const personalIn = sum(opIn.filter((r: any) => r.account_type === "personal"), (x: any) => x.amount);
+  const personalIn = 0;
   const netOp = income - op;
   return { income, operating: op, draws: dw, ownerDraws: dw, netOp, netAfter: netOp - dw, personalIn };
 }
