@@ -1247,6 +1247,7 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
+          related_bigint_id: number | null
           related_id: string
           related_type: Database["public"]["Enums"]["finance_related_type"]
           uploaded_by: string | null
@@ -1258,6 +1259,7 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
+          related_bigint_id?: number | null
           related_id: string
           related_type: Database["public"]["Enums"]["finance_related_type"]
           uploaded_by?: string | null
@@ -1269,6 +1271,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
+          related_bigint_id?: number | null
           related_id?: string
           related_type?: Database["public"]["Enums"]["finance_related_type"]
           uploaded_by?: string | null
@@ -1285,6 +1288,7 @@ export type Database = {
           new_value: string | null
           note: string | null
           old_value: string | null
+          related_bigint_id: number | null
           related_id: string | null
           related_type: string
         }
@@ -1297,6 +1301,7 @@ export type Database = {
           new_value?: string | null
           note?: string | null
           old_value?: string | null
+          related_bigint_id?: number | null
           related_id?: string | null
           related_type: string
         }
@@ -1309,6 +1314,7 @@ export type Database = {
           new_value?: string | null
           note?: string | null
           old_value?: string | null
+          related_bigint_id?: number | null
           related_id?: string | null
           related_type?: string
         }
@@ -1380,8 +1386,13 @@ export type Database = {
           internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
           item_name: string
           main_category_id: string | null
+          missing_purchase_invoice_reason: string | null
           month: string
           note: string | null
+          payment_type:
+            | Database["public"]["Enums"]["purchase_payment_type"]
+            | null
+          purchase_invoice_id: number | null
           related_transaction_id: string | null
           sub_category_id: string | null
           supplier_id: string | null
@@ -1413,8 +1424,13 @@ export type Database = {
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           item_name: string
           main_category_id?: string | null
+          missing_purchase_invoice_reason?: string | null
           month: string
           note?: string | null
+          payment_type?:
+            | Database["public"]["Enums"]["purchase_payment_type"]
+            | null
+          purchase_invoice_id?: number | null
           related_transaction_id?: string | null
           sub_category_id?: string | null
           supplier_id?: string | null
@@ -1446,8 +1462,13 @@ export type Database = {
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           item_name?: string
           main_category_id?: string | null
+          missing_purchase_invoice_reason?: string | null
           month?: string
           note?: string | null
+          payment_type?:
+            | Database["public"]["Enums"]["purchase_payment_type"]
+            | null
+          purchase_invoice_id?: number | null
           related_transaction_id?: string | null
           sub_category_id?: string | null
           supplier_id?: string | null
@@ -1471,6 +1492,13 @@ export type Database = {
             columns: ["main_category_id"]
             isOneToOne: false
             referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_purchase_invoice_id_fkey"
+            columns: ["purchase_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_invoices"
             referencedColumns: ["id"]
           },
           {
@@ -2079,6 +2107,216 @@ export type Database = {
           year?: string | null
         }
         Relationships: []
+      }
+      purchase_invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          discount_amount: number
+          expense_category_id: string | null
+          id: number
+          line_subtotal: number
+          line_tax_amount: number
+          line_total: number
+          product_id: number | null
+          purchase_invoice_id: number
+          quantity: number
+          sort_order: number
+          tax_code: Database["public"]["Enums"]["sales_invoice_tax_code"]
+          tax_rate: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          discount_amount?: number
+          expense_category_id?: string | null
+          id?: number
+          line_subtotal?: number
+          line_tax_amount?: number
+          line_total?: number
+          product_id?: number | null
+          purchase_invoice_id: number
+          quantity?: number
+          sort_order?: number
+          tax_code?: Database["public"]["Enums"]["sales_invoice_tax_code"]
+          tax_rate?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          discount_amount?: number
+          expense_category_id?: string | null
+          id?: number
+          line_subtotal?: number
+          line_tax_amount?: number
+          line_total?: number
+          product_id?: number | null
+          purchase_invoice_id?: number
+          quantity?: number
+          sort_order?: number
+          tax_code?: Database["public"]["Enums"]["sales_invoice_tax_code"]
+          tax_rate?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_invoice_items_expense_category_id_fkey"
+            columns: ["expense_category_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "aqh_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoice_items_purchase_invoice_id_fkey"
+            columns: ["purchase_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_invoices: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          attachment_exception_reason: string | null
+          attachment_required: boolean
+          created_at: string
+          created_by: string | null
+          currency: string
+          deductible_percentage: number
+          deductible_vat_amount: number
+          discount_amount: number
+          due_date: string | null
+          duplicate_override_reason: string | null
+          id: number
+          internal_notes: string | null
+          internal_reference: string
+          issue_date: string
+          non_deductible_reason:
+            | Database["public"]["Enums"]["purchase_non_deductible_reason"]
+            | null
+          non_deductible_vat_amount: number
+          notes: string | null
+          paid_amount: number
+          paid_from_personal_account: boolean
+          payment_status: Database["public"]["Enums"]["purchase_payment_status"]
+          purchase_type: Database["public"]["Enums"]["purchase_type"]
+          remaining_amount: number
+          reviewed_by: string | null
+          reviewer_note: string | null
+          status: Database["public"]["Enums"]["purchase_invoice_status"]
+          subtotal: number
+          supplier_id: string | null
+          supplier_invoice_number: string | null
+          supply_date: string | null
+          taxable_amount: number
+          total_amount: number
+          updated_at: string
+          vat_amount: number
+          vat_deductibility: Database["public"]["Enums"]["purchase_vat_deductibility"]
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attachment_exception_reason?: string | null
+          attachment_required?: boolean
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          deductible_percentage?: number
+          deductible_vat_amount?: number
+          discount_amount?: number
+          due_date?: string | null
+          duplicate_override_reason?: string | null
+          id?: number
+          internal_notes?: string | null
+          internal_reference: string
+          issue_date?: string
+          non_deductible_reason?:
+            | Database["public"]["Enums"]["purchase_non_deductible_reason"]
+            | null
+          non_deductible_vat_amount?: number
+          notes?: string | null
+          paid_amount?: number
+          paid_from_personal_account?: boolean
+          payment_status?: Database["public"]["Enums"]["purchase_payment_status"]
+          purchase_type?: Database["public"]["Enums"]["purchase_type"]
+          remaining_amount?: number
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: Database["public"]["Enums"]["purchase_invoice_status"]
+          subtotal?: number
+          supplier_id?: string | null
+          supplier_invoice_number?: string | null
+          supply_date?: string | null
+          taxable_amount?: number
+          total_amount?: number
+          updated_at?: string
+          vat_amount?: number
+          vat_deductibility?: Database["public"]["Enums"]["purchase_vat_deductibility"]
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attachment_exception_reason?: string | null
+          attachment_required?: boolean
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          deductible_percentage?: number
+          deductible_vat_amount?: number
+          discount_amount?: number
+          due_date?: string | null
+          duplicate_override_reason?: string | null
+          id?: number
+          internal_notes?: string | null
+          internal_reference?: string
+          issue_date?: string
+          non_deductible_reason?:
+            | Database["public"]["Enums"]["purchase_non_deductible_reason"]
+            | null
+          non_deductible_vat_amount?: number
+          notes?: string | null
+          paid_amount?: number
+          paid_from_personal_account?: boolean
+          payment_status?: Database["public"]["Enums"]["purchase_payment_status"]
+          purchase_type?: Database["public"]["Enums"]["purchase_type"]
+          remaining_amount?: number
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: Database["public"]["Enums"]["purchase_invoice_status"]
+          subtotal?: number
+          supplier_id?: string | null
+          supplier_invoice_number?: string | null
+          supply_date?: string | null
+          taxable_amount?: number
+          total_amount?: number
+          updated_at?: string
+          vat_amount?: number
+          vat_deductibility?: Database["public"]["Enums"]["purchase_vat_deductibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_invoices_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "finance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       request_assignment_events: {
         Row: {
@@ -2986,6 +3224,55 @@ export type Database = {
       }
     }
     Functions: {
+      approve_purchase_invoice: {
+        Args: { p_invoice_id: number }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          attachment_exception_reason: string | null
+          attachment_required: boolean
+          created_at: string
+          created_by: string | null
+          currency: string
+          deductible_percentage: number
+          deductible_vat_amount: number
+          discount_amount: number
+          due_date: string | null
+          duplicate_override_reason: string | null
+          id: number
+          internal_notes: string | null
+          internal_reference: string
+          issue_date: string
+          non_deductible_reason:
+            | Database["public"]["Enums"]["purchase_non_deductible_reason"]
+            | null
+          non_deductible_vat_amount: number
+          notes: string | null
+          paid_amount: number
+          paid_from_personal_account: boolean
+          payment_status: Database["public"]["Enums"]["purchase_payment_status"]
+          purchase_type: Database["public"]["Enums"]["purchase_type"]
+          remaining_amount: number
+          reviewed_by: string | null
+          reviewer_note: string | null
+          status: Database["public"]["Enums"]["purchase_invoice_status"]
+          subtotal: number
+          supplier_id: string | null
+          supplier_invoice_number: string | null
+          supply_date: string | null
+          taxable_amount: number
+          total_amount: number
+          updated_at: string
+          vat_amount: number
+          vat_deductibility: Database["public"]["Enums"]["purchase_vat_deductibility"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "purchase_invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       approve_sales_invoice: {
         Args: { p_invoice_id: number }
         Returns: {
@@ -3075,7 +3362,12 @@ export type Database = {
         }[]
       }
       i_have_any_custom_role: { Args: never; Returns: boolean }
+      next_purchase_invoice_number: { Args: never; Returns: string }
       next_sales_invoice_number: { Args: never; Returns: string }
+      purchase_invoice_recalc_totals: {
+        Args: { p_invoice_id: number }
+        Returns: undefined
+      }
       sales_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
         Returns: undefined
@@ -3140,8 +3432,50 @@ export type Database = {
         | "tax_or_government_payment"
         | "customer_refund"
         | "unclassified_outgoing"
-      finance_related_type: "income" | "expense" | "supplier" | "quote"
+      finance_related_type:
+        | "income"
+        | "expense"
+        | "supplier"
+        | "quote"
+        | "purchase_invoice"
       finance_transaction_direction: "incoming" | "outgoing"
+      purchase_invoice_status:
+        | "draft"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "partially_paid"
+        | "paid"
+      purchase_non_deductible_reason:
+        | "missing_tax_invoice"
+        | "invalid_supplier_tax_data"
+        | "personal_expense"
+        | "unrelated_to_business"
+        | "exempt_activity"
+        | "duplicate_invoice"
+        | "outside_tax_period"
+        | "restricted_expense"
+        | "other"
+      purchase_payment_status: "unpaid" | "partially_paid" | "paid" | "overpaid"
+      purchase_payment_type:
+        | "supplier_invoice_payment"
+        | "direct_expense"
+        | "inventory_payment"
+        | "asset_payment"
+        | "owner_reimbursement"
+        | "other"
+      purchase_type:
+        | "operating_expense"
+        | "inventory"
+        | "asset"
+        | "service"
+        | "government_fee"
+        | "other"
+      purchase_vat_deductibility:
+        | "fully_deductible"
+        | "partially_deductible"
+        | "non_deductible"
+        | "pending_review"
       request_status: "new" | "in_progress" | "closed"
       sales_invoice_payment_status:
         | "unpaid"
@@ -3362,8 +3696,56 @@ export const Constants = {
         "customer_refund",
         "unclassified_outgoing",
       ],
-      finance_related_type: ["income", "expense", "supplier", "quote"],
+      finance_related_type: [
+        "income",
+        "expense",
+        "supplier",
+        "quote",
+        "purchase_invoice",
+      ],
       finance_transaction_direction: ["incoming", "outgoing"],
+      purchase_invoice_status: [
+        "draft",
+        "under_review",
+        "approved",
+        "rejected",
+        "partially_paid",
+        "paid",
+      ],
+      purchase_non_deductible_reason: [
+        "missing_tax_invoice",
+        "invalid_supplier_tax_data",
+        "personal_expense",
+        "unrelated_to_business",
+        "exempt_activity",
+        "duplicate_invoice",
+        "outside_tax_period",
+        "restricted_expense",
+        "other",
+      ],
+      purchase_payment_status: ["unpaid", "partially_paid", "paid", "overpaid"],
+      purchase_payment_type: [
+        "supplier_invoice_payment",
+        "direct_expense",
+        "inventory_payment",
+        "asset_payment",
+        "owner_reimbursement",
+        "other",
+      ],
+      purchase_type: [
+        "operating_expense",
+        "inventory",
+        "asset",
+        "service",
+        "government_fee",
+        "other",
+      ],
+      purchase_vat_deductibility: [
+        "fully_deductible",
+        "partially_deductible",
+        "non_deductible",
+        "pending_review",
+      ],
       request_status: ["new", "in_progress", "closed"],
       sales_invoice_payment_status: [
         "unpaid",
