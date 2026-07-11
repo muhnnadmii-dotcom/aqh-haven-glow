@@ -114,13 +114,24 @@ function IncomesPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/5 p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+      {unclassifiedCount > 0 && (
+        <button
+          onClick={() => setFAccStatus("unclassified")}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] ${fAccStatus === "unclassified" ? "bg-amber-500/20 border-amber-500/40 text-amber-200" : "bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20"}`}
+        >
+          <Tag size={13} /> حركات غير مصنفة: {unclassifiedCount}
+        </button>
+      )}
+
+      <div className="rounded-xl border border-white/10 bg-white/5 p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
         <label className="relative col-span-2 md:col-span-2">
           <Search size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث…" className="w-full pr-7 pl-2 py-1.5 rounded-lg bg-background/60 border border-white/10 text-[12px]" />
         </label>
         <Select v={fMonth} onChange={setFMonth} ph="الشهر" opts={months.map((m) => ({ value: m, label: m }))} />
         <Select v={fSource} onChange={setFSource} ph="مصدر الدخل" opts={sources.map((s) => ({ value: s.id, label: s.name }))} />
+        <Select v={fTxnType} onChange={setFTxnType} ph="نوع الحركة" opts={INCOMING_TYPES.map((t) => ({ value: t.value, label: t.label }))} />
+        <Select v={fAccStatus} onChange={setFAccStatus} ph="حالة التصنيف" opts={ACCOUNTING_STATUSES.map((s) => ({ value: s.value, label: s.label }))} />
         <Select v={fAccount} onChange={setFAccount} ph="نوع الحساب" opts={ACCOUNT_TYPES.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fInternal} onChange={setFInternal} ph="مراجعة داخلية" opts={INTERNAL_REVIEW.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fAcct} onChange={setFAcct} ph="حالة المحاسب" opts={ACCOUNTANT_STATUS.map((a) => ({ value: a.value, label: a.label }))} />
@@ -134,6 +145,7 @@ function IncomesPage() {
               <th className="text-start px-3 py-2">التاريخ</th>
               <th className="text-start px-3 py-2">المبلغ</th>
               <th className="text-start px-3 py-2">المصدر</th>
+              <th className="text-start px-3 py-2">نوع الحركة</th>
               <th className="text-start px-3 py-2">الحساب</th>
               <th className="text-start px-3 py-2">داخلي</th>
               <th className="text-start px-3 py-2">المحاسب</th>
