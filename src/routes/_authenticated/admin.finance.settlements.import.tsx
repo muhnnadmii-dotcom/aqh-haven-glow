@@ -122,7 +122,27 @@ function detectHeaderRow(aoa: any[][], aliases: string[]): number {
 }
 
 // ---------- row model ----------
-type LineType = "sale" | "refund" | "adjustment";
+type LineType =
+  | "sale"
+  | "refund"
+  | "chargeback"
+  | "reserve_held"
+  | "reserve_released"
+  | "payout_fee"
+  | "manual_adjustment"
+  | "unexplained_deduction";
+
+const LINE_TYPE_LABEL: Record<LineType, string> = {
+  sale: "بيع",
+  refund: "مرتجع",
+  chargeback: "اعتراض/Chargeback",
+  reserve_held: "احتياطي محتجز",
+  reserve_released: "احتياطي مُفرج عنه",
+  payout_fee: "رسوم تحويل",
+  manual_adjustment: "تعديل يدوي من الوسيط",
+  unexplained_deduction: "خصم غير مفسر",
+};
+
 type MatchStatus =
   | "matched_invoice"
   | "matched_cancelled_order"
@@ -131,17 +151,17 @@ type MatchStatus =
   | "order_not_found"
   | "needs_credit_note"
   | "unmatched_refund"
-  | "orphan_line";
+  | "needs_classification";
 
 const MATCH_LABEL: Record<MatchStatus, string> = {
   matched_invoice: "مطابق لفاتورة",
   matched_cancelled_order: "طلب ملغي ومطابق",
   cancelled_order_needs_refund_match: "طلب ملغي ينتظر مطابقة الاسترجاع",
-  order_found_invoice_missing: "الطلب موجود والفاتورة غير موجودة",
+  order_found_invoice_missing: "الطلب موجود بدون فاتورة",
   order_not_found: "الطلب غير موجود في استيراد سلة",
   needs_credit_note: "يحتاج إشعار دائن (استرجاع جزئي)",
   unmatched_refund: "استرجاع بدون عملية أصلية",
-  orphan_line: "سطر بدون رقم طلب",
+  needs_classification: "تعديل/خصم تسوية غير مرتبط بطلب",
 };
 
 const MATCH_TONE: Record<MatchStatus, string> = {
@@ -152,16 +172,19 @@ const MATCH_TONE: Record<MatchStatus, string> = {
   order_not_found: "text-red-300",
   needs_credit_note: "text-amber-300",
   unmatched_refund: "text-red-300",
-  orphan_line: "text-red-300",
+  needs_classification: "text-amber-300",
 };
 
-// Statuses that BLOCK settlement approval (require human review before commit)
-const BLOCKING_STATUSES = new Set<MatchStatus>([
+// Statuses that require review before FINAL CLOSE. Import commit is always allowed.
+const REVIEW_STATUSES = new Set<MatchStatus>([
   "order_not_found",
   "cancelled_order_needs_refund_match",
   "unmatched_refund",
-  "orphan_line",
+  "needs_classification",
+  "order_found_invoice_missing",
+  "needs_credit_note",
 ]);
+const BLOCKING_STATUSES = REVIEW_STATUSES;
 
 type ReviewReason = "invalid_amount" | "duplicate_line" | "zero_amount" | "amount_mismatch";
 const REVIEW_LABEL: Record<ReviewReason, string> = {
