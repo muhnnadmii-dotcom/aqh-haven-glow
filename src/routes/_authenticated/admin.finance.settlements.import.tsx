@@ -215,6 +215,7 @@ function SettlementImportPage() {
   const [settlementRef, setSettlementRef] = useState("");
   const [settlementDate, setSettlementDate] = useState(new Date().toISOString().slice(0, 10));
   const [payoutFee, setPayoutFee] = useState("0");
+  const [statusFilter, setStatusFilter] = useState<MatchStatus | "">("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const providerLabel = PROVIDERS.find((p) => p.code === provider)?.label ?? "";
