@@ -5,6 +5,7 @@ import { fmtSAR, OWNER_DRAW_SLUG } from "@/lib/finance/constants";
 import { formatMonthAr, monthRange, splitExpenses, splitIncomes, sum } from "@/lib/finance/dashboard-data";
 import { exportXLSX } from "@/lib/finance/xlsx";
 import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
+import { getAccountingPerformance, type AccountingPerformance } from "@/lib/finance/accounting-performance";
 import { Download, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/reports")({
@@ -16,6 +17,8 @@ function ymNow(offset = 0) {
   const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + offset);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
+
+type ReportKind = "cash" | "income_statement";
 
 function ReportsPage() {
   const [month, setMonth] = useState(ymNow(0));
