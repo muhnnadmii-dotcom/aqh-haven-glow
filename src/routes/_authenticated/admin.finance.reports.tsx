@@ -84,15 +84,15 @@ function ReportsPage() {
     const label = formatMonthAr(month);
     exportXLSX(`تقرير-${month}.xlsx`, [
       {
-        name: `قائمة الدخل ${label}`,
+        name: `المقبوضات والمدفوعات ${label}`,
         headers: ["البند", "المبلغ (ر.س)"],
         rows: [
-          ["إجمالي الدخل", totIncome],
-          ["إجمالي مصروفات التشغيل", -totOp],
+          ["إجمالي المقبوضات", totIncome],
+          ["إجمالي المدفوعات", -totOp],
           ...catRows.map((c) => [`— ${c.name}`, -c.total] as [string, number]),
-          ["صافي الربح قبل التوزيع", netOp],
-          ["توزيع الأرباح (سحوبات المالك)", -totDraws],
-          ["الصافي بعد التوزيع", netAfter],
+          ["صافي التدفق قبل سحوبات المالك", netOp],
+          ["سحوبات المالك", -totDraws],
+          ["صافي التدفق بعد سحوبات المالك", netAfter],
         ],
       },
       {
@@ -135,7 +135,7 @@ function ReportsPage() {
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-[11px] tracking-[0.3em] text-gold/80 uppercase print:text-gray-600">Financial Report</div>
-            <h1 className="text-2xl font-semibold mt-1">قائمة الدخل — {formatMonthAr(month)}</h1>
+            <h1 className="text-2xl font-semibold mt-1">تقرير المقبوضات والمدفوعات — {formatMonthAr(month)}</h1>
             <div className="text-[12px] text-muted-foreground print:text-gray-600 mt-1">{businessName}</div>
           </div>
           <div className="text-right text-[11px] text-muted-foreground print:text-gray-600">
@@ -146,14 +146,14 @@ function ReportsPage() {
 
         <table className="w-full text-[13px] mb-8">
           <tbody>
-            <TR label="إجمالي الدخل" v={totIncome} tone="text-emerald-300 print:text-black" bold />
-            <TR label="مصروفات التشغيل" v={-totOp} tone="text-red-300 print:text-black" />
+            <TR label="إجمالي المقبوضات" v={totIncome} tone="text-emerald-300 print:text-black" bold />
+            <TR label="إجمالي المدفوعات" v={-totOp} tone="text-red-300 print:text-black" />
             {catRows.map((c) => (
               <TR key={c.id} label={`— ${c.name}`} v={-c.total} muted />
             ))}
-            <TR label="صافي الربح قبل التوزيع" v={netOp} tone={netOp >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
-            <TR label="توزيع الأرباح (سحوبات المالك)" v={-totDraws} tone="text-gold print:text-black" />
-            <TR label="الصافي بعد التوزيع" v={netAfter} tone={netAfter >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
+            <TR label="صافي التدفق قبل سحوبات المالك" v={netOp} tone={netOp >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
+            <TR label="سحوبات المالك" v={-totDraws} tone="text-gold print:text-black" />
+            <TR label="صافي التدفق بعد سحوبات المالك" v={netAfter} tone={netAfter >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
           </tbody>
         </table>
 

@@ -373,25 +373,28 @@ function FinanceDashboard() {
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
 
-        <Kpi icon={TrendingUp} label="إجمالي الدخل" value={fmtSAR(totIncome)} tone="text-emerald-300"
+        <Kpi icon={TrendingUp} label="إجمالي المقبوضات" value={fmtSAR(totIncome)} tone="text-emerald-300"
           change={pctChange(totIncome, pTotIncome)}
-          onClick={() => open({ title: "الدخل", show: "income" })} />
-        <Kpi icon={TrendingDown} label="مصروفات التشغيل" value={fmtSAR(totOpExpense)} tone="text-red-300"
+          onClick={() => open({ title: "المقبوضات", show: "income" })} />
+        <Kpi icon={TrendingDown} label="إجمالي المدفوعات" value={fmtSAR(totOpExpense)} tone="text-red-300"
           change={pctChange(totOpExpense, pTotOpExpense)} invert
-          onClick={() => open({ title: "مصروفات التشغيل", show: "expense" })} />
-        <Kpi icon={Scale} label="صافي الربح قبل التوزيع" value={fmtSAR(netOp)} tone={netOp >= 0 ? "text-emerald-300" : "text-red-300"}
+          onClick={() => open({ title: "المدفوعات", show: "expense" })} />
+        <Kpi icon={Scale} label="صافي التدفق قبل سحوبات المالك" value={fmtSAR(netOp)} tone={netOp >= 0 ? "text-emerald-300" : "text-red-300"}
           change={pctChange(netOp, pNetOp)} />
-        <Kpi icon={Wallet} label="توزيع الأرباح" value={fmtSAR(totDraws)} tone="text-gold"
+        <Kpi icon={Wallet} label="سحوبات المالك" value={fmtSAR(totDraws)} tone="text-gold"
           change={pctChange(totDraws, pTotDraws)}
-          onClick={() => ownerDrawCatId && open({ title: "توزيع الأرباح", show: "expense", expenseFilter: { mainCategoryId: ownerDrawCatId } })} />
-        <Kpi icon={PiggyBank} label="الصافي بعد التوزيع" value={fmtSAR(netAfterDraws)} tone={netAfterDraws >= 0 ? "text-emerald-300" : "text-red-300"}
+          onClick={() => ownerDrawCatId && open({ title: "سحوبات المالك", show: "expense", expenseFilter: { mainCategoryId: ownerDrawCatId } })} />
+        <Kpi icon={PiggyBank} label="صافي التدفق النقدي" value={fmtSAR(netAfterDraws)} tone={netAfterDraws >= 0 ? "text-emerald-300" : "text-red-300"}
           change={pctChange(netAfterDraws, pNetAfterDraws)} />
+      </div>
+      <div className="text-[11px] text-muted-foreground -mt-1 px-1">
+        * يمثل صافي التدفق النقدي الفرق بين المقبوضات والمدفوعات خلال الفترة، ولا يمثل صافي الربح المحاسبي.
       </div>
 
       {/* Charts row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 rounded-xl border border-white/10 bg-white/5 p-4">
-          <div className="text-sm font-semibold mb-3">الدخل مقابل المصروفات {excludeDraws ? "(تشغيلي)" : ""}</div>
+          <div className="text-sm font-semibold mb-3">المقبوضات مقابل المدفوعات {excludeDraws ? "(تشغيلي)" : ""}</div>
           <div className="h-64">
             {series.length === 0 ? <Empty /> : (
               <ResponsiveContainer width="100%" height="100%">

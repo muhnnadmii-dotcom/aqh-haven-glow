@@ -59,11 +59,11 @@ function ComparePage() {
   const legendB = sameLabel ? `${labelB} (B)` : labelB;
 
   const rows: { key: "income" | "operating" | "netOp" | "draws" | "netAfter"; label: string; invert: boolean; bold?: boolean }[] = [
-    { key: "income", label: "إجمالي الدخل", invert: false },
-    { key: "operating", label: "مصروفات التشغيل", invert: true },
-    { key: "netOp", label: "صافي الربح قبل التوزيع", invert: false, bold: true },
-    { key: "draws", label: "توزيع الأرباح (سحوبات المالك)", invert: true },
-    { key: "netAfter", label: "الصافي بعد التوزيع", invert: false, bold: true },
+    { key: "income", label: "إجمالي المقبوضات", invert: false },
+    { key: "operating", label: "إجمالي المدفوعات", invert: true },
+    { key: "netOp", label: "صافي التدفق قبل سحوبات المالك", invert: false, bold: true },
+    { key: "draws", label: "سحوبات المالك", invert: true },
+    { key: "netAfter", label: "صافي التدفق بعد سحوبات المالك", invert: false, bold: true },
   ];
 
   const chartData = rows.map((r) => ({

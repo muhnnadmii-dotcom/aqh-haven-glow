@@ -43,8 +43,8 @@ export const ADMIN_PAGES: AdminPageDef[] = [
 
   // Finance
   { key: "/admin/finance",                 label: "لوحة المالية",     group: "finance", financeOnly: true },
-  { key: "/admin/finance/incomes",         label: "الدخل",            group: "finance", financeOnly: true },
-  { key: "/admin/finance/expenses",        label: "المصروفات",        group: "finance", financeOnly: true },
+  { key: "/admin/finance/incomes",         label: "المقبوضات",        group: "finance", financeOnly: true },
+  { key: "/admin/finance/expenses",        label: "المدفوعات",        group: "finance", financeOnly: true },
   { key: "/admin/finance/suppliers",       label: "الموردين",         group: "finance", financeOnly: true },
   { key: "/admin/finance/categories",      label: "التصنيفات",         group: "finance", financeOnly: true },
   { key: "/admin/finance/attachments",     label: "المرفقات",          group: "finance", financeOnly: true },
