@@ -124,7 +124,18 @@ function ReportsPage() {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-white/10 bg-white/5 p-3 flex flex-wrap items-center gap-3 print:hidden">
-        <span className="text-[11px] text-muted-foreground">شهر التقرير:</span>
+        <span className="text-[11px] text-muted-foreground">نوع التقرير:</span>
+        <div className="inline-flex rounded-lg overflow-hidden border border-white/10">
+          <button onClick={() => setReportKind("cash")}
+            className={`px-3 py-1.5 text-[12px] ${reportKind === "cash" ? "bg-gold/20 text-gold" : "bg-white/5 text-muted-foreground"}`}>
+            المقبوضات والمدفوعات (نقدي)
+          </button>
+          <button onClick={() => setReportKind("income_statement")}
+            className={`px-3 py-1.5 text-[12px] ${reportKind === "income_statement" ? "bg-gold/20 text-gold" : "bg-white/5 text-muted-foreground"}`}>
+            قائمة الدخل (محاسبي)
+          </button>
+        </div>
+        <span className="text-[11px] text-muted-foreground ms-3">شهر التقرير:</span>
         <select value={mm} onChange={(e) => setMonth(`${my}-${e.target.value}`)} className="px-2 py-1.5 rounded-lg text-[12px] bg-background/60 border border-gold/40 text-gold">
           {MONTHS_AR.map((n, i) => <option key={i} value={String(i + 1).padStart(2, "0")}>{n}</option>)}
         </select>
