@@ -1248,7 +1248,7 @@ export type Database = {
           file_url: string
           id: string
           related_bigint_id: number | null
-          related_id: string
+          related_id: string | null
           related_type: Database["public"]["Enums"]["finance_related_type"]
           uploaded_by: string | null
         }
@@ -1260,7 +1260,7 @@ export type Database = {
           file_url: string
           id?: string
           related_bigint_id?: number | null
-          related_id: string
+          related_id?: string | null
           related_type: Database["public"]["Enums"]["finance_related_type"]
           uploaded_by?: string | null
         }
@@ -1272,7 +1272,7 @@ export type Database = {
           file_url?: string
           id?: string
           related_bigint_id?: number | null
-          related_id?: string
+          related_id?: string | null
           related_type?: Database["public"]["Enums"]["finance_related_type"]
           uploaded_by?: string | null
         }
