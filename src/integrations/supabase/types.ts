@@ -3560,6 +3560,7 @@ export type Database = {
           order_id: string | null
           order_status: string | null
           original_gross_amount: number | null
+          original_payment_method: string | null
           paid_amount: number
           payment_provider:
             | Database["public"]["Enums"]["sales_payment_provider"]
@@ -3568,6 +3569,9 @@ export type Database = {
           refund_amount: number
           remaining_amount: number
           sales_channel: Database["public"]["Enums"]["sales_channel_type"]
+          settlement_status:
+            | Database["public"]["Enums"]["sales_invoice_settlement_status"]
+            | null
           shipping_before_vat: number
           shipping_vat: number
           status: Database["public"]["Enums"]["sales_invoice_status"]
@@ -3603,6 +3607,7 @@ export type Database = {
           order_id?: string | null
           order_status?: string | null
           original_gross_amount?: number | null
+          original_payment_method?: string | null
           paid_amount?: number
           payment_provider?:
             | Database["public"]["Enums"]["sales_payment_provider"]
@@ -3611,6 +3616,9 @@ export type Database = {
           refund_amount?: number
           remaining_amount?: number
           sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          settlement_status?:
+            | Database["public"]["Enums"]["sales_invoice_settlement_status"]
+            | null
           shipping_before_vat?: number
           shipping_vat?: number
           status?: Database["public"]["Enums"]["sales_invoice_status"]
@@ -3646,6 +3654,7 @@ export type Database = {
           order_id?: string | null
           order_status?: string | null
           original_gross_amount?: number | null
+          original_payment_method?: string | null
           paid_amount?: number
           payment_provider?:
             | Database["public"]["Enums"]["sales_payment_provider"]
@@ -3654,6 +3663,9 @@ export type Database = {
           refund_amount?: number
           remaining_amount?: number
           sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
+          settlement_status?:
+            | Database["public"]["Enums"]["sales_invoice_settlement_status"]
+            | null
           shipping_before_vat?: number
           shipping_vat?: number
           status?: Database["public"]["Enums"]["sales_invoice_status"]
@@ -4374,6 +4386,10 @@ export type Database = {
       }
     }
     Functions: {
+      _salla_settlement_from_provider: {
+        Args: { p: string }
+        Returns: Database["public"]["Enums"]["sales_invoice_settlement_status"]
+      }
       acct_id: { Args: { p_key: string }; Returns: string }
       acct_should_post: { Args: { p_date: string }; Returns: boolean }
       approve_credit_debit_note: {
@@ -4497,6 +4513,7 @@ export type Database = {
           order_id: string | null
           order_status: string | null
           original_gross_amount: number | null
+          original_payment_method: string | null
           paid_amount: number
           payment_provider:
             | Database["public"]["Enums"]["sales_payment_provider"]
@@ -4505,6 +4522,9 @@ export type Database = {
           refund_amount: number
           remaining_amount: number
           sales_channel: Database["public"]["Enums"]["sales_channel_type"]
+          settlement_status:
+            | Database["public"]["Enums"]["sales_invoice_settlement_status"]
+            | null
           shipping_before_vat: number
           shipping_vat: number
           status: Database["public"]["Enums"]["sales_invoice_status"]
@@ -4700,6 +4720,8 @@ export type Database = {
         Args: { p_invoice_id: number }
         Returns: undefined
       }
+      salla_backfill_apply: { Args: never; Returns: Json }
+      salla_backfill_preview: { Args: never; Returns: Json }
       vat_get_excluded_invoices: {
         Args: { p_period_id: string }
         Returns: {
@@ -4929,6 +4951,11 @@ export type Database = {
         | "partially_paid"
         | "paid"
         | "overpaid"
+      sales_invoice_settlement_status:
+        | "pending"
+        | "matched"
+        | "not_applicable"
+        | "manual_review"
       sales_invoice_status:
         | "draft"
         | "approved"
@@ -5282,6 +5309,12 @@ export const Constants = {
         "partially_paid",
         "paid",
         "overpaid",
+      ],
+      sales_invoice_settlement_status: [
+        "pending",
+        "matched",
+        "not_applicable",
+        "manual_review",
       ],
       sales_invoice_status: [
         "draft",
