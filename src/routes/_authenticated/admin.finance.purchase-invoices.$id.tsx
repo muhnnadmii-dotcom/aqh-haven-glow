@@ -96,6 +96,11 @@ function PurchaseInvoiceEditor() {
     queryFn: async () => (await supabase.from("finance_categories").select("id, name, kind, parent_id").eq("is_active", true).order("display_order")).data as any[],
   });
 
+  const { data: paymentProviders = [] } = useQuery({
+    queryKey: ["payment_providers_min"],
+    queryFn: async () => (await supabase.from("payment_providers" as any).select("id, name, is_active").order("name")).data as any[],
+  });
+
   const [header, setHeader] = useState<any>(null);
   useEffect(() => { if (invoice) setHeader({ ...invoice }); }, [invoice]);
 
