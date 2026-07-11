@@ -607,7 +607,7 @@ function ReconciliationPage() {
           <ul className="max-h-[520px] overflow-auto divide-y divide-white/5">
             {loading && <li className="p-4 text-xs text-muted-foreground">جاري التحميل…</li>}
             {!loading && incomesFiltered.length === 0 && <li className="p-4 text-xs text-muted-foreground">لا توجد حوالات مطابقة</li>}
-            {incomesFiltered.map(inc => {
+            {incomesSorted.map(inc => {
               const used = incomeAlloc[inc.id] ?? 0;
               const remaining = Number(inc.amount) - used;
               const isSel = inc.id === selIncomeId;
