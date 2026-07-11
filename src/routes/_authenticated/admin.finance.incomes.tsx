@@ -294,7 +294,9 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     collection_type: row?.collection_type ?? "",
     related_transaction_id: row?.related_transaction_id ?? "",
     payment_provider_id: row?.payment_provider_id ?? "",
+    payment_provider_id: row?.payment_provider_id ?? "",
     settlement_id: row?.settlement_id ?? "",
+    supplier_id: row?.supplier_id ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
