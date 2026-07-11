@@ -112,7 +112,7 @@ function VatDashboard() {
               <Row label="فواتير بدون مرفق" value={String(summary.purchases.missing_attachment)} />
               <Row label="فواتير مشتبه تكرارها" value={String(summary.purchases.suspected_duplicates)} />
               <div className="pt-2 mt-2 border-t border-white/10 flex gap-2">
-                <Link to="/admin/finance/vat/excluded" className="text-[11px] text-gold hover:underline">عرض المستبعدة</Link>
+                <Link to="/admin/finance/vat/excluded" className="text-[11px] text-gold hover:underline">مستندات تنتظر المراجعة</Link>
                 <Link to="/admin/finance/vat/draft" className="text-[11px] text-gold hover:underline">مسودة الإقرار</Link>
               </div>
             </Card>
