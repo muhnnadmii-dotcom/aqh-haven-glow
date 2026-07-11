@@ -185,7 +185,7 @@ function SalesInvoicesList() {
                     </Link>
                   </td>
                   <td className="p-2 whitespace-nowrap">{r.issue_date}</td>
-                  <td className="p-2">{custName(r.customer_id)}</td>
+                  <td className="p-2">{custName(r)}</td>
                   <td className="p-2">{SAR(r.taxable_amount)}</td>
                   <td className="p-2">{SAR(r.vat_amount)}</td>
                   <td className="p-2 font-semibold">{SAR(r.total_amount)}</td>
