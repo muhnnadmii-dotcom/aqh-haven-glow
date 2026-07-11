@@ -1,5 +1,5 @@
 import { Link, Outlet, useRouterState, createFileRoute, redirect } from "@tanstack/react-router";
-import { LayoutDashboard, TrendingUp, TrendingDown, Truck, Tags, Paperclip, History, Download, Settings as Cog, Upload, Archive, FileText, GitCompare, BarChart3 } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, Truck, Tags, Paperclip, History, Download, Settings as Cog, Upload, Archive, FileText, GitCompare, BarChart3, Wallet, ArrowLeftRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionUser } from "@/lib/client-auth";
 

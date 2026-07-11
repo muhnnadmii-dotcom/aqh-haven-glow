@@ -73,6 +73,7 @@ import { Route as AuthenticatedAdminInventoryCatalogRouteImport } from './routes
 import { Route as AuthenticatedAdminFinanceSuppliersRouteImport } from './routes/_authenticated/admin.finance.suppliers'
 import { Route as AuthenticatedAdminFinanceSettingsRouteImport } from './routes/_authenticated/admin.finance.settings'
 import { Route as AuthenticatedAdminFinanceReportsRouteImport } from './routes/_authenticated/admin.finance.reports'
+import { Route as AuthenticatedAdminFinanceOwnerAccountRouteImport } from './routes/_authenticated/admin.finance.owner-account'
 import { Route as AuthenticatedAdminFinanceIncomesRouteImport } from './routes/_authenticated/admin.finance.incomes'
 import { Route as AuthenticatedAdminFinanceImportBatchesRouteImport } from './routes/_authenticated/admin.finance.import-batches'
 import { Route as AuthenticatedAdminFinanceImportRouteImport } from './routes/_authenticated/admin.finance.import'
@@ -451,6 +452,12 @@ const AuthenticatedAdminFinanceReportsRoute =
     path: '/reports',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinanceOwnerAccountRoute =
+  AuthenticatedAdminFinanceOwnerAccountRouteImport.update({
+    id: '/owner-account',
+    path: '/owner-account',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinanceIncomesRoute =
   AuthenticatedAdminFinanceIncomesRouteImport.update({
     id: '/incomes',
@@ -632,6 +639,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -709,6 +717,7 @@ export interface FileRoutesByTo {
   '/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -796,6 +805,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/import': typeof AuthenticatedAdminFinanceImportRoute
   '/_authenticated/admin/finance/import-batches': typeof AuthenticatedAdminFinanceImportBatchesRoute
   '/_authenticated/admin/finance/incomes': typeof AuthenticatedAdminFinanceIncomesRoute
+  '/_authenticated/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/_authenticated/admin/finance/reports': typeof AuthenticatedAdminFinanceReportsRoute
   '/_authenticated/admin/finance/settings': typeof AuthenticatedAdminFinanceSettingsRoute
   '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -883,6 +893,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/owner-account'
     | '/admin/finance/reports'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
@@ -960,6 +971,7 @@ export interface FileRouteTypes {
     | '/admin/finance/import'
     | '/admin/finance/import-batches'
     | '/admin/finance/incomes'
+    | '/admin/finance/owner-account'
     | '/admin/finance/reports'
     | '/admin/finance/settings'
     | '/admin/finance/suppliers'
@@ -1046,6 +1058,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/import'
     | '/_authenticated/admin/finance/import-batches'
     | '/_authenticated/admin/finance/incomes'
+    | '/_authenticated/admin/finance/owner-account'
     | '/_authenticated/admin/finance/reports'
     | '/_authenticated/admin/finance/settings'
     | '/_authenticated/admin/finance/suppliers'
@@ -1539,6 +1552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceReportsRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/owner-account': {
+      id: '/_authenticated/admin/finance/owner-account'
+      path: '/owner-account'
+      fullPath: '/admin/finance/owner-account'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceOwnerAccountRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/incomes': {
       id: '/_authenticated/admin/finance/incomes'
       path: '/incomes'
@@ -1760,6 +1780,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceImportRoute: typeof AuthenticatedAdminFinanceImportRoute
   AuthenticatedAdminFinanceImportBatchesRoute: typeof AuthenticatedAdminFinanceImportBatchesRoute
   AuthenticatedAdminFinanceIncomesRoute: typeof AuthenticatedAdminFinanceIncomesRoute
+  AuthenticatedAdminFinanceOwnerAccountRoute: typeof AuthenticatedAdminFinanceOwnerAccountRoute
   AuthenticatedAdminFinanceReportsRoute: typeof AuthenticatedAdminFinanceReportsRoute
   AuthenticatedAdminFinanceSettingsRoute: typeof AuthenticatedAdminFinanceSettingsRoute
   AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
@@ -1787,6 +1808,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinanceImportBatchesRoute,
     AuthenticatedAdminFinanceIncomesRoute:
       AuthenticatedAdminFinanceIncomesRoute,
+    AuthenticatedAdminFinanceOwnerAccountRoute:
+      AuthenticatedAdminFinanceOwnerAccountRoute,
     AuthenticatedAdminFinanceReportsRoute:
       AuthenticatedAdminFinanceReportsRoute,
     AuthenticatedAdminFinanceSettingsRoute:
