@@ -285,6 +285,9 @@ function Select({ v, onChange, ph, opts }: { v: string; onChange: (s: string) =>
 function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawCatId, onClose, onSaved }: any) {
   const isNew = !row;
   const accountantOnly = !roles.canManage && roles.canAccountant;
+  // Preselect owner_withdrawal when opening the owner-draw quick form
+  const initialTxnType = row?.transaction_type
+    ?? (initial?.main_category_id && ownerDrawCatId && initial.main_category_id === ownerDrawCatId ? "owner_withdrawal" : "");
   const [f, setF] = useState({
     expense_date: row?.expense_date ?? new Date().toISOString().slice(0, 10),
     amount: row?.amount ?? 0,
@@ -299,6 +302,9 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
     accountant_status: row?.accountant_status ?? "not_reviewed",
     accountant_note: row?.accountant_note ?? "",
     attachment_status: row?.attachment_status ?? "not_attached",
+    transaction_type: initialTxnType,
+    accounting_status: row?.accounting_status ?? (initialTxnType ? "classified" : "unclassified"),
+    internal_note: row?.internal_note ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
