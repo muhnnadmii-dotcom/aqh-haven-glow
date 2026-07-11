@@ -267,6 +267,9 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
     accountant_status: row?.accountant_status ?? "not_reviewed",
     accountant_note: row?.accountant_note ?? "",
     attachment_status: row?.attachment_status ?? "not_attached",
+    transaction_type: row?.transaction_type ?? "",
+    accounting_status: row?.accounting_status ?? "unclassified",
+    internal_note: row?.internal_note ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
