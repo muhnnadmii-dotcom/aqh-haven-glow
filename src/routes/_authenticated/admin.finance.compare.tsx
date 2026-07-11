@@ -7,6 +7,7 @@ import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from "recharts";
+import { getAccountingPerformance, type AccountingPerformance } from "@/lib/finance/accounting-performance";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/compare")({
   ssr: false,
