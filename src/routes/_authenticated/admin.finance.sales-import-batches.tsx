@@ -75,19 +75,105 @@ function SalesBatchesPage() {
         </p>
 
         {preview && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[12px]">
-            <Stat label="إجمالي فواتير سلة" value={preview.total_salla_invoices} />
-            <Stat label="سيتم تحديثها" value={preview.invoices_to_update} tone="blue" />
-            <Stat label="بحاجة إنشاء بنود" value={preview.items_to_create_invoices} tone="amber" />
-            <Stat label="بدون اسم عميل" value={preview.missing_customer_name} />
-            <Stat label="بدون ضريبة" value={preview.missing_vat} />
-            <Stat label="فرق بالمجاميع" value={preview.totals_mismatch} tone="red" />
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[12px]">
+              <Stat label="إجمالي فواتير سلة" value={preview.total_salla_invoices} />
+              <Stat label="لها snapshot أصلي" value={preview.with_snapshot} tone="blue" />
+              <Stat label="بدون snapshot" value={preview.without_snapshot} tone="red" />
+              <Stat label="سيتم تحديث رأسها (drafts)" value={preview.headers_to_update} tone="blue" />
+              <Stat label="تحتوي بنودًا" value={preview.with_items} tone="emerald" />
+              <Stat label="بدون بنود" value={preview.without_items} tone="amber" />
+              <Stat label="تحتاج إنشاء بنود ملخصة" value={preview.needs_items_created} tone="amber" />
+              <Stat label="لن تُصلَح (بدون snapshot)" value={preview.wont_repair} tone="red" />
+            </div>
+
+            {preview.target_test_269384344 && (
+              <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3 text-[12px]">
+                <div className="font-semibold text-blue-200 mb-1">اختبار الفاتورة SALLA-269384344</div>
+                <div className="text-blue-100/90">
+                  الحالة: <b>{preview.target_test_269384344.status}</b> ·
+                  البنود: <b>{preview.target_test_269384344.items_count}</b>
+                  {" "}(مجموع البنود قبل الضريبة: <b>{preview.target_test_269384344.items_subtotal}</b>،
+                  رأس الفاتورة قبل الضريبة: <b>{preview.target_test_269384344.header_subtotal}</b>،
+                  الضريبة: <b>{preview.target_test_269384344.header_vat}</b>،
+                  الإجمالي: <b>{preview.target_test_269384344.header_total}</b>)
+                </div>
+                {preview.target_test_269384344.items_count > 0 ? (
+                  <div className="text-emerald-300 mt-1">✓ الفاتورة تحتوي على بنود — لن تظهر عبارة "لا توجد بنود".</div>
+                ) : (
+                  <div className="text-amber-300 mt-1">⚠ لا توجد بنود بعد — سيحاول الإصلاح إنشاؤها من snapshot.</div>
+                )}
+              </div>
+            )}
+
+            {Array.isArray(preview.exclusions) && preview.exclusions.length > 0 && (
+              <details className="rounded-lg bg-black/30 border border-white/10 p-2 text-[12px]">
+                <summary className="cursor-pointer font-semibold">
+                  الفواتير المستبعدة من تحديث الرأس ({preview.exclusions.length})
+                </summary>
+                <div className="mt-2 max-h-64 overflow-y-auto">
+                  <table className="w-full text-[11px]">
+                    <thead className="text-muted-foreground">
+                      <tr className="border-b border-white/10">
+                        <th className="p-1.5 text-right">رقم الفاتورة</th>
+                        <th className="p-1.5 text-right">رقم طلب سلة</th>
+                        <th className="p-1.5 text-right">الحالة</th>
+                        <th className="p-1.5 text-right">السبب</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {preview.exclusions.map((x: any, i: number) => (
+                        <tr key={i} className="border-b border-white/5">
+                          <td className="p-1.5 font-mono">{x.invoice_number}</td>
+                          <td className="p-1.5 font-mono">{x.external_order_id ?? "—"}</td>
+                          <td className="p-1.5">{x.status}</td>
+                          <td className="p-1.5 text-amber-300">{x.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            )}
           </div>
         )}
 
         {applied && (
-          <div className="mt-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-[12px] text-emerald-200">
-            تم تحديث <b>{applied.invoices_updated}</b> فاتورة، وإنشاء <b>{applied.items_created}</b> بند. فروقات بالمجاميع: <b>{applied.totals_mismatch}</b>.
+          <div className="mt-2 space-y-2">
+            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-[12px] text-emerald-200">
+              <div>تم تحديث رأس <b>{applied.invoices_updated}</b> فاتورة (drafts فقط).</div>
+              <div>تم إنشاء <b>{applied.items_created}</b> بند جديد.</div>
+              <div>فواتير كانت تحتوي بنودًا مسبقًا: <b>{applied.invoices_with_items_already}</b>.</div>
+              <div>فروقات بالمجاميع: <b>{applied.totals_mismatch}</b>.</div>
+              <div>فواتير فشل إصلاحها: <b>{applied.invoices_failed}</b>.</div>
+            </div>
+            {Array.isArray(applied.failed) && applied.failed.length > 0 && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-[12px]">
+                <div className="font-semibold text-red-200 mb-2">قائمة الفواتير التي فشل إصلاحها</div>
+                <div className="max-h-64 overflow-y-auto">
+                  <table className="w-full text-[11px]">
+                    <thead className="text-muted-foreground">
+                      <tr className="border-b border-white/10">
+                        <th className="p-1.5 text-right">رقم الفاتورة</th>
+                        <th className="p-1.5 text-right">رقم طلب سلة</th>
+                        <th className="p-1.5 text-right">الحالة</th>
+                        <th className="p-1.5 text-right">السبب</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {applied.failed.map((x: any, i: number) => (
+                        <tr key={i} className="border-b border-white/5">
+                          <td className="p-1.5 font-mono">{x.invoice_number}</td>
+                          <td className="p-1.5 font-mono">{x.external_order_id ?? "—"}</td>
+                          <td className="p-1.5">{x.status}</td>
+                          <td className="p-1.5 text-red-300">{x.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
