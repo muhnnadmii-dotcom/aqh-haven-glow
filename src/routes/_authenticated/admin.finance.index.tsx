@@ -514,6 +514,12 @@ function FinanceDashboard() {
 
       {loading && <div className="text-center text-xs text-muted-foreground">جاري التحميل…</div>}
       {drawer && <FinanceRowsDrawer spec={drawer} onClose={() => setDrawer(null)} />}
+        </TabsContent>
+
+        <TabsContent value="accounting" className="mt-0">
+          <AccountingPanel from={range.dateFrom ?? "1970-01-01"} to={range.dateTo ?? new Date().toISOString().slice(0, 10)} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
