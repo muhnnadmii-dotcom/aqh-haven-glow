@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Inbox, X, Paperclip, CheckCircle2, User, Building, Link2, AlertCircle, ArrowLeftRight, Info } from "lucide-react";
+import { Loader2, Inbox, X, Paperclip, CheckCircle2, User, Building, Link2, AlertCircle, ArrowLeftRight, Info, Split, Landmark, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
@@ -76,6 +76,8 @@ type Row = {
   related_transaction_id?: string | null;
   note?: string | null;
   internal_note?: string | null;
+  settlement_id?: string | null;
+  split_parent_id?: string | null;
   raw: any;
 };
 
@@ -128,6 +130,14 @@ function ReviewCenter() {
     queryKey: ["purchase_invoices_min"],
     queryFn: async () => (await supabase.from("purchase_invoices" as any).select("id, internal_reference, supplier_id, total_amount, remaining_amount, issue_date, status").limit(1000)).data as any[],
   });
+  const { data: settlements = [] } = useQuery({
+    queryKey: ["review_settlements"],
+    queryFn: async () => (await supabase.from("payment_settlements" as any).select("id, provider_id, settlement_date, expected_net_amount, actual_bank_amount, difference_amount, status, bank_income_id, settlement_reference").order("settlement_date", { ascending: false }).limit(500)).data as any[],
+  });
+  const { data: providers = [] } = useQuery({
+    queryKey: ["review_providers"],
+    queryFn: async () => (await supabase.from("payment_providers" as any).select("id, name, code, rounding_tolerance").eq("is_active", true)).data as any[],
+  });
 
   const rows: Row[] = useMemo(() => {
     const inc = incomes.map((r: any): Row => ({
@@ -137,7 +147,8 @@ function ReviewCenter() {
       internal_review_status: r.internal_review_status, attachment_status: r.attachment_status,
       account_id: r.account_id, account_type: r.account_type,
       customer_id: r.customer_id, sales_invoice_id: r.sales_invoice_id,
-      related_transaction_id: r.related_transaction_id, note: r.note, internal_note: r.internal_note, raw: r,
+      related_transaction_id: r.related_transaction_id, note: r.note, internal_note: r.internal_note,
+      settlement_id: r.settlement_id, split_parent_id: r.split_parent_id, raw: r,
     }));
     const exp = expenses.map((r: any): Row => ({
       kind: "expense", id: r.id, date: r.expense_date, amount: Number(r.amount) || 0,
@@ -146,10 +157,21 @@ function ReviewCenter() {
       internal_review_status: r.internal_review_status, attachment_status: r.attachment_status,
       account_id: r.account_id, account_type: r.account_type,
       supplier_id: r.supplier_id, purchase_invoice_id: r.purchase_invoice_id,
-      related_transaction_id: r.related_transaction_id, note: r.note, internal_note: r.internal_note, raw: r,
+      related_transaction_id: r.related_transaction_id, note: r.note, internal_note: r.internal_note,
+      settlement_id: r.settlement_id, split_parent_id: r.split_parent_id, raw: r,
     }));
     return [...inc, ...exp].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   }, [incomes, expenses]);
+
+  // Detect provider (Salla/Tabby/Tamara/...) from note
+  const providerMatch = (r: Row): { id: string; name: string } | null => {
+    const hay = `${r.note ?? ""} ${r.internal_note ?? ""}`.toLowerCase();
+    for (const p of providers as any[]) {
+      const needles = [p.code, p.name, p.name?.replace(/\s+/g, "")].filter(Boolean).map((s: string) => String(s).toLowerCase());
+      if (needles.some((n) => hay.includes(n))) return { id: p.id, name: p.name };
+    }
+    return null;
+  };
 
   // Flags per row
   const flags = (r: Row) => {
@@ -165,9 +187,13 @@ function ReviewCenter() {
     const missingParty = r.kind === "income"
       ? (r.transaction_type === "customer_invoice_collection" && !r.customer_id)
       : (r.transaction_type === "supplier_invoice_payment" && !r.supplier_id);
+    const pm = providerMatch(r);
+    const unlinkedProviderSettlement = r.kind === "income" && !!pm && !r.settlement_id;
+    const isSplitChild = !!r.split_parent_id;
     const isCompleted = r.internal_review_status === "reviewed" && r.accounting_status === "reviewed";
-    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, isCompleted };
+    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
   };
+
 
   // Filters
   const [chip, setChip] = useState<string>("unclassified");
@@ -195,7 +221,9 @@ function ReviewCenter() {
       if (chip === "no_attach" && !f.noAttachment) return false;
       if (chip === "personal" && !f.personalNeedsReview) return false;
       if (chip === "transfer" && !f.transferMissingCounterpart) return false;
+      if (chip === "provider_unlinked" && !f.unlinkedProviderSettlement) return false;
       if (chip === "completed" && !f.isCompleted) return false;
+
 
       if (fFrom && r.date < fFrom) return false;
       if (fTo && r.date > fTo) return false;
@@ -223,7 +251,7 @@ function ReviewCenter() {
 
   // KPI counts
   const kpis = useMemo(() => {
-    let unclassified = 0, unlinked = 0, noAttach = 0, personal = 0, transfer = 0, completed = 0;
+    let unclassified = 0, unlinked = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
     rows.forEach((r) => {
       const f = flags(r);
       if (f.isUnclassified) unclassified++;
@@ -231,10 +259,17 @@ function ReviewCenter() {
       if (f.noAttachment) noAttach++;
       if (f.personalNeedsReview) personal++;
       if (f.transferMissingCounterpart) transfer++;
+      if (f.unlinkedProviderSettlement) providerUnlinked++;
       if (f.isCompleted) completed++;
     });
-    return { unclassified, unlinked, noAttach, personal, transfer, completed };
-  }, [rows]);
+    // Settlement diffs summary
+    const settlementDiffs = (settlements as any[]).filter((s) => {
+      const tol = (providers as any[]).find((p) => p.id === s.provider_id)?.rounding_tolerance ?? 0.05;
+      return s.actual_bank_amount != null && Math.abs(Number(s.difference_amount)) > Number(tol);
+    });
+    return { unclassified, unlinked, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
+  }, [rows, settlements, providers]);
+
 
   // Selection
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -276,14 +311,33 @@ function ReviewCenter() {
       </div>
 
       {/* KPI chips */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KpiChip label="إجمالي غير المصنف" count={kpis.unclassified} active={chip === "unclassified"} onClick={() => setChip("unclassified")} tone="amber" icon={AlertCircle} />
-        <KpiChip label="غير مرتبط" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        <KpiChip label="غير مصنف" count={kpis.unclassified} active={chip === "unclassified"} onClick={() => setChip("unclassified")} tone="amber" icon={AlertCircle} />
+        <KpiChip label="غير مرتبط بفاتورة/طرف" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
+        <KpiChip label="بوابات دفع بدون تسوية" count={kpis.providerUnlinked} active={chip === "provider_unlinked"} onClick={() => setChip("provider_unlinked")} tone="rose" icon={Landmark} />
         <KpiChip label="بدون مرفق" count={kpis.noAttach} active={chip === "no_attach"} onClick={() => setChip("no_attach")} tone="orange" icon={Paperclip} />
-        <KpiChip label="حساب شخصي يحتاج مراجعة" count={kpis.personal} active={chip === "personal"} onClick={() => setChip("personal")} tone="purple" icon={User} />
+        <KpiChip label="حساب شخصي بلا مراجعة" count={kpis.personal} active={chip === "personal"} onClick={() => setChip("personal")} tone="purple" icon={User} />
         <KpiChip label="تحويل غير مكتمل" count={kpis.transfer} active={chip === "transfer"} onClick={() => setChip("transfer")} tone="cyan" icon={ArrowLeftRight} />
         <KpiChip label="مكتمل" count={kpis.completed} active={chip === "completed"} onClick={() => setChip("completed")} tone="emerald" icon={CheckCircle2} />
       </div>
+
+      {/* Settlement diffs panel */}
+      {(kpis.settlementDiffs?.length ?? 0) > 0 && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
+          <div className="text-sm font-semibold text-rose-300 mb-2 flex items-center gap-2">
+            <TrendingDown className="w-4 h-4" /> فروقات تسوية غير مفسرة ({kpis.settlementDiffs.length})
+          </div>
+          <div className="text-xs text-muted-foreground grid grid-cols-1 md:grid-cols-2 gap-1">
+            {kpis.settlementDiffs.slice(0, 6).map((s: any) => (
+              <div key={s.id} className="flex justify-between border-b border-white/5 py-1">
+                <span>{s.settlement_date} · {(providers as any[]).find((p) => p.id === s.provider_id)?.name ?? "—"} · {s.settlement_reference ?? "—"}</span>
+                <span className="text-rose-300 tabular-nums">{Number(s.difference_amount).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {/* Filters */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 rounded-xl bg-white/5 border border-white/10 p-3">
@@ -403,8 +457,12 @@ function ReviewCenter() {
                         {f.transferMissingCounterpart && <Dot color="cyan" title="تحويل بدون طرف مقابل" />}
                         {f.unlinkedInvoice && <Dot color="rose" title="بدون فاتورة" />}
                         {f.missingParty && <Dot color="pink" title="بدون طرف" />}
+                        {f.unlinkedProviderSettlement && <Dot color="rose" title={`${f.providerName} — بدون تسوية`} />}
+                        {r.settlement_id && <Badge variant="outline" className="text-[10px] px-1 py-0 bg-emerald-500/10 text-emerald-300 border-emerald-500/30">مرتبط بتسوية</Badge>}
+                        {f.isSplitChild && <Badge variant="outline" className="text-[10px] px-1 py-0 bg-blue-500/10 text-blue-300 border-blue-500/30">مقسّم</Badge>}
                       </div>
                     </td>
+
                     <td className="p-2 text-xs" onClick={() => setOpenRow(r)}>
                       {f.isCompleted
                         ? <Badge variant="outline" className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30">مكتمل</Badge>
@@ -426,11 +484,13 @@ function ReviewCenter() {
           row={openRow}
           accounts={accounts} suppliers={suppliers} customers={customers}
           salesInvoices={salesInvoices} purchaseInvoices={purchaseInvoices}
+          settlements={settlements} providers={providers}
           incomes={incomes} expenses={expenses}
           onClose={() => setOpenRow(null)}
-          onDone={() => { invalidateAll(); setOpenRow(null); }}
+          onDone={() => { invalidateAll(); qc.invalidateQueries({ queryKey: ["review_settlements"] }); setOpenRow(null); }}
         />
       )}
+
 
       {showBulk && (
         <BulkModal
@@ -453,6 +513,7 @@ function KpiChip({ label, count, active, onClick, tone, icon: Icon }: any) {
     purple: "border-purple-500/40 text-purple-300 bg-purple-500/10",
     cyan: "border-cyan-500/40 text-cyan-300 bg-cyan-500/10",
     emerald: "border-emerald-500/40 text-emerald-300 bg-emerald-500/10",
+    rose: "border-rose-500/40 text-rose-300 bg-rose-500/10",
   };
   return (
     <button onClick={onClick} className={`rounded-xl border p-3 text-right transition ${active ? tones[tone] + " ring-2 ring-current/40" : "border-white/10 bg-white/5 hover:bg-white/10"}`}>
@@ -484,8 +545,9 @@ function Field({ label, children }: { label: string; children: any }) {
 }
 
 // ================== Row Drawer ==================
-function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchaseInvoices, incomes, expenses, onClose, onDone }: any) {
+function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchaseInvoices, settlements, providers, incomes, expenses, onClose, onDone }: any) {
   const [pending, setPending] = useState(false);
+  const [showSplit, setShowSplit] = useState(false);
   const [state, setState] = useState<any>({
     transaction_type: row.transaction_type ?? "",
     business_relation: row.business_relation ?? "unclassified",
@@ -496,6 +558,7 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
     sales_invoice_id: row.sales_invoice_id ?? "",
     purchase_invoice_id: row.purchase_invoice_id ?? "",
     related_transaction_id: row.related_transaction_id ?? "",
+    settlement_id: row.settlement_id ?? "",
     accounting_status: row.accounting_status ?? "unclassified",
     internal_review_status: row.internal_review_status ?? "unreviewed",
     internal_note: row.internal_note ?? "",
@@ -503,66 +566,86 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
   const table = row.kind === "income" ? "finance_incomes" : "finance_expenses";
   const typeMap = row.direction === "incoming" ? INCOMING_TYPE : OUTGOING_TYPE;
 
+  // Detect provider hint from note
+  const providerHint = useMemo(() => {
+    const hay = `${row.note ?? ""} ${row.internal_note ?? ""}`.toLowerCase();
+    return (providers as any[]).find((p: any) => {
+      const needles = [p.code, p.name, p.name?.replace(/\s+/g, "")].filter(Boolean).map((s: string) => String(s).toLowerCase());
+      return needles.some((n) => hay.includes(n));
+    });
+  }, [row, providers]);
+
+  // Candidate settlements: same provider (if any), and amount within tolerance
+  const settlementCandidates = useMemo(() => {
+    if (row.kind !== "income") return [];
+    const tol = providerHint?.rounding_tolerance ?? 5;
+    return (settlements as any[]).filter((s: any) => {
+      if (providerHint && s.provider_id !== providerHint.id) return false;
+      // exclude settlements already linked to another income
+      if (s.bank_income_id && s.bank_income_id !== row.id) return false;
+      const target = Number(s.actual_bank_amount ?? s.expected_net_amount) || 0;
+      return Math.abs(target - row.amount) <= Math.max(Number(tol) || 5, 5);
+    }).slice(0, 30);
+  }, [settlements, providerHint, row]);
+
+  const buildPayload = (overrides: any = {}) => {
+    const p: any = {
+      transaction_type: state.transaction_type || null,
+      business_relation: state.business_relation,
+      account_id: state.account_id || null,
+      account_type: state.account_type,
+      accounting_status: state.accounting_status,
+      internal_review_status: state.internal_review_status,
+      internal_note: state.internal_note || null,
+      related_transaction_id: state.related_transaction_id || null,
+      settlement_id: state.settlement_id || null,
+      ...overrides,
+    };
+    if (row.kind === "income") {
+      p.customer_id = state.customer_id || null;
+      p.sales_invoice_id = state.sales_invoice_id ? Number(state.sales_invoice_id) : null;
+    } else {
+      p.supplier_id = state.supplier_id || null;
+      p.purchase_invoice_id = state.purchase_invoice_id ? Number(state.purchase_invoice_id) : null;
+    }
+    return p;
+  };
+
   const save = async () => {
     setPending(true);
     try {
-      const payload: any = {
-        transaction_type: state.transaction_type || null,
-        business_relation: state.business_relation,
-        account_id: state.account_id || null,
-        account_type: state.account_type,
-        accounting_status: state.accounting_status,
-        internal_review_status: state.internal_review_status,
-        internal_note: state.internal_note || null,
-        related_transaction_id: state.related_transaction_id || null,
-      };
-      if (row.kind === "income") {
-        payload.customer_id = state.customer_id || null;
-        payload.sales_invoice_id = state.sales_invoice_id ? Number(state.sales_invoice_id) : null;
-      } else {
-        payload.supplier_id = state.supplier_id || null;
-        payload.purchase_invoice_id = state.purchase_invoice_id ? Number(state.purchase_invoice_id) : null;
-      }
+      const payload = buildPayload();
       const { error } = await supabase.from(table as any).update(payload).eq("id", row.id);
       if (error) throw error;
+      // If linking to a settlement, also update the settlement.bank_income_id (idempotent)
+      if (state.settlement_id && row.kind === "income" && state.settlement_id !== row.settlement_id) {
+        await supabase.from("payment_settlements" as any).update({ bank_income_id: row.id }).eq("id", state.settlement_id);
+      }
       toast.success("تم حفظ التعديلات");
       onDone();
     } catch (e: any) { toast.error(e.message); } finally { setPending(false); }
   };
 
+
   const markComplete = async () => {
-    // Guard: must be classified
     if (!state.transaction_type || state.business_relation === "unclassified") {
       toast.error("لا يمكن الإكمال — الحركة غير مصنفة بالكامل");
       return;
     }
-    setState({ ...state, accounting_status: "reviewed", internal_review_status: "reviewed" });
-    // save immediately with reviewed
     setPending(true);
     try {
-      const payload: any = {
-        transaction_type: state.transaction_type || null,
-        business_relation: state.business_relation,
-        account_id: state.account_id || null,
-        account_type: state.account_type,
-        accounting_status: "reviewed",
-        internal_review_status: "reviewed",
-        internal_note: state.internal_note || null,
-        related_transaction_id: state.related_transaction_id || null,
-      };
-      if (row.kind === "income") {
-        payload.customer_id = state.customer_id || null;
-        payload.sales_invoice_id = state.sales_invoice_id ? Number(state.sales_invoice_id) : null;
-      } else {
-        payload.supplier_id = state.supplier_id || null;
-        payload.purchase_invoice_id = state.purchase_invoice_id ? Number(state.purchase_invoice_id) : null;
-      }
+      const payload = buildPayload({ accounting_status: "reviewed", internal_review_status: "reviewed" });
       const { error } = await supabase.from(table as any).update(payload).eq("id", row.id);
       if (error) throw error;
+      if (state.settlement_id && row.kind === "income" && state.settlement_id !== row.settlement_id) {
+        await supabase.from("payment_settlements" as any).update({ bank_income_id: row.id }).eq("id", state.settlement_id);
+      }
+      setState({ ...state, accounting_status: "reviewed", internal_review_status: "reviewed" });
       toast.success("تم اعتماد المراجعة");
       onDone();
     } catch (e: any) { toast.error(e.message); } finally { setPending(false); }
   };
+
 
   // Quick actions
   const applyQuick = (patch: any) => setState((s: any) => ({ ...s, ...patch }));
@@ -712,6 +795,57 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
             </div>
           )}
 
+          {/* Settlement linking for income rows */}
+          {row.kind === "income" && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
+              <div className="text-sm font-semibold mb-2 flex items-center gap-2">
+                <Landmark className="w-4 h-4" />
+                ربط بتسوية بوابة دفع {providerHint && <Badge variant="outline" className="text-[10px] bg-white/5 border-white/20">اقتراح: {providerHint.name}</Badge>}
+              </div>
+              {state.settlement_id ? (
+                <div className="flex items-center justify-between p-2 rounded bg-emerald-500/10 border border-emerald-500/30">
+                  <div className="text-xs">
+                    مرتبط بتسوية:{" "}
+                    <b className="font-mono">
+                      {(settlements as any[]).find((s: any) => s.id === state.settlement_id)?.settlement_reference
+                        ?? state.settlement_id.slice(0, 8)}
+                    </b>
+                  </div>
+                  <button className="text-xs text-rose-300 hover:text-rose-200" onClick={() => setState({ ...state, settlement_id: "" })}>إلغاء الربط</button>
+                </div>
+              ) : settlementCandidates.length === 0 ? (
+                <div className="text-xs text-muted-foreground">لا توجد تسويات متطابقة (نفس البوابة والمبلغ ضمن هامش التقريب).</div>
+              ) : (
+                <div className="space-y-1 max-h-56 overflow-y-auto">
+                  {settlementCandidates.map((s: any) => {
+                    const p = (providers as any[]).find((pp: any) => pp.id === s.provider_id);
+                    const diff = row.amount - Number(s.actual_bank_amount ?? s.expected_net_amount ?? 0);
+                    return (
+                      <label key={s.id} className={`flex items-center justify-between p-2 rounded cursor-pointer border ${state.settlement_id === s.id ? "bg-rose-500/20 border-rose-500/50" : "border-white/5 hover:bg-white/5"}`}>
+                        <div className="flex-1">
+                          <div className="text-xs flex items-center gap-2">
+                            <b>{p?.name ?? "—"}</b>
+                            <span className="text-muted-foreground">{s.settlement_date}</span>
+                            <span className="font-mono text-[10px] text-muted-foreground">{s.settlement_reference ?? s.id.slice(0, 6)}</span>
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            متوقع: {SAR(s.expected_net_amount)} · فعلي: {s.actual_bank_amount != null ? SAR(s.actual_bank_amount) : "—"}
+                            {Math.abs(diff) > 0.01 && <span className="text-amber-300"> · فرق مع الحركة: {SAR(diff)}</span>}
+                          </div>
+                        </div>
+                        <input type="radio" checked={state.settlement_id === s.id} onChange={() => setState({ ...state, settlement_id: s.id })} />
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="text-[10px] text-muted-foreground mt-2">
+                لن يتم إنشاء حركة جديدة — سيتم فقط ربط هذه الحركة بالتسوية المختارة.
+              </div>
+            </div>
+          )}
+
+
           <Field label="ملاحظة داخلية">
             <Textarea value={state.internal_note} onChange={(e) => setState({ ...state, internal_note: e.target.value })} rows={2} className="bg-black/40 border-white/10 text-sm" />
           </Field>
@@ -735,7 +869,14 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
         </div>
 
         <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-white/10 p-3 flex justify-between gap-2">
-          <Button variant="outline" onClick={onClose}>إلغاء</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>إلغاء</Button>
+            {!row.split_parent_id && (
+              <Button variant="outline" onClick={() => setShowSplit(true)} disabled={pending} className="border-blue-500/40 text-blue-300 hover:bg-blue-500/10">
+                <Split className="w-4 h-4 ml-1" />تقسيم
+              </Button>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={save} disabled={pending}>{pending ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}</Button>
             <Button onClick={markComplete} disabled={pending} className="bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -744,9 +885,13 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
           </div>
         </div>
       </div>
+      {showSplit && (
+        <SplitDialog row={row} onClose={() => setShowSplit(false)} onDone={() => { setShowSplit(false); onDone(); }} />
+      )}
     </div>
   );
 }
+
 function QuickBtn({ children, onClick }: any) {
   return <button onClick={onClick} className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-md px-2 py-1">{children}</button>;
 }
@@ -874,3 +1019,94 @@ function BulkModal({ selected, accounts, categoriesAll, onClose, onDone }: any) 
     </div>
   );
 }
+
+// ================== Split Dialog ==================
+function SplitDialog({ row, onClose, onDone }: { row: Row; onClose: () => void; onDone: () => void }) {
+  const [parts, setParts] = useState<Array<{ amount: string; note: string }>>([
+    { amount: (row.amount / 2).toFixed(2), note: "" },
+    { amount: (row.amount / 2).toFixed(2), note: "" },
+  ]);
+  const [pending, setPending] = useState(false);
+  const total = parts.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const diff = row.amount - total;
+  const table = row.kind === "income" ? "finance_incomes" : "finance_expenses";
+  const dateField = row.kind === "income" ? "income_date" : "expense_date";
+
+  const setPart = (i: number, patch: any) => setParts((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  const addPart = () => setParts((prev) => [...prev, { amount: "0.00", note: "" }]);
+  const removePart = (i: number) => setParts((prev) => prev.filter((_, idx) => idx !== i));
+
+  const apply = async () => {
+    if (parts.length < 2) { toast.error("يجب أن يكون هناك جزءان على الأقل"); return; }
+    if (Math.abs(diff) > 0.01) { toast.error(`مجموع الأجزاء يجب أن يساوي مبلغ الأصل (فرق: ${diff.toFixed(2)})`); return; }
+    if (parts.some((p) => (Number(p.amount) || 0) <= 0)) { toast.error("كل جزء يجب أن يكون مبلغه أكبر من صفر"); return; }
+    setPending(true);
+    try {
+      const base: any = { ...row.raw };
+      delete base.id; delete base.created_at; delete base.updated_at;
+      base.split_parent_id = row.id;
+      base.accounting_status = "unclassified";
+      base.internal_review_status = "unreviewed";
+
+      const inserts = parts.map((p) => ({
+        ...base,
+        amount: Number(p.amount),
+        [dateField]: row.date,
+        internal_note: [row.internal_note, p.note].filter(Boolean).join(" · ") || null,
+      }));
+      const { error: insErr } = await supabase.from(table as any).insert(inserts);
+      if (insErr) throw insErr;
+
+      // Mark the parent as split (keeps amount/date intact; excluded from accounting via status)
+      const parentPatch: any = {
+        accounting_status: "excluded",
+        internal_review_status: "reviewed",
+        internal_note: [row.internal_note, `تم التقسيم إلى ${parts.length} أجزاء`].filter(Boolean).join(" · "),
+      };
+      const { error: updErr } = await supabase.from(table as any).update(parentPatch).eq("id", row.id);
+      if (updErr) throw updErr;
+
+      toast.success("تم التقسيم بنجاح");
+      onDone();
+    } catch (e: any) { toast.error(e.message); } finally { setPending(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-lg bg-background border border-white/10 rounded-xl p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm font-semibold flex items-center gap-2"><Split className="w-4 h-4" />تقسيم الحركة</div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-white"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="text-xs text-muted-foreground mb-3">
+          الأصل: <b>{SAR(row.amount)}</b> · {row.date} — لن يتم تعديل مبلغ أو تاريخ الحركة الأصلية؛ سيتم إنشاء أجزاء جديدة مربوطة بها واستبعادها من المحاسبة.
+        </div>
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {parts.map((p, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <input type="number" step="0.01" value={p.amount} onChange={(e) => setPart(i, { amount: e.target.value })} className="w-28 bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm" />
+              <input type="text" placeholder="ملاحظة (اختياري)" value={p.note} onChange={(e) => setPart(i, { note: e.target.value })} className="flex-1 bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm" />
+              {parts.length > 2 && <button onClick={() => removePart(i)} className="text-rose-300 hover:text-rose-200"><X className="w-4 h-4" /></button>}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between items-center mt-3 text-xs">
+          <button onClick={addPart} className="text-blue-300 hover:text-blue-200">+ إضافة جزء</button>
+          <div>
+            المجموع: <b>{SAR(total)}</b>
+            <span className={Math.abs(diff) < 0.01 ? "text-emerald-300 mr-2" : "text-amber-300 mr-2"}>
+              · فرق: {SAR(diff)}
+            </span>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={onClose}>إلغاء</Button>
+          <Button onClick={apply} disabled={pending || Math.abs(diff) > 0.01} className="bg-blue-600 hover:bg-blue-700 text-white">
+            {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : "تنفيذ التقسيم"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
