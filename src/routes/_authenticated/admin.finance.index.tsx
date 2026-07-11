@@ -295,6 +295,13 @@ function FinanceDashboard() {
         </div>
       </div>
 
+      <Tabs defaultValue="cash" className="space-y-5">
+        <TabsList className="bg-white/5 border border-white/10">
+          <TabsTrigger value="cash">لوحة النقد</TabsTrigger>
+          <TabsTrigger value="accounting">لوحة الأداء المحاسبي</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="cash" className="space-y-5 mt-0">
       {/* Headline: manual balances (editable) + auto-computed reference */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <BalanceCard
