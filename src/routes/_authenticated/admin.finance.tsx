@@ -41,6 +41,11 @@ const tabs = [
   { to: "/admin/finance/export", label: "التصدير", icon: Download },
   { to: "/admin/finance/import", label: "استيراد Excel", icon: Upload },
   { to: "/admin/finance/import-batches", label: "دفعات الاستيراد", icon: Archive },
+  { to: "/admin/finance/chart-of-accounts", label: "دليل الحسابات", icon: BookMarked },
+  { to: "/admin/finance/journal-entries", label: "القيود اليومية", icon: BookOpen },
+  { to: "/admin/finance/periods", label: "الفترات المحاسبية", icon: CalendarRange },
+  { to: "/admin/finance/trial-balance", label: "ميزان المراجعة", icon: Scale },
+  { to: "/admin/finance/general-ledger", label: "دفتر الأستاذ", icon: ScrollText },
   { to: "/admin/finance/settings", label: "الإعدادات", icon: Cog },
 ];
 
