@@ -118,9 +118,9 @@ function SettlementsPage() {
                   <td className={`px-3 py-2 tabular-nums ${Math.abs(diff) > 0.05 ? "text-red-400" : "text-emerald-400"}`}>{diff.toFixed(2)}</td>
                   <td className={`px-3 py-2 ${STATUS_COLOR[r.status]}`}>{STATUS_LABEL[r.status]}</td>
                   <td className="px-3 py-2">
-                    <Link to="/admin/finance/settlements/$id" params={{ id: r.id }} className="inline-flex items-center gap-1 text-gold hover:underline">
-                      تفاصيل <ChevronLeft size={12} />
-                    </Link>
+                    <button onClick={() => window.location.assign(`/admin/finance/settlement-lines?settlement=${r.id}`)} className="inline-flex items-center gap-1 text-gold hover:underline">
+                      الحركات <ChevronLeft size={12} />
+                    </button>
                   </td>
                 </tr>
               );
