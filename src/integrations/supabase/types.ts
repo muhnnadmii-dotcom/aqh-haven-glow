@@ -3773,6 +3773,60 @@ export type Database = {
           },
         ]
       }
+      salla_orders: {
+        Row: {
+          batch_id: string | null
+          cancellation_date: string | null
+          customer_name: string | null
+          external_order_id: string
+          id: string
+          imported_at: string
+          invoice_number: string | null
+          order_date: string | null
+          order_status: string | null
+          original_total: number | null
+          payment_method: string | null
+          payment_status: string | null
+          raw_snapshot: Json | null
+          refund_total: number | null
+          updated_at: string
+        }
+        Insert: {
+          batch_id?: string | null
+          cancellation_date?: string | null
+          customer_name?: string | null
+          external_order_id: string
+          id?: string
+          imported_at?: string
+          invoice_number?: string | null
+          order_date?: string | null
+          order_status?: string | null
+          original_total?: number | null
+          payment_method?: string | null
+          payment_status?: string | null
+          raw_snapshot?: Json | null
+          refund_total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string | null
+          cancellation_date?: string | null
+          customer_name?: string | null
+          external_order_id?: string
+          id?: string
+          imported_at?: string
+          invoice_number?: string | null
+          order_date?: string | null
+          order_status?: string | null
+          original_total?: number | null
+          payment_method?: string | null
+          payment_status?: string | null
+          raw_snapshot?: Json | null
+          refund_total?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_requests: {
         Row: {
           accepted_by_staff_at: string | null
