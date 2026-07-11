@@ -756,15 +756,32 @@ function SettlementImportPage() {
             <Kpi label="مبيعات" value={String(summary.sales)} tone="text-emerald-300" />
             <Kpi label="مرتجعات" value={String(summary.refunds)} tone="text-amber-300" />
             <Kpi label="تعديلات" value={String(summary.adjustments)} tone="text-muted-foreground" />
-            <Kpi label="مطابقة" value={String(summary.matched)} tone="text-emerald-300" />
-            <Kpi label="طلبات غير موجودة" value={String(summary.notFound)} tone="text-red-300" />
-            <Kpi label="مكررة" value={String(summary.dupes)} tone="text-amber-300" />
-            <Kpi label="تحتاج مراجعة" value={String(summary.review)} tone={summary.review ? "text-red-300" : "text-muted-foreground"} />
+            <Kpi label="مطابق لفاتورة" value={String(summary.counts.matched_invoice)} tone="text-emerald-300" />
+            <Kpi label="طلب ملغي مطابق" value={String(summary.counts.matched_cancelled_order)} tone="text-sky-300" />
+            <Kpi label="ينتظر استرجاع" value={String(summary.counts.cancelled_order_needs_refund_match)} tone="text-amber-300" />
+            <Kpi label="طلب بدون فاتورة" value={String(summary.counts.order_found_invoice_missing)} tone="text-amber-300" />
+            <Kpi label="طلب غير موجود" value={String(summary.counts.order_not_found)} tone="text-red-300" />
+            <Kpi label="حجب اعتماد" value={String(summary.blocking)} tone={summary.blocking ? "text-red-300" : "text-muted-foreground"} />
             <Kpi label="إجمالي المبيعات" value={summary.gross.toFixed(2)} />
             <Kpi label="المرتجعات" value={summary.refundsAbs.toFixed(2)} />
             <Kpi label="الرسوم" value={summary.fees.toFixed(2)} />
             <Kpi label="ضريبة الرسوم" value={summary.feesVat.toFixed(2)} />
             <Kpi label="صافي متوقع" value={summary.expected.toFixed(2)} tone="text-gold" />
+          </div>
+
+          {/* Filter by match status */}
+          <div className="flex flex-wrap gap-2 items-center text-[11px]">
+            <span className="text-muted-foreground">فلتر:</span>
+            <button
+              onClick={() => setStatusFilter("")}
+              className={`px-2 py-1 rounded border ${statusFilter === "" ? "bg-gold/20 border-gold/40 text-gold" : "bg-white/5 border-white/10"}`}
+            >الكل ({rows.length})</button>
+            {(Object.keys(MATCH_LABEL) as MatchStatus[]).filter((k) => summary.counts[k] > 0).map((k) => (
+              <button key={k}
+                onClick={() => setStatusFilter(k)}
+                className={`px-2 py-1 rounded border ${statusFilter === k ? "bg-gold/20 border-gold/40 text-gold" : "bg-white/5 border-white/10"}`}
+              >{MATCH_LABEL[k]} ({summary.counts[k]})</button>
+            ))}
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
@@ -781,12 +798,12 @@ function SettlementImportPage() {
                   <th className="text-start px-2 py-1.5">ضريبة الرسوم</th>
                   <th className="text-start px-2 py-1.5">صافي السطر</th>
                   <th className="text-start px-2 py-1.5">الفاتورة</th>
-                  <th className="text-start px-2 py-1.5">الحالة</th>
+                  <th className="text-start px-2 py-1.5">حالة المطابقة</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.slice(0, 500).map((r) => (
-                  <tr key={r.rowNo} className={`border-t border-white/5 ${r.needs_review ? "bg-amber-500/5" : ""}`}>
+                {rows.filter((r) => !statusFilter || r.match_status === statusFilter).slice(0, 500).map((r) => (
+                  <tr key={r.rowNo} className={`border-t border-white/5 ${BLOCKING_STATUSES.has(r.match_status) ? "bg-red-500/5" : r.needs_review ? "bg-amber-500/5" : ""}`}>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.rowNo}</td>
                     <td className="px-2 py-1.5">{r.external_order_id ?? "—"}</td>
                     <td className="px-2 py-1.5">{r.transaction_date ?? "—"}</td>
@@ -796,11 +813,23 @@ function SettlementImportPage() {
                     <td className="px-2 py-1.5 tabular-nums">{r.fees_before_vat.toFixed(2)}</td>
                     <td className="px-2 py-1.5 tabular-nums">{r.fees_vat_amount.toFixed(2)}</td>
                     <td className="px-2 py-1.5 tabular-nums">{(r.net_amount ?? (r.gross_amount - r.fees_before_vat - r.fees_vat_amount)).toFixed(2)}</td>
-                    <td className="px-2 py-1.5">{r.sales_invoice_id ? <span className="text-emerald-300">#{r.sales_invoice_id}</span> : <span className="text-muted-foreground">—</span>}</td>
                     <td className="px-2 py-1.5">
-                      {r.needs_review
-                        ? <span className="inline-flex items-center gap-1 text-amber-300"><AlertTriangle size={11} /> {r.reasons.map((x) => REVIEW_LABEL[x]).join("، ")}</span>
-                        : <span className="inline-flex items-center gap-1 text-emerald-300"><CheckCircle2 size={11} /> سليم</span>}
+                      {r.sales_invoice_id
+                        ? <span className="text-emerald-300">#{r.sales_invoice_id}</span>
+                        : r.match_status === "matched_cancelled_order"
+                          ? <span className="text-sky-300">— (ملغي)</span>
+                          : <span className="text-muted-foreground">—</span>}
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <span className={`inline-flex items-center gap-1 ${MATCH_TONE[r.match_status]}`}>
+                        {BLOCKING_STATUSES.has(r.match_status)
+                          ? <AlertTriangle size={11} />
+                          : r.match_status === "matched_invoice" || r.match_status === "matched_cancelled_order"
+                            ? <CheckCircle2 size={11} />
+                            : <AlertTriangle size={11} />}
+                        {MATCH_LABEL[r.match_status]}
+                        {r.reasons.length > 0 && <span className="text-muted-foreground">· {r.reasons.map((x) => REVIEW_LABEL[x]).join("، ")}</span>}
+                      </span>
                     </td>
                   </tr>
                 ))}
