@@ -429,9 +429,14 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
                 </select>
               </Field>
               <Field label="نوع الحركة">
-                <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setF({ ...f, transaction_type: e.target.value })} className="inp">
+                <select disabled={accountantOnly} value={f.transaction_type} onChange={(e) => setType(e.target.value)} className="inp">
                   <option value="">— اختر —</option>
                   {INCOMING_TYPES.map((tt) => <option key={tt.value} value={tt.value}>{tt.label}</option>)}
+                </select>
+              </Field>
+              <Field label="علاقة العملية بالنشاط">
+                <select disabled={accountantOnly} value={f.business_relation} onChange={(e) => setF({ ...f, business_relation: e.target.value })} className="inp">
+                  {BUSINESS_RELATIONS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
                 </select>
               </Field>
               <Field label="المصدر">
