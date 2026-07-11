@@ -756,36 +756,38 @@ function ReconciliationPage() {
               const cls = isSel ? "bg-blue-500/10 border-r-2 border-blue-400" : "hover:bg-white/5";
               const provId = derivedProviderId(inc);
               const showRestHeader = selSettlement && idx === bestMatches.length && bestMatches.length > 0 && strength !== "exact_match" && strength !== "probable_match";
-              return (
-                <>
-                  {showRestHeader && (
-                    <li key={`hdr-${inc.id}`} className="p-2 text-[10px] text-muted-foreground border-b border-white/5">باقي حوالات الوسيط</li>
-                  )}
-                  <li key={inc.id}>
-                    <button onClick={() => setSelIncomeId(inc.id)} className={`w-full text-right p-3 text-xs space-y-1 ${cls}`}>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-blue-300">{providerById[provId ?? ""]?.name ?? (inc.transaction_type ?? "غير محدد")}</span>
-                        <span className="text-muted-foreground">{inc.income_date}</span>
-                      </div>
-                      <div className="text-muted-foreground line-clamp-1">{inc.note ?? "—"}</div>
-                      <div className="flex justify-between">
-                        <span>المبلغ: <b className="text-white">{fmt(inc.amount)}</b></span>
-                        <span>المتبقي: <b className={remaining > 0.05 ? "text-amber-300" : "text-emerald-300"}>{fmt(remaining)}</b></span>
-                      </div>
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-muted-foreground text-[10px]">
-                          {used <= 0 ? "غير مرتبطة" : Math.abs(remaining) <= 0.05 ? "مرتبطة بالكامل" : "مرتبطة جزئياً"}
+              const nodes = [] as any[];
+              if (showRestHeader) {
+                nodes.push(
+                  <li key={`hdr-${inc.id}`} className="p-2 text-[10px] text-muted-foreground border-b border-white/5">باقي حوالات الوسيط</li>
+                );
+              }
+              nodes.push(
+                <li key={inc.id}>
+                  <button onClick={() => setSelIncomeId(inc.id)} className={`w-full text-right p-3 text-xs space-y-1 ${cls}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-blue-300">{providerById[provId ?? ""]?.name ?? (inc.transaction_type ?? "غير محدد")}</span>
+                      <span className="text-muted-foreground">{inc.income_date}</span>
+                    </div>
+                    <div className="text-muted-foreground line-clamp-1">{inc.note ?? "—"}</div>
+                    <div className="flex justify-between">
+                      <span>المبلغ: <b className="text-white">{fmt(inc.amount)}</b></span>
+                      <span>المتبقي: <b className={remaining > 0.05 ? "text-amber-300" : "text-emerald-300"}>{fmt(remaining)}</b></span>
+                    </div>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-muted-foreground text-[10px]">
+                        {used <= 0 ? "غير مرتبطة" : Math.abs(remaining) <= 0.05 ? "مرتبطة بالكامل" : "مرتبطة جزئياً"}
+                      </span>
+                      {selSettlement && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${MATCH_COLOR[strength]}`}>
+                          {MATCH_STRENGTH_LABEL[strength]} · فرق {fmt(diff)}
                         </span>
-                        {selSettlement && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${MATCH_COLOR[strength]}`}>
-                            {MATCH_STRENGTH_LABEL[strength]} · فرق {fmt(diff)}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  </li>
-                </>
+                      )}
+                    </div>
+                  </button>
+                </li>
               );
+              return nodes;
             })}
           </ul>
         </section>
