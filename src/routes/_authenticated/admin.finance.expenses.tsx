@@ -353,8 +353,19 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
 
   const t = f.transaction_type;
   const showPurchaseInvoice = t === "supplier_invoice_payment";
-  const showPaymentType = t !== "" && t !== "internal_transfer_out" && t !== "owner_withdrawal";
-  const showRelated = t === "internal_transfer_out" || t === "owner_withdrawal";
+  const showPaymentType = t !== "" && t !== "internal_transfer_out" && t !== "owner_withdrawal" && t !== "owner_reimbursement";
+  const showRelated = t === "internal_transfer_out" || t === "owner_withdrawal" || t === "owner_reimbursement";
+  const showCustomerRefund = t === "customer_refund";
+
+  // Auto-derive business_relation when a type is picked (user can still override).
+  const setType = (newType: string) => {
+    const suggested = defaultBusinessRelation(newType);
+    setF({
+      ...f,
+      transaction_type: newType,
+      business_relation: suggested ?? f.business_relation,
+    });
+  };
 
   const save = async () => {
     setSaving(true);
