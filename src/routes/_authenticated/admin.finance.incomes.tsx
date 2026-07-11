@@ -89,7 +89,7 @@ function IncomesPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">الدخل / التحصيلات {showDeleted && <span className="text-amber-300 text-[12px]">(المؤرشفة)</span>}</h2>
+        <h2 className="text-base font-semibold">المقبوضات {showDeleted && <span className="text-amber-300 text-[12px]">(المؤرشفة)</span>}</h2>
         <div className="flex items-center gap-2">
           {roles.canManage && deletedCount > 0 && (
             <button onClick={() => setShowDeleted(!showDeleted)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] ${showDeleted ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : "bg-white/5 border-white/10 hover:bg-white/10"}`}>
