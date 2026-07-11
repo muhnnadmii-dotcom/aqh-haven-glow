@@ -2564,6 +2564,7 @@ export type Database = {
           adjustments_amount: number
           attachment_id: string | null
           bank_income_id: string | null
+          calculated_expected_net_amount: number | null
           created_at: string
           created_by: string | null
           difference_amount: number
@@ -2587,15 +2588,18 @@ export type Database = {
           reserve_released: number
           settlement_date: string | null
           settlement_reference: string | null
+          source_expected_net_amount: number | null
           source_file_name: string | null
           status: Database["public"]["Enums"]["payment_settlement_status"]
           updated_at: string
+          wallet_top_up_amount: number
         }
         Insert: {
           actual_bank_amount?: number | null
           adjustments_amount?: number
           attachment_id?: string | null
           bank_income_id?: string | null
+          calculated_expected_net_amount?: number | null
           created_at?: string
           created_by?: string | null
           difference_amount?: number
@@ -2619,15 +2623,18 @@ export type Database = {
           reserve_released?: number
           settlement_date?: string | null
           settlement_reference?: string | null
+          source_expected_net_amount?: number | null
           source_file_name?: string | null
           status?: Database["public"]["Enums"]["payment_settlement_status"]
           updated_at?: string
+          wallet_top_up_amount?: number
         }
         Update: {
           actual_bank_amount?: number | null
           adjustments_amount?: number
           attachment_id?: string | null
           bank_income_id?: string | null
+          calculated_expected_net_amount?: number | null
           created_at?: string
           created_by?: string | null
           difference_amount?: number
@@ -2651,9 +2658,11 @@ export type Database = {
           reserve_released?: number
           settlement_date?: string | null
           settlement_reference?: string | null
+          source_expected_net_amount?: number | null
           source_file_name?: string | null
           status?: Database["public"]["Enums"]["payment_settlement_status"]
           updated_at?: string
+          wallet_top_up_amount?: number
         }
         Relationships: [
           {
@@ -4911,6 +4920,7 @@ export type Database = {
           adjustments_amount: number
           attachment_id: string | null
           bank_income_id: string | null
+          calculated_expected_net_amount: number | null
           created_at: string
           created_by: string | null
           difference_amount: number
@@ -4934,9 +4944,11 @@ export type Database = {
           reserve_released: number
           settlement_date: string | null
           settlement_reference: string | null
+          source_expected_net_amount: number | null
           source_file_name: string | null
           status: Database["public"]["Enums"]["payment_settlement_status"]
           updated_at: string
+          wallet_top_up_amount: number
         }
         SetofOptions: {
           from: "*"
@@ -5156,6 +5168,7 @@ export type Database = {
         | "chargeback"
         | "manual_adjustment"
         | "unexplained_deduction"
+        | "wallet_top_up"
       payment_settlement_payout_status:
         | "awaiting_payout"
         | "received"
@@ -5526,6 +5539,7 @@ export const Constants = {
         "chargeback",
         "manual_adjustment",
         "unexplained_deduction",
+        "wallet_top_up",
       ],
       payment_settlement_payout_status: [
         "awaiting_payout",
