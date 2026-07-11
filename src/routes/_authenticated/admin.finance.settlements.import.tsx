@@ -804,7 +804,8 @@ function SettlementImportPage() {
             <Kpi label="ينتظر استرجاع" value={String(summary.counts.cancelled_order_needs_refund_match)} tone="text-amber-300" />
             <Kpi label="طلب بدون فاتورة" value={String(summary.counts.order_found_invoice_missing)} tone="text-amber-300" />
             <Kpi label="طلب غير موجود" value={String(summary.counts.order_not_found)} tone="text-red-300" />
-            <Kpi label="حجب اعتماد" value={String(summary.blocking)} tone={summary.blocking ? "text-red-300" : "text-muted-foreground"} />
+            <Kpi label="بحاجة مراجعة" value={String(summary.review)} tone={summary.review ? "text-amber-300" : "text-muted-foreground"} />
+            <Kpi label="خصم غير مصنف" value={String(summary.counts.needs_classification)} tone={summary.counts.needs_classification ? "text-amber-300" : "text-muted-foreground"} />
             <Kpi label="إجمالي المبيعات" value={summary.gross.toFixed(2)} />
             <Kpi label="المرتجعات" value={summary.refundsAbs.toFixed(2)} />
             <Kpi label="الرسوم" value={summary.fees.toFixed(2)} />
