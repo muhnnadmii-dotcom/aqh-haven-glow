@@ -1,76 +1,85 @@
-## الهدف
-إضافة تصنيف واضح لكل حركة مالية (وارد/صادر + نوع الحركة + حالة التصنيف) على الجداول الحالية `finance_incomes` و `finance_expenses`، بدون حذف بيانات أو إعادة بناء.
+# تطوير لوحة المالية — تقسيم إلى نقد ومحاسبي
 
-## 1) Migration آمنة (إضافة أعمدة + Enums)
+## نطاق العمل
+تعديل على النظام المالي القائم فقط. الاحتفاظ بالتصميم الحالي (RTL، الوضع الداكن، البطاقات، الرسومات) وإعادة استخدام المكونات الحالية (`FinanceRowsDrawer`، `dashboard-data.ts`، Recharts، `capital.ts`، `manual-balances.ts`).
 
-إنشاء نوعين جديدين واستخدامهما على الجدولين الحاليين:
+## 1. تقسيم لوحة المالية إلى تبويبين
+داخل `admin.finance.index.tsx` نفس الصفحة، إضافة `Tabs`:
 
-- `finance_transaction_direction`: `incoming | outgoing`
-- `finance_incoming_type`: 8 قيم (customer_invoice_collection, cash_sale, owner_contribution, internal_transfer_in, supplier_refund, loan_received, other_income, unclassified_incoming)
-- `finance_outgoing_type`: 10 قيم (supplier_invoice_payment, operating_expense, inventory_purchase, asset_purchase, owner_withdrawal, internal_transfer_out, loan_payment, tax_or_government_payment, customer_refund, unclassified_outgoing)
-- `finance_accounting_status`: `unclassified | classified | reviewed`
+### تبويب "لوحة النقد" (افتراضي)
+يستخدم نفس البطاقات الحالية دون تغيير مظهرها، مع إعادة تنظيم:
+- رصيد الحسابات (من `finance_accounts` + `computeLiveCash`)
+- إجمالي المقبوضات / المدفوعات / صافي التدفق (موجودة)
+- التدفق النقدي التشغيلي = مقبوضات تشغيلية − مدفوعات تشغيلية (استبعاد `transaction_type` من مجموعة owner_contribution/withdrawal/internal_transfer)
+- مساهمات المالك / سحوبات المالك / التحويلات الداخلية (بطاقات منفصلة موجودة جزئيًا)
+- تحصيلات النشاط في الحساب الشخصي: `finance_incomes` حيث `account.account_owner_type='owner'` و`business_relation='business'`
+- مبالغ مستحقة للمالك / صافي جاري المالك (من `get_owner_current_account` الموجودة)
+- الحركات غير المصنفة (موجودة)
+- آخر الحركات + أرصدة الحسابات + رسم المقبوضات/المدفوعات (موجودة)
 
-الأعمدة المضافة على كل من `finance_incomes` و `finance_expenses`:
+### تبويب "لوحة الأداء المحاسبي" (جديد)
+مصدر البيانات: `sales_invoices` المعتمدة، `purchase_invoices` المعتمدة، و`journal_entry_lines` للقيود المرحّلة عبر `get_trial_balance`.
 
-| الحقل | النوع | ملاحظات |
-|---|---|---|
-| `transaction_direction` | enum | ثابت: incoming للمقبوضات، outgoing للمدفوعات (default حسب الجدول) |
-| `transaction_type` | enum مناسب للاتجاه | nullable في البداية |
-| `accounting_status` | enum | default `unclassified` |
-| `related_transaction_id` | uuid | nullable (للتحويلات الداخلية المتقابلة) |
-| `internal_note` | text | nullable |
+RPC جديد `get_accounting_performance(p_from date, p_to date)` يعيد:
+- `gross_sales`, `sales_discounts`, `net_sales` من `sales_invoices` (approved/partially_paid/paid)
+- `cogs` من رصيد حساب `cost_of_goods_sold` (إن وُجد رصيد، وإلا `NULL`)
+- `gross_profit` = net_sales − cogs (فقط إذا cogs ليس NULL)
+- `operating_expenses` من مجاميع حسابات النوع `expense` (باستثناء `owner_drawings`)
+- `net_profit` = gross_profit − operating_expenses
+- `ar_balance` من `accounts_receivable`, `ap_balance` من `accounts_payable`
+- `inventory_value` من `aqh_finance_manual_balances.inventory_value` (أو حساب inventory إن وجد)
+- `output_vat`, `deductible_input_vat` من `sales_invoices.vat_amount` و`purchase_invoices.deductible_vat_amount`
+- `net_vat` = output − deductible
 
-- البيانات القديمة تبقى كما هي: `transaction_type = NULL`، `accounting_status = 'unclassified'`.
-- لا يوجد تحويل تلقائي بناءً على اسم أو وصف — لا نلمس المبالغ أو التواريخ.
-- (اختياري وآمن) للسجلات التي مصدرها فئة "توزيع الأرباح/سحوبات المالك" الحالية بشكل قاطع فقط، تُضبط `transaction_type = 'owner_withdrawal'` و `accounting_status = 'classified'` — بشرط وجود slug واضح مثل `owner_draw` في `finance_categories.system_slug`. غير ذلك تبقى unclassified.
+عند غياب COGS تعرض البطاقة "غير مكتمل — يحتاج ربط تكلفة المخزون" ولا يحسب مجمل الربح.
 
-## 2) تعديل الواجهة (بدون تغيير التصميم)
+## 2. صفحة مقارنة الأشهر (`admin.finance.compare.tsx`)
+تقسيم إلى قسمين:
+- **مقارنة نقدية**: مقبوضات، مدفوعات، صافي تدفق، تحصيلات الحساب الشخصي، مدفوعات المالك (توسيع الجدول الحالي)
+- **مقارنة محاسبية**: مبيعات، تكلفة مبيعات، مصروفات، صافي ربح، ضريبة مخرجات، ضريبة مدخلات (استدعاء `get_accounting_performance` لكل شهر)
 
-**نموذج المقبوضات** (`admin.finance.incomes.tsx`):
-- إضافة `Select` لـ "نوع الحركة" بقيم incoming (مع تسميات عربية).
-- عرض العمود في الجدول.
-- فلتر علوي: نوع الحركة + حالة التصنيف (الكل/غير مصنف/مصنف/تمت مراجعته).
-- بطاقة صغيرة أعلى الصفحة "حركات غير مصنفة: N" — الضغط عليها يفعّل فلتر unclassified.
+## 3. قابلية التتبع (Drill-down)
+كل بطاقة تفتح `FinanceRowsDrawer` أو Drawer جديد مماثل يعرض السجلات المصدر مع الفترة والفلاتر المطبقة. لا تفتح بطاقة بدون سجلات فعلية.
 
-**نموذج المدفوعات** (`admin.finance.expenses.tsx`):
-- نفس الإضافات مع قيم outgoing.
+للبطاقات المحاسبية: Drawer جديد `AccountingRowsDrawer` يعرض القيود من `journal_entry_lines` مع رقم القيد والتاريخ والوصف والمبلغ.
 
-عند اختيار نوع الحركة يدويًا تنتقل `accounting_status` تلقائيًا إلى `classified`.
+## 4. التقارير (`admin.finance.reports.tsx`)
+- إعادة تسمية التقرير الحالي إلى "تقرير المقبوضات والمدفوعات (نقدي)"
+- إضافة تقرير جديد "قائمة الدخل" (Income Statement): صافي المبيعات، تكلفة المبيعات، مجمل الربح، المصروفات التشغيلية، صافي الربح — يعتمد على `get_accounting_performance`. سحوبات المالك مستثناة.
 
-## 3) منطق التقارير
+## تفاصيل تقنية
 
-تحديث فلاتر الجمع في:
-- `admin.finance.index.tsx` (KPIs + توزيع الأرباح + النقد المباشر)
-- `admin.finance.compare.tsx`
-- `admin.finance.reports.tsx`
-- `computeLiveCash` في حساب النقد المرتبط بالـ anchor
+### Migration
+```sql
+CREATE OR REPLACE FUNCTION public.get_accounting_performance(p_from date, p_to date)
+RETURNS TABLE(
+  gross_sales numeric, sales_discounts numeric, net_sales numeric,
+  cogs numeric, gross_profit numeric,
+  operating_expenses numeric, net_profit numeric,
+  ar_balance numeric, ap_balance numeric, inventory_value numeric,
+  output_vat numeric, deductible_input_vat numeric, net_vat numeric
+) LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,private AS $$ ... $$;
+-- REVOKE من public/anon، GRANT للأدوار المالية عبر has_any_finance_role
+```
+كل الأرقام `numeric(14,2)`.
 
-قواعد الاستبعاد من إجمالي التشغيل (مقبوضات ومدفوعات):
-- استبعاد `internal_transfer_in` / `internal_transfer_out`
-- استبعاد `owner_contribution` من المقبوضات
-- استبعاد `owner_withdrawal` من المدفوعات (تبقى ضمن "سحوبات المالك")
-- استبعاد `loan_received` من المقبوضات
-- استبعاد `loan_payment` من المدفوعات
+### الملفات المعدلة/المنشأة
+- **معدل**: `src/routes/_authenticated/admin.finance.index.tsx` (تبويبات)، `admin.finance.compare.tsx` (قسم محاسبي)، `admin.finance.reports.tsx` (تقرير قائمة الدخل)
+- **جديد**: `src/lib/finance/accounting-performance.ts` (استدعاء RPC + أنواع)، `src/components/finance/AccountingRowsDrawer.tsx`
+- **جديد**: migration واحدة لإنشاء RPC
 
-ملاحظة: الحركات القديمة `transaction_type = NULL` تبقى ضمن التشغيل كما هي اليوم (حفاظًا على الأرقام الحالية).
+### القيود على التنفيذ
+- لا تعديل على الجداول أو الأعمدة الموجودة
+- لا حذف بيانات
+- لا بيانات تجريبية
+- Grants: `REVOKE ALL FROM PUBLIC, anon`; `GRANT EXECUTE TO authenticated` (مع فحص الدور داخل الدالة)
+- decimal دقيق (`numeric`)
 
-سحوبات المالك (Owner Draws) في الداشبورد: يعتمد الآن على `transaction_type = 'owner_withdrawal'` بالإضافة إلى المصدر الحالي (فئة "توزيع الأرباح") — أيهما أوجد.
-
-النقد المباشر (`cash_anchor_date`) يستمر بجمع كل الحركات بعد تاريخ الإرساء، لأن التحويلات الداخلية تؤثر فعلاً على الرصيد النقدي؛ لكن سنستثني `internal_transfer_*` لأنها متعادلة (in/out) لتفادي الازدواج عندما يتم ربطها عبر `related_transaction_id`. الحركات القديمة غير المتأثرة تبقى كما هي.
-
-## 4) الملفات المتوقع تعديلها
-- Migration واحدة (Enums + ALTER TABLE + defaults).
-- `src/routes/_authenticated/admin.finance.incomes.tsx`
-- `src/routes/_authenticated/admin.finance.expenses.tsx`
-- `src/routes/_authenticated/admin.finance.index.tsx`
-- `src/routes/_authenticated/admin.finance.compare.tsx`
-- `src/routes/_authenticated/admin.finance.reports.tsx`
-- ملف مساعد جديد `src/lib/finance-transaction-types.ts` (قوائم الأنواع + التسميات العربية + مجموعات الاستبعاد).
-
-## معايير القبول
-- Enums وأعمدة جديدة موجودة على الجدولين.
-- بيانات قديمة سليمة تمامًا (لا تغيير للمبالغ/التواريخ) و `accounting_status = unclassified`.
-- إمكانية إضافة/تعديل حركة مع اختيار نوعها ورؤية عمودها وفلترتها.
-- بطاقة "غير مصنف" تعمل كفلتر سريع.
-- التحويلات الداخلية وسحوبات المالك ومساهمات المالك والقروض مستثناة من إجمالي التشغيل في KPIs والتقارير.
-- لا أخطاء TypeScript ولا انكسار في السياسات/الصلاحيات (الأعمدة الجديدة تحت نفس RLS الحالية).
+## طريقة الاختبار
+1. فتح `/admin/finance` — التبديل بين تبويب النقد والمحاسبي
+2. اختيار شهر يحوي فواتير مبيعات معتمدة والتحقق من ظهور صافي المبيعات
+3. حالة عدم توفر COGS → عرض رسالة "غير مكتمل"
+4. الضغط على أي بطاقة → فتح Drawer بالسجلات
+5. `/admin/finance/compare` → عرض قسمي المقارنة
+6. `/admin/finance/reports` → توليد "قائمة الدخل" وتصديرها
+7. التأكد أن سحوبات المالك لا تظهر ضمن مصروفات قائمة الدخل
