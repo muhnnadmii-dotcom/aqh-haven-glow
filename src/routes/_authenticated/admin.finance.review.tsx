@@ -484,11 +484,13 @@ function ReviewCenter() {
           row={openRow}
           accounts={accounts} suppliers={suppliers} customers={customers}
           salesInvoices={salesInvoices} purchaseInvoices={purchaseInvoices}
+          settlements={settlements} providers={providers}
           incomes={incomes} expenses={expenses}
           onClose={() => setOpenRow(null)}
-          onDone={() => { invalidateAll(); setOpenRow(null); }}
+          onDone={() => { invalidateAll(); qc.invalidateQueries({ queryKey: ["review_settlements"] }); setOpenRow(null); }}
         />
       )}
+
 
       {showBulk && (
         <BulkModal
