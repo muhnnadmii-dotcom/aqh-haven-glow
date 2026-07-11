@@ -130,6 +130,11 @@ function PurchaseInvoiceEditor() {
         duplicate_override_reason: header.duplicate_override_reason || null,
         notes: header.notes || null,
         internal_notes: header.internal_notes || null,
+        payment_provider_id: header.payment_provider_id || null,
+        fee_period_start: header.fee_period_start || null,
+        fee_period_end: header.fee_period_end || null,
+        provider_invoice_number: header.provider_invoice_number || null,
+        vat_document_status: header.vat_document_status || null,
       };
       const { error } = await supabase.from("purchase_invoices" as any).update(payload).eq("id", invoiceId);
       if (error) throw error;
