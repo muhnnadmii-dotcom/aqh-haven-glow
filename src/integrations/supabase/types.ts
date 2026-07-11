@@ -2536,6 +2536,7 @@ export type Database = {
       payment_settlements: {
         Row: {
           actual_bank_amount: number | null
+          adjustments_amount: number
           attachment_id: string | null
           bank_income_id: string | null
           created_at: string
@@ -2546,22 +2547,27 @@ export type Database = {
           fees_vat_amount: number
           gross_sales_amount: number
           id: string
+          imported_at: string
           notes: string | null
           other_deductions: number
           payout_fee: number
+          payout_status: Database["public"]["Enums"]["payment_settlement_payout_status"]
           period_end: string | null
           period_start: string | null
           provider_id: string
           refunds_amount: number
+          report_reference: string | null
           reserve_held: number
           reserve_released: number
           settlement_date: string
           settlement_reference: string | null
+          source_file_name: string | null
           status: Database["public"]["Enums"]["payment_settlement_status"]
           updated_at: string
         }
         Insert: {
           actual_bank_amount?: number | null
+          adjustments_amount?: number
           attachment_id?: string | null
           bank_income_id?: string | null
           created_at?: string
@@ -2572,22 +2578,27 @@ export type Database = {
           fees_vat_amount?: number
           gross_sales_amount?: number
           id?: string
+          imported_at?: string
           notes?: string | null
           other_deductions?: number
           payout_fee?: number
+          payout_status?: Database["public"]["Enums"]["payment_settlement_payout_status"]
           period_end?: string | null
           period_start?: string | null
           provider_id: string
           refunds_amount?: number
+          report_reference?: string | null
           reserve_held?: number
           reserve_released?: number
           settlement_date: string
           settlement_reference?: string | null
+          source_file_name?: string | null
           status?: Database["public"]["Enums"]["payment_settlement_status"]
           updated_at?: string
         }
         Update: {
           actual_bank_amount?: number | null
+          adjustments_amount?: number
           attachment_id?: string | null
           bank_income_id?: string | null
           created_at?: string
@@ -2598,17 +2609,21 @@ export type Database = {
           fees_vat_amount?: number
           gross_sales_amount?: number
           id?: string
+          imported_at?: string
           notes?: string | null
           other_deductions?: number
           payout_fee?: number
+          payout_status?: Database["public"]["Enums"]["payment_settlement_payout_status"]
           period_end?: string | null
           period_start?: string | null
           provider_id?: string
           refunds_amount?: number
+          report_reference?: string | null
           reserve_held?: number
           reserve_released?: number
           settlement_date?: string
           settlement_reference?: string | null
+          source_file_name?: string | null
           status?: Database["public"]["Enums"]["payment_settlement_status"]
           updated_at?: string
         }
@@ -4848,6 +4863,46 @@ export type Database = {
         Args: { _invoice_id: number }
         Returns: undefined
       }
+      recalculate_settlement_totals: {
+        Args: { _settlement_id: string }
+        Returns: {
+          actual_bank_amount: number | null
+          adjustments_amount: number
+          attachment_id: string | null
+          bank_income_id: string | null
+          created_at: string
+          created_by: string | null
+          difference_amount: number
+          expected_net_amount: number
+          fees_before_vat: number
+          fees_vat_amount: number
+          gross_sales_amount: number
+          id: string
+          imported_at: string
+          notes: string | null
+          other_deductions: number
+          payout_fee: number
+          payout_status: Database["public"]["Enums"]["payment_settlement_payout_status"]
+          period_end: string | null
+          period_start: string | null
+          provider_id: string
+          refunds_amount: number
+          report_reference: string | null
+          reserve_held: number
+          reserve_released: number
+          settlement_date: string
+          settlement_reference: string | null
+          source_file_name: string | null
+          status: Database["public"]["Enums"]["payment_settlement_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_settlements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       recompute_settlement_status: {
         Args: { _settlement_id: string }
         Returns: undefined
@@ -5048,6 +5103,10 @@ export type Database = {
         | "reserve_released"
         | "rounding_difference"
         | "unexplained_transfer_fee"
+      payment_settlement_payout_status:
+        | "awaiting_payout"
+        | "received"
+        | "partially_received"
       payment_settlement_status:
         | "draft"
         | "imported"
@@ -5411,6 +5470,11 @@ export const Constants = {
         "reserve_released",
         "rounding_difference",
         "unexplained_transfer_fee",
+      ],
+      payment_settlement_payout_status: [
+        "awaiting_payout",
+        "received",
+        "partially_received",
       ],
       payment_settlement_status: [
         "draft",

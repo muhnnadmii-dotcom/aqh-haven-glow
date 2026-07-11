@@ -13,9 +13,21 @@ type Settlement = {
   id: string;
   provider_id: string;
   settlement_reference: string | null;
+  report_reference: string | null;
+  source_file_name: string | null;
   settlement_date: string;
+  period_start: string | null;
+  period_end: string | null;
+  imported_at: string | null;
   expected_net_amount: number;
+  gross_sales_amount: number;
+  refunds_amount: number;
+  fees_before_vat: number;
+  fees_vat_amount: number;
+  payout_fee: number;
+  adjustments_amount: number;
   status: string;
+  payout_status: string | null;
   notes: string | null;
 };
 
@@ -89,6 +101,23 @@ const MATCH_COLOR: Record<string, string> = {
 const fmt = (n: number) => new Intl.NumberFormat("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
 const daysBetween = (a: string, b: string) => Math.abs(Math.floor((new Date(a).getTime() - new Date(b).getTime()) / 86400000));
 
+function isTechnicalRef(ref: string | null | undefined) {
+  if (!ref) return true;
+  // e.g. "salla_payments-0acfe154b75b" — provider code + hash
+  return /^[a-z0-9_]+-[a-f0-9]{6,}$/i.test(ref.trim());
+}
+
+function displayRef(s: Settlement, providerName: string) {
+  const realRef = s.report_reference && s.report_reference.trim() ? s.report_reference.trim() : null;
+  if (realRef) return `${providerName} — تسوية #${realRef}`;
+  const fileMatch = s.source_file_name?.match(/#?(\d{5,})/);
+  if (fileMatch) return `${providerName} — تسوية #${fileMatch[1]}`;
+  if (!isTechnicalRef(s.settlement_reference)) return `${providerName} — ${s.settlement_reference}`;
+  if (s.source_file_name) return `${providerName} — ${s.source_file_name}`;
+  const date = s.imported_at ? new Date(s.imported_at).toLocaleDateString("ar-SA") : s.settlement_date;
+  return `${providerName} — استيراد ${date}`;
+}
+
 function ReconciliationPage() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
@@ -118,7 +147,7 @@ function ReconciliationPage() {
     setLoading(true);
     const [p, s, i, a] = await Promise.all([
       supabase.from("payment_providers" as any).select("id,name,code").eq("is_active", true),
-      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,settlement_date,expected_net_amount,status,notes").order("settlement_date", { ascending: false }).limit(500),
+      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,report_reference,source_file_name,settlement_date,period_start,period_end,imported_at,expected_net_amount,gross_sales_amount,refunds_amount,fees_before_vat,fees_vat_amount,payout_fee,adjustments_amount,status,payout_status,notes").order("settlement_date", { ascending: false }).limit(500),
       supabase.from("finance_incomes" as any).select("id,income_date,amount,note,transaction_type,payment_provider_id,settlement_id,account_id").is("deleted_at", null).order("income_date", { ascending: false }).limit(500),
       supabase.from("settlement_bank_allocations" as any).select("*").eq("status", "confirmed"),
     ]);
@@ -182,6 +211,22 @@ function ReconciliationPage() {
     });
   }, [incomes, iFilterProvider, iFilterAlloc, iShowAll, iSearch, incomeAlloc]);
 
+  const selSettlementForSort = useMemo(() => settlements.find(s => s.id === selSettlementId) || null, [settlements, selSettlementId]);
+  const incomesSorted = useMemo(() => {
+    if (!selSettlementForSort) return incomesFiltered;
+    const s = selSettlementForSort;
+    const expected = Number(s.expected_net_amount);
+    const score = (inc: Income) => {
+      const sameProvider = inc.payment_provider_id === s.provider_id ? 0 : 100;
+      const remaining = Number(inc.amount) - (incomeAlloc[inc.id] ?? 0);
+      const amountDiff = Math.abs(remaining - expected);
+      const amountScore = amountDiff <= 0.05 ? 0 : amountDiff <= 20 ? 5 : amountDiff <= 200 ? 20 : 50;
+      const dateScore = Math.min(30, daysBetween(s.settlement_date, inc.income_date));
+      return sameProvider + amountScore + dateScore;
+    };
+    return [...incomesFiltered].sort((a, b) => score(a) - score(b));
+  }, [incomesFiltered, selSettlementForSort, incomeAlloc]);
+
   const selSettlement = useMemo(() => settlements.find(s => s.id === selSettlementId) || null, [settlements, selSettlementId]);
   const selIncome = useMemo(() => incomes.find(i => i.id === selIncomeId) || null, [incomes, selIncomeId]);
 
@@ -191,32 +236,45 @@ function ReconciliationPage() {
   // Suggested amount / match strength
   const suggestion = useMemo(() => {
     if (!selSettlement || !selIncome) return null;
-    const suggestedAmount = Math.min(settleRemaining, incomeRemaining);
-    if (suggestedAmount <= 0) return { strength: "no_match", suggestedAmount: 0, diff: 0, suggestedType: null as string | null, reason: "لا يوجد متبقٍ في أحد الطرفين" };
-    const sameProvider = selIncome.payment_provider_id && selIncome.payment_provider_id === selSettlement.provider_id;
+    const sameProvider = !!(selIncome.payment_provider_id && selIncome.payment_provider_id === selSettlement.provider_id);
     const dateDelta = daysBetween(selSettlement.settlement_date, selIncome.income_date);
-    const diff = incomeRemaining - settleRemaining; // bank - expected remaining
-    const absDiff = Math.abs(diff);
+    const settleExpected = Number(selSettlement.expected_net_amount || 0);
+    const incomeAmount = Number(selIncome.amount || 0);
+    const diffFull = incomeAmount - settleExpected;
+    const absDiffFull = Math.abs(diffFull);
+    const suggestedAmount = Math.min(settleRemaining, incomeRemaining);
+    if (suggestedAmount <= 0) return { strength: "no_match", suggestedAmount: 0, diff: 0, suggestedType: null as string | null, reason: "لا يوجد متبقٍ في أحد الطرفين", sameProvider, dateDelta };
 
+    const diff = incomeRemaining - settleRemaining;
+    const absDiff = Math.abs(diff);
     let strength: string = "no_match";
     let suggestedType: string | null = null;
     let reason = "";
 
-    if (absDiff <= 0.05) {
-      strength = sameProvider && dateDelta <= 30 ? "exact_match" : "probable_match";
+    // Ratio guard against the settlement expected total — prevents e.g. 6664 vs 4250 pretending to match.
+    const ratio = absDiffFull / Math.max(settleExpected, 1);
+
+    if (sameProvider && absDiff <= 0.05 && dateDelta <= 30 && ratio <= 0.02) {
+      strength = "exact_match";
       suggestedType = absDiff > 0 ? "rounding_difference" : null;
-      reason = "المبلغ متطابق ضمن هامش التقريب";
-    } else if (absDiff <= 20) {
-      strength = sameProvider ? "probable_match" : "weak_match";
+      reason = "نفس الوسيط + المبلغ متطابق ضمن هامش التقريب";
+    } else if (absDiff <= 0.05 && ratio <= 0.02) {
+      strength = "probable_match";
+      suggestedType = absDiff > 0 ? "rounding_difference" : null;
+      reason = "المبلغ متطابق لكن الوسيط أو التاريخ لا يتطابق";
+    } else if (sameProvider && absDiff <= 20 && dateDelta <= 30 && ratio <= 0.05) {
+      strength = "probable_match";
       suggestedType = "unknown_difference";
-      reason = `فرق ${fmt(absDiff)} يحتاج تصنيف`;
-    } else if (sameProvider && dateDelta <= 15 && absDiff / Math.max(settleRemaining, 1) < 0.05) {
+      reason = `نفس الوسيط · فرق ${fmt(absDiff)} يحتاج تصنيف`;
+    } else if (sameProvider && dateDelta <= 15 && ratio <= 0.10) {
       strength = "weak_match";
       suggestedType = "unknown_difference";
-      reason = "نفس الوسيط لكن الفرق كبير";
+      reason = `نفس الوسيط لكن الفرق ${fmt(absDiffFull)} (${(ratio * 100).toFixed(1)}%)`;
     } else {
       strength = "no_match";
-      reason = "الفرق كبير جداً";
+      reason = sameProvider
+        ? `الفرق كبير جداً (${fmt(absDiffFull)} · ${(ratio * 100).toFixed(1)}%)`
+        : "الوسيط مختلف";
     }
     return { strength, suggestedAmount, diff, suggestedType, reason, sameProvider, dateDelta };
   }, [selSettlement, selIncome, settleRemaining, incomeRemaining]);
@@ -259,6 +317,13 @@ function ReconciliationPage() {
     const { error } = await supabase.rpc("reverse_settlement_allocation" as any, { _allocation_id: allocId, _reason: reason.trim() });
     if (error) { toast.error(error.message); return; }
     toast.success("تم عكس التخصيص");
+    await load();
+  };
+
+  const recalcSettlement = async (settlementId: string) => {
+    const { error } = await supabase.rpc("recalculate_settlement_totals" as any, { _settlement_id: settlementId });
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم إعادة احتساب التسوية");
     await load();
   };
 
@@ -345,21 +410,39 @@ function ReconciliationPage() {
               const remaining = Number(s.expected_net_amount) - used;
               const isSel = s.id === selSettlementId;
               const cls = isSel ? "bg-amber-500/10 border-r-2 border-amber-500" : "hover:bg-white/5";
+              const providerName = providerById[s.provider_id]?.name ?? "—";
               return (
                 <li key={s.id}>
                   <button onClick={() => setSelSettlementId(s.id)} className={`w-full text-right p-3 text-xs space-y-1 ${cls}`}>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-amber-400">{providerById[s.provider_id]?.name ?? "—"}</span>
-                      <span className="text-muted-foreground">{s.settlement_date}</span>
+                      <span className="font-semibold text-amber-400 truncate">{displayRef(s, providerName)}</span>
+                      <span className="text-muted-foreground shrink-0">{s.settlement_date}</span>
                     </div>
-                    <div className="text-muted-foreground">مرجع: {s.settlement_reference ?? "—"}</div>
+                    {s.source_file_name && (
+                      <div className="text-[10px] text-muted-foreground truncate">📎 {s.source_file_name}</div>
+                    )}
                     <div className="flex justify-between">
                       <span>المتوقع: <b className="text-white">{fmt(s.expected_net_amount)}</b></span>
                       <span>مخصص: <b className="text-blue-300">{fmt(used)}</b></span>
                     </div>
-                    <div className="flex justify-between">
+                    {Math.abs(Number(s.adjustments_amount || 0)) > 0.005 && (
+                      <div className="text-[10px] text-purple-300">تسويات: {fmt(s.adjustments_amount)}</div>
+                    )}
+                    <div className="flex justify-between items-center gap-2">
                       <span>المتبقي: <b className={remaining > 0.05 ? "text-amber-300" : "text-emerald-300"}>{fmt(remaining)}</b></span>
-                      <span className="text-muted-foreground">{STATUS_LABEL[s.status] ?? s.status}</span>
+                      <span className="flex items-center gap-1">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">{STATUS_LABEL[s.status] ?? s.status}</span>
+                        {s.payout_status && s.payout_status !== s.status && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-300">{s.payout_status}</span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="pt-1 flex justify-end" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); recalcSettlement(s.id); }}
+                        className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-muted-foreground hover:bg-white/5 hover:text-white"
+                        title="إعادة قراءة كل سطور التسوية وإعادة حساب الإجماليات"
+                      >↻ إعادة احتساب</button>
                     </div>
                   </button>
                 </li>
@@ -382,10 +465,39 @@ function ReconciliationPage() {
               <div className="rounded border border-white/10 p-2 space-y-1 bg-black/20">
                 <div className="text-amber-400 font-semibold">التسوية المختارة</div>
                 <Row label="الوسيط" value={providerById[selSettlement.provider_id]?.name ?? "—"} />
-                <Row label="المرجع" value={selSettlement.settlement_reference ?? "—"} />
-                <Row label="التاريخ" value={selSettlement.settlement_date} />
-                <Row label="الصافي المتوقع" value={fmt(selSettlement.expected_net_amount)} bold />
-                <Row label="المتبقي للتخصيص" value={fmt(settleRemaining)} tone={settleRemaining > 0.05 ? "amber" : "emerald"} bold />
+                <Row label="المرجع" value={displayRef(selSettlement, providerById[selSettlement.provider_id]?.name ?? "—")} />
+                {selSettlement.source_file_name && <Row label="الملف المصدر" value={selSettlement.source_file_name} />}
+                <Row label="تاريخ التسوية" value={selSettlement.settlement_date} />
+                {selSettlement.imported_at && (
+                  <Row label="تاريخ الاستيراد" value={new Date(selSettlement.imported_at).toLocaleString("ar-SA")} />
+                )}
+                <div className="mt-2 pt-2 border-t border-white/5 space-y-0.5">
+                  <Row label="إجمالي المبيعات" value={fmt(selSettlement.gross_sales_amount)} />
+                  <Row label="المرتجعات" value={`− ${fmt(selSettlement.refunds_amount)}`} tone="red" />
+                  <Row label="الرسوم" value={`− ${fmt(Number(selSettlement.fees_before_vat) + Number(selSettlement.fees_vat_amount))}`} tone="red" />
+                  {Number(selSettlement.payout_fee || 0) > 0 && (
+                    <Row label="رسوم التحويل" value={`− ${fmt(selSettlement.payout_fee)}`} tone="red" />
+                  )}
+                  {Math.abs(Number(selSettlement.adjustments_amount || 0)) > 0.005 && (
+                    <Row label="تسويات إضافية" value={fmt(selSettlement.adjustments_amount)} tone={Number(selSettlement.adjustments_amount) < 0 ? "red" : "emerald"} />
+                  )}
+                </div>
+                <div className="mt-1 pt-1 border-t border-white/5">
+                  <Row label="الصافي المتوقع" value={fmt(selSettlement.expected_net_amount)} bold />
+                  <Row label="المتبقي للتخصيص" value={fmt(settleRemaining)} tone={settleRemaining > 0.05 ? "amber" : "emerald"} bold />
+                </div>
+                <div className="pt-1 flex justify-between items-center">
+                  <div className="flex gap-1 flex-wrap">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">مطابقة: {STATUS_LABEL[selSettlement.status] ?? selSettlement.status}</span>
+                    {selSettlement.payout_status && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-300">دفع: {selSettlement.payout_status}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => recalcSettlement(selSettlement.id)}
+                    className="text-[10px] px-2 py-0.5 rounded border border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+                  >↻ إعادة احتساب من السطور</button>
+                </div>
               </div>
             )}
             {selIncome && (
@@ -495,7 +607,7 @@ function ReconciliationPage() {
           <ul className="max-h-[520px] overflow-auto divide-y divide-white/5">
             {loading && <li className="p-4 text-xs text-muted-foreground">جاري التحميل…</li>}
             {!loading && incomesFiltered.length === 0 && <li className="p-4 text-xs text-muted-foreground">لا توجد حوالات مطابقة</li>}
-            {incomesFiltered.map(inc => {
+            {incomesSorted.map(inc => {
               const used = incomeAlloc[inc.id] ?? 0;
               const remaining = Number(inc.amount) - used;
               const isSel = inc.id === selIncomeId;
