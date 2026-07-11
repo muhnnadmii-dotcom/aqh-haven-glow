@@ -322,10 +322,15 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
     attachment_status: row?.attachment_status ?? "not_attached",
     transaction_type: initialTxnType,
     accounting_status: row?.accounting_status ?? (initialTxnType ? "classified" : "unclassified"),
+    business_relation: row?.business_relation ?? (initialTxnType ? (defaultBusinessRelation(initialTxnType) ?? "unclassified") : "unclassified"),
     internal_note: row?.internal_note ?? "",
     purchase_invoice_id: row?.purchase_invoice_id ?? "",
     payment_type: row?.payment_type ?? "",
     related_transaction_id: row?.related_transaction_id ?? "",
+    customer_id: row?.customer_id ?? "",
+    sales_invoice_id: row?.sales_invoice_id ?? "",
+    payment_provider_id: row?.payment_provider_id ?? "",
+    settlement_id: row?.settlement_id ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<PendingAttachment[]>([]);
