@@ -1315,6 +1315,7 @@ export type Database = {
           account_type: Database["public"]["Enums"]["finance_account_type"]
           accountant_note: string | null
           accountant_status: Database["public"]["Enums"]["finance_accountant_status"]
+          accounting_status: Database["public"]["Enums"]["finance_accounting_status"]
           amount: number
           attachment_status: Database["public"]["Enums"]["finance_attachment_status"]
           created_at: string
@@ -1325,20 +1326,27 @@ export type Database = {
           expense_date: string
           id: string
           import_batch_id: string | null
+          internal_note: string | null
           internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
           item_name: string
           main_category_id: string | null
           month: string
           note: string | null
+          related_transaction_id: string | null
           sub_category_id: string | null
           supplier_id: string | null
           supplier_name: string | null
+          transaction_direction: Database["public"]["Enums"]["finance_transaction_direction"]
+          transaction_type:
+            | Database["public"]["Enums"]["finance_outgoing_type"]
+            | null
           updated_at: string
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["finance_account_type"]
           accountant_note?: string | null
           accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
+          accounting_status?: Database["public"]["Enums"]["finance_accounting_status"]
           amount: number
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
           created_at?: string
@@ -1349,20 +1357,27 @@ export type Database = {
           expense_date: string
           id?: string
           import_batch_id?: string | null
+          internal_note?: string | null
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           item_name: string
           main_category_id?: string | null
           month: string
           note?: string | null
+          related_transaction_id?: string | null
           sub_category_id?: string | null
           supplier_id?: string | null
           supplier_name?: string | null
+          transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
+          transaction_type?:
+            | Database["public"]["Enums"]["finance_outgoing_type"]
+            | null
           updated_at?: string
         }
         Update: {
           account_type?: Database["public"]["Enums"]["finance_account_type"]
           accountant_note?: string | null
           accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
+          accounting_status?: Database["public"]["Enums"]["finance_accounting_status"]
           amount?: number
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
           created_at?: string
@@ -1373,14 +1388,20 @@ export type Database = {
           expense_date?: string
           id?: string
           import_batch_id?: string | null
+          internal_note?: string | null
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           item_name?: string
           main_category_id?: string | null
           month?: string
           note?: string | null
+          related_transaction_id?: string | null
           sub_category_id?: string | null
           supplier_id?: string | null
           supplier_name?: string | null
+          transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
+          transaction_type?:
+            | Database["public"]["Enums"]["finance_outgoing_type"]
+            | null
           updated_at?: string
         }
         Relationships: [
@@ -1496,6 +1517,7 @@ export type Database = {
           account_type: Database["public"]["Enums"]["finance_account_type"]
           accountant_note: string | null
           accountant_status: Database["public"]["Enums"]["finance_accountant_status"]
+          accounting_status: Database["public"]["Enums"]["finance_accounting_status"]
           amount: number
           attachment_status: Database["public"]["Enums"]["finance_attachment_status"]
           created_at: string
@@ -1507,15 +1529,22 @@ export type Database = {
           import_batch_id: string | null
           income_date: string
           income_source_id: string | null
+          internal_note: string | null
           internal_review_status: Database["public"]["Enums"]["finance_internal_review"]
           month: string
           note: string | null
+          related_transaction_id: string | null
+          transaction_direction: Database["public"]["Enums"]["finance_transaction_direction"]
+          transaction_type:
+            | Database["public"]["Enums"]["finance_incoming_type"]
+            | null
           updated_at: string
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["finance_account_type"]
           accountant_note?: string | null
           accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
+          accounting_status?: Database["public"]["Enums"]["finance_accounting_status"]
           amount: number
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
           created_at?: string
@@ -1527,15 +1556,22 @@ export type Database = {
           import_batch_id?: string | null
           income_date: string
           income_source_id?: string | null
+          internal_note?: string | null
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           month: string
           note?: string | null
+          related_transaction_id?: string | null
+          transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
+          transaction_type?:
+            | Database["public"]["Enums"]["finance_incoming_type"]
+            | null
           updated_at?: string
         }
         Update: {
           account_type?: Database["public"]["Enums"]["finance_account_type"]
           accountant_note?: string | null
           accountant_status?: Database["public"]["Enums"]["finance_accountant_status"]
+          accounting_status?: Database["public"]["Enums"]["finance_accounting_status"]
           amount?: number
           attachment_status?: Database["public"]["Enums"]["finance_attachment_status"]
           created_at?: string
@@ -1547,9 +1583,15 @@ export type Database = {
           import_batch_id?: string | null
           income_date?: string
           income_source_id?: string | null
+          internal_note?: string | null
           internal_review_status?: Database["public"]["Enums"]["finance_internal_review"]
           month?: string
           note?: string | null
+          related_transaction_id?: string | null
+          transaction_direction?: Database["public"]["Enums"]["finance_transaction_direction"]
+          transaction_type?:
+            | Database["public"]["Enums"]["finance_incoming_type"]
+            | null
           updated_at?: string
         }
         Relationships: [
@@ -2743,10 +2785,32 @@ export type Database = {
         | "reviewed"
         | "posted_to_qoyod"
         | "needs_fix"
+      finance_accounting_status: "unclassified" | "classified" | "reviewed"
       finance_attachment_status: "attached" | "not_attached" | "not_required"
       finance_category_kind: "main" | "sub"
+      finance_incoming_type:
+        | "customer_invoice_collection"
+        | "cash_sale"
+        | "owner_contribution"
+        | "internal_transfer_in"
+        | "supplier_refund"
+        | "loan_received"
+        | "other_income"
+        | "unclassified_incoming"
       finance_internal_review: "unreviewed" | "reviewed"
+      finance_outgoing_type:
+        | "supplier_invoice_payment"
+        | "operating_expense"
+        | "inventory_purchase"
+        | "asset_purchase"
+        | "owner_withdrawal"
+        | "internal_transfer_out"
+        | "loan_payment"
+        | "tax_or_government_payment"
+        | "customer_refund"
+        | "unclassified_outgoing"
       finance_related_type: "income" | "expense" | "supplier" | "quote"
+      finance_transaction_direction: "incoming" | "outgoing"
       request_status: "new" | "in_progress" | "closed"
       service_request_status:
         | "new"
@@ -2904,10 +2968,34 @@ export const Constants = {
         "posted_to_qoyod",
         "needs_fix",
       ],
+      finance_accounting_status: ["unclassified", "classified", "reviewed"],
       finance_attachment_status: ["attached", "not_attached", "not_required"],
       finance_category_kind: ["main", "sub"],
+      finance_incoming_type: [
+        "customer_invoice_collection",
+        "cash_sale",
+        "owner_contribution",
+        "internal_transfer_in",
+        "supplier_refund",
+        "loan_received",
+        "other_income",
+        "unclassified_incoming",
+      ],
       finance_internal_review: ["unreviewed", "reviewed"],
+      finance_outgoing_type: [
+        "supplier_invoice_payment",
+        "operating_expense",
+        "inventory_purchase",
+        "asset_purchase",
+        "owner_withdrawal",
+        "internal_transfer_out",
+        "loan_payment",
+        "tax_or_government_payment",
+        "customer_refund",
+        "unclassified_outgoing",
+      ],
       finance_related_type: ["income", "expense", "supplier", "quote"],
+      finance_transaction_direction: ["incoming", "outgoing"],
       request_status: ["new", "in_progress", "closed"],
       service_request_status: [
         "new",
