@@ -87,7 +87,7 @@ function SalesInvoicesList() {
   const filtered = useMemo(() => invoices.filter((r) => {
     if (q) {
       const s = q.toLowerCase();
-      const hay = `${r.invoice_number ?? ""} ${custName(r.customer_id)} ${r.notes ?? ""}`.toLowerCase();
+      const hay = `${r.invoice_number ?? ""} ${custName(r)} ${r.customer_name_snapshot ?? ""} ${r.notes ?? ""}`.toLowerCase();
       if (!hay.includes(s)) return false;
     }
     if (fStatus && r.status !== fStatus) return false;
