@@ -19,6 +19,8 @@ import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEnt
 import { getManualBalances, updateManualBalances, totalNetWorth, computeLiveCash, type ManualBalances } from "@/lib/finance/manual-balances";
 import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AccountingPanel } from "@/components/finance/AccountingPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/")({
   ssr: false,
