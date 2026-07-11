@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link as LinkIcon, RotateCcw, Search, AlertTriangle, CheckCircle2, Wallet, Building2, RefreshCcw } from "lucide-react";
+import { Link as LinkIcon, RotateCcw, Search, AlertTriangle, CheckCircle2, Wallet, Building2, RefreshCcw, Pencil, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlement-reconciliation")({
   ssr: false,
@@ -19,6 +19,7 @@ type Settlement = {
   period_start: string | null;
   period_end: string | null;
   imported_at: string | null;
+  payout_received_date: string | null;
   expected_net_amount: number;
   gross_sales_amount: number;
   refunds_amount: number;
@@ -112,10 +113,19 @@ const MATCH_COLOR: Record<string, string> = {
 };
 
 const fmt = (n: number) => new Intl.NumberFormat("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
+const MS_PER_DAY = 86400000;
+const RIYADH_DATE_TIME = new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Riyadh" });
+const dateMs = (d: string) => {
+  const [y, m, day] = d.split("-").map(Number);
+  return Date.UTC(y, (m || 1) - 1, day || 1);
+};
+const addDays = (d: string, days: number) => new Date(dateMs(d) + days * MS_PER_DAY).toISOString().slice(0, 10);
 const daysBetween = (a: string | null, b: string | null) => {
   if (!a || !b) return 999;
-  return Math.abs(Math.floor((new Date(a).getTime() - new Date(b).getTime()) / 86400000));
+  return Math.abs(Math.floor((dateMs(a) - dateMs(b)) / MS_PER_DAY));
 };
+const settlementMatchDate = (s: Settlement | null) => s?.settlement_date || s?.period_end || null;
+const inMatchWindow = (incomeDate: string, refDate: string) => incomeDate >= addDays(refDate, -7) && incomeDate <= addDays(refDate, 14);
 
 function isTechnicalRef(ref: string | null | undefined) {
   if (!ref) return true;
@@ -181,6 +191,7 @@ function ReconciliationPage() {
   const [diffNote, setDiffNote] = useState<string>("");
   const [allowOver, setAllowOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingSettlement, setEditingSettlement] = useState<Settlement | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -188,7 +199,7 @@ function ReconciliationPage() {
       supabase.from("payment_providers" as any).select("id,name,provider_code").eq("is_active", true),
       supabase.from("finance_income_sources" as any).select("id,name"),
       supabase.from("finance_accounts" as any).select("id,name"),
-      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,report_reference,source_file_name,settlement_date,period_start,period_end,imported_at,expected_net_amount,gross_sales_amount,refunds_amount,fees_before_vat,fees_vat_amount,payout_fee,adjustments_amount,status,payout_status,notes").order("settlement_date", { ascending: false, nullsFirst: false }).limit(500),
+      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,report_reference,source_file_name,settlement_date,period_start,period_end,imported_at,payout_received_date,expected_net_amount,gross_sales_amount,refunds_amount,fees_before_vat,fees_vat_amount,payout_fee,adjustments_amount,status,payout_status,notes").order("settlement_date", { ascending: false, nullsFirst: false }).limit(500),
       supabase.from("finance_incomes" as any).select("id,income_date,amount,note,transaction_type,business_relation,payment_provider_id,income_source_id,settlement_id,account_id").is("deleted_at", null).order("income_date", { ascending: false }).limit(1000),
       supabase.from("settlement_bank_allocations" as any).select("*").eq("status", "confirmed"),
     ]);
@@ -276,6 +287,7 @@ function ReconciliationPage() {
   const incomesFiltered = useMemo(() => {
     // Provider filter: explicit filter wins; else the currently selected settlement's provider.
     const effProvider = iFilterProvider || (selSettlement ? selSettlement.provider_id : "");
+    const refDate = settlementMatchDate(selSettlement);
     return incomes.filter(inc => {
       const used = incomeAlloc[inc.id] ?? 0;
       const remaining = Number(inc.amount) - used;
@@ -293,6 +305,7 @@ function ReconciliationPage() {
         if (used > 0 && Math.abs(remaining) <= 0.05 && iFilterAlloc !== "full" && iFilterAlloc !== "partial") return false;
       }
       if (effProvider && provId !== effProvider) return false;
+      if (!iShowAll && selSettlement && refDate && !inMatchWindow(inc.income_date, refDate)) return false;
       if (iFilterAlloc === "unmatched" && used > 0) return false;
       if (iFilterAlloc === "partial" && !(used > 0 && remaining > 0.05)) return false;
       if (iFilterAlloc === "full" && !(Math.abs(remaining) <= 0.05 && used > 0)) return false;
@@ -311,26 +324,28 @@ function ReconciliationPage() {
   }, [incomes, iFilterProvider, iFilterAlloc, iFilterAccount, iShowAll, iSearch, iDateFrom, iDateTo, iAmountMin, iAmountMax, incomeAlloc, selSettlement, derivedProviderId]);
 
   // Score-based ranking (matching engine)
-  const scoreOf = useCallback((inc: Income, s: Settlement): { strength: string; score: number; diff: number } => {
+  const scoreOf = useCallback((inc: Income, s: Settlement): { strength: string; score: number; diff: number; dateDelta: number | null } => {
     const provId = derivedProviderId(inc);
     const sameProvider = provId === s.provider_id;
     const expected = Number(s.expected_net_amount) - (settleAlloc[s.id] ?? 0);
     const remaining = Number(inc.amount) - (incomeAlloc[inc.id] ?? 0);
     const diff = remaining - expected;
     const absDiff = Math.abs(diff);
-    const date = daysBetween(s.settlement_date, inc.income_date);
+    const refDate = settlementMatchDate(s);
+    const dateDelta = refDate ? daysBetween(refDate, inc.income_date) : null;
+    const isInsideWindow = refDate ? inMatchWindow(inc.income_date, refDate) : true;
 
     let strength: string;
-    if (sameProvider && absDiff <= 0.05) strength = "exact_match";
-    else if (sameProvider && absDiff <= 10) strength = "probable_match";
+    if (sameProvider && absDiff <= 0.05 && isInsideWindow) strength = "exact_match";
+    else if (sameProvider && absDiff <= 10 && isInsideWindow) strength = "probable_match";
     else if (sameProvider) strength = "weak_match";
     else strength = "no_match";
 
     // Lower score is better
     const providerPenalty = sameProvider ? 0 : 1000;
     const amountPenalty = absDiff <= 0.05 ? 0 : absDiff <= 10 ? absDiff * 2 : 200 + absDiff;
-    const datePenalty = Math.min(60, date);
-    return { strength, score: providerPenalty + amountPenalty + datePenalty, diff };
+    const datePenalty = refDate ? (isInsideWindow ? Math.min(21, dateDelta ?? 0) : 500 + Math.min(365, dateDelta ?? 365)) : 0;
+    return { strength, score: providerPenalty + amountPenalty + datePenalty, diff, dateDelta };
   }, [derivedProviderId, settleAlloc, incomeAlloc]);
 
   const incomesRanked = useMemo(() => {
@@ -354,24 +369,26 @@ function ReconciliationPage() {
     if (!selSettlement || !selIncome) return null;
     const provId = derivedProviderId(selIncome);
     const sameProvider = provId === selSettlement.provider_id;
-    const dateDelta = daysBetween(selSettlement.settlement_date, selIncome.income_date);
+    const refDate = settlementMatchDate(selSettlement);
+    const dateDelta = refDate ? daysBetween(refDate, selIncome.income_date) : null;
+    const isInsideWindow = refDate ? inMatchWindow(selIncome.income_date, refDate) : true;
     const suggestedAmount = Math.min(settleRemaining, incomeRemaining);
     if (suggestedAmount <= 0) return { strength: "no_match", suggestedAmount: 0, diff: 0, suggestedType: null as string | null, reason: "لا يوجد متبقٍ في أحد الطرفين", sameProvider, dateDelta };
     const diff = incomeRemaining - settleRemaining;
     const absDiff = Math.abs(diff);
     let strength = "no_match", suggestedType: string | null = null, reason = "";
-    if (sameProvider && absDiff <= 0.05) {
+    if (sameProvider && absDiff <= 0.05 && isInsideWindow) {
       strength = "exact_match";
       suggestedType = absDiff > 0 ? "rounding_difference" : null;
-      reason = "نفس الوسيط + المبلغ متطابق ضمن هامش التقريب";
-    } else if (sameProvider && absDiff <= 10) {
+      reason = refDate ? "نفس الوسيط + المبلغ متطابق ضمن هامش التقريب + التاريخ ضمن النطاق" : "نفس الوسيط + المبلغ متطابق ضمن هامش التقريب";
+    } else if (sameProvider && absDiff <= 10 && isInsideWindow) {
       strength = "probable_match";
       suggestedType = absDiff <= 0.05 ? "rounding_difference" : "unknown_difference";
       reason = `نفس الوسيط · فرق ${fmt(absDiff)} ريال`;
     } else if (sameProvider) {
       strength = "weak_match";
       suggestedType = "unknown_difference";
-      reason = `نفس الوسيط · فرق ${fmt(absDiff)} ريال`;
+      reason = refDate && !isInsideWindow ? `نفس الوسيط · خارج نطاق التاريخ الافتراضي · فرق ${fmt(absDiff)} ريال` : `نفس الوسيط · فرق ${fmt(absDiff)} ريال`;
     } else {
       strength = "no_match";
       reason = "الوسيط مختلف";
@@ -462,6 +479,7 @@ function ReconciliationPage() {
   }, [allocations, selSettlement]);
 
   const settleDateLabel = (s: Settlement) => s.settlement_date ?? "تاريخ التسوية غير محدد";
+  const selectedRefDate = settlementMatchDate(selSettlement);
 
   return (
     <div className="p-4 md:p-6 space-y-4" dir="rtl">
@@ -578,8 +596,9 @@ function ReconciliationPage() {
                   <Row label="فترة التسوية" value={`${selSettlement.period_start ?? "…"} → ${selSettlement.period_end ?? "…"}`} />
                 )}
                 {selSettlement.imported_at && (
-                  <Row label="تاريخ الاستيراد" value={new Date(selSettlement.imported_at).toLocaleString("ar-SA")} />
+                  <Row label="تاريخ الاستيراد" value={RIYADH_DATE_TIME.format(new Date(selSettlement.imported_at))} />
                 )}
+                {selSettlement.payout_received_date && <Row label="تاريخ وصول الحوالة" value={selSettlement.payout_received_date} />}
                 {selSettlement.source_file_name && <Row label="الملف المصدر" value={selSettlement.source_file_name} />}
                 <div className="mt-2 pt-2 border-t border-white/5 space-y-0.5">
                   <Row label="إجمالي المبيعات" value={fmt(selSettlement.gross_sales_amount)} />
@@ -599,8 +618,24 @@ function ReconciliationPage() {
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/25 text-orange-200">حالة التحويل: {PAYOUT_LABEL[selSettlement.payout_status ?? ""] ?? "—"}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">حالة المطابقة: {MATCH_STATUS_LABEL[settleRemaining <= 0.05 && (settleAlloc[selSettlement.id] ?? 0) > 0 ? "fully_matched" : (settleAlloc[selSettlement.id] ?? 0) > 0 ? "partially_matched" : "unmatched"]}</span>
                   </div>
-                  <button onClick={() => recalcSettlement(selSettlement.id)} className="text-[10px] px-2 py-0.5 rounded border border-amber-500/30 text-amber-300 hover:bg-amber-500/10">↻ إعادة احتساب</button>
+                  <div className="flex gap-1">
+                    <button onClick={() => setEditingSettlement(selSettlement)} className="text-[10px] px-2 py-0.5 rounded border border-white/10 text-muted-foreground hover:text-amber-300 hover:bg-white/5 inline-flex items-center gap-1"><Pencil className="w-3 h-3" /> تعديل بيانات التسوية</button>
+                    <button onClick={() => recalcSettlement(selSettlement.id)} className="text-[10px] px-2 py-0.5 rounded border border-amber-500/30 text-amber-300 hover:bg-amber-500/10">↻ إعادة احتساب</button>
+                  </div>
                 </div>
+              </div>
+            )}
+
+            {selSettlement && !selectedRefDate && (
+              <div className="rounded border border-amber-500/30 bg-amber-500/10 p-2 text-amber-200 text-xs flex gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>تاريخ التسوية غير محدد؛ الاقتراح يعتمد على الوسيط والمبلغ فقط.</span>
+              </div>
+            )}
+
+            {selSettlement && selectedRefDate && !iShowAll && (
+              <div className="rounded border border-white/10 bg-white/5 p-2 text-muted-foreground text-[11px]">
+                تظهر الحوالات من {addDays(selectedRefDate, -7)} إلى {addDays(selectedRefDate, 14)} افتراضياً. فعّل «إظهار كل الحركات» للتوسيع.
               </div>
             )}
 
@@ -647,7 +682,7 @@ function ReconciliationPage() {
                 </div>
                 <Row label="مبلغ التخصيص المقترح" value={fmt(suggestion.suggestedAmount)} />
                 <Row label="الفرق بعد التخصيص" value={fmt(suggestion.diff)} />
-                <Row label="فارق التاريخ" value={`${suggestion.dateDelta} يوم`} />
+                <Row label="فارق التاريخ" value={suggestion.dateDelta == null ? "غير مستخدم" : `${suggestion.dateDelta} يوم`} />
               </div>
             )}
 
@@ -796,6 +831,74 @@ function ReconciliationPage() {
       <div className="text-xs text-muted-foreground p-3 rounded border border-white/10 flex gap-2">
         <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
         <span>هذه الشاشة لا تُنشئ مبيعات ولا رسومًا ولا ضريبة ولا قيودًا جديدة. تكتفي بربط التسويات بالحوالات البنكية المقابلة، وكل إجراء يُحفظ في سجل التدقيق.</span>
+      </div>
+      {editingSettlement && (
+        <SettlementMetaDialog
+          settlement={editingSettlement}
+          onClose={() => setEditingSettlement(null)}
+          onSaved={async () => { setEditingSettlement(null); await load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function SettlementMetaDialog({ settlement, onClose, onSaved }: { settlement: Settlement; onClose: () => void; onSaved: () => void | Promise<void> }) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    settlement_reference: settlement.settlement_reference ?? "",
+    settlement_date: settlement.settlement_date ?? "",
+    period_start: settlement.period_start ?? "",
+    period_end: settlement.period_end ?? "",
+  });
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("payment_settlements" as any)
+      .update({
+        settlement_reference: form.settlement_reference.trim() || null,
+        settlement_date: form.settlement_date || null,
+        period_start: form.period_start || null,
+        period_end: form.period_end || null,
+      })
+      .eq("id", settlement.id);
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else { toast.success("تم تحديث بيانات التسوية"); await onSaved(); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-xl border border-white/10 bg-[#0b1220] p-5 space-y-3" dir="rtl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">تعديل بيانات التسوية</h3>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-[11px] text-muted-foreground">
+          هذا التعديل يغيّر المرجع والتواريخ فقط، ولا يغيّر المبالغ أو الحركات أو الروابط الحالية.
+        </div>
+        <label className="block text-[11px]">مرجع التسوية
+          <input value={form.settlement_reference} onChange={(e) => setForm({ ...form, settlement_reference: e.target.value })} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label className="block text-[11px]">تاريخ التسوية
+            <input type="date" value={form.settlement_date} onChange={(e) => setForm({ ...form, settlement_date: e.target.value })} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+            {!form.settlement_date && <span className="mt-1 block text-[10px] text-amber-300">تاريخ التسوية غير محدد</span>}
+          </label>
+          <label className="block text-[11px]">بداية الفترة
+            <input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+          </label>
+          <label className="block text-[11px]">نهاية الفترة
+            <input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+          </label>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <button onClick={onClose} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">إلغاء</button>
+          <button disabled={saving} onClick={save} className="px-3 py-1.5 rounded bg-amber-500 text-black text-[12px] disabled:opacity-50">
+            {saving ? "…" : "حفظ"}
+          </button>
+        </div>
       </div>
     </div>
   );
