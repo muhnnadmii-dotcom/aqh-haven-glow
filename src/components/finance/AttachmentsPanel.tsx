@@ -39,7 +39,9 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
   };
 
   const load = async () => {
-    const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", relatedType).eq("related_id", relatedId).order("created_at", { ascending: false });
+    const col = isBigintRelated(relatedType) ? "related_bigint_id" : "related_id";
+    const val: any = isBigintRelated(relatedType) ? Number(relatedId) : relatedId;
+    const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", relatedType).eq(col, val).order("created_at", { ascending: false });
     setRows((data as any) ?? []);
   };
   useEffect(() => { load(); }, [relatedType, relatedId]);
