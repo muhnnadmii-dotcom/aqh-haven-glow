@@ -8,7 +8,8 @@ type Att = { id: string; file_url: string; file_name: string; file_type: string 
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.csv";
 
-export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote";
+export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote" | "purchase_invoice";
+const isBigintRelated = (t: FinanceAttachRelatedType) => t === "purchase_invoice";
 
 export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relatedType: FinanceAttachRelatedType; relatedId: string; canManage: boolean }) {
   const [rows, setRows] = useState<Att[]>([]);
