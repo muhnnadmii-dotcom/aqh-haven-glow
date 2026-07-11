@@ -249,11 +249,11 @@ function ExpensesPage() {
               </tr>
             ))}
             {filtered.length === 0 && !loading && (
-              <tr><td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">لا توجد بيانات</td></tr>
+              <tr><td colSpan={11} className="px-3 py-8 text-center text-muted-foreground">لا توجد بيانات</td></tr>
             )}
           </tbody>
           <tfoot className="bg-white/5 font-semibold">
-            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={8}></td></tr>
+            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={9}></td></tr>
           </tfoot>
         </table>
       </div>
