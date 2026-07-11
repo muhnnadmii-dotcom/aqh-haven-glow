@@ -132,23 +132,50 @@ const amount0 = (v: any) => parseAmount(v) ?? 0;
 const CANCELLED_RX = /cancel|ملغى|ملغي|ملغاة|إلغاء|الغاء/i;
 const isCancelled = (s: string | null) => !!s && CANCELLED_RX.test(s);
 
-type ReviewReason =
+type Classification =
+  | "ready_to_import"
+  | "importable_missing_tax_document"
+  | "skipped_duplicate"
   | "cancelled_order"
-  | "zero_total"
-  | "missing_payment_method"
-  | "missing_invoice_number"
-  | "missing_required_data"
-  | "invalid_amount"
-  | "duplicate_order";
+  | "blocking_review";
 
-const REVIEW_LABEL: Record<ReviewReason, string> = {
-  cancelled_order: "طلب ملغى",
-  zero_total: "إجمالي = 0",
-  missing_payment_method: "طريقة الدفع مفقودة",
+const CLASSIFICATION_LABEL: Record<Classification, string> = {
+  ready_to_import: "جاهز للاستيراد",
+  importable_missing_tax_document: "مسودة — مستند ضريبي ناقص",
+  skipped_duplicate: "مكرر — سيتم تجاوزه",
+  cancelled_order: "طلب ملغي (سجل فقط)",
+  blocking_review: "خطأ يمنع الاستيراد",
+};
+
+const CLASSIFICATION_CLASS: Record<Classification, string> = {
+  ready_to_import: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  importable_missing_tax_document: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  skipped_duplicate: "bg-white/10 text-muted-foreground border-white/20",
+  cancelled_order: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30",
+  blocking_review: "bg-red-500/15 text-red-300 border-red-500/30",
+};
+
+type DataIssue =
+  | "missing_invoice_number"
+  | "missing_payment_method"
+  | "cancelled_order"
+  | "duplicate_order"
+  | "zero_total"
+  | "invalid_amount"
+  | "missing_order_id"
+  | "invalid_date"
+  | "conflicting_existing_order";
+
+const ISSUE_LABEL: Record<DataIssue, string> = {
   missing_invoice_number: "رقم الفاتورة مفقود",
-  missing_required_data: "بيانات مطلوبة مفقودة",
+  missing_payment_method: "طريقة الدفع مفقودة",
+  cancelled_order: "طلب ملغي",
+  duplicate_order: "مكرر",
+  zero_total: "إجمالي = 0",
   invalid_amount: "قيمة غير صالحة",
-  duplicate_order: "طلب مكرر",
+  missing_order_id: "رقم الطلب مفقود",
+  invalid_date: "تاريخ غير صالح",
+  conflicting_existing_order: "تعارض مع طلب موجود",
 };
 
 type PaymentStatus = "paid" | "unpaid" | "unknown";
@@ -165,20 +192,22 @@ type ParsedRow = {
   order_status: string | null;
   payment_status: PaymentStatus;
   payment_status_source: "inferred" | "unknown";
-  original_gross_amount: number | null;      // إجمالي الطلب شامل الضريبة
-  total_vat_amount: number;                   // إجمالي الضريبة
+  original_gross_amount: number | null;
+  total_vat_amount: number;
   shipping_before_vat: number;
-  shipping_vat: number;                       // محسوبة
-  product_vat: number;                        // محسوبة
-  total_before_vat: number;                   // محسوبة
-  product_before_vat: number;                 // محسوبة
+  shipping_vat: number;
+  product_vat: number;
+  total_before_vat: number;
+  product_before_vat: number;
   total_discount: number;
   cancelled: boolean;
   duplicate: boolean;
-  review_reasons: ReviewReason[];
-  needs_review: boolean;
-  hard_error: boolean;
+  issues: DataIssue[];
+  classification: Classification;
+  tax_document_status: "present" | "missing";
+  vat_return_eligible: boolean;
 };
+
 
 function SalesImportPage() {
   const { canManage, canAccountant } = useFinanceRoles();
