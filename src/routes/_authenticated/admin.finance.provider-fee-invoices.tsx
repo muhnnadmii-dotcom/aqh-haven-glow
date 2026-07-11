@@ -92,9 +92,9 @@ function ProviderFeeInvoicesPage() {
                     <tr key={r.id} className="border-t border-white/5">
                       <td className="px-3 py-2">{r.issue_date}</td>
                       <td className="px-3 py-2">
-                        <Link to={"/admin/finance/purchase-invoices/$id" as any} params={{ id: String(r.id) }} className="text-primary hover:underline">
+                        <a href={`/admin/finance/purchase-invoices/${r.id}`} className="text-primary hover:underline">
                           {r.internal_reference}
-                        </Link>
+                        </a>
                       </td>
                       <td className="px-3 py-2">{prov?.name ?? "—"}</td>
                       <td className="px-3 py-2">{period}</td>
