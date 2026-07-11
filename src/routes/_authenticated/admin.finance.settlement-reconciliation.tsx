@@ -220,32 +220,45 @@ function ReconciliationPage() {
   // Suggested amount / match strength
   const suggestion = useMemo(() => {
     if (!selSettlement || !selIncome) return null;
-    const suggestedAmount = Math.min(settleRemaining, incomeRemaining);
-    if (suggestedAmount <= 0) return { strength: "no_match", suggestedAmount: 0, diff: 0, suggestedType: null as string | null, reason: "لا يوجد متبقٍ في أحد الطرفين" };
-    const sameProvider = selIncome.payment_provider_id && selIncome.payment_provider_id === selSettlement.provider_id;
+    const sameProvider = !!(selIncome.payment_provider_id && selIncome.payment_provider_id === selSettlement.provider_id);
     const dateDelta = daysBetween(selSettlement.settlement_date, selIncome.income_date);
-    const diff = incomeRemaining - settleRemaining; // bank - expected remaining
-    const absDiff = Math.abs(diff);
+    const settleExpected = Number(selSettlement.expected_net_amount || 0);
+    const incomeAmount = Number(selIncome.amount || 0);
+    const diffFull = incomeAmount - settleExpected;
+    const absDiffFull = Math.abs(diffFull);
+    const suggestedAmount = Math.min(settleRemaining, incomeRemaining);
+    if (suggestedAmount <= 0) return { strength: "no_match", suggestedAmount: 0, diff: 0, suggestedType: null as string | null, reason: "لا يوجد متبقٍ في أحد الطرفين", sameProvider, dateDelta };
 
+    const diff = incomeRemaining - settleRemaining;
+    const absDiff = Math.abs(diff);
     let strength: string = "no_match";
     let suggestedType: string | null = null;
     let reason = "";
 
-    if (absDiff <= 0.05) {
-      strength = sameProvider && dateDelta <= 30 ? "exact_match" : "probable_match";
+    // Ratio guard against the settlement expected total — prevents e.g. 6664 vs 4250 pretending to match.
+    const ratio = absDiffFull / Math.max(settleExpected, 1);
+
+    if (sameProvider && absDiff <= 0.05 && dateDelta <= 30 && ratio <= 0.02) {
+      strength = "exact_match";
       suggestedType = absDiff > 0 ? "rounding_difference" : null;
-      reason = "المبلغ متطابق ضمن هامش التقريب";
-    } else if (absDiff <= 20) {
-      strength = sameProvider ? "probable_match" : "weak_match";
+      reason = "نفس الوسيط + المبلغ متطابق ضمن هامش التقريب";
+    } else if (absDiff <= 0.05 && ratio <= 0.02) {
+      strength = "probable_match";
+      suggestedType = absDiff > 0 ? "rounding_difference" : null;
+      reason = "المبلغ متطابق لكن الوسيط أو التاريخ لا يتطابق";
+    } else if (sameProvider && absDiff <= 20 && dateDelta <= 30 && ratio <= 0.05) {
+      strength = "probable_match";
       suggestedType = "unknown_difference";
-      reason = `فرق ${fmt(absDiff)} يحتاج تصنيف`;
-    } else if (sameProvider && dateDelta <= 15 && absDiff / Math.max(settleRemaining, 1) < 0.05) {
+      reason = `نفس الوسيط · فرق ${fmt(absDiff)} يحتاج تصنيف`;
+    } else if (sameProvider && dateDelta <= 15 && ratio <= 0.10) {
       strength = "weak_match";
       suggestedType = "unknown_difference";
-      reason = "نفس الوسيط لكن الفرق كبير";
+      reason = `نفس الوسيط لكن الفرق ${fmt(absDiffFull)} (${(ratio * 100).toFixed(1)}%)`;
     } else {
       strength = "no_match";
-      reason = "الفرق كبير جداً";
+      reason = sameProvider
+        ? `الفرق كبير جداً (${fmt(absDiffFull)} · ${(ratio * 100).toFixed(1)}%)`
+        : "الوسيط مختلف";
     }
     return { strength, suggestedAmount, diff, suggestedType, reason, sameProvider, dateDelta };
   }, [selSettlement, selIncome, settleRemaining, incomeRemaining]);
