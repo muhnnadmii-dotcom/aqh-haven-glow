@@ -258,7 +258,8 @@ export function extractTamaraSummary(aoa: any[][]): TamaraSummary {
     return isFinite(n) ? round2(n) : null;
   };
 
-  // Look for a totals row within the next ~20 rows (label often "Total" / "Grand Total" / empty)
+  // Look for a totals row within the next ~20 rows (label often "Credit Total" / "Total" / "Grand Total")
+  const totalsRe = /^(credit\s+total|grand\s+total|totals?|total)$/i;
   let totalRow: any[] | null = null;
   let accum = { count: 0, canceled: 0, captured: 0, refund: 0, fees: 0, vat: 0, payable: 0, has: false };
   for (let i = hdr + 1; i < Math.min(aoa.length, hdr + 40); i++) {
@@ -266,8 +267,8 @@ export function extractTamaraSummary(aoa: any[][]): TamaraSummary {
     const first = norm(row[cols.findIndex((c) => c === "type")] ?? row[0]);
     // If we hit an empty row, stop.
     if (!row.some((c) => c != null && String(c).trim() !== "")) break;
-    if (/^(total|grand total|totals?)$/i.test(first)) { totalRow = row; break; }
-    // otherwise accumulate the section rows
+    if (totalsRe.test(first)) { totalRow = row; break; }
+    // otherwise accumulate the section rows (never accumulate a totals-like row)
     const cCount = numAt(row, idxCount);
     if (cCount != null) accum.count += cCount;
     const cCan = numAt(row, idxCanceled); if (cCan != null) accum.canceled += cCan;
