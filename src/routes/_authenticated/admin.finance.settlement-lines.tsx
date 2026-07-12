@@ -178,9 +178,10 @@ function SettlementLinesPage() {
           <option value="">كل حالات المطابقة</option>
           {Object.entries(MATCH_LABEL).map(([k, v]) => <option key={k} value={k}>{v.text}</option>)}
         </select>
+        <input value={filterOrder} onChange={(e) => setFilterOrder(e.target.value)} placeholder="رقم الطلب" className="bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px] w-32" />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+      <div className={`overflow-x-auto rounded-xl border border-white/10 bg-white/5 ${pg.loading ? "opacity-70" : ""}`}>
         <table className="w-full text-[12px]">
           <thead className="bg-white/5 text-muted-foreground">
             <tr>
@@ -195,10 +196,10 @@ function SettlementLinesPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && (
+            {pg.rows.length === 0 && !pg.loading && (
               <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">لا توجد حركات</td></tr>
             )}
-            {filtered.map((r) => {
+            {pg.rows.map((r: any) => {
               const inv = r.sales_invoice_id ? invoices[r.sales_invoice_id] : null;
               const ord = r.salla_order_id ? orders[r.salla_order_id] : null;
               const m = MATCH_LABEL[r.matching_status] ?? { text: r.matching_status ?? "غير مصنّف", tone: "text-muted-foreground" };
@@ -230,7 +231,9 @@ function SettlementLinesPage() {
             })}
           </tbody>
         </table>
+        <PaginationBar page={pg.page} pageCount={pg.pageCount} pageSize={pg.pageSize} total={pg.total} loading={pg.loading} onPage={pg.setPage} onPageSize={pg.setPageSize} />
       </div>
+
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPreview(null)}>
