@@ -658,10 +658,12 @@ function SalesImportPage() {
     toast.success(`تم تطبيق قالب: ${t.name}`);
   }
 
+  const [reviewFilter, setReviewFilter] = useState<Classification | "all">("all");
   const visibleRows = useMemo(
-    () => showOnlyReview ? rows.filter((r) => r.needs_review || r.hard_error) : rows,
-    [rows, showOnlyReview]
+    () => reviewFilter === "all" ? rows : rows.filter((r) => r.classification === reviewFilter),
+    [rows, reviewFilter]
   );
+
 
   return (
     <div className="space-y-4" dir="rtl">
