@@ -62,8 +62,8 @@ function SalesInvoicesList() {
     let query = supabase.from("sales_invoices").select(LIST_COLS, { count: "exact" })
       .order("issue_date", { ascending: false, nullsFirst: false })
       .order("id", { ascending: false });
-    if (fStatus) query = query.eq("status", fStatus);
-    if (fPay) query = query.eq("payment_status", fPay);
+    if (fStatus) query = query.eq("status", fStatus as any);
+    if (fPay) query = query.eq("payment_status", fPay as any);
     if (fMonth) {
       const [y, m] = fMonth.split("-").map(Number);
       const from = `${y}-${String(m).padStart(2, "0")}-01`;
