@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
-import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
-import { INCOMING_TYPES, ACCOUNTING_STATUSES, incomingLabel, accountingStatusLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
+import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, fmtSAR, labelOf } from "@/lib/finance/constants";
+import { INCOMING_TYPES, ACCOUNTING_STATUSES, incomingLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
 
 const BUSINESS_RELATIONS: { value: string; label: string }[] = [
   { value: "business", label: "تخص النشاط" },
@@ -12,7 +12,7 @@ const BUSINESS_RELATIONS: { value: string; label: string }[] = [
   { value: "internal_transfer", label: "تحويل داخلي" },
   { value: "unclassified", label: "غير محددة" },
 ];
-import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive, Tag } from "lucide-react";
+import { Plus, Search, X, Pencil, Trash2, RotateCcw, Archive, Tag, Link2, ExternalLink, Wand2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, type PendingAttachment } from "@/components/finance/AttachmentsPanel";
 import { AuditPanel } from "@/components/finance/AuditPanel";
@@ -25,15 +25,62 @@ export const Route = createFileRoute("/_authenticated/admin/finance/incomes")({
 });
 
 type Income = any;
+type Provider = { id: string; name: string; provider_code: string };
+type Settlement = {
+  id: string; provider_id: string; settlement_reference: string | null;
+  settlement_date: string | null; expected_net_amount: number | null;
+  actual_bank_amount: number | null; status: string | null; bank_income_id: string | null;
+};
+type Alloc = {
+  id: string; settlement_id: string; transaction_id: string;
+  allocated_amount: number; status: string;
+  difference_type: string | null; difference_amount: number | null;
+};
+
+type LinkStatus = "unmatched" | "suggested_match" | "partially_allocated" | "fully_allocated" | "needs_review";
+
+const LINK_TONES: Record<LinkStatus, string> = {
+  unmatched: "bg-white/5 text-muted-foreground border-white/15",
+  suggested_match: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  partially_allocated: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  fully_allocated: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  needs_review: "bg-red-500/15 text-red-300 border-red-500/30",
+};
+const LINK_LABELS: Record<LinkStatus, string> = {
+  unmatched: "غير مرتبطة",
+  suggested_match: "مطابقة مقترحة",
+  partially_allocated: "مرتبطة جزئيًا",
+  fully_allocated: "مرتبطة بالكامل",
+  needs_review: "تحتاج مراجعة",
+};
+
+// Normalize a source name/code to a provider_code (salla_payments/tabby/tamara), or null.
+function normalizeProviderCode(name?: string | null): string | null {
+  if (!name) return null;
+  const s = String(name).trim().toLowerCase();
+  if (s === "salla" || s === "سلة" || s.includes("سلة") || s.startsWith("salla")) return "salla_payments";
+  if (s === "tabby" || s === "تابي" || s.includes("تابي") || s === "tabby.ai") return "tabby";
+  if (s === "tamara" || s === "تمارا" || s.includes("تمارا")) return "tamara";
+  return null;
+}
+function providerAr(code?: string | null): string {
+  return code === "salla_payments" ? "سلة" : code === "tabby" ? "تابي" : code === "tamara" ? "تمارا" : "—";
+}
 
 function IncomesPage() {
   const roles = useFinanceRoles();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Income[]>([]);
   const [sources, setSources] = useState<{ id: string; name: string }[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [allocs, setAllocs] = useState<Alloc[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Income | null>(null);
   const [creating, setCreating] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [reclassifyOpen, setReclassifyOpen] = useState(false);
+  const [linkedDialog, setLinkedDialog] = useState<{ income: Income; settlements: Settlement[]; allocs: Alloc[] } | null>(null);
 
   const [q, setQ] = useState("");
   const [fMonth, setFMonth] = useState("");
@@ -44,20 +91,104 @@ function IncomesPage() {
   const [fAtt, setFAtt] = useState("");
   const [fTxnType, setFTxnType] = useState("");
   const [fAccStatus, setFAccStatus] = useState("");
+  const [fProvider, setFProvider] = useState<"" | "salla_payments" | "tabby" | "tamara" | "none">("");
+  const [fLink, setFLink] = useState<"" | LinkStatus>("");
+
+  const resetFilters = () => {
+    setQ(""); setFMonth(""); setFSource(""); setFAccount(""); setFInternal("");
+    setFAcct(""); setFAtt(""); setFTxnType(""); setFAccStatus(""); setFProvider(""); setFLink("");
+  };
 
   const load = async () => {
     setLoading(true);
-    const [{ data: incs }, { data: srcs }] = await Promise.all([
+    const [{ data: incs }, { data: srcs }, { data: prov }, { data: setts }, { data: als }] = await Promise.all([
       supabase.from("finance_incomes").select("*").order("income_date", { ascending: false }),
       supabase.from("finance_income_sources").select("id, name").eq("is_active", true).order("display_order"),
+      supabase.from("payment_providers").select("id, name, provider_code"),
+      supabase.from("payment_settlements").select("id, provider_id, settlement_reference, settlement_date, expected_net_amount, actual_bank_amount, status, bank_income_id"),
+      supabase.from("settlement_bank_allocations").select("id, settlement_id, transaction_id, allocated_amount, status, difference_type, difference_amount").eq("status", "confirmed"),
     ]);
     setRows(incs ?? []);
     setSources(srcs ?? []);
+    setProviders((prov as any) ?? []);
+    setSettlements((setts as any) ?? []);
+    setAllocs((als as any) ?? []);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
   const sourceName = (id: string | null) => sources.find((s) => s.id === id)?.name ?? "—";
+  const providerById = useMemo(() => new Map(providers.map((p) => [p.id, p])), [providers]);
+  const providerByCode = useMemo(() => new Map(providers.map((p) => [p.provider_code, p])), [providers]);
+  const settlementById = useMemo(() => new Map(settlements.map((s) => [s.id, s])), [settlements]);
+
+  // Per-income enrichment
+  const enrichment = useMemo(() => {
+    const allocByIncome = new Map<string, Alloc[]>();
+    for (const a of allocs) {
+      const arr = allocByIncome.get(a.transaction_id) ?? [];
+      arr.push(a);
+      allocByIncome.set(a.transaction_id, arr);
+    }
+    const settByBankIncome = new Map<string, Settlement[]>();
+    for (const s of settlements) {
+      if (s.bank_income_id) {
+        const arr = settByBankIncome.get(s.bank_income_id) ?? [];
+        arr.push(s);
+        settByBankIncome.set(s.bank_income_id, arr);
+      }
+    }
+
+    const out = new Map<string, {
+      providerCode: string | null;
+      providerName: string;
+      isProviderIncome: boolean;
+      allocated: number;
+      remaining: number;
+      linkStatus: LinkStatus;
+      linkedSettlements: Settlement[];
+      linkedAllocs: Alloc[];
+    }>();
+
+    for (const r of rows) {
+      // Resolve provider: explicit column → source name normalization.
+      let providerCode: string | null = null;
+      if (r.payment_provider_id) {
+        providerCode = providerById.get(r.payment_provider_id)?.provider_code ?? null;
+      }
+      if (!providerCode) providerCode = normalizeProviderCode(sourceName(r.income_source_id));
+      const isProviderIncome = !!providerCode && Number(r.amount) > 0;
+
+      const rowAllocs = allocByIncome.get(r.id) ?? [];
+      const directSetts = settByBankIncome.get(r.id) ?? [];
+      const linkedSettIds = new Set<string>();
+      rowAllocs.forEach((a) => linkedSettIds.add(a.settlement_id));
+      directSetts.forEach((s) => linkedSettIds.add(s.id));
+      const linkedSettlements = Array.from(linkedSettIds).map((id) => settlementById.get(id)).filter(Boolean) as Settlement[];
+
+      const amount = Number(r.amount ?? 0);
+      let allocated = rowAllocs.reduce((s, a) => s + Number(a.allocated_amount ?? 0), 0);
+      // Direct bank_income link with no explicit alloc → treat as full for that settlement.
+      const directOnly = directSetts.filter((s) => !rowAllocs.some((a) => a.settlement_id === s.id));
+      if (directOnly.length && allocated === 0) allocated = amount;
+      const remaining = Math.max(0, +(amount - allocated).toFixed(2));
+
+      const hasIssue = rowAllocs.some((a) => a.difference_type && Number(a.difference_amount ?? 0) !== 0);
+      let linkStatus: LinkStatus;
+      if (hasIssue) linkStatus = "needs_review";
+      else if (allocated === 0) linkStatus = "unmatched";
+      else if (Math.abs(amount - allocated) <= 0.05) linkStatus = "fully_allocated";
+      else linkStatus = "partially_allocated";
+
+      out.set(r.id, {
+        providerCode, providerName: providerAr(providerCode),
+        isProviderIncome, allocated, remaining, linkStatus,
+        linkedSettlements, linkedAllocs: rowAllocs,
+      });
+    }
+    return out;
+  }, [rows, allocs, settlements, sources, providerById, settlementById]);
+
   const filtered = useMemo(() => rows.filter((r) => {
     if (!showDeleted && r.deleted_at) return false;
     if (showDeleted && !r.deleted_at) return false;
@@ -70,8 +201,30 @@ function IncomesPage() {
     if (fAtt && r.attachment_status !== fAtt) return false;
     if (fTxnType && r.transaction_type !== fTxnType) return false;
     if (fAccStatus && (r.accounting_status ?? "unclassified") !== fAccStatus) return false;
+    const en = enrichment.get(r.id);
+    if (fProvider) {
+      if (fProvider === "none") { if (en?.providerCode) return false; }
+      else if (en?.providerCode !== fProvider) return false;
+    }
+    if (fLink && en?.linkStatus !== fLink) return false;
     return true;
-  }), [rows, q, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, sources, showDeleted]);
+  }), [rows, q, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, fLink, sources, showDeleted, enrichment]);
+
+  const summary = useMemo(() => {
+    const s = { unmatched: 0, suggested: 0, partial: 0, full: 0, needsReview: 0, unallocated: 0 };
+    for (const r of rows) {
+      if (r.deleted_at) continue;
+      const en = enrichment.get(r.id);
+      if (!en || !en.isProviderIncome) continue;
+      if (en.linkStatus === "unmatched") s.unmatched++;
+      if (en.linkStatus === "suggested_match") s.suggested++;
+      if (en.linkStatus === "partially_allocated") s.partial++;
+      if (en.linkStatus === "fully_allocated") s.full++;
+      if (en.linkStatus === "needs_review") s.needsReview++;
+      s.unallocated += en.remaining;
+    }
+    return s;
+  }, [rows, enrichment]);
 
   const unclassifiedCount = useMemo(
     () => rows.filter((r) => !r.deleted_at && (r.accounting_status ?? "unclassified") === "unclassified").length,
@@ -83,6 +236,11 @@ function IncomesPage() {
   const deletedCount = rows.filter((r) => r.deleted_at).length;
 
   const softDelete = async (r: Income) => {
+    const en = enrichment.get(r.id);
+    if (en && en.allocated > 0) {
+      toast.error("لا يمكن حذف حوالة مرتبطة بتسوية مؤكدة — يجب عكس التخصيص أولًا من مركز المطابقة.");
+      return;
+    }
     const reason = window.prompt("سبب الحذف (اختياري):", "") ?? "";
     if (!confirm("هل أنت متأكد من حذف هذه العملية؟ سيتم إخفاؤها من الجداول مع الاحتفاظ بها في سجل النظام.")) return;
     const { data: u } = await supabase.auth.getUser();
@@ -104,11 +262,21 @@ function IncomesPage() {
     else { toast.success("تمت الاستعادة"); load(); }
   };
 
+  const openReconciliation = (incomeId?: string) => {
+    const url = incomeId ? `/admin/finance/settlement-reconciliation?income=${incomeId}` : "/admin/finance/settlement-reconciliation";
+    navigate({ to: url });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold">المقبوضات {showDeleted && <span className="text-amber-300 text-[12px]">(المؤرشفة)</span>}</h2>
         <div className="flex items-center gap-2">
+          {roles.canManage && (
+            <button onClick={() => setReclassifyOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[12px] hover:bg-sky-500/25">
+              <Wand2 size={13} /> تصنيف حوالات الوسطاء القديمة
+            </button>
+          )}
           {roles.canManage && deletedCount > 0 && (
             <button onClick={() => setShowDeleted(!showDeleted)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] ${showDeleted ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : "bg-white/5 border-white/10 hover:bg-white/10"}`}>
               <Archive size={13} /> {showDeleted ? "إخفاء المؤرشفة" : `عرض المؤرشفة (${deletedCount})`}
@@ -122,6 +290,16 @@ function IncomesPage() {
         </div>
       </div>
 
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+        <SummaryCard label="غير مرتبطة" value={summary.unmatched} tone="text-muted-foreground" active={fLink === "unmatched"} onClick={() => setFLink(fLink === "unmatched" ? "" : "unmatched")} />
+        <SummaryCard label="مطابقات مقترحة" value={summary.suggested} tone="text-sky-300" active={fLink === "suggested_match"} onClick={() => setFLink(fLink === "suggested_match" ? "" : "suggested_match")} />
+        <SummaryCard label="مرتبطة جزئيًا" value={summary.partial} tone="text-orange-300" active={fLink === "partially_allocated"} onClick={() => setFLink(fLink === "partially_allocated" ? "" : "partially_allocated")} />
+        <SummaryCard label="مرتبطة بالكامل" value={summary.full} tone="text-emerald-300" active={fLink === "fully_allocated"} onClick={() => setFLink(fLink === "fully_allocated" ? "" : "fully_allocated")} />
+        <SummaryCard label="مبلغ غير مخصص" value={fmtSAR(summary.unallocated)} tone="text-gold" />
+        <SummaryCard label="تحتاج مراجعة" value={summary.needsReview} tone="text-red-300" active={fLink === "needs_review"} onClick={() => setFLink(fLink === "needs_review" ? "" : "needs_review")} />
+      </div>
+
       {unclassifiedCount > 0 && (
         <button
           onClick={() => setFAccStatus("unclassified")}
@@ -131,19 +309,27 @@ function IncomesPage() {
         </button>
       )}
 
-      <div className="rounded-xl border border-white/10 bg-white/5 p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
-        <label className="relative col-span-2 md:col-span-2">
+      <div className="rounded-xl border border-white/10 bg-white/5 p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+        <label className="relative col-span-2">
           <Search size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث…" className="w-full pr-7 pl-2 py-1.5 rounded-lg bg-background/60 border border-white/10 text-[12px]" />
         </label>
-        <Select v={fMonth} onChange={setFMonth} ph="الشهر" opts={months.map((m) => ({ value: m, label: m }))} />
-        <Select v={fSource} onChange={setFSource} ph="مصدر الدخل" opts={sources.map((s) => ({ value: s.id, label: s.name }))} />
+        <Select v={fProvider} onChange={(v) => setFProvider(v as any)} ph="وسيط الدفع" opts={[
+          { value: "salla_payments", label: "سلة" },
+          { value: "tabby", label: "تابي" },
+          { value: "tamara", label: "تمارا" },
+          { value: "none", label: "بدون وسيط" },
+        ]} />
+        <Select v={fLink} onChange={(v) => setFLink(v as any)} ph="حالة الربط" opts={(Object.keys(LINK_LABELS) as LinkStatus[]).map((k) => ({ value: k, label: LINK_LABELS[k] }))} />
         <Select v={fTxnType} onChange={setFTxnType} ph="نوع الحركة" opts={INCOMING_TYPES.map((t) => ({ value: t.value, label: t.label }))} />
+        <Select v={fMonth} onChange={setFMonth} ph="الشهر" opts={months.map((m) => ({ value: m, label: m }))} />
+        <Select v={fSource} onChange={setFSource} ph="المصدر الأصلي" opts={sources.map((s) => ({ value: s.id, label: s.name }))} />
         <Select v={fAccStatus} onChange={setFAccStatus} ph="حالة التصنيف" opts={ACCOUNTING_STATUSES.map((s) => ({ value: s.value, label: s.label }))} />
         <Select v={fAccount} onChange={setFAccount} ph="نوع الحساب" opts={ACCOUNT_TYPES.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fInternal} onChange={setFInternal} ph="مراجعة داخلية" opts={INTERNAL_REVIEW.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fAcct} onChange={setFAcct} ph="حالة المحاسب" opts={ACCOUNTANT_STATUS.map((a) => ({ value: a.value, label: a.label }))} />
         <Select v={fAtt} onChange={setFAtt} ph="حالة المرفق" opts={ATTACHMENT_STATUS.map((a) => ({ value: a.value, label: a.label }))} />
+        <button onClick={resetFilters} className="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[12px] inline-flex items-center gap-1"><RotateCcw size={12} /> إعادة ضبط</button>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
@@ -152,60 +338,78 @@ function IncomesPage() {
             <tr>
               <th className="text-start px-3 py-2">التاريخ</th>
               <th className="text-start px-3 py-2">المبلغ</th>
-              <th className="text-start px-3 py-2">المصدر</th>
+              <th className="text-start px-3 py-2">وسيط الدفع</th>
               <th className="text-start px-3 py-2">نوع الحركة</th>
               <th className="text-start px-3 py-2">الحساب</th>
-              <th className="text-start px-3 py-2">داخلي</th>
-              <th className="text-start px-3 py-2">المحاسب</th>
+              <th className="text-start px-3 py-2">حالة الربط</th>
+              <th className="text-start px-3 py-2">المخصص</th>
+              <th className="text-start px-3 py-2">المتبقي</th>
+              <th className="text-start px-3 py-2">التسوية المرتبطة</th>
               <th className="text-start px-3 py-2">المرفق</th>
+              <th className="text-start px-3 py-2">المحاسب</th>
               <th className="text-start px-3 py-2">إجراءات</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((r) => (
+            {filtered.map((r) => {
+              const en = enrichment.get(r.id)!;
+              return (
               <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 ${r.deleted_at ? "opacity-60" : ""}`}>
                 <td className="px-3 py-2 whitespace-nowrap">{r.income_date}</td>
                 <td className="px-3 py-2 font-mono">{fmtSAR(r.amount)}</td>
-                <td className="px-3 py-2">{sourceName(r.income_source_id)}</td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {en.providerCode ? (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-gold/30 bg-gold/10 text-gold">{en.providerName}</span>
+                  ) : (
+                    <span className="text-muted-foreground text-[10px]">—</span>
+                  )}
+                </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {r.transaction_type ? (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-white/10 bg-white/5">
                       {incomingLabel(r.transaction_type)}
                     </span>
                   ) : (
-                    <span className="text-amber-300/80 text-[10px]">غير مصنف</span>
+                    <span className="text-amber-300/80 text-[10px]">مقبوض غير مصنف</span>
                   )}
                 </td>
                 <td className="px-3 py-2">{labelOf(ACCOUNT_TYPES, r.account_type)}</td>
                 <td className="px-3 py-2">
-                  <ReviewStatusEditor
-                    table="finance_incomes"
-                    rowId={r.id}
-                    field="internal_review_status"
-                    value={r.internal_review_status}
-                    canEdit={roles.canManage && !r.deleted_at}
-                    onChanged={(v) => setRows((prev) => prev.map((x) => x.id === r.id ? { ...x, internal_review_status: v } : x))}
+                  {en.isProviderIncome ? (
+                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border whitespace-nowrap ${LINK_TONES[en.linkStatus]}`}>{LINK_LABELS[en.linkStatus]}</span>
+                  ) : (
+                    <span className="text-muted-foreground text-[10px]">لا ينطبق</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 font-mono text-[11px]">{en.allocated > 0 ? fmtSAR(en.allocated) : "—"}</td>
+                <td className={`px-3 py-2 font-mono text-[11px] ${en.remaining > 0 && en.isProviderIncome ? "text-orange-300" : ""}`}>{en.isProviderIncome ? fmtSAR(en.remaining) : "—"}</td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {en.linkedSettlements.length === 0 ? (
+                    en.isProviderIncome ? (
+                      <button onClick={() => openReconciliation(r.id)} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-sky-500/10 border border-sky-500/30 text-sky-300 hover:bg-sky-500/20">
+                        <Link2 size={10} /> بحث عن تسوية
+                      </button>
+                    ) : <span className="text-muted-foreground text-[10px]">—</span>
+                  ) : en.linkedSettlements.length === 1 ? (
+                    <button onClick={() => openReconciliation(r.id)} className="inline-flex items-center gap-1 text-[10px] text-sky-300 hover:underline">
+                      {providerAr(providerById.get(en.linkedSettlements[0].provider_id)?.provider_code)} — تسوية #{en.linkedSettlements[0].settlement_reference ?? en.linkedSettlements[0].id.slice(0, 8)}
+                      <ExternalLink size={10} />
+                    </button>
+                  ) : (
+                    <button onClick={() => setLinkedDialog({ income: r, settlements: en.linkedSettlements, allocs: en.linkedAllocs })} className="inline-flex items-center gap-1 text-[10px] text-sky-300 hover:underline">
+                      مرتبط بـ {en.linkedSettlements.length} تسويات
+                    </button>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  <RowAttachmentControl relatedType="income" relatedId={r.id} status={r.attachment_status} canManage={roles.canManage} canDelete={roles.canManage}
+                    onChanged={(s) => setRows((prev) => prev.map((x) => x.id === r.id ? { ...x, attachment_status: s } : x))}
                   />
                 </td>
                 <td className="px-3 py-2">
-                  <ReviewStatusEditor
-                    table="finance_incomes"
-                    rowId={r.id}
-                    field="accountant_status"
-                    value={r.accountant_status}
-                    note={r.accountant_note}
+                  <ReviewStatusEditor table="finance_incomes" rowId={r.id} field="accountant_status" value={r.accountant_status} note={r.accountant_note}
                     canEdit={(roles.canManage || roles.canAccountant) && !r.deleted_at}
                     onChanged={(v, n) => setRows((prev) => prev.map((x) => x.id === r.id ? { ...x, accountant_status: v, ...(n !== undefined ? { accountant_note: n } : {}) } : x))}
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <RowAttachmentControl
-                    relatedType="income"
-                    relatedId={r.id}
-                    status={r.attachment_status}
-                    canManage={roles.canManage}
-                    canDelete={roles.canManage}
-                    onChanged={(s) => setRows((prev) => prev.map((x) => x.id === r.id ? { ...x, attachment_status: s } : x))}
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -226,13 +430,13 @@ function IncomesPage() {
                   </div>
                 </td>
               </tr>
-            ))}
+            );})}
             {filtered.length === 0 && !loading && (
-              <tr><td colSpan={9} className="px-3 py-8 text-center text-muted-foreground">لا توجد بيانات</td></tr>
+              <tr><td colSpan={12} className="px-3 py-8 text-center text-muted-foreground">لا توجد بيانات</td></tr>
             )}
           </tbody>
           <tfoot className="bg-white/5 font-semibold">
-            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={7}></td></tr>
+            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={10}></td></tr>
           </tfoot>
         </table>
       </div>
@@ -241,24 +445,223 @@ function IncomesPage() {
         <IncomeDialog
           row={editing}
           sources={sources}
+          providers={providers}
           roles={roles}
           onClose={() => { setEditing(null); setCreating(false); }}
           onSaved={() => { setEditing(null); setCreating(false); load(); }}
+        />
+      )}
+
+      {reclassifyOpen && (
+        <ReclassifyDialog
+          rows={rows}
+          sources={sources}
+          providers={providers}
+          onClose={() => setReclassifyOpen(false)}
+          onDone={() => { setReclassifyOpen(false); load(); }}
+        />
+      )}
+
+      {linkedDialog && (
+        <LinkedSettlementsDialog
+          income={linkedDialog.income}
+          settlements={linkedDialog.settlements}
+          allocs={linkedDialog.allocs}
+          providers={providers}
+          onClose={() => setLinkedDialog(null)}
+          onOpen={(id: string) => { setLinkedDialog(null); openReconciliation(id); }}
         />
       )}
     </div>
   );
 }
 
-function Badge({ tone, children }: { tone: string; children: React.ReactNode }) {
-  return <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border whitespace-nowrap ${tone}`}>{children}</span>;
+function SummaryCard({ label, value, tone, active, onClick }: { label: string; value: number | string; tone?: string; active?: boolean; onClick?: () => void }) {
+  const Cmp: any = onClick ? "button" : "div";
+  return (
+    <Cmp onClick={onClick} className={`rounded-xl border p-3 text-start transition ${active ? "bg-white/10 border-gold/40" : "bg-white/5 border-white/10 hover:bg-white/10"}`}>
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+      <div className={`text-lg font-semibold font-mono mt-1 ${tone ?? ""}`}>{value}</div>
+    </Cmp>
+  );
 }
+
 function Select({ v, onChange, ph, opts }: { v: string; onChange: (s: string) => void; ph: string; opts: { value: string; label: string }[] }) {
   return (
     <select value={v} onChange={(e) => onChange(e.target.value)} className="w-full px-2 py-1.5 rounded-lg bg-background/60 border border-white/10 text-[12px]">
       <option value="">{ph}</option>
       {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
+  );
+}
+
+function LinkedSettlementsDialog({ income, settlements, allocs, providers, onClose, onOpen }: any) {
+  const providerById = new Map<string, Provider>(providers.map((p: Provider) => [p.id, p]));
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-xl rounded-2xl bg-background border border-white/10 p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <div className="font-semibold text-sm">التسويات المرتبطة — {fmtSAR(income.amount)}</div>
+          <button onClick={onClose} className="p-1.5 hover:bg-white/5 rounded"><X size={16} /></button>
+        </div>
+        <div className="space-y-2 max-h-[60vh] overflow-auto">
+          {settlements.map((s: Settlement) => {
+            const alloc = allocs.find((a: Alloc) => a.settlement_id === s.id);
+            const p = providerById.get(s.provider_id);
+            return (
+              <div key={s.id} className="rounded-lg border border-white/10 bg-white/5 p-3 text-[12px] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-gold">{providerAr(p?.provider_code)}</span>
+                  <span className="font-mono text-[11px] text-muted-foreground">#{s.settlement_reference ?? s.id.slice(0, 8)}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 text-[11px]">
+                  <div>الصافي المتوقع: <span className="font-mono">{fmtSAR(s.expected_net_amount)}</span></div>
+                  <div>المخصص من الحوالة: <span className="font-mono text-emerald-300">{fmtSAR(alloc?.allocated_amount ?? income.amount)}</span></div>
+                  <div>حالة التسوية: {s.status ?? "—"}</div>
+                  <div>التاريخ: {s.settlement_date ?? "—"}</div>
+                </div>
+                <button onClick={() => onOpen(income.id)} className="text-[11px] text-sky-300 hover:underline inline-flex items-center gap-1"><ExternalLink size={11} /> فتح مركز المطابقة</button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type ReclassifyPlan = {
+  candidates: Array<{ id: string; income_date: string; amount: number; sourceName: string; providerCode: string; providerId: string; account_type: string; currentType: string | null; conflict: boolean; skipReason?: string }>;
+  bySalla: number; byTabby: number; byTamara: number;
+  toChange: number; conflicts: number; skipped: number;
+};
+
+function ReclassifyDialog({ rows, sources, providers, onClose, onDone }: any) {
+  const [applying, setApplying] = useState(false);
+
+  const plan: ReclassifyPlan = useMemo(() => {
+    const providerByCode = new Map<string, Provider>((providers as Provider[]).map((p) => [p.provider_code, p]));
+    const srcById = new Map<string, string>((sources as any[]).map((s: any) => [s.id, s.name]));
+    const out: ReclassifyPlan = { candidates: [], bySalla: 0, byTabby: 0, byTamara: 0, toChange: 0, conflicts: 0, skipped: 0 };
+    for (const r of rows as Income[]) {
+      if (r.deleted_at) continue;
+      if (Number(r.amount) <= 0) continue;
+      if (r.payment_provider_id) continue; // already tagged
+      const src = srcById.get(r.income_source_id) ?? "";
+      const code = normalizeProviderCode(src);
+      if (!code) continue;
+      const prov = providerByCode.get(code);
+      if (!prov) continue;
+      if (r.account_type === "personal") {
+        out.candidates.push({ id: r.id, income_date: r.income_date, amount: Number(r.amount), sourceName: src, providerCode: code, providerId: prov.id, account_type: r.account_type, currentType: r.transaction_type, conflict: false, skipReason: "حساب شخصي — يحتاج تأكيد يدوي" });
+        out.skipped++;
+        continue;
+      }
+      const conflict = !!r.transaction_type && r.transaction_type !== "payment_provider_settlement" && r.transaction_type !== "unclassified_incoming";
+      out.candidates.push({ id: r.id, income_date: r.income_date, amount: Number(r.amount), sourceName: src, providerCode: code, providerId: prov.id, account_type: r.account_type, currentType: r.transaction_type, conflict });
+      if (code === "salla_payments") out.bySalla++;
+      if (code === "tabby") out.byTabby++;
+      if (code === "tamara") out.byTamara++;
+      if (conflict) out.conflicts++;
+      else out.toChange++;
+    }
+    return out;
+  }, [rows, sources, providers]);
+
+  const apply = async () => {
+    if (!confirm(`سيتم تحديث ${plan.toChange} حركة إلى (تحويل تسوية وسيط دفع). لن يتم تغيير المبلغ أو التاريخ أو الحساب. متابعة؟`)) return;
+    setApplying(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id ?? null;
+      const targets = plan.candidates.filter((c) => !c.conflict && !c.skipReason);
+      let ok = 0, fail = 0;
+      for (const c of targets) {
+        const { error } = await supabase.from("finance_incomes").update({
+          payment_provider_id: c.providerId,
+          transaction_type: "payment_provider_settlement",
+          business_relation: "business",
+          accounting_status: "classified",
+        }).eq("id", c.id);
+        if (error) { fail++; continue; }
+        await supabase.from("finance_audit_logs").insert({
+          related_type: "finance_incomes", related_id: c.id, action: "reclassify_provider",
+          field_name: "transaction_type", old_value: c.currentType ?? null,
+          new_value: "payment_provider_settlement", changed_by: uid,
+          note: `تصنيف تلقائي — وسيط: ${providerAr(c.providerCode)} (${c.sourceName})`,
+        });
+        ok++;
+      }
+      toast.success(`تم تحديث ${ok} حركة${fail ? ` — فشل ${fail}` : ""}`);
+      onDone();
+    } catch (e: any) {
+      toast.error("تعذر التنفيذ: " + (e.message ?? "خطأ"));
+    } finally { setApplying(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl bg-background border border-white/10 p-4 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <div className="font-semibold">تصنيف حوالات الوسطاء القديمة</div>
+          <button onClick={onClose} className="p-1.5 hover:bg-white/5 rounded"><X size={16} /></button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-[12px]">
+          <Stat label="حركات سلة" value={plan.bySalla} />
+          <Stat label="حركات تابي" value={plan.byTabby} />
+          <Stat label="حركات تمارا" value={plan.byTamara} />
+          <Stat label="سيتغير نوعها" value={plan.toChange} tone="text-emerald-300" />
+          <Stat label="مستبعدة / تعارض" value={plan.conflicts + plan.skipped} tone="text-amber-300" />
+        </div>
+        <div className="text-[11px] text-muted-foreground">
+          سيتم تحديث الحقول الآتية فقط: وسيط الدفع، نوع الحركة (= تحويل تسوية وسيط دفع)، علاقة العملية (= تخص النشاط)، حالة التصنيف (= مصنف). لن يتم تغيير المبلغ، التاريخ، الحساب، ولن تُنشأ حركات جديدة أو قيود جديدة. جميع التغييرات تُسجّل في سجل التدقيق.
+        </div>
+
+        {(plan.conflicts + plan.skipped) > 0 && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-[11px]">
+            <div className="font-semibold text-amber-300 mb-2 inline-flex items-center gap-1"><AlertTriangle size={12} /> تعارض أو استبعاد ({plan.conflicts + plan.skipped})</div>
+            <div className="max-h-40 overflow-auto space-y-1">
+              {plan.candidates.filter((c) => c.conflict || c.skipReason).map((c) => (
+                <div key={c.id} className="flex items-center justify-between border-b border-white/5 py-1">
+                  <span>{c.income_date} — {fmtSAR(c.amount)} — {c.sourceName}</span>
+                  <span className="text-amber-300">{c.skipReason ?? `مصنف يدويًا: ${incomingLabel(c.currentType)}`}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-[11px]">
+          <div className="font-semibold mb-2">معاينة الحركات القابلة للتصنيف ({plan.toChange})</div>
+          <div className="max-h-64 overflow-auto">
+            <table className="w-full">
+              <thead className="text-muted-foreground text-[10px]"><tr><th className="text-start pb-1">التاريخ</th><th className="text-start pb-1">المبلغ</th><th className="text-start pb-1">المصدر</th><th className="text-start pb-1">الوسيط الجديد</th></tr></thead>
+              <tbody>
+                {plan.candidates.filter((c) => !c.conflict && !c.skipReason).slice(0, 200).map((c) => (
+                  <tr key={c.id} className="border-t border-white/5"><td className="py-1">{c.income_date}</td><td className="font-mono">{fmtSAR(c.amount)}</td><td>{c.sourceName}</td><td className="text-gold">{providerAr(c.providerCode)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2">
+          <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] bg-white/5 hover:bg-white/10">إلغاء</button>
+          <button disabled={applying || plan.toChange === 0} onClick={apply} className="px-4 py-1.5 rounded-lg text-[12px] bg-gold/20 border border-gold/40 text-gold hover:bg-gold/30 disabled:opacity-50">
+            {applying ? "..." : `تنفيذ التصنيف (${plan.toChange})`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, tone }: { label: string; value: number | string; tone?: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+      <div className={`text-base font-semibold font-mono ${tone ?? ""}`}>{value}</div>
+    </div>
   );
 }
 
@@ -269,7 +672,7 @@ const COLLECTION_TYPES = [
   { value: "other", label: "أخرى" },
 ];
 
-function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
+function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any) {
   const isNew = !row;
   const accountantOnly = !roles.canManage && roles.canAccountant;
   const canReview = roles.canManage || roles.canAccountant;
@@ -413,6 +816,11 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
           )}
 
           {/* Section 1: Movement */}
+          {f.payment_provider_id && f.transaction_type === "payment_provider_settlement" && (
+            <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-200 text-[11px] p-2">
+              هذه حوالة تسوية من وسيط دفع، وسيتم ربطها بتقرير التسوية من مركز المطابقة. لن يتم اعتبار المبلغ مبيعات جديدة.
+            </div>
+          )}
           <SectionCard title="بيانات الحركة">
             <div className="grid grid-cols-2 gap-3">
               <Field label="التاريخ"><input type="date" disabled={accountantOnly} value={f.income_date} onChange={(e) => setF({ ...f, income_date: e.target.value })} className="inp" /></Field>
@@ -440,7 +848,23 @@ function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
                 </select>
               </Field>
               <Field label="المصدر">
-                <select disabled={accountantOnly} value={f.income_source_id} onChange={(e) => setF({ ...f, income_source_id: e.target.value })} className="inp">
+                <select disabled={accountantOnly} value={f.income_source_id} onChange={(e) => {
+                  const srcId = e.target.value;
+                  const srcName = (sources as any[]).find((s: any) => s.id === srcId)?.name;
+                  const code = normalizeProviderCode(srcName);
+                  const prov = code ? (providers as Provider[]).find((p) => p.provider_code === code) : null;
+                  if (prov) {
+                    setF({
+                      ...f, income_source_id: srcId,
+                      payment_provider_id: prov.id,
+                      transaction_type: "payment_provider_settlement",
+                      business_relation: "business",
+                      accounting_status: "classified",
+                    });
+                  } else {
+                    setF({ ...f, income_source_id: srcId });
+                  }
+                }} className="inp">
                   <option value="">—</option>
                   {sources.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
