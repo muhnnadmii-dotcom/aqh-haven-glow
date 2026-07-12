@@ -30,9 +30,11 @@ export const Route = createFileRoute("/knowledge/$slug")({
     if (!data || !data.published || !data.visible) throw notFound();
     return data as unknown as Article;
   },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     const title = loaderData?.seo_title || loaderData?.title || "مقال";
     const desc = loaderData?.seo_description || loaderData?.excerpt || "";
+    const image = loaderData?.cover_path ? publicUrl(loaderData.cover_path) : undefined;
+    const url = `https://hub.aqh.sa/knowledge/${params.slug}`;
     return {
       meta: [
         { title: `${title} — أكوا هيفن` },
@@ -40,6 +42,24 @@ export const Route = createFileRoute("/knowledge/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
         { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        ...(image ? [{ property: "og:image", content: image }] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: loaderData?.title ?? title,
+            description: desc,
+            ...(image ? { image } : {}),
+            author: { "@type": "Organization", name: "Aqua Haven" },
+            publisher: { "@type": "Organization", name: "Aqua Haven" },
+            mainEntityOfPage: url,
+          }),
+        },
       ],
     };
   },
