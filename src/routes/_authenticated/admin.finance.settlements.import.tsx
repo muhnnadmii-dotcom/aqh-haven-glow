@@ -17,6 +17,8 @@ import {
   type TamaraSummary,
   type TamaraParsedLine,
 } from "@/lib/finance/tamara-import";
+import { detectTabbyHeaderRow } from "@/lib/finance/tabby-import";
+import { TabbySettlementImport } from "@/components/finance/TabbySettlementImport";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/import")({
   ssr: false,
@@ -293,6 +295,12 @@ function SettlementImportPage() {
       setTamaraMapping(autoMapTamara(headers));
       return;
     }
+    if (provider === "tabby") {
+      // For Tabby we auto-map by exact header names; also re-detect header row in case the user switched provider after upload.
+      const hr = detectTabbyHeaderRow(aoa);
+      setHeaderRow(hr);
+      return;
+    }
     const def = templates.find((t) => t.provider === provider);
     if (def) setMapping(def.mapping);
     else autoMap(headers);
@@ -339,6 +347,13 @@ function SettlementImportPage() {
       if (hdr.periodStart && !periodStart) setPeriodStart(hdr.periodStart);
       if (hdr.periodEnd && !periodEnd) setPeriodEnd(hdr.periodEnd);
       if (sum.payableToMerchant != null && !sourceExpectedNet) setSourceExpectedNet(String(sum.payableToMerchant));
+    } else if (provider === "tabby") {
+      const hr = detectTabbyHeaderRow(arr);
+      setHeaderRow(hr);
+      const hs = arr[hr] ?? [];
+      setHeaders(hs);
+      setTamaraHeader(null);
+      setTamaraSummary(null);
     } else {
       const aliases = COMMON_FIELDS.flatMap((f) => f.aliases);
       const hr = detectHeaderRow(arr, aliases);
@@ -890,7 +905,20 @@ function SettlementImportPage() {
       )}
 
       {/* Step 2 */}
-      {step === 2 && (
+      {(step === 2 || step === 3) && provider === "tabby" && (
+        <TabbySettlementImport
+          step={step === 3 ? 3 : 2}
+          aoa={aoa}
+          headerRow={headerRow}
+          file={file}
+          fileHash={fileHash}
+          providerRow={providerRow}
+          canManage={canManage}
+          onBack={() => setStep(step === 3 ? 2 : 1)}
+          onGotoPreview={() => setStep(3)}
+        />
+      )}
+      {step === 2 && provider !== "tabby" && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
           <h2 className="text-sm font-semibold">تعيين الأعمدة — {providerLabel}</h2>
 
@@ -975,7 +1003,7 @@ function SettlementImportPage() {
       )}
 
       {/* Step 3 */}
-      {step === 3 && (
+      {step === 3 && provider !== "tabby" && (
         <div className="space-y-4">
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
             <label className="block text-[11px]">مرجع التسوية
