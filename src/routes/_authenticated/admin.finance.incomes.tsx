@@ -469,7 +469,7 @@ function IncomesPage() {
           allocs={linkedDialog.allocs}
           providers={providers}
           onClose={() => setLinkedDialog(null)}
-          onOpen={(id) => { setLinkedDialog(null); openReconciliation(id); }}
+          onOpen={(id: string) => { setLinkedDialog(null); openReconciliation(id); }}
         />
       )}
     </div>
