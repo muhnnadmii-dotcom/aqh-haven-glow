@@ -905,7 +905,20 @@ function SettlementImportPage() {
       )}
 
       {/* Step 2 */}
-      {step === 2 && (
+      {step === 2 && provider === "tabby" && (
+        <TabbySettlementImport
+          step={2}
+          aoa={aoa}
+          headerRow={headerRow}
+          file={file}
+          fileHash={fileHash}
+          providerRow={providerRow}
+          canManage={canManage}
+          onBack={() => setStep(1)}
+          onGotoPreview={() => setStep(3)}
+        />
+      )}
+      {step === 2 && provider !== "tabby" && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
           <h2 className="text-sm font-semibold">تعيين الأعمدة — {providerLabel}</h2>
 
