@@ -4995,6 +4995,8 @@ export type Database = {
         Args: { _settlement_id: string }
         Returns: number
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       vat_get_excluded_invoices: {
         Args: { p_period_id: string }
         Returns: {
