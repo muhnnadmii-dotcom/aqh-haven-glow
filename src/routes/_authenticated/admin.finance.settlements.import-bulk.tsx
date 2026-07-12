@@ -524,12 +524,11 @@ function BulkImportPage() {
         const { error } = await (supabase as any).from("payment_settlement_lines").insert(slice);
         if (error) throw error;
       }
-      await (supabase as any).from("finance_audit_logs").insert({
-        related_type: "payment_settlements",
-        related_id: settlementId,
-        action: "import_settlement_bulk",
-        note: `provider=${provider} · file=${entry.file.name} · hash=${entry.hash.slice(0, 16)} · lines=${parsed.length} · review=${sm.review}`,
-        changed_by: uid,
+      await (supabase as any).rpc("finance_log_manual_audit", {
+        p_related_type: "payment_settlements",
+        p_related_id: settlementId,
+        p_action: "import_settlement_bulk",
+        p_note: `provider=${provider} · file=${entry.file.name} · hash=${entry.hash.slice(0, 16)} · lines=${parsed.length} · review=${sm.review}`,
       });
 
       return {
