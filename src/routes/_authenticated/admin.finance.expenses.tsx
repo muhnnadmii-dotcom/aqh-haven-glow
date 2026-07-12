@@ -488,7 +488,7 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
         <div className="p-4 space-y-4">
           {row?.deleted_at && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-200 text-[11px] p-2">
-              عملية مؤرشفة بتاريخ {new Date(row.deleted_at).toLocaleString("ar")}{row.delete_reason ? ` · السبب: ${row.delete_reason}` : ""}
+              عملية مؤرشفة بتاريخ {new Date(row.deleted_at).toLocaleString("en-US")}{row.delete_reason ? ` · السبب: ${row.delete_reason}` : ""}
             </div>
           )}
           {ownerDrawCatId && f.main_category_id === ownerDrawCatId && (
