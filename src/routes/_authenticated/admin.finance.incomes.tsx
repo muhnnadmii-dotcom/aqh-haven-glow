@@ -258,26 +258,12 @@ function IncomesPage() {
     return out;
   }, [rows, allocs, settlements, sources, providerById, settlementById]);
 
+  // Server-side filters already applied; keep fLink as page-scope client filter.
   const filtered = useMemo(() => rows.filter((r) => {
-    if (!showDeleted && r.deleted_at) return false;
-    if (showDeleted && !r.deleted_at) return false;
-    if (q && !(r.note ?? "").toLowerCase().includes(q.toLowerCase()) && !sourceName(r.income_source_id).toLowerCase().includes(q.toLowerCase())) return false;
-    if (fMonth && r.month !== fMonth) return false;
-    if (fSource && r.income_source_id !== fSource) return false;
-    if (fAccount && r.account_type !== fAccount) return false;
-    if (fInternal && r.internal_review_status !== fInternal) return false;
-    if (fAcct && r.accountant_status !== fAcct) return false;
-    if (fAtt && r.attachment_status !== fAtt) return false;
-    if (fTxnType && r.transaction_type !== fTxnType) return false;
-    if (fAccStatus && (r.accounting_status ?? "unclassified") !== fAccStatus) return false;
+    if (!fLink) return true;
     const en = enrichment.get(r.id);
-    if (fProvider) {
-      if (fProvider === "none") { if (en?.providerCode) return false; }
-      else if (en?.providerCode !== fProvider) return false;
-    }
-    if (fLink && en?.linkStatus !== fLink) return false;
-    return true;
-  }), [rows, q, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, fLink, sources, showDeleted, enrichment]);
+    return en?.linkStatus === fLink;
+  }), [rows, fLink, enrichment]);
 
   const summary = useMemo(() => {
     const s = { unmatched: 0, suggested: 0, partial: 0, full: 0, needsReview: 0, unallocated: 0 };
@@ -295,14 +281,17 @@ function IncomesPage() {
     return s;
   }, [rows, enrichment]);
 
-  const unclassifiedCount = useMemo(
-    () => rows.filter((r) => !r.deleted_at && (r.accounting_status ?? "unclassified") === "unclassified").length,
-    [rows],
-  );
-
-  const months = useMemo(() => Array.from(new Set(rows.map((r) => r.month).filter(Boolean))).sort().reverse(), [rows]);
+  const months = useMemo(() => {
+    const out: string[] = [];
+    const now = new Date();
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return out;
+  }, []);
   const total = filtered.reduce((a, b) => a + Number(b.amount ?? 0), 0);
-  const deletedCount = rows.filter((r) => r.deleted_at).length;
+
 
   const softDelete = async (r: Income) => {
     const en = enrichment.get(r.id);
