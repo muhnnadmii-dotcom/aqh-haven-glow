@@ -1003,7 +1003,20 @@ function SettlementImportPage() {
       )}
 
       {/* Step 3 */}
-      {step === 3 && (
+      {step === 3 && provider === "tabby" && (
+        <TabbySettlementImport
+          step={3}
+          aoa={aoa}
+          headerRow={headerRow}
+          file={file}
+          fileHash={fileHash}
+          providerRow={providerRow}
+          canManage={canManage}
+          onBack={() => setStep(2)}
+          onGotoPreview={() => setStep(3)}
+        />
+      )}
+      {step === 3 && provider !== "tabby" && (
         <div className="space-y-4">
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
             <label className="block text-[11px]">مرجع التسوية
