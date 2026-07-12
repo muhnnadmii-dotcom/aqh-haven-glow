@@ -828,13 +828,9 @@ function SalesImportPage() {
               </thead>
               <tbody>
                 {visibleRows.map((r) => {
-                  const rowStatus = r.hard_error ? "خطأ"
-                    : r.needs_review ? "مراجعة"
-                    : "صالح";
-                  const badge = r.hard_error ? "bg-red-500/15 text-red-300 border-red-500/30"
-                    : r.needs_review ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
-                    : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
-                  const canSelect = !r.needs_review && !r.hard_error;
+                  const rowStatus = CLASSIFICATION_LABEL[r.classification];
+                  const badge = CLASSIFICATION_CLASS[r.classification];
+                  const canSelect = canImportRow(r);
                   const isSel = selected.has(r.rowNo);
                   const payStatusBadge = r.payment_status === "paid"
                     ? "text-emerald-300"
@@ -866,8 +862,8 @@ function SalesImportPage() {
                       <td className="p-1.5">{r.shipping_vat || "—"}</td>
                       <td className="p-1.5">{r.total_discount || "—"}</td>
                       <td className="p-1.5 text-[10px] text-amber-200">
-                        {r.review_reasons.length
-                          ? r.review_reasons.map((x) => <div key={x}>• {REVIEW_LABEL[x]}</div>)
+                        {r.issues.length
+                          ? r.issues.map((x) => <div key={x}>• {ISSUE_LABEL[x]}</div>)
                           : "—"}
                       </td>
                     </tr>
@@ -881,3 +877,17 @@ function SalesImportPage() {
     </div>
   );
 }
+
+function BucketChip({ active, k, n, onClick }: { active: Classification | "all"; k: Classification; n: number; onClick: (k: Classification | "all") => void }) {
+  const cls = CLASSIFICATION_CLASS[k];
+  const isActive = active === k;
+  return (
+    <button
+      onClick={() => onClick(isActive ? "all" : k)}
+      className={`px-2 py-0.5 rounded border text-[11px] ${cls} ${isActive ? "ring-1 ring-white/40" : ""}`}
+    >
+      {CLASSIFICATION_LABEL[k]}: {n}
+    </button>
+  );
+}
+
