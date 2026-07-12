@@ -295,6 +295,12 @@ function SettlementImportPage() {
       setTamaraMapping(autoMapTamara(headers));
       return;
     }
+    if (provider === "tabby") {
+      // For Tabby we auto-map by exact header names; also re-detect header row in case the user switched provider after upload.
+      const hr = detectTabbyHeaderRow(aoa);
+      setHeaderRow(hr);
+      return;
+    }
     const def = templates.find((t) => t.provider === provider);
     if (def) setMapping(def.mapping);
     else autoMap(headers);
