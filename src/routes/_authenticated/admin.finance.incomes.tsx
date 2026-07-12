@@ -843,7 +843,23 @@ function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any)
                 </select>
               </Field>
               <Field label="المصدر">
-                <select disabled={accountantOnly} value={f.income_source_id} onChange={(e) => setF({ ...f, income_source_id: e.target.value })} className="inp">
+                <select disabled={accountantOnly} value={f.income_source_id} onChange={(e) => {
+                  const srcId = e.target.value;
+                  const srcName = (sources as any[]).find((s: any) => s.id === srcId)?.name;
+                  const code = normalizeProviderCode(srcName);
+                  const prov = code ? (providers as Provider[]).find((p) => p.provider_code === code) : null;
+                  if (prov) {
+                    setF({
+                      ...f, income_source_id: srcId,
+                      payment_provider_id: prov.id,
+                      transaction_type: "payment_provider_settlement",
+                      business_relation: "business",
+                      accounting_status: "classified",
+                    });
+                  } else {
+                    setF({ ...f, income_source_id: srcId });
+                  }
+                }} className="inp">
                   <option value="">—</option>
                   {sources.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
