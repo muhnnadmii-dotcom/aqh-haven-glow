@@ -1,0 +1,21 @@
+# Aqua Haven (أكوا هيفن)
+
+> Aqua Haven designs, builds, and maintains premium freshwater and marine aquariums across Saudi Arabia — custom tanks, professional maintenance plans, and business solutions for cafes, restaurants, and retail spaces.
+
+## Pages
+
+- [Home](/): Overview of Aqua Haven's aquarium design and maintenance services.
+- [About](/about): Company story, team, and craftsmanship approach.
+- [Services](/services): Full list of aquarium services offered.
+- [Custom Aquariums](/services/custom-aquariums): Bespoke aquarium design and fabrication.
+- [Maintenance Plans](/maintenance): Monthly maintenance packages for freshwater and marine tanks.
+- [Business Solutions](/business-solutions): Aquarium installations for cafes, restaurants, events, and shops.
+- [Portfolio](/portfolio): Completed aquarium projects and case studies.
+- [Catalog](/catalog): Available aquarium models and equipment.
+- [Knowledge Center](/knowledge): Articles and guides on aquarium care.
+- [Consultation](/consultation): Book a design or maintenance consultation.
+- [Contact](/contact): Get in touch with Aqua Haven.
+
+## Optional
+
+- [Trust & Privacy](/trust): Privacy and data handling practices.
