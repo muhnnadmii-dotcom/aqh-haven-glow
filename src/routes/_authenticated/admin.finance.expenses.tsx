@@ -28,17 +28,18 @@ export const Route = createFileRoute("/_authenticated/admin/finance/expenses")({
 
 function ExpensesPage() {
   const roles = useFinanceRoles();
-  const [rows, setRows] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [mains, setMains] = useState<any[]>([]);
   const [subs, setSubs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<any>(null);
   const [creating, setCreating] = useState(false);
   const [creatingOwnerDraw, setCreatingOwnerDraw] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [unclassifiedCount, setUnclassifiedCount] = useState(0);
+  const [deletedCount, setDeletedCount] = useState(0);
 
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [fMonth, setFMonth] = useState("");
   const [fSup, setFSup] = useState("");
   const [fMain, setFMain] = useState("");
@@ -50,52 +51,89 @@ function ExpensesPage() {
   const [fTxnType, setFTxnType] = useState("");
   const [fAccStatus, setFAccStatus] = useState("");
 
-  const load = async () => {
-    setLoading(true);
-    const [{ data: exps }, { data: sups }, { data: cats }] = await Promise.all([
-      supabase.from("finance_expenses").select("*").order("expense_date", { ascending: false }),
-      supabase.from("finance_suppliers").select("id, name").eq("is_active", true).order("name"),
-      supabase.from("finance_categories").select("*").eq("is_active", true).order("display_order"),
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: sups }, { data: cats }] = await Promise.all([
+        supabase.from("finance_suppliers").select("id, name").eq("is_active", true).order("name"),
+        supabase.from("finance_categories").select("*").eq("is_active", true).order("display_order"),
+      ]);
+      setSuppliers(sups ?? []);
+      setMains((cats ?? []).filter((c: any) => c.kind === "main"));
+      setSubs((cats ?? []).filter((c: any) => c.kind === "sub"));
+    })();
+  }, []);
+
+  const refreshCounts = useCallback(async () => {
+    const [u, d] = await Promise.all([
+      supabase.from("finance_expenses").select("id", { count: "exact", head: true }).is("deleted_at", null).or("accounting_status.is.null,accounting_status.eq.unclassified"),
+      supabase.from("finance_expenses").select("id", { count: "exact", head: true }).not("deleted_at", "is", null),
     ]);
-    setRows(exps ?? []);
-    setSuppliers(sups ?? []);
-    setMains((cats ?? []).filter((c: any) => c.kind === "main"));
-    setSubs((cats ?? []).filter((c: any) => c.kind === "sub"));
-    setLoading(false);
+    setUnclassifiedCount(u.count ?? 0);
+    setDeletedCount(d.count ?? 0);
+  }, []);
+  useEffect(() => { refreshCounts(); }, [refreshCounts]);
+
+  const fetcher = useCallback(async ({ page, pageSize }: { page: number; pageSize: PageSize }) => {
+    let query = supabase.from("finance_expenses").select("*", { count: "exact" })
+      .order("expense_date", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false });
+    if (showDeleted) query = query.not("deleted_at", "is", null);
+    else query = query.is("deleted_at", null);
+    if (debouncedQ) {
+      const like = `%${debouncedQ.replace(/[%_]/g, (m) => "\\" + m)}%`;
+      query = query.or(`item_name.ilike.${like},supplier_name.ilike.${like}`);
+    }
+    if (fMonth) query = query.eq("month", fMonth);
+    if (fSup) query = query.eq("supplier_id", fSup);
+    if (fMain) query = query.eq("main_category_id", fMain);
+    if (fSub) query = query.eq("sub_category_id", fSub);
+    if (fAccount) query = query.eq("account_type", fAccount as any);
+    if (fInternal) query = query.eq("internal_review_status", fInternal as any);
+    if (fAcct) query = query.eq("accountant_status", fAcct as any);
+    if (fAtt) query = query.eq("attachment_status", fAtt as any);
+    if (fTxnType) query = query.eq("transaction_type", fTxnType as any);
+    if (fAccStatus) {
+      if (fAccStatus === "unclassified") query = query.or("accounting_status.is.null,accounting_status.eq.unclassified");
+      else query = query.eq("accounting_status", fAccStatus as any);
+    }
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, count, error } = await query.range(from, to);
+    if (error) throw new Error(error.message);
+    return { rows: (data as any[]) ?? [], total: count ?? 0 };
+  }, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus]);
+
+  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus]);
+  const rows = pg.rows;
+  const setRows = (updater: (prev: any[]) => any[]) => {
+    // in-place row mutation from child components (status editor) — safe optimistic update
+    (pg as any).rows = updater(pg.rows);
   };
-  useEffect(() => { load(); }, []);
+  const loading = pg.loading;
+  const load = useCallback(() => { pg.reload(); refreshCounts(); }, [pg.reload, refreshCounts]);
 
   const supName = (id: string | null) => suppliers.find((s) => s.id === id)?.name ?? "—";
   const catName = (id: string | null) => [...mains, ...subs].find((c) => c.id === id)?.name ?? "—";
   const ownerDrawCatId = useMemo(() => mains.find((c: any) => c.system_slug === OWNER_DRAW_SLUG)?.id ?? null, [mains]);
   const ownerDrawSubId = useMemo(() => ownerDrawCatId ? (subs.find((s: any) => s.parent_id === ownerDrawCatId)?.id ?? null) : null, [subs, ownerDrawCatId]);
 
-  const filtered = useMemo(() => rows.filter((r) => {
-    if (!showDeleted && r.deleted_at) return false;
-    if (showDeleted && !r.deleted_at) return false;
-    if (q && !(r.item_name ?? "").toLowerCase().includes(q.toLowerCase()) && !(r.supplier_name ?? "").toLowerCase().includes(q.toLowerCase())) return false;
-    if (fMonth && r.month !== fMonth) return false;
-    if (fSup && r.supplier_id !== fSup) return false;
-    if (fMain && r.main_category_id !== fMain) return false;
-    if (fSub && r.sub_category_id !== fSub) return false;
-    if (fAccount && r.account_type !== fAccount) return false;
-    if (fInternal && r.internal_review_status !== fInternal) return false;
-    if (fAcct && r.accountant_status !== fAcct) return false;
-    if (fAtt && r.attachment_status !== fAtt) return false;
-    if (fTxnType && r.transaction_type !== fTxnType) return false;
-    if (fAccStatus && (r.accounting_status ?? "unclassified") !== fAccStatus) return false;
-    return true;
-  }), [rows, q, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, showDeleted]);
-
-  const unclassifiedCount = useMemo(
-    () => rows.filter((r) => !r.deleted_at && (r.accounting_status ?? "unclassified") === "unclassified").length,
-    [rows],
-  );
-
-  const months = useMemo(() => Array.from(new Set(rows.map((r) => r.month).filter(Boolean))).sort().reverse(), [rows]);
-  const total = filtered.reduce((a, b) => a + Number(b.amount ?? 0), 0);
+  const months = useMemo(() => {
+    const out: string[] = [];
+    const now = new Date();
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return out;
+  }, []);
+  const filtered = rows;
+  const total = rows.reduce((a, b) => a + Number(b.amount ?? 0), 0);
   const subsForMain = fMain ? subs.filter((s) => s.parent_id === fMain) : subs;
-  const deletedCount = rows.filter((r) => r.deleted_at).length;
 
   const softDelete = async (r: any) => {
     const reason = window.prompt("سبب الحذف (اختياري):", "") ?? "";
