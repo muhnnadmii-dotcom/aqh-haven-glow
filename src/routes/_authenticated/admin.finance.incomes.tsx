@@ -72,19 +72,20 @@ function providerAr(code?: string | null): string {
 function IncomesPage() {
   const roles = useFinanceRoles();
   const navigate = useNavigate();
-  const [rows, setRows] = useState<Income[]>([]);
   const [sources, setSources] = useState<{ id: string; name: string }[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [allocs, setAllocs] = useState<Alloc[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [pageAllocs, setPageAllocs] = useState<Alloc[]>([]);
   const [editing, setEditing] = useState<Income | null>(null);
   const [creating, setCreating] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const [reclassifyOpen, setReclassifyOpen] = useState(false);
   const [linkedDialog, setLinkedDialog] = useState<{ income: Income; settlements: Settlement[]; allocs: Alloc[] } | null>(null);
+  const [unclassifiedCount, setUnclassifiedCount] = useState(0);
+  const [deletedCount, setDeletedCount] = useState(0);
 
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [fMonth, setFMonth] = useState("");
   const [fSource, setFSource] = useState("");
   const [fAccount, setFAccount] = useState("");
@@ -101,23 +102,90 @@ function IncomesPage() {
     setFAcct(""); setFAtt(""); setFTxnType(""); setFAccStatus(""); setFProvider(""); setFLink("");
   };
 
-  const load = async () => {
-    setLoading(true);
-    const [{ data: incs }, { data: srcs }, { data: prov }, { data: setts }, { data: als }] = await Promise.all([
-      supabase.from("finance_incomes").select("*").order("income_date", { ascending: false }),
-      supabase.from("finance_income_sources").select("id, name").eq("is_active", true).order("display_order"),
-      supabase.from("payment_providers").select("id, name, provider_code"),
-      supabase.from("payment_settlements").select("id, provider_id, settlement_reference, settlement_date, expected_net_amount, actual_bank_amount, status, bank_income_id"),
-      supabase.from("settlement_bank_allocations").select("id, settlement_id, transaction_id, allocated_amount, status, difference_type, difference_amount").eq("status", "confirmed"),
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: srcs }, { data: prov }, { data: setts }] = await Promise.all([
+        supabase.from("finance_income_sources").select("id, name").eq("is_active", true).order("display_order"),
+        supabase.from("payment_providers").select("id, name, provider_code"),
+        supabase.from("payment_settlements").select("id, provider_id, settlement_reference, settlement_date, expected_net_amount, actual_bank_amount, status, bank_income_id"),
+      ]);
+      setSources(srcs ?? []);
+      setProviders((prov as any) ?? []);
+      setSettlements((setts as any) ?? []);
+    })();
+  }, []);
+
+  const providerByCode = useMemo(() => new Map(providers.map((p) => [p.provider_code, p])), [providers]);
+
+  const refreshCounts = useCallback(async () => {
+    const [u, d] = await Promise.all([
+      supabase.from("finance_incomes").select("id", { count: "exact", head: true }).is("deleted_at", null).or("accounting_status.is.null,accounting_status.eq.unclassified"),
+      supabase.from("finance_incomes").select("id", { count: "exact", head: true }).not("deleted_at", "is", null),
     ]);
-    setRows(incs ?? []);
-    setSources(srcs ?? []);
-    setProviders((prov as any) ?? []);
-    setSettlements((setts as any) ?? []);
-    setAllocs((als as any) ?? []);
-    setLoading(false);
-  };
-  useEffect(() => { load(); }, []);
+    setUnclassifiedCount(u.count ?? 0);
+    setDeletedCount(d.count ?? 0);
+  }, []);
+  useEffect(() => { refreshCounts(); }, [refreshCounts]);
+
+  const fetcher = useCallback(async ({ page, pageSize }: { page: number; pageSize: PageSize }) => {
+    let query = supabase.from("finance_incomes").select("*", { count: "exact" })
+      .order("income_date", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false });
+    if (showDeleted) query = query.not("deleted_at", "is", null);
+    else query = query.is("deleted_at", null);
+    if (debouncedQ) {
+      const like = `%${debouncedQ.replace(/[%_]/g, (m) => "\\" + m)}%`;
+      query = query.ilike("note", like);
+    }
+    if (fMonth) query = query.eq("month", fMonth);
+    if (fSource) query = query.eq("income_source_id", fSource);
+    if (fAccount) query = query.eq("account_type", fAccount as any);
+    if (fInternal) query = query.eq("internal_review_status", fInternal as any);
+    if (fAcct) query = query.eq("accountant_status", fAcct as any);
+    if (fAtt) query = query.eq("attachment_status", fAtt as any);
+    if (fTxnType) query = query.eq("transaction_type", fTxnType as any);
+    if (fAccStatus) {
+      if (fAccStatus === "unclassified") query = query.or("accounting_status.is.null,accounting_status.eq.unclassified");
+      else query = query.eq("accounting_status", fAccStatus as any);
+    }
+    if (fProvider === "none") query = query.is("payment_provider_id", null);
+    else if (fProvider) {
+      const p = providerByCode.get(fProvider);
+      if (!p) return { rows: [], total: 0 };
+      query = query.eq("payment_provider_id", p.id);
+    }
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, count, error } = await query.range(from, to);
+    if (error) throw new Error(error.message);
+    const incRows = (data as any[]) ?? [];
+
+    // Fetch confirmed allocations only for current page rows.
+    const ids = incRows.map((r) => r.id);
+    if (ids.length) {
+      const { data: als } = await supabase.from("settlement_bank_allocations")
+        .select("id, settlement_id, transaction_id, allocated_amount, status, difference_type, difference_amount")
+        .eq("status", "confirmed").in("transaction_id", ids);
+      setPageAllocs((als as any) ?? []);
+    } else {
+      setPageAllocs([]);
+    }
+    return { rows: incRows, total: count ?? 0 };
+  }, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, providerByCode]);
+
+  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider]);
+  const [rows, setLocalRows] = useState<Income[]>([]);
+  useEffect(() => { setLocalRows(pg.rows); }, [pg.rows]);
+  const setRows = (updater: (prev: any[]) => any[]) => setLocalRows((p) => updater(p));
+  const loading = pg.loading;
+  const load = useCallback(() => { pg.reload(); refreshCounts(); }, [pg.reload, refreshCounts]);
+  const allocs = pageAllocs;
+
 
   const sourceName = (id: string | null) => sources.find((s) => s.id === id)?.name ?? "—";
   const providerById = useMemo(() => new Map(providers.map((p) => [p.id, p])), [providers]);
