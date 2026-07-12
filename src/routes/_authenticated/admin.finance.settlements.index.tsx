@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
-import { Plus, X, ChevronLeft, Upload, RefreshCcw, Pencil, CalendarX } from "lucide-react";
+import { Plus, X, ChevronLeft, Upload, RefreshCcw, Pencil, CalendarX, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useMemo } from "react";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
