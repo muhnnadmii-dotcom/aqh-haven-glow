@@ -263,6 +263,10 @@ function SettlementImportPage() {
   const [payoutFee, setPayoutFee] = useState("0");
   const [sourceExpectedNet, setSourceExpectedNet] = useState("");
   const [statusFilter, setStatusFilter] = useState<MatchStatus | "">("");
+  // ---- Tamara-only state (populated when provider === "tamara") ----
+  const [tamaraMapping, setTamaraMapping] = useState<TamaraMapping>({});
+  const [tamaraHeader, setTamaraHeader] = useState<TamaraHeaderInfo | null>(null);
+  const [tamaraSummary, setTamaraSummary] = useState<TamaraSummary | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const providerLabel = PROVIDERS.find((p) => p.code === provider)?.label ?? "";
