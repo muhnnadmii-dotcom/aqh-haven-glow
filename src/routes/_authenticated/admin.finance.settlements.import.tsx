@@ -366,7 +366,80 @@ function SettlementImportPage() {
     setHeaders(hs);
   }, [headerRow, aoa]);
 
+  function tamaraToParsedLines(t: TamaraParsedLine[]): ParsedLine[] {
+    // Within-file dedup by provider_event_id (unique per Tamara event).
+    const seenEvent = new Set<string>();
+    return t.map((r) => {
+      const reasons: ReviewReason[] = [];
+      // For refund events, keep amount signed negative even if the file omitted the sign.
+      let gross = r.event_amount;
+      if (r.event_type === "refund" && gross > 0) gross = -gross;
+
+      if (r.event_amount === 0 && r.event_type !== "needs_review_event") reasons.push("zero_amount");
+      if (r.event_amount == null || !isFinite(r.event_amount)) reasons.push("invalid_amount");
+      if (r.reasons.includes("net_amount_mismatch")) reasons.push("amount_mismatch");
+      if (r.provider_event_id && seenEvent.has(r.provider_event_id)) reasons.push("duplicate_line");
+      if (r.provider_event_id) seenEvent.add(r.provider_event_id);
+
+      const desc =
+        (r.event_type_raw ? `Event: ${r.event_type_raw}` : "") +
+        (r.refund_reason ? ` · ${r.refund_reason}` : "") +
+        (r.provider_order_status ? ` · ${r.provider_order_status}` : "");
+
+      const lineType: LineType =
+        r.line_type === "sale" ? "sale"
+          : r.line_type === "refund" ? "refund"
+            : "manual_adjustment";
+
+      const rawObj: Record<string, any> = {
+        ...r.raw,
+        _tamara_event_type: r.event_type_raw,
+        _tamara_event_id: r.provider_event_id,
+        _tamara_order_id: r.provider_order_id,
+        _merchant_order_number: r.external_order_id,
+        _merchant_order_id_source: r.external_order_id_source,
+        _refund_id: r.provider_refund_id,
+        _refund_reason: r.refund_reason,
+        _original_order_date: r.original_order_date,
+        _original_order_amount: r.original_order_amount,
+        _fixed_fee_amount: r.fixed_fee_amount,
+        _variable_fee_amount: r.variable_fee_amount,
+        _variable_fee_rate: r.variable_fee_rate,
+        _provider_order_status: r.provider_order_status,
+        _payment_type: r.payment_type,
+        _currency: r.currency,
+      };
+
+      return {
+        rowNo: r.rowNo,
+        external_order_id: r.external_order_id,
+        transaction_date: r.event_date ?? r.original_order_date,
+        original_payment_method: r.payment_type,
+        // Use Tamara event id as the provider_transaction_id so cross-file dedup works.
+        provider_transaction_id: r.provider_event_id,
+        description: desc.trim() || null,
+        gross_amount: gross,
+        fees_before_vat: r.fees_before_vat,
+        fees_vat_amount: r.fees_vat_amount,
+        net_amount: r.net_amount,
+        net_before_vat_check: null,
+        line_type: lineType,
+        sales_invoice_id: null,
+        salla_order_status: r.provider_order_status,
+        // preliminary; goPreview() re-computes match_status against invoices
+        match_status: r.external_order_id ? "order_not_found" : "needs_classification",
+        reasons,
+        needs_review: reasons.length > 0 || r.needs_review,
+        raw: rawObj,
+      };
+    });
+  }
+
   function buildRows(): ParsedLine[] {
+    if (provider === "tamara") {
+      const t = buildTamaraRows(aoa, headerRow, tamaraMapping);
+      return tamaraToParsedLines(t);
+    }
     const body = aoa.slice(headerRow + 1).filter((r) => r.some((c) => c != null && c !== ""));
     const get = (raw: any[], k: FieldKey) => (mapping[k] != null ? raw[mapping[k]!] : null);
     // duplicate detection within file
