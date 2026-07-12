@@ -5195,6 +5195,7 @@ export type Database = {
         | "manual_adjustment"
         | "unexplained_deduction"
         | "wallet_top_up"
+        | "partial_refund"
       payment_settlement_payout_status:
         | "awaiting_payout"
         | "received"
@@ -5566,6 +5567,7 @@ export const Constants = {
         "manual_adjustment",
         "unexplained_deduction",
         "wallet_top_up",
+        "partial_refund",
       ],
       payment_settlement_payout_status: [
         "awaiting_payout",
