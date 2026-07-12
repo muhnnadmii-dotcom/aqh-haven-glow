@@ -816,6 +816,11 @@ function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any)
           )}
 
           {/* Section 1: Movement */}
+          {f.payment_provider_id && f.transaction_type === "payment_provider_settlement" && (
+            <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-200 text-[11px] p-2">
+              هذه حوالة تسوية من وسيط دفع، وسيتم ربطها بتقرير التسوية من مركز المطابقة. لن يتم اعتبار المبلغ مبيعات جديدة.
+            </div>
+          )}
           <SectionCard title="بيانات الحركة">
             <div className="grid grid-cols-2 gap-3">
               <Field label="التاريخ"><input type="date" disabled={accountantOnly} value={f.income_date} onChange={(e) => setF({ ...f, income_date: e.target.value })} className="inp" /></Field>
