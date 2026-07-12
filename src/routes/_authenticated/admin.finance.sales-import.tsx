@@ -208,6 +208,16 @@ type ParsedRow = {
   vat_return_eligible: boolean;
 };
 
+function countBuckets(rows: ParsedRow[]) {
+  const acc: Record<Classification, number> = {
+    ready_to_import: 0, importable_missing_tax_document: 0,
+    skipped_duplicate: 0, cancelled_order: 0, blocking_review: 0,
+  };
+  rows.forEach((r) => { acc[r.classification]++; });
+  return acc;
+}
+
+
 
 function SalesImportPage() {
   const { canManage, canAccountant } = useFinanceRoles();
