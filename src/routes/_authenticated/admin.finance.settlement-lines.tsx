@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RefreshCcw } from "lucide-react";
+import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
+import { PaginationBar } from "@/components/finance/PaginationBar";
+
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlement-lines")({
   ssr: false,
