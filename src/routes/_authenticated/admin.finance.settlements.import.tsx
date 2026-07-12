@@ -5,6 +5,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { toast } from "sonner";
 import { Upload, FileSpreadsheet, ChevronLeft, Save, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  TAMARA_FIELDS,
+  autoMapTamara,
+  detectTamaraHeaderRow,
+  extractTamaraHeader,
+  extractTamaraSummary,
+  buildTamaraRows,
+  type TamaraMapping,
+  type TamaraHeaderInfo,
+  type TamaraSummary,
+  type TamaraParsedLine,
+} from "@/lib/finance/tamara-import";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/import")({
   ssr: false,
