@@ -48,6 +48,7 @@ function SettlementsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState<any | null>(null);
 
   useEffect(() => {
     supabase.from("payment_providers" as any).select("id, name, provider_code, is_active").eq("is_active", true).order("name")
