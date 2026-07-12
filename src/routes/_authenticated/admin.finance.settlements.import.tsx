@@ -286,9 +286,13 @@ function SettlementImportPage() {
     })();
   }, [provider]);
 
-  // Auto-load default template on provider change
+  // Auto-load default template on provider change (non-Tamara only)
   useEffect(() => {
     if (headers.length === 0) return;
+    if (provider === "tamara") {
+      setTamaraMapping(autoMapTamara(headers));
+      return;
+    }
     const def = templates.find((t) => t.provider === provider);
     if (def) setMapping(def.mapping);
     else autoMap(headers);
@@ -319,12 +323,32 @@ function SettlementImportPage() {
     const ws = wb.Sheets[name];
     const arr = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: null, raw: true }) as any[][];
     setAoa(arr);
-    const aliases = COMMON_FIELDS.flatMap((f) => f.aliases);
-    const hr = detectHeaderRow(arr, aliases);
-    setHeaderRow(hr);
-    const hs = arr[hr] ?? [];
-    setHeaders(hs);
-    autoMap(hs);
+    if (provider === "tamara") {
+      const hr = detectTamaraHeaderRow(arr);
+      setHeaderRow(hr);
+      const hs = arr[hr] ?? [];
+      setHeaders(hs);
+      setTamaraMapping(autoMapTamara(hs));
+      const hdr = extractTamaraHeader(arr);
+      const sum = extractTamaraSummary(arr);
+      setTamaraHeader(hdr);
+      setTamaraSummary(sum);
+      // Prefill settlement metadata (only if empty so user can override)
+      if (hdr.statementId && !settlementRef) setSettlementRef(hdr.statementId);
+      if (hdr.statementDate && !settlementDate) setSettlementDate(hdr.statementDate);
+      if (hdr.periodStart && !periodStart) setPeriodStart(hdr.periodStart);
+      if (hdr.periodEnd && !periodEnd) setPeriodEnd(hdr.periodEnd);
+      if (sum.payableToMerchant != null && !sourceExpectedNet) setSourceExpectedNet(String(sum.payableToMerchant));
+    } else {
+      const aliases = COMMON_FIELDS.flatMap((f) => f.aliases);
+      const hr = detectHeaderRow(arr, aliases);
+      setHeaderRow(hr);
+      const hs = arr[hr] ?? [];
+      setHeaders(hs);
+      autoMap(hs);
+      setTamaraHeader(null);
+      setTamaraSummary(null);
+    }
     setRows([]);
   }
 
