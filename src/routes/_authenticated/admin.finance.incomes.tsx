@@ -494,9 +494,10 @@ function IncomesPage() {
             )}
           </tbody>
           <tfoot className="bg-white/5 font-semibold">
-            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={10}></td></tr>
+            <tr><td className="px-3 py-2">إجمالي الصفحة</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={10} className="text-muted-foreground text-[11px]">{pg.total} سجل مطابق</td></tr>
           </tfoot>
         </table>
+        <PaginationBar page={pg.page} pageCount={pg.pageCount} pageSize={pg.pageSize} total={pg.total} loading={pg.loading} onPage={pg.setPage} onPageSize={pg.setPageSize} />
       </div>
 
       {(editing || creating) && (
@@ -512,13 +513,13 @@ function IncomesPage() {
 
       {reclassifyOpen && (
         <ReclassifyDialog
-          rows={rows}
           sources={sources}
           providers={providers}
           onClose={() => setReclassifyOpen(false)}
           onDone={() => { setReclassifyOpen(false); load(); }}
         />
       )}
+
 
       {linkedDialog && (
         <LinkedSettlementsDialog
