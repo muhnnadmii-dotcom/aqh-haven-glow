@@ -136,7 +136,7 @@ function ReviewCenter() {
   });
   const { data: providers = [] } = useQuery({
     queryKey: ["review_providers"],
-    queryFn: async () => (await supabase.from("payment_providers" as any).select("id, name, code, rounding_tolerance").eq("is_active", true)).data as any[],
+    queryFn: async () => ((await supabase.from("payment_providers" as any).select("id, name, provider_code, rounding_tolerance").eq("is_active", true)).data as any[]) ?? [],
   });
 
   const rows: Row[] = useMemo(() => {
