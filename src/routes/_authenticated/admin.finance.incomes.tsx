@@ -595,7 +595,19 @@ type ReclassifyPlan = {
   toChange: number; conflicts: number; skipped: number;
 };
 
-function ReclassifyDialog({ rows, sources, providers, onClose, onDone }: any) {
+function ReclassifyDialog({ sources, providers, onClose, onDone }: any) {
+  const [rows, setRows] = useState<Income[]>([]);
+  useEffect(() => {
+    (async () => {
+      // Fetch only candidates: non-deleted, positive amount, no explicit payment_provider_id.
+      const { data } = await supabase.from("finance_incomes")
+        .select("id, income_date, amount, income_source_id, payment_provider_id, account_type, transaction_type, deleted_at")
+        .is("deleted_at", null).gt("amount", 0).is("payment_provider_id", null)
+        .order("income_date", { ascending: false }).limit(5000);
+      setRows((data as any) ?? []);
+    })();
+  }, []);
+
   const [applying, setApplying] = useState(false);
 
   const plan: ReclassifyPlan = useMemo(() => {
