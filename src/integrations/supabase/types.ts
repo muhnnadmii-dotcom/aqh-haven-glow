@@ -4196,6 +4196,7 @@ export type Database = {
           content_en: Json | null
           id: string
           page_key: string
+          published: boolean
           title: string | null
           title_en: string | null
           updated_at: string
@@ -4205,6 +4206,7 @@ export type Database = {
           content_en?: Json | null
           id?: string
           page_key: string
+          published?: boolean
           title?: string | null
           title_en?: string | null
           updated_at?: string
@@ -4214,6 +4216,7 @@ export type Database = {
           content_en?: Json | null
           id?: string
           page_key?: string
+          published?: boolean
           title?: string | null
           title_en?: string | null
           updated_at?: string
