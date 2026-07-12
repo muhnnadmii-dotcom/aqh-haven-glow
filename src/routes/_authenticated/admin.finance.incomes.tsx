@@ -189,7 +189,6 @@ function IncomesPage() {
 
   const sourceName = (id: string | null) => sources.find((s) => s.id === id)?.name ?? "—";
   const providerById = useMemo(() => new Map(providers.map((p) => [p.id, p])), [providers]);
-  const providerByCode = useMemo(() => new Map(providers.map((p) => [p.provider_code, p])), [providers]);
   const settlementById = useMemo(() => new Map(settlements.map((s) => [s.id, s])), [settlements]);
 
   // Per-income enrichment
