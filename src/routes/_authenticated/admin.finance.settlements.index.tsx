@@ -485,3 +485,82 @@ function RematchAllButton({ onDone }: { onDone: () => void }) {
     </>
   );
 }
+
+function SettlementDeleteDialog({ settlement, providerName, onClose, onDone }: { settlement: any; providerName: string; onClose: () => void; onDone: () => void }) {
+  const [reason, setReason] = useState("");
+  const [confirmText, setConfirmText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [redirectImport, setRedirectImport] = useState(true);
+
+  const canDelete = reason.trim().length >= 3 && confirmText.trim() === "حذف";
+
+  const run = async () => {
+    if (!canDelete) return;
+    setBusy(true);
+    const { data, error } = await (supabase as any).rpc("delete_settlement_full", {
+      _settlement_id: settlement.id,
+      _reason: reason.trim(),
+    });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    const d = data ?? {};
+    toast.success(`تم حذف التسوية · حركات: ${d.deleted_lines ?? 0} · حوالات معكوسة: ${d.reversed_allocations ?? 0}`);
+    if (redirectImport) {
+      window.location.assign("/admin/finance/settlements/import");
+      return;
+    }
+    onDone();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-xl border border-red-500/30 bg-[#0b1220] p-5 space-y-3" dir="rtl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-red-300 flex items-center gap-2"><Trash2 size={14} /> حذف التسوية وإعادة الاستيراد</h3>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+
+        <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-[12px] space-y-1">
+          <div className="flex justify-between"><span className="text-muted-foreground">البوابة</span><span>{providerName}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">المرجع</span><span className="font-mono">{settlement.settlement_reference ?? "—"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">التاريخ</span><span>{settlement.settlement_date ?? "—"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">الصافي المتوقع</span><span className="tabular-nums">{Number(settlement.expected_net_amount).toFixed(2)}</span></div>
+        </div>
+
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-[11px] leading-6 text-red-100">
+          سيتم تنفيذ التالي بشكل نهائي:
+          <ul className="list-disc pr-5 mt-1 space-y-0.5">
+            <li>حذف جميع حركات هذه التسوية.</li>
+            <li>عكس أي حوالات بنكية مربوطة بها (بدون حذف حركة البنك نفسها).</li>
+            <li>فك ارتباط أي مقبوضات/مصروفات كانت مرتبطة بالتسوية (تبقى الحركات كما هي).</li>
+            <li>حذف رأس التسوية نفسها.</li>
+          </ul>
+          يبقى سجل التدقيق محفوظًا. لا يمكن التراجع تلقائيًا.
+        </div>
+
+        <label className="block text-[11px]">سبب الحذف (مطلوب)
+          <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2}
+            placeholder="مثال: ملف تسوية خاطئ، بوابة خاطئة، رفع مكرر…"
+            className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+        </label>
+
+        <label className="block text-[11px]">اكتب كلمة <b className="text-red-300">حذف</b> للتأكيد
+          <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)}
+            className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]" />
+        </label>
+
+        <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <input type="checkbox" checked={redirectImport} onChange={(e) => setRedirectImport(e.target.checked)} />
+          فتح شاشة استيراد التسويات مباشرة بعد الحذف
+        </label>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button onClick={onClose} className="px-3 py-1.5 rounded border border-white/10 text-[12px]">إلغاء</button>
+          <button disabled={!canDelete || busy} onClick={run} className="px-3 py-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white text-[12px] disabled:opacity-40">
+            {busy ? "…" : "تنفيذ الحذف"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
