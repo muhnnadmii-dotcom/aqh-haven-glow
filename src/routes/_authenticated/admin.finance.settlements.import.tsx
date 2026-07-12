@@ -894,21 +894,59 @@ function SettlementImportPage() {
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
           <h2 className="text-sm font-semibold">تعيين الأعمدة — {providerLabel}</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {COMMON_FIELDS.map((f) => (
-              <label key={f.key} className="block text-[11px]">
-                {f.label} {f.required && <span className="text-red-400">*</span>}
-                <select
-                  value={mapping[f.key] ?? -1}
-                  onChange={(e) => setMapping({ ...mapping, [f.key]: Number(e.target.value) })}
-                  className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]"
-                >
-                  <option value={-1}>— بدون —</option>
-                  {headers.map((h, i) => <option key={i} value={i}>{String(h ?? `عمود ${i + 1}`)}</option>)}
-                </select>
-              </label>
-            ))}
-          </div>
+          {provider === "tamara" ? (
+            <div className="space-y-3">
+              {tamaraHeader && (
+                <div className="rounded-lg border border-gold/30 bg-gold/5 p-3 text-[11px] grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div><span className="text-muted-foreground">Statement ID:</span> <span className="font-mono">{tamaraHeader.statementId ?? "—"}</span></div>
+                  <div><span className="text-muted-foreground">Statement Date:</span> <span className="font-mono">{tamaraHeader.statementDate ?? "—"}</span></div>
+                  <div><span className="text-muted-foreground">Period:</span> <span className="font-mono">{tamaraHeader.periodStart ?? "—"} → {tamaraHeader.periodEnd ?? "—"}</span></div>
+                  <div><span className="text-muted-foreground">Merchant ID:</span> <span className="font-mono">{tamaraHeader.tamaraMerchantId ?? "—"}</span></div>
+                </div>
+              )}
+              {(["order", "event", "fees", "net", "refund", "meta"] as const).map((sec) => {
+                const items = TAMARA_FIELDS.filter((f) => f.section === sec);
+                if (!items.length) return null;
+                const secLabel = { order: "بيانات الطلب", event: "بيانات الحدث", fees: "الرسوم", net: "الصافي", refund: "الاسترجاع", meta: "أخرى" }[sec];
+                return (
+                  <div key={sec}>
+                    <div className="text-[11px] font-semibold text-gold mb-1">{secLabel}</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {items.map((f) => (
+                        <label key={f.key} className="block text-[11px]">
+                          {f.label} {f.required && <span className="text-red-400">*</span>}
+                          <select
+                            value={tamaraMapping[f.key] ?? -1}
+                            onChange={(e) => setTamaraMapping({ ...tamaraMapping, [f.key]: Number(e.target.value) })}
+                            className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]"
+                          >
+                            <option value={-1}>— بدون —</option>
+                            {headers.map((h, i) => <option key={i} value={i}>{String(h ?? `عمود ${i + 1}`)}</option>)}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {COMMON_FIELDS.map((f) => (
+                <label key={f.key} className="block text-[11px]">
+                  {f.label} {f.required && <span className="text-red-400">*</span>}
+                  <select
+                    value={mapping[f.key] ?? -1}
+                    onChange={(e) => setMapping({ ...mapping, [f.key]: Number(e.target.value) })}
+                    className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]"
+                  >
+                    <option value={-1}>— بدون —</option>
+                    {headers.map((h, i) => <option key={i} value={i}>{String(h ?? `عمود ${i + 1}`)}</option>)}
+                  </select>
+                </label>
+              ))}
+            </div>
+          )}
 
           <div className="border-t border-white/10 pt-3 space-y-2">
             <div className="text-[12px] font-semibold">قوالب محفوظة ({providerLabel})</div>
