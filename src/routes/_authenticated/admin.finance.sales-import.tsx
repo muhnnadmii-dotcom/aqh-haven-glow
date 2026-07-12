@@ -754,31 +754,31 @@ function SalesImportPage() {
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <h3 className="text-sm font-semibold">معاينة ({rows.length} صف)</h3>
-            <div className="flex items-center gap-2 text-[11px]">
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">صالح: {stats.valid}</span>
-              <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">يحتاج مراجعة: {stats.review}</span>
-              <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300">محدد: {stats.selectedValid}</span>
+            <div className="flex items-center gap-1 text-[11px] flex-wrap">
+              <BucketChip active={reviewFilter} k="ready_to_import" n={buckets.ready_to_import} onClick={setReviewFilter} />
+              <BucketChip active={reviewFilter} k="importable_missing_tax_document" n={buckets.importable_missing_tax_document} onClick={setReviewFilter} />
+              <BucketChip active={reviewFilter} k="cancelled_order" n={buckets.cancelled_order} onClick={setReviewFilter} />
+              <BucketChip active={reviewFilter} k="skipped_duplicate" n={buckets.skipped_duplicate} onClick={setReviewFilter} />
+              <BucketChip active={reviewFilter} k="blocking_review" n={buckets.blocking_review} onClick={setReviewFilter} />
+              {reviewFilter !== "all" && (
+                <button onClick={() => setReviewFilter("all")} className="px-2 py-0.5 rounded border border-white/15 text-muted-foreground">عرض الكل</button>
+              )}
+              <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300">محدد: {stats.selectedImportable}</span>
             </div>
             <div className="ml-auto flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setShowOnlyReview((v) => !v)}
-                className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5"
-              >
-                <Eye size={14} /> {showOnlyReview ? "عرض الكل" : `مراجعة الصفوف المستبعدة (${stats.review})`}
-              </button>
-              <button onClick={selectAllValid} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px]">
-                تحديد كل الصالح
+              <button onClick={selectAllImportable} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px]">
+                تحديد كل الصالح للاستيراد
               </button>
               <button onClick={clearSelection} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px]">
                 مسح التحديد
               </button>
               <button
                 onClick={commit}
-                disabled={committing || !canWrite || stats.selectedValid === 0}
+                disabled={committing || !canWrite || stats.selectedImportable === 0}
                 className="px-4 py-2 rounded-lg bg-gold text-black text-[12px] font-semibold hover:bg-gold/90 disabled:opacity-50 inline-flex items-center gap-1.5"
               >
                 {committing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                اعتماد الصفوف الصالحة ({stats.selectedValid})
+                استيراد الطلبات الجديدة ({stats.selectedImportable})
               </button>
               <button onClick={() => { setRows([]); setSelected(new Set()); }} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5">
                 <RotateCcw size={14} /> إلغاء
@@ -786,14 +786,23 @@ function SalesImportPage() {
             </div>
           </div>
 
-          {stats.review >= 14 && (
-            <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-200">
-              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-              <div>
-                يوجد {stats.review} صف يحتاج مراجعة. تم استبعادها من التحديد الافتراضي. راجعها قبل أي اعتماد يدوي.
+          {/* بطاقة تفصيل أسباب المراجعة */}
+          <div className="mb-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] p-2 text-[11px]">
+            {(Object.keys(ISSUE_LABEL) as DataIssue[]).map((k) => (
+              <div key={k} className="flex items-center justify-between px-2 py-1 rounded bg-white/5">
+                <span className="text-muted-foreground">{ISSUE_LABEL[k]}</span>
+                <span className={issueCounts[k] > 0 ? "text-amber-300 font-semibold" : "text-muted-foreground"}>{issueCounts[k]}</span>
               </div>
+            ))}
+          </div>
+
+          {buckets.blocking_review > 0 && (
+            <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-[11px] text-red-200">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <div>{buckets.blocking_review} صف يحتوي خطأ يمنع الاستيراد. راجعها ثم أعد الاستيراد.</div>
             </div>
           )}
+
 
           <div className="overflow-x-auto">
             <table className="w-full text-[11px]">
