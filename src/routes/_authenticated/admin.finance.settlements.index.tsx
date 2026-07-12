@@ -186,6 +186,14 @@ function SettlementsPage() {
           onSaved={() => { setEditing(null); reload(); }}
         />
       )}
+      {deleting && (
+        <SettlementDeleteDialog
+          settlement={deleting}
+          providerName={providerName(deleting.provider_id)}
+          onClose={() => setDeleting(null)}
+          onDone={() => { setDeleting(null); reload(); }}
+        />
+      )}
     </div>
   );
 }
