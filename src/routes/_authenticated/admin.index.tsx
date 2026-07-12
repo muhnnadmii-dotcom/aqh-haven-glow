@@ -120,7 +120,7 @@ function AdminHome() {
     })();
   }, []);
 
-  const today = new Date().toLocaleDateString("ar-SA", {
+  const today = new Date().toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
@@ -301,7 +301,7 @@ function RequestLine({ r }: { r: ReqRow }) {
         <div className="text-[11px] text-muted-foreground truncate">
           {TYPE_LABEL[r.type] || r.type}
           {r.city ? ` · ${r.city}` : ""}
-          {" · "}{new Date(r.created_at).toLocaleDateString("ar-SA")}
+          {" · "}{new Date(r.created_at).toLocaleDateString("en-US")}
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">

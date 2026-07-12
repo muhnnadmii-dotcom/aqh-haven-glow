@@ -172,8 +172,8 @@ function RequestDetail() {
             <div className="text-[10px] text-muted-foreground mt-1 font-mono">#{req.id.slice(0, 8)}</div>
           </div>
           <div className="text-[11px] text-muted-foreground text-end">
-            <div>أرسل: {new Date(req.created_at).toLocaleString("ar-SA")}</div>
-            <div>آخر تحديث: {new Date(req.updated_at).toLocaleString("ar-SA")}</div>
+            <div>أرسل: {new Date(req.created_at).toLocaleString("en-US")}</div>
+            <div>آخر تحديث: {new Date(req.updated_at).toLocaleString("en-US")}</div>
           </div>
         </div>
 
@@ -363,7 +363,7 @@ function RequestDetail() {
                 <span>←</span>
                 <span className="text-gold">{REQUEST_STATUS_LABEL[h.to_status as RequestStatus] || h.to_status}</span>
                 {!h.is_visible_to_customer && <span className="text-[9px] px-1 rounded bg-white/10">داخلي</span>}
-                <span className="text-muted-foreground ms-auto">{new Date(h.created_at).toLocaleString("ar-SA")}</span>
+                <span className="text-muted-foreground ms-auto">{new Date(h.created_at).toLocaleString("en-US")}</span>
               </div>
             ))}
             {reports.map((r) => (
@@ -371,14 +371,14 @@ function RequestDetail() {
                 <FileText size={12} className="text-gold" />
                 <span>تقرير: {r.title}</span>
                 {!r.is_visible_to_customer && <span className="text-[9px] px-1 rounded bg-white/10">مخفي</span>}
-                <span className="text-muted-foreground ms-auto">{new Date(r.created_at).toLocaleString("ar-SA")}</span>
+                <span className="text-muted-foreground ms-auto">{new Date(r.created_at).toLocaleString("en-US")}</span>
               </div>
             ))}
             {appointments.map((a) => (
               <div key={`a-${a.id}`} className="text-xs flex items-center gap-2 bg-white/5 rounded-lg px-2.5 py-1.5">
                 <Calendar size={12} className="text-gold" />
                 <span>{a.kind}</span>
-                <span className="text-muted-foreground">{a.preferred_date ? new Date(a.preferred_date).toLocaleString("ar-SA") : NA}</span>
+                <span className="text-muted-foreground">{a.preferred_date ? new Date(a.preferred_date).toLocaleString("en-US") : NA}</span>
                 <span className="ms-auto text-[10px] px-1.5 py-0.5 rounded bg-white/10">{a.status}</span>
               </div>
             ))}
@@ -387,7 +387,7 @@ function RequestDetail() {
                 <UserCheck size={12} className="text-gold" />
                 <span>{assignmentEventLabel(e, staff)}</span>
                 {!e.visible_to_customer && <span className="text-[9px] px-1 rounded bg-white/10">داخلي</span>}
-                <span className="text-muted-foreground ms-auto">{new Date(e.created_at).toLocaleString("ar-SA")}</span>
+                <span className="text-muted-foreground ms-auto">{new Date(e.created_at).toLocaleString("en-US")}</span>
               </div>
             ))}
           </div>
@@ -477,7 +477,7 @@ function AssignmentBox({
         </div>
         <div className="bg-white/5 rounded-lg p-2.5">
           <div className="text-[10px] text-muted-foreground mb-0.5">وقت الإسناد</div>
-          <div>{req.assigned_at ? new Date(req.assigned_at).toLocaleString("ar-SA") : "—"}</div>
+          <div>{req.assigned_at ? new Date(req.assigned_at).toLocaleString("en-US") : "—"}</div>
         </div>
         <div className="bg-white/5 rounded-lg p-2.5">
           <div className="text-[10px] text-muted-foreground mb-0.5">من قام بالإسناد</div>
@@ -486,7 +486,7 @@ function AssignmentBox({
         {req.accepted_by_staff_at && (
           <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-2.5 sm:col-span-2">
             <div className="text-[10px] text-emerald-300 mb-0.5">وقت الاستلام</div>
-            <div className="text-emerald-200">{new Date(req.accepted_by_staff_at).toLocaleString("ar-SA")}</div>
+            <div className="text-emerald-200">{new Date(req.accepted_by_staff_at).toLocaleString("en-US")}</div>
           </div>
         )}
         {req.assignment_note && (
@@ -692,7 +692,7 @@ function NotesPanel({
             visibility === "internal" ? "bg-amber-500/5 border border-amber-500/20" : "bg-white/5"
           }`}>
             <div className="whitespace-pre-wrap" dir="auto">{n.body}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString("ar-SA")}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString("en-US")}</div>
           </div>
         ))}
         {visibility === "internal" && legacyAdminNote && (
@@ -735,7 +735,7 @@ function ReportsPanel({ reports, onNew, onEdit, onToggleVisibility, onDelete }: 
                   <div className="text-[10px] text-muted-foreground flex items-center gap-2 mt-0.5">
                     <span>{REPORT_TYPE_LABEL[r.report_type] || r.report_type}</span>
                     <span>·</span>
-                    <span>{new Date(r.created_at).toLocaleString("ar-SA")}</span>
+                    <span>{new Date(r.created_at).toLocaleString("en-US")}</span>
                   </div>
                 </div>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${

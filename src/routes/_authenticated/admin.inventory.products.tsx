@@ -44,7 +44,7 @@ type Category = { id: number; name_ar: string };
 type Supplier = { id: string; name_ar: string };
 
 const SAR = (n: number) =>
-  new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n) + " ر.س";
 
 function ProductsPage() {
   const qc = useQueryClient();

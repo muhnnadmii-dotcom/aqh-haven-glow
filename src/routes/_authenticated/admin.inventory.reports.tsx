@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/admin/inventory/reports")(
 });
 
 const SAR = (n: number) =>
-  new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 0 }).format(n) + " ر.س";
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n) + " ر.س";
 
 function ReportsPage() {
   const reqsQ = useQuery({

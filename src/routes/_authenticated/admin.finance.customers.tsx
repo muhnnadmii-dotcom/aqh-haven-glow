@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/customers")(
   component: CustomersPage,
 });
 
-const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(Number(n) || 0);
+const SAR = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(Number(n) || 0);
 
 function CustomersPage() {
   const [q, setQ] = useState("");

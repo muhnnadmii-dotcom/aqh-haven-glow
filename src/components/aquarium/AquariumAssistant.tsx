@@ -660,8 +660,8 @@ function IssueForm({ tank, onDone }: { tank: TankLite; onDone: () => void }) {
           `نوع المشكلة: ${issueLabel}`,
           desc ? `وصف العميل: ${desc}` : null,
           lastStat ? `آخر حالة سجلها العميل: ${lastStat.status}` : null,
-          lastWC ? `آخر تغيير ماء: ${new Date(lastWC.created_at).toLocaleDateString("ar-SA")}${lastWC.water_change_percentage ? ` (${lastWC.water_change_percentage}%)` : ""}` : null,
-          lastR ? `آخر قراءة (${new Date(lastR.reading_date).toLocaleDateString("ar-SA")}): ${[
+          lastWC ? `آخر تغيير ماء: ${new Date(lastWC.created_at).toLocaleDateString("en-US")}${lastWC.water_change_percentage ? ` (${lastWC.water_change_percentage}%)` : ""}` : null,
+          lastR ? `آخر قراءة (${new Date(lastR.reading_date).toLocaleDateString("en-US")}): ${[
             lastR.ph != null && `pH ${lastR.ph}`,
             lastR.nitrate != null && `NO3 ${lastR.nitrate}`,
             lastR.ammonia != null && `NH3 ${lastR.ammonia}`,

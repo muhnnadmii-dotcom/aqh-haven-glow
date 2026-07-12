@@ -68,7 +68,7 @@ function RequestsPage() {
                   {REQUEST_STATUS_LABEL[r.status]}
                 </span>
               </div>
-              <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("ar-SA")}</div>
+              <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("en-US")}</div>
               {r.customer_notes && <p className="text-sm mt-2 text-muted-foreground line-clamp-2">{r.customer_notes}</p>}
               <div className="text-[11px] text-gold mt-2">عرض التفاصيل ←</div>
             </Link>

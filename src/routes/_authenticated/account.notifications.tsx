@@ -110,7 +110,7 @@ function NotificationsPage() {
                     {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-gold inline-block" />}
                   </div>
                   {n.body && <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5" dir="auto">{n.body}</div>}
-                  <div className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString("ar-SA")}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString("en-US")}</div>
                 </div>
               </button>
             </li>

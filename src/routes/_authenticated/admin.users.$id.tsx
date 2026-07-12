@@ -116,7 +116,7 @@ function CustomerDetail() {
           <KV k="الاسم" v={display(profile.full_name)} />
           <KV k="الجوال" v={display(profile.phone)} ltr />
           <KV k="المدينة (من آخر طلب)" v={display(lastCity)} />
-          <KV k="تاريخ الإنشاء" v={new Date(profile.created_at).toLocaleDateString("ar-SA")} />
+          <KV k="تاريخ الإنشاء" v={new Date(profile.created_at).toLocaleDateString("en-US")} />
         </Section>
 
         <Section title={`أحواض العميل (${tanks.length})`} icon={<Fish size={14} />}>
@@ -143,7 +143,7 @@ function CustomerDetail() {
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-gold">{REQUEST_TYPE_LABEL[r.type]}</span>
                 <span className="text-muted-foreground">{display(r.city)}</span>
-                <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString("ar-SA")}</span>
+                <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString("en-US")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className={`text-[10px] px-1.5 py-0.5 rounded ${REQUEST_STATUS_COLOR[r.status]}`}>{REQUEST_STATUS_LABEL[r.status]}</span>
@@ -182,7 +182,7 @@ function CustomerDetail() {
           {notes.map((n) => (
             <div key={n.id} className="text-sm bg-white/5 rounded-lg p-2.5">
               <div className="whitespace-pre-wrap">{n.body}</div>
-              <div className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString("ar-SA")}</div>
+              <div className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString("en-US")}</div>
             </div>
           ))}
         </div>
@@ -214,7 +214,7 @@ function ApptLine({ a }: { a: Appt }) {
     <div className="flex items-center justify-between gap-2 bg-white/5 rounded-lg px-2.5 py-1.5 text-xs">
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-gold">{a.kind}</span>
-        <span className="text-muted-foreground">{a.preferred_date ? new Date(a.preferred_date).toLocaleString("ar-SA") : NA}</span>
+        <span className="text-muted-foreground">{a.preferred_date ? new Date(a.preferred_date).toLocaleString("en-US") : NA}</span>
       </div>
       <div className="flex items-center gap-2">
         <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10">{a.status}</span>

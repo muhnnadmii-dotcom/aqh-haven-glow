@@ -43,7 +43,7 @@ type SupplierProduct = {
 type Vendor = { id: string; name: string; products: number };
 
 const VAT_RATE = 0.15;
-const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
+const SAR = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n) + " ر.س";
 
 function SupplierCatalogPage() {
   const qc = useQueryClient();

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/sales-invoic
   component: SalesInvoicesList,
 });
 
-const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(Number(n) || 0);
+const SAR = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(Number(n) || 0);
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "مسودة", approved: "معتمدة", partially_paid: "مدفوعة جزئيًا", paid: "مدفوعة", cancelled: "ملغاة",

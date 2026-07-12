@@ -70,6 +70,6 @@ function Card({ icon: Icon, label, value, tone, href }: { icon: any; label: stri
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "—";
-  try { return new Date(iso).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" }); }
+  try { return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }); }
   catch { return iso; }
 }

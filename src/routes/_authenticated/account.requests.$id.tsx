@@ -134,8 +134,8 @@ function CustomerRequestDetail() {
         <div className="text-[11px] text-gold">{REQUEST_TYPE_LABEL[req.type]}</div>
         <h1 className="text-xl sm:text-2xl font-bold">طلب #{req.id.slice(0, 8)}</h1>
         <div className="text-[11px] text-muted-foreground">
-          أُرسل في {new Date(req.created_at).toLocaleString("ar-SA")}
-          {req.updated_at !== req.created_at && <> · آخر تحديث {new Date(req.updated_at).toLocaleString("ar-SA")}</>}
+          أُرسل في {new Date(req.created_at).toLocaleString("en-US")}
+          {req.updated_at !== req.created_at && <> · آخر تحديث {new Date(req.updated_at).toLocaleString("en-US")}</>}
         </div>
       </div>
 
@@ -215,7 +215,7 @@ function CustomerRequestDetail() {
                   <span className="text-muted-foreground">{h.from_status ? REQUEST_STATUS_LABEL[h.from_status as RequestStatus] || h.from_status : "بدء"}</span>
                   <span>←</span>
                   <span className="text-gold">{REQUEST_STATUS_LABEL[h.to_status as RequestStatus] || h.to_status}</span>
-                  <span className="text-muted-foreground ms-auto">{new Date(h.created_at).toLocaleString("ar-SA")}</span>
+                  <span className="text-muted-foreground ms-auto">{new Date(h.created_at).toLocaleString("en-US")}</span>
                 </div>
               ))}
             </div>
@@ -237,7 +237,7 @@ function CustomerRequestDetail() {
               {reports.map((r) => (
                 <div key={r.id} className="bg-white/5 rounded-lg p-3">
                   <div className="font-bold text-sm">{r.title}</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">{REPORT_TYPE_LABEL[r.report_type] || r.report_type} · {new Date(r.created_at).toLocaleString("ar-SA")}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">{REPORT_TYPE_LABEL[r.report_type] || r.report_type} · {new Date(r.created_at).toLocaleString("en-US")}</div>
                   {r.body && <div className="text-sm whitespace-pre-wrap mt-2" dir="auto">{r.body}</div>}
                 </div>
               ))}
@@ -263,7 +263,7 @@ function CustomerRequestDetail() {
                     <div className="font-bold">{a.kind}</div>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10">{a.status}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">{a.preferred_date ? new Date(a.preferred_date).toLocaleString("ar-SA") : NA}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{a.preferred_date ? new Date(a.preferred_date).toLocaleString("en-US") : NA}</div>
                   {a.notes && <div className="text-xs mt-2 whitespace-pre-wrap" dir="auto">{a.notes}</div>}
                 </div>
               ))}
@@ -320,7 +320,7 @@ function CustomerCommentsPanel({ requestId, comments, onChanged }: {
         {comments.map((c) => (
           <div key={c.id} className="bg-white/5 rounded-lg p-2.5 text-sm">
             <div className="whitespace-pre-wrap" dir="auto">{c.body}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">{new Date(c.created_at).toLocaleString("ar-SA")}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">{new Date(c.created_at).toLocaleString("en-US")}</div>
           </div>
         ))}
       </div>

@@ -25,5 +25,5 @@ export function Counter({ to, suffix = "", duration = 1800 }: { to: number; suff
     return () => obs.disconnect();
   }, [to, duration]);
 
-  return <span ref={ref}>{val.toLocaleString("ar-SA")}{suffix}</span>;
+  return <span ref={ref}>{val.toLocaleString("en-US")}{suffix}</span>;
 }

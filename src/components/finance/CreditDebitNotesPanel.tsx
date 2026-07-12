@@ -9,7 +9,7 @@ type Kind = "sales" | "purchase";
 export type NoteType = "sales_credit_note" | "sales_debit_note" | "purchase_credit_note" | "purchase_debit_note";
 
 const SAR = (n: number | null | undefined) =>
-  (Number(n ?? 0)).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ﷼";
+  (Number(n ?? 0)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ﷼";
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "مسودة", approved: "معتمد", cancelled: "ملغى",

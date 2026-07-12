@@ -844,7 +844,7 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
     { v: "resolved", label: "تم الحل" },
   ];
 
-  const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n) + " ر.س";
+  const SAR = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n) + " ر.س";
 
   return (
     <div className="space-y-4">
@@ -910,7 +910,7 @@ function RequestsListTab({ isAdmin }: { isAdmin: boolean }) {
                   </span>
                   <span className="text-sm">{r.employee_name?.trim() || "موظف"}</span>
                   <span className="text-[11px] text-muted-foreground" dir="ltr">
-                    {new Date(r.created_at).toLocaleString("ar-SA")}
+                    {new Date(r.created_at).toLocaleString("en-US")}
                   </span>
                   {r.source === "supplier_catalog" && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold/10 text-gold border border-gold/30">

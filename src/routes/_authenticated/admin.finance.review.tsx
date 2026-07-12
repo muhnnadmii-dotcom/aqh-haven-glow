@@ -53,7 +53,7 @@ const ACCT_STATUS: Record<string, string> = {
 };
 const REVIEW_STATUS: Record<string, string> = { unreviewed: "غير مراجع", reviewed: "مراجع" };
 const ATTACH: Record<string, string> = { attached: "مرفق", not_attached: "بدون مرفق", not_required: "مستثنى" };
-const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(Number(n) || 0);
+const SAR = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(Number(n) || 0);
 
 // ================== Row type ==================
 type Row = {

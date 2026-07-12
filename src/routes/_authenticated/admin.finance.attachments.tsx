@@ -124,7 +124,7 @@ function AttachmentsPage() {
                 <td className="px-3 py-2 flex items-center gap-1.5"><Paperclip size={11} className="text-muted-foreground" />{r.file_name}</td>
                 <td className="px-3 py-2">{r.attachment_type ?? "—"}</td>
                 <td className="px-3 py-2">{labelOfRelated(r)}</td>
-                <td className="px-3 py-2 whitespace-nowrap">{new Date(r.created_at).toLocaleString("ar-SA")}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{new Date(r.created_at).toLocaleString("en-US")}</td>
                 <td className="px-3 py-2 flex gap-1">
                   <button onClick={() => open(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px]"><Download size={11} /> تحميل</button>
                   {r.related_type === "income" && (

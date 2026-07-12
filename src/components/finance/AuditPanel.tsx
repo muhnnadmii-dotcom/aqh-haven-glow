@@ -39,7 +39,7 @@ export function AuditPanel({ relatedType, relatedId }: { relatedType: string; re
               <div className="flex items-center justify-between text-muted-foreground gap-2">
                 <span>{actionLabel(r.action)}{r.field_name ? ` · ${r.field_name}` : ""}</span>
                 <span className="text-foreground/80">{r.changed_by ? (actors[r.changed_by] ?? "—") : "—"}</span>
-                <span>{new Date(r.changed_at).toLocaleString("ar-SA")}</span>
+                <span>{new Date(r.changed_at).toLocaleString("en-US")}</span>
               </div>
               {r.field_name && (
                 <div className="mt-0.5 text-foreground/80">
