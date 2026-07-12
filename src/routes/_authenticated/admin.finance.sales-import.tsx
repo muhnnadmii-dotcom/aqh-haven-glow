@@ -132,23 +132,50 @@ const amount0 = (v: any) => parseAmount(v) ?? 0;
 const CANCELLED_RX = /cancel|ملغى|ملغي|ملغاة|إلغاء|الغاء/i;
 const isCancelled = (s: string | null) => !!s && CANCELLED_RX.test(s);
 
-type ReviewReason =
+type Classification =
+  | "ready_to_import"
+  | "importable_missing_tax_document"
+  | "skipped_duplicate"
   | "cancelled_order"
-  | "zero_total"
-  | "missing_payment_method"
-  | "missing_invoice_number"
-  | "missing_required_data"
-  | "invalid_amount"
-  | "duplicate_order";
+  | "blocking_review";
 
-const REVIEW_LABEL: Record<ReviewReason, string> = {
-  cancelled_order: "طلب ملغى",
-  zero_total: "إجمالي = 0",
-  missing_payment_method: "طريقة الدفع مفقودة",
+const CLASSIFICATION_LABEL: Record<Classification, string> = {
+  ready_to_import: "جاهز للاستيراد",
+  importable_missing_tax_document: "مسودة — مستند ضريبي ناقص",
+  skipped_duplicate: "مكرر — سيتم تجاوزه",
+  cancelled_order: "طلب ملغي (سجل فقط)",
+  blocking_review: "خطأ يمنع الاستيراد",
+};
+
+const CLASSIFICATION_CLASS: Record<Classification, string> = {
+  ready_to_import: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  importable_missing_tax_document: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  skipped_duplicate: "bg-white/10 text-muted-foreground border-white/20",
+  cancelled_order: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30",
+  blocking_review: "bg-red-500/15 text-red-300 border-red-500/30",
+};
+
+type DataIssue =
+  | "missing_invoice_number"
+  | "missing_payment_method"
+  | "cancelled_order"
+  | "duplicate_order"
+  | "zero_total"
+  | "invalid_amount"
+  | "missing_order_id"
+  | "invalid_date"
+  | "conflicting_existing_order";
+
+const ISSUE_LABEL: Record<DataIssue, string> = {
   missing_invoice_number: "رقم الفاتورة مفقود",
-  missing_required_data: "بيانات مطلوبة مفقودة",
+  missing_payment_method: "طريقة الدفع مفقودة",
+  cancelled_order: "طلب ملغي",
+  duplicate_order: "مكرر",
+  zero_total: "إجمالي = 0",
   invalid_amount: "قيمة غير صالحة",
-  duplicate_order: "طلب مكرر",
+  missing_order_id: "رقم الطلب مفقود",
+  invalid_date: "تاريخ غير صالح",
+  conflicting_existing_order: "تعارض مع طلب موجود",
 };
 
 type PaymentStatus = "paid" | "unpaid" | "unknown";
@@ -165,20 +192,32 @@ type ParsedRow = {
   order_status: string | null;
   payment_status: PaymentStatus;
   payment_status_source: "inferred" | "unknown";
-  original_gross_amount: number | null;      // إجمالي الطلب شامل الضريبة
-  total_vat_amount: number;                   // إجمالي الضريبة
+  original_gross_amount: number | null;
+  total_vat_amount: number;
   shipping_before_vat: number;
-  shipping_vat: number;                       // محسوبة
-  product_vat: number;                        // محسوبة
-  total_before_vat: number;                   // محسوبة
-  product_before_vat: number;                 // محسوبة
+  shipping_vat: number;
+  product_vat: number;
+  total_before_vat: number;
+  product_before_vat: number;
   total_discount: number;
   cancelled: boolean;
   duplicate: boolean;
-  review_reasons: ReviewReason[];
-  needs_review: boolean;
-  hard_error: boolean;
+  issues: DataIssue[];
+  classification: Classification;
+  tax_document_status: "present" | "missing";
+  vat_return_eligible: boolean;
 };
+
+function countBuckets(rows: ParsedRow[]) {
+  const acc: Record<Classification, number> = {
+    ready_to_import: 0, importable_missing_tax_document: 0,
+    skipped_duplicate: 0, cancelled_order: 0, blocking_review: 0,
+  };
+  rows.forEach((r) => { acc[r.classification]++; });
+  return acc;
+}
+
+
 
 function SalesImportPage() {
   const { canManage, canAccountant } = useFinanceRoles();
@@ -289,25 +328,23 @@ function SalesImportPage() {
       const cancelled = isCancelled(orderStatus);
       const provider = detectProvider(paymentMethodRaw);
 
-      // review reasons
-      const reasons: ReviewReason[] = [];
-      let hardError = false;
-      if (!orderId) { reasons.push("missing_required_data"); hardError = true; }
-      if (!dateStr) { reasons.push("missing_required_data"); hardError = true; }
-      if (gross == null) { reasons.push("invalid_amount"); hardError = true; }
-      if (cancelled) reasons.push("cancelled_order");
-      if (gross != null && gross === 0) reasons.push("zero_total");
-      if (!paymentMethodRaw) reasons.push("missing_payment_method");
-      if (!invoiceNumber) reasons.push("missing_invoice_number");
+      // تجميع القضايا (issues) بدون تصنيف نهائي حتى نطبق المكررات
+      const issues: DataIssue[] = [];
+      if (!orderId) issues.push("missing_order_id");
+      if (!dateStr) issues.push("invalid_date");
+      if (gross == null) issues.push("invalid_amount");
+      if (gross != null && gross < 0 && !cancelled) issues.push("invalid_amount");
+      if (cancelled) issues.push("cancelled_order");
+      if (gross != null && gross === 0) issues.push("zero_total");
+      if (!paymentMethodRaw) issues.push("missing_payment_method");
+      if (!invoiceNumber) issues.push("missing_invoice_number");
 
-      // حالة الدفع المستنتجة
+      // حالة الدفع المستنتجة (لا تعتمد على وجود رقم فاتورة)
       let paymentStatus: PaymentStatus = "unknown";
       let statusSource: "inferred" | "unknown" = "unknown";
-      if (!cancelled && gross != null && gross > 0 && paymentMethodRaw && invoiceNumber) {
+      if (!cancelled && gross != null && gross > 0 && paymentMethodRaw) {
         paymentStatus = "paid";
         statusSource = "inferred";
-      } else if (!paymentMethodRaw) {
-        paymentStatus = "unknown";
       }
 
       return {
@@ -331,9 +368,10 @@ function SalesImportPage() {
         total_discount: totalDiscount,
         cancelled,
         duplicate: false,
-        review_reasons: reasons,
-        needs_review: reasons.length > 0,
-        hard_error: hardError,
+        issues,
+        classification: "ready_to_import", // مبدئي — سيُعاد تصنيفه أدناه
+        tax_document_status: invoiceNumber ? "present" : "missing",
+        vat_return_eligible: !!invoiceNumber && !cancelled,
       };
     });
 
@@ -344,8 +382,7 @@ function SalesImportPage() {
       const prev = seen.get(r.external_order_id);
       if (prev != null) {
         r.duplicate = true;
-        if (!r.review_reasons.includes("duplicate_order")) r.review_reasons.push("duplicate_order");
-        r.needs_review = true;
+        if (!r.issues.includes("duplicate_order")) r.issues.push("duplicate_order");
       } else {
         seen.set(r.external_order_id, r.rowNo);
       }
@@ -363,29 +400,59 @@ function SalesImportPage() {
       parsed.forEach((r) => {
         if (r.external_order_id && existSet.has(r.external_order_id)) {
           r.duplicate = true;
-          if (!r.review_reasons.includes("duplicate_order")) r.review_reasons.push("duplicate_order");
-          r.needs_review = true;
+          if (!r.issues.includes("duplicate_order")) r.issues.push("duplicate_order");
         }
       });
     }
 
+    // تصنيف نهائي بالأولوية: blocking > duplicate > cancelled > missing_tax_doc > ready
+    parsed.forEach((r) => {
+      const hardBlocking =
+        !r.external_order_id ||
+        !r.order_date ||
+        r.original_gross_amount == null ||
+        (r.original_gross_amount != null && r.original_gross_amount < 0 && !r.cancelled);
+      if (hardBlocking) r.classification = "blocking_review";
+      else if (r.duplicate) r.classification = "skipped_duplicate";
+      else if (r.cancelled) r.classification = "cancelled_order";
+      else if (!r.external_invoice_number) r.classification = "importable_missing_tax_document";
+      else r.classification = "ready_to_import";
+    });
+
     setRows(parsed);
-    // اختيار افتراضي: الصفوف الصالحة فقط
+    // اختيار افتراضي: جاهز + مسودة مستند ناقص
     const auto = new Set<number>();
-    parsed.forEach((r) => { if (!r.needs_review && !r.hard_error) auto.add(r.rowNo); });
+    parsed.forEach((r) => {
+      if (r.classification === "ready_to_import" || r.classification === "importable_missing_tax_document") auto.add(r.rowNo);
+    });
     setSelected(auto);
 
-    const ok = parsed.filter((r) => !r.needs_review && !r.hard_error).length;
-    const rev = parsed.filter((r) => r.needs_review || r.hard_error).length;
-    toast.success(`تم تحضير ${parsed.length} صف — صالح: ${ok}، يحتاج مراجعة: ${rev}`);
+    const buckets = countBuckets(parsed);
+    toast.success(
+      `تم تحضير ${parsed.length} صف — جاهز: ${buckets.ready_to_import}، مسودة ناقصة: ${buckets.importable_missing_tax_document}، ملغي: ${buckets.cancelled_order}، مكرر: ${buckets.skipped_duplicate}، أخطاء: ${buckets.blocking_review}`
+    );
   }
+
+
+  const buckets = useMemo(() => countBuckets(rows), [rows]);
+  const issueCounts = useMemo(() => {
+    const acc: Record<DataIssue, number> = {
+      missing_invoice_number: 0, missing_payment_method: 0, cancelled_order: 0,
+      duplicate_order: 0, zero_total: 0, invalid_amount: 0,
+      missing_order_id: 0, invalid_date: 0, conflicting_existing_order: 0,
+    };
+    rows.forEach((r) => r.issues.forEach((k) => { acc[k] = (acc[k] ?? 0) + 1; }));
+    return acc;
+  }, [rows]);
+
+  const canImportRow = (r: ParsedRow) =>
+    r.classification === "ready_to_import" || r.classification === "importable_missing_tax_document";
 
   const stats = useMemo(() => {
     const total = rows.length;
-    const valid = rows.filter((r) => !r.needs_review && !r.hard_error).length;
-    const review = rows.filter((r) => r.needs_review || r.hard_error).length;
-    const selectedValid = rows.filter((r) => selected.has(r.rowNo) && !r.needs_review && !r.hard_error).length;
-    return { total, valid, review, selectedValid };
+    const importable = rows.filter(canImportRow).length;
+    const selectedImportable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r)).length;
+    return { total, importable, selectedImportable };
   }, [rows, selected]);
 
   function toggleRow(rowNo: number, canSelect: boolean) {
@@ -396,9 +463,9 @@ function SalesImportPage() {
       return n;
     });
   }
-  function selectAllValid() {
+  function selectAllImportable() {
     const n = new Set<number>();
-    rows.forEach((r) => { if (!r.needs_review && !r.hard_error) n.add(r.rowNo); });
+    rows.forEach((r) => { if (canImportRow(r)) n.add(r.rowNo); });
     setSelected(n);
   }
   function clearSelection() { setSelected(new Set()); }
@@ -406,9 +473,23 @@ function SalesImportPage() {
   async function commit() {
     if (!rows.length) return;
     if (!canWrite) { toast.error("لا تملك صلاحية الاستيراد"); return; }
-    // فرض القاعدة: فقط الصفوف الصالحة والمحددة
-    const importable = rows.filter((r) => selected.has(r.rowNo) && !r.needs_review && !r.hard_error);
-    if (!importable.length) { toast.error("لا توجد صفوف صالحة محددة للاعتماد"); return; }
+    const importable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r));
+    if (!importable.length) { toast.error("لا توجد صفوف قابلة للاستيراد ضمن التحديد"); return; }
+
+    const readyCount = importable.filter((r) => r.classification === "ready_to_import").length;
+    const missingDocCount = importable.filter((r) => r.classification === "importable_missing_tax_document").length;
+    const cancelledCount = buckets.cancelled_order;
+    const dupCount = buckets.skipped_duplicate;
+    const blockCount = buckets.blocking_review;
+
+    const ok = window.confirm(
+      `سيتم استيراد ${importable.length} طلب كمسودة فاتورة:\n` +
+      `• جاهز للاستيراد: ${readyCount}\n` +
+      `• مسودات بمستند ضريبي ناقص: ${missingDocCount}\n\n` +
+      `سيتم حفظ ${cancelledCount} طلب ملغي كسجل طلب فقط (بدون فاتورة نشطة).\n` +
+      `سيتم تجاوز ${dupCount} مكرر و ${blockCount} خطأ.\n\nمتابعة؟`
+    );
+    if (!ok) return;
 
     setCommitting(true);
     try {
@@ -433,16 +514,24 @@ function SalesImportPage() {
       const batchId = batchRow.id as string;
 
       let inserted = 0;
+      let insertedDraftMissingDoc = 0;
       const failed: { rowNo: number; error: string }[] = [];
 
       for (const r of importable) {
-        const invoiceNumber = `SALLA-${r.external_order_id}`;
+        // رقم عرض داخلي — لا نضع external_invoice_number إن كان ناقصاً
+        const invoiceNumber = r.external_invoice_number
+          ? `SALLA-${r.external_order_id}`
+          : `SALLA-${r.external_order_id}`;
+        const missingDoc = r.classification === "importable_missing_tax_document";
         const settlementStatus =
           r.payment_provider === "tabby" || r.payment_provider === "tamara" || r.payment_provider === "salla_payments"
             ? "pending"
             : r.payment_provider === "bank_transfer"
               ? "not_applicable"
               : "manual_review";
+        const noteParts: string[] = [];
+        if (missingDoc) noteParts.push("مسودة — رقم الفاتورة الضريبية مفقود، لا تدخل الإقرار الضريبي حتى الاستكمال");
+        if (!r.payment_method_raw) noteParts.push("طريقة الدفع غير معروفة");
         const row: any = {
           invoice_number: invoiceNumber,
           issue_date: r.order_date,
@@ -455,7 +544,7 @@ function SalesImportPage() {
           settlement_status: settlementStatus,
           original_payment_method: r.payment_method_raw ?? null,
           external_order_id: r.external_order_id,
-          external_invoice_number: r.external_invoice_number,
+          external_invoice_number: r.external_invoice_number, // يبقى null إن كان مفقوداً
           customer_name_snapshot: r.customer_name,
           order_status: r.order_status,
           original_gross_amount: r.original_gross_amount,
@@ -470,10 +559,10 @@ function SalesImportPage() {
           total_amount: r.original_gross_amount ?? 0,
           paid_amount: r.payment_status === "paid" ? (r.original_gross_amount ?? 0) : 0,
           remaining_amount: r.payment_status === "paid" ? 0 : (r.original_gross_amount ?? 0),
-          data_completeness_status: "complete",
+          data_completeness_status: missingDoc ? "missing_original_invoice" : "complete",
           import_batch_id: batchId,
           import_row_snapshot: r as any,
-          notes: null,
+          notes: noteParts.length ? noteParts.join(" · ") : null,
         };
 
         const { error: iErr } = await (supabase as any)
@@ -483,13 +572,12 @@ function SalesImportPage() {
           .single();
         if (iErr) { failed.push({ rowNo: r.rowNo, error: iErr.message }); continue; }
         inserted++;
+        if (missingDoc) insertedDraftMissingDoc++;
       }
 
-      const duplicates = rows.filter((r) => r.duplicate).length;
-      const reviewRows = rows.filter((r) => r.needs_review || r.hard_error).length;
       const errorRows = failed.length;
 
-      // Upsert ALL parsed rows into salla_orders (including cancelled) for settlement matching
+      // Upsert ALL parsed rows into salla_orders (يشمل الملغية والمكررة) لأغراض مطابقة التسويات
       const orderPayloads = rows
         .filter((r) => r.external_order_id)
         .map((r) => ({
@@ -513,21 +601,29 @@ function SalesImportPage() {
 
       await (supabase as any).from("sales_import_batches").update({
         imported_rows: inserted,
-        duplicate_rows: duplicates,
-        needs_review_rows: reviewRows,
+        duplicate_rows: buckets.skipped_duplicate,
+        needs_review_rows: buckets.blocking_review,
         error_rows: errorRows,
-        summary_json: { headerRow, headers, failed, salla_orders_upserted: orderPayloads.length },
+        summary_json: {
+          headerRow, headers, failed,
+          salla_orders_upserted: orderPayloads.length,
+          buckets, issue_counts: issueCounts,
+          drafts_missing_tax_document: insertedDraftMissingDoc,
+          cancelled_saved_as_orders: buckets.cancelled_order,
+        },
       }).eq("id", batchId);
 
       await (supabase as any).from("finance_audit_logs").insert({
         related_type: "sales_import_batches",
         related_id: batchId,
         action: "commit_sales_import",
-        note: `salla · file=${file?.name} inserted=${inserted} dupes=${duplicates} review=${reviewRows} errors=${errorRows}`,
+        note: `salla · file=${file?.name} inserted=${inserted} draft_missing_doc=${insertedDraftMissingDoc} cancelled=${buckets.cancelled_order} dupes=${buckets.skipped_duplicate} blocking=${buckets.blocking_review} errors=${errorRows}`,
         changed_by: uid,
       });
 
-      toast.success(`تم استيراد ${inserted} فاتورة. تجاهل مراجعة: ${reviewRows}، مكررة: ${duplicates}، أخطاء: ${errorRows}.`);
+      toast.success(
+        `تم استيراد ${inserted} طلب (${insertedDraftMissingDoc} بمستند ناقص). ملغي محفوظ كسجل: ${buckets.cancelled_order}، مكرر متجاوز: ${buckets.skipped_duplicate}، خطأ: ${buckets.blocking_review + errorRows}.`
+      );
       setRows([]); setSelected(new Set()); setFile(null); setSheets([]); setSheet(""); setAoa([]); setMapping({});
       if (fileRef.current) fileRef.current.value = "";
     } catch (e: any) {
@@ -536,6 +632,7 @@ function SalesImportPage() {
       setCommitting(false);
     }
   }
+
 
   async function saveTemplate() {
     const name = templateName.trim();
@@ -561,10 +658,12 @@ function SalesImportPage() {
     toast.success(`تم تطبيق قالب: ${t.name}`);
   }
 
+  const [reviewFilter, setReviewFilter] = useState<Classification | "all">("all");
   const visibleRows = useMemo(
-    () => showOnlyReview ? rows.filter((r) => r.needs_review || r.hard_error) : rows,
-    [rows, showOnlyReview]
+    () => reviewFilter === "all" ? rows : rows.filter((r) => r.classification === reviewFilter),
+    [rows, reviewFilter]
   );
+
 
   return (
     <div className="space-y-4" dir="rtl">
@@ -655,31 +754,31 @@ function SalesImportPage() {
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <h3 className="text-sm font-semibold">معاينة ({rows.length} صف)</h3>
-            <div className="flex items-center gap-2 text-[11px]">
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">صالح: {stats.valid}</span>
-              <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">يحتاج مراجعة: {stats.review}</span>
-              <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300">محدد: {stats.selectedValid}</span>
+            <div className="flex items-center gap-1 text-[11px] flex-wrap">
+              <BucketChip active={reviewFilter} k="ready_to_import" n={buckets.ready_to_import} onClick={setReviewFilter} />
+              <BucketChip active={reviewFilter} k="importable_missing_tax_document" n={buckets.importable_missing_tax_document} onClick={setReviewFilter} />
+              <BucketChip active={reviewFilter} k="cancelled_order" n={buckets.cancelled_order} onClick={setReviewFilter} />
+              <BucketChip active={reviewFilter} k="skipped_duplicate" n={buckets.skipped_duplicate} onClick={setReviewFilter} />
+              <BucketChip active={reviewFilter} k="blocking_review" n={buckets.blocking_review} onClick={setReviewFilter} />
+              {reviewFilter !== "all" && (
+                <button onClick={() => setReviewFilter("all")} className="px-2 py-0.5 rounded border border-white/15 text-muted-foreground">عرض الكل</button>
+              )}
+              <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300">محدد: {stats.selectedImportable}</span>
             </div>
             <div className="ml-auto flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setShowOnlyReview((v) => !v)}
-                className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5"
-              >
-                <Eye size={14} /> {showOnlyReview ? "عرض الكل" : `مراجعة الصفوف المستبعدة (${stats.review})`}
-              </button>
-              <button onClick={selectAllValid} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px]">
-                تحديد كل الصالح
+              <button onClick={selectAllImportable} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px]">
+                تحديد كل الصالح للاستيراد
               </button>
               <button onClick={clearSelection} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px]">
                 مسح التحديد
               </button>
               <button
                 onClick={commit}
-                disabled={committing || !canWrite || stats.selectedValid === 0}
+                disabled={committing || !canWrite || stats.selectedImportable === 0}
                 className="px-4 py-2 rounded-lg bg-gold text-black text-[12px] font-semibold hover:bg-gold/90 disabled:opacity-50 inline-flex items-center gap-1.5"
               >
                 {committing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                اعتماد الصفوف الصالحة ({stats.selectedValid})
+                استيراد الطلبات الجديدة ({stats.selectedImportable})
               </button>
               <button onClick={() => { setRows([]); setSelected(new Set()); }} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5">
                 <RotateCcw size={14} /> إلغاء
@@ -687,14 +786,23 @@ function SalesImportPage() {
             </div>
           </div>
 
-          {stats.review >= 14 && (
-            <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-200">
-              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-              <div>
-                يوجد {stats.review} صف يحتاج مراجعة. تم استبعادها من التحديد الافتراضي. راجعها قبل أي اعتماد يدوي.
+          {/* بطاقة تفصيل أسباب المراجعة */}
+          <div className="mb-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] p-2 text-[11px]">
+            {(Object.keys(ISSUE_LABEL) as DataIssue[]).map((k) => (
+              <div key={k} className="flex items-center justify-between px-2 py-1 rounded bg-white/5">
+                <span className="text-muted-foreground">{ISSUE_LABEL[k]}</span>
+                <span className={issueCounts[k] > 0 ? "text-amber-300 font-semibold" : "text-muted-foreground"}>{issueCounts[k]}</span>
               </div>
+            ))}
+          </div>
+
+          {buckets.blocking_review > 0 && (
+            <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-[11px] text-red-200">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <div>{buckets.blocking_review} صف يحتوي خطأ يمنع الاستيراد. راجعها ثم أعد الاستيراد.</div>
             </div>
           )}
+
 
           <div className="overflow-x-auto">
             <table className="w-full text-[11px]">
@@ -720,13 +828,9 @@ function SalesImportPage() {
               </thead>
               <tbody>
                 {visibleRows.map((r) => {
-                  const rowStatus = r.hard_error ? "خطأ"
-                    : r.needs_review ? "مراجعة"
-                    : "صالح";
-                  const badge = r.hard_error ? "bg-red-500/15 text-red-300 border-red-500/30"
-                    : r.needs_review ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
-                    : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
-                  const canSelect = !r.needs_review && !r.hard_error;
+                  const rowStatus = CLASSIFICATION_LABEL[r.classification];
+                  const badge = CLASSIFICATION_CLASS[r.classification];
+                  const canSelect = canImportRow(r);
                   const isSel = selected.has(r.rowNo);
                   const payStatusBadge = r.payment_status === "paid"
                     ? "text-emerald-300"
@@ -758,8 +862,8 @@ function SalesImportPage() {
                       <td className="p-1.5">{r.shipping_vat || "—"}</td>
                       <td className="p-1.5">{r.total_discount || "—"}</td>
                       <td className="p-1.5 text-[10px] text-amber-200">
-                        {r.review_reasons.length
-                          ? r.review_reasons.map((x) => <div key={x}>• {REVIEW_LABEL[x]}</div>)
+                        {r.issues.length
+                          ? r.issues.map((x) => <div key={x}>• {ISSUE_LABEL[x]}</div>)
                           : "—"}
                       </td>
                     </tr>
@@ -773,3 +877,17 @@ function SalesImportPage() {
     </div>
   );
 }
+
+function BucketChip({ active, k, n, onClick }: { active: Classification | "all"; k: Classification; n: number; onClick: (k: Classification | "all") => void }) {
+  const cls = CLASSIFICATION_CLASS[k];
+  const isActive = active === k;
+  return (
+    <button
+      onClick={() => onClick(isActive ? "all" : k)}
+      className={`px-2 py-0.5 rounded border text-[11px] ${cls} ${isActive ? "ring-1 ring-white/40" : ""}`}
+    >
+      {CLASSIFICATION_LABEL[k]}: {n}
+    </button>
+  );
+}
+
