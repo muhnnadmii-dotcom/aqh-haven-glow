@@ -390,7 +390,7 @@ function IncomesPage() {
         <button onClick={resetFilters} className="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[12px] inline-flex items-center gap-1"><RotateCcw size={12} /> إعادة ضبط</button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+      <div className={`overflow-x-auto rounded-xl border border-white/10 bg-white/5 ${loading ? "opacity-70" : ""}`}>
         <table className="w-full text-[12px]">
           <thead className="bg-white/5 text-muted-foreground">
             <tr>
