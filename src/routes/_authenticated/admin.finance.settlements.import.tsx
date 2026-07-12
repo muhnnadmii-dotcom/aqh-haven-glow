@@ -5,6 +5,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { toast } from "sonner";
 import { Upload, FileSpreadsheet, ChevronLeft, Save, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  TAMARA_FIELDS,
+  autoMapTamara,
+  detectTamaraHeaderRow,
+  extractTamaraHeader,
+  extractTamaraSummary,
+  buildTamaraRows,
+  type TamaraMapping,
+  type TamaraHeaderInfo,
+  type TamaraSummary,
+  type TamaraParsedLine,
+} from "@/lib/finance/tamara-import";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/import")({
   ssr: false,
@@ -251,6 +263,10 @@ function SettlementImportPage() {
   const [payoutFee, setPayoutFee] = useState("0");
   const [sourceExpectedNet, setSourceExpectedNet] = useState("");
   const [statusFilter, setStatusFilter] = useState<MatchStatus | "">("");
+  // ---- Tamara-only state (populated when provider === "tamara") ----
+  const [tamaraMapping, setTamaraMapping] = useState<TamaraMapping>({});
+  const [tamaraHeader, setTamaraHeader] = useState<TamaraHeaderInfo | null>(null);
+  const [tamaraSummary, setTamaraSummary] = useState<TamaraSummary | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const providerLabel = PROVIDERS.find((p) => p.code === provider)?.label ?? "";
@@ -270,9 +286,13 @@ function SettlementImportPage() {
     })();
   }, [provider]);
 
-  // Auto-load default template on provider change
+  // Auto-load default template on provider change (non-Tamara only)
   useEffect(() => {
     if (headers.length === 0) return;
+    if (provider === "tamara") {
+      setTamaraMapping(autoMapTamara(headers));
+      return;
+    }
     const def = templates.find((t) => t.provider === provider);
     if (def) setMapping(def.mapping);
     else autoMap(headers);
@@ -303,12 +323,32 @@ function SettlementImportPage() {
     const ws = wb.Sheets[name];
     const arr = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: null, raw: true }) as any[][];
     setAoa(arr);
-    const aliases = COMMON_FIELDS.flatMap((f) => f.aliases);
-    const hr = detectHeaderRow(arr, aliases);
-    setHeaderRow(hr);
-    const hs = arr[hr] ?? [];
-    setHeaders(hs);
-    autoMap(hs);
+    if (provider === "tamara") {
+      const hr = detectTamaraHeaderRow(arr);
+      setHeaderRow(hr);
+      const hs = arr[hr] ?? [];
+      setHeaders(hs);
+      setTamaraMapping(autoMapTamara(hs));
+      const hdr = extractTamaraHeader(arr);
+      const sum = extractTamaraSummary(arr);
+      setTamaraHeader(hdr);
+      setTamaraSummary(sum);
+      // Prefill settlement metadata (only if empty so user can override)
+      if (hdr.statementId && !settlementRef) setSettlementRef(hdr.statementId);
+      if (hdr.statementDate && !settlementDate) setSettlementDate(hdr.statementDate);
+      if (hdr.periodStart && !periodStart) setPeriodStart(hdr.periodStart);
+      if (hdr.periodEnd && !periodEnd) setPeriodEnd(hdr.periodEnd);
+      if (sum.payableToMerchant != null && !sourceExpectedNet) setSourceExpectedNet(String(sum.payableToMerchant));
+    } else {
+      const aliases = COMMON_FIELDS.flatMap((f) => f.aliases);
+      const hr = detectHeaderRow(arr, aliases);
+      setHeaderRow(hr);
+      const hs = arr[hr] ?? [];
+      setHeaders(hs);
+      autoMap(hs);
+      setTamaraHeader(null);
+      setTamaraSummary(null);
+    }
     setRows([]);
   }
 
@@ -326,7 +366,80 @@ function SettlementImportPage() {
     setHeaders(hs);
   }, [headerRow, aoa]);
 
+  function tamaraToParsedLines(t: TamaraParsedLine[]): ParsedLine[] {
+    // Within-file dedup by provider_event_id (unique per Tamara event).
+    const seenEvent = new Set<string>();
+    return t.map((r) => {
+      const reasons: ReviewReason[] = [];
+      // For refund events, keep amount signed negative even if the file omitted the sign.
+      let gross = r.event_amount;
+      if (r.event_type === "refund" && gross > 0) gross = -gross;
+
+      if (r.event_amount === 0 && r.event_type !== "needs_review_event") reasons.push("zero_amount");
+      if (r.event_amount == null || !isFinite(r.event_amount)) reasons.push("invalid_amount");
+      if (r.reasons.includes("net_amount_mismatch")) reasons.push("amount_mismatch");
+      if (r.provider_event_id && seenEvent.has(r.provider_event_id)) reasons.push("duplicate_line");
+      if (r.provider_event_id) seenEvent.add(r.provider_event_id);
+
+      const desc =
+        (r.event_type_raw ? `Event: ${r.event_type_raw}` : "") +
+        (r.refund_reason ? ` · ${r.refund_reason}` : "") +
+        (r.provider_order_status ? ` · ${r.provider_order_status}` : "");
+
+      const lineType: LineType =
+        r.line_type === "sale" ? "sale"
+          : r.line_type === "refund" ? "refund"
+            : "manual_adjustment";
+
+      const rawObj: Record<string, any> = {
+        ...r.raw,
+        _tamara_event_type: r.event_type_raw,
+        _tamara_event_id: r.provider_event_id,
+        _tamara_order_id: r.provider_order_id,
+        _merchant_order_number: r.external_order_id,
+        _merchant_order_id_source: r.external_order_id_source,
+        _refund_id: r.provider_refund_id,
+        _refund_reason: r.refund_reason,
+        _original_order_date: r.original_order_date,
+        _original_order_amount: r.original_order_amount,
+        _fixed_fee_amount: r.fixed_fee_amount,
+        _variable_fee_amount: r.variable_fee_amount,
+        _variable_fee_rate: r.variable_fee_rate,
+        _provider_order_status: r.provider_order_status,
+        _payment_type: r.payment_type,
+        _currency: r.currency,
+      };
+
+      return {
+        rowNo: r.rowNo,
+        external_order_id: r.external_order_id,
+        transaction_date: r.event_date ?? r.original_order_date,
+        original_payment_method: r.payment_type,
+        // Use Tamara event id as the provider_transaction_id so cross-file dedup works.
+        provider_transaction_id: r.provider_event_id,
+        description: desc.trim() || null,
+        gross_amount: gross,
+        fees_before_vat: r.fees_before_vat,
+        fees_vat_amount: r.fees_vat_amount,
+        net_amount: r.net_amount,
+        net_before_vat_check: null,
+        line_type: lineType,
+        sales_invoice_id: null,
+        salla_order_status: r.provider_order_status,
+        // preliminary; goPreview() re-computes match_status against invoices
+        match_status: r.external_order_id ? "order_not_found" : "needs_classification",
+        reasons,
+        needs_review: reasons.length > 0 || r.needs_review,
+        raw: rawObj,
+      };
+    });
+  }
+
   function buildRows(): ParsedLine[] {
+    if (provider === "tamara") {
+      const t = buildTamaraRows(aoa, headerRow, tamaraMapping);
+      return tamaraToParsedLines(t);
+    }
     const body = aoa.slice(headerRow + 1).filter((r) => r.some((c) => c != null && c !== ""));
     const get = (raw: any[], k: FieldKey) => (mapping[k] != null ? raw[mapping[k]!] : null);
     // duplicate detection within file
@@ -403,8 +516,13 @@ function SettlementImportPage() {
 
   async function goPreview() {
     if (!aoa.length) { toast.error("لم يتم رفع ملف"); return; }
-    const req = COMMON_FIELDS.filter((f) => f.required).filter((f) => mapping[f.key] == null || mapping[f.key] === -1);
-    if (req.length) { toast.error(`أعمدة مطلوبة غير مربوطة: ${req.map((r) => r.label).join("، ")}`); return; }
+    if (provider === "tamara") {
+      const missing = TAMARA_FIELDS.filter((f) => f.required).filter((f) => tamaraMapping[f.key] == null || tamaraMapping[f.key] === -1);
+      if (missing.length) { toast.error(`أعمدة تمارا مطلوبة غير مربوطة: ${missing.map((r) => r.label).join("، ")}`); return; }
+    } else {
+      const req = COMMON_FIELDS.filter((f) => f.required).filter((f) => mapping[f.key] == null || mapping[f.key] === -1);
+      if (req.length) { toast.error(`أعمدة مطلوبة غير مربوطة: ${req.map((r) => r.label).join("، ")}`); return; }
+    }
 
     const parsed = buildRows();
 
@@ -776,21 +894,59 @@ function SettlementImportPage() {
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-4">
           <h2 className="text-sm font-semibold">تعيين الأعمدة — {providerLabel}</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {COMMON_FIELDS.map((f) => (
-              <label key={f.key} className="block text-[11px]">
-                {f.label} {f.required && <span className="text-red-400">*</span>}
-                <select
-                  value={mapping[f.key] ?? -1}
-                  onChange={(e) => setMapping({ ...mapping, [f.key]: Number(e.target.value) })}
-                  className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]"
-                >
-                  <option value={-1}>— بدون —</option>
-                  {headers.map((h, i) => <option key={i} value={i}>{String(h ?? `عمود ${i + 1}`)}</option>)}
-                </select>
-              </label>
-            ))}
-          </div>
+          {provider === "tamara" ? (
+            <div className="space-y-3">
+              {tamaraHeader && (
+                <div className="rounded-lg border border-gold/30 bg-gold/5 p-3 text-[11px] grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div><span className="text-muted-foreground">Statement ID:</span> <span className="font-mono">{tamaraHeader.statementId ?? "—"}</span></div>
+                  <div><span className="text-muted-foreground">Statement Date:</span> <span className="font-mono">{tamaraHeader.statementDate ?? "—"}</span></div>
+                  <div><span className="text-muted-foreground">Period:</span> <span className="font-mono">{tamaraHeader.periodStart ?? "—"} → {tamaraHeader.periodEnd ?? "—"}</span></div>
+                  <div><span className="text-muted-foreground">Merchant ID:</span> <span className="font-mono">{tamaraHeader.tamaraMerchantId ?? "—"}</span></div>
+                </div>
+              )}
+              {(["order", "event", "fees", "net", "refund", "meta"] as const).map((sec) => {
+                const items = TAMARA_FIELDS.filter((f) => f.section === sec);
+                if (!items.length) return null;
+                const secLabel = { order: "بيانات الطلب", event: "بيانات الحدث", fees: "الرسوم", net: "الصافي", refund: "الاسترجاع", meta: "أخرى" }[sec];
+                return (
+                  <div key={sec}>
+                    <div className="text-[11px] font-semibold text-gold mb-1">{secLabel}</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {items.map((f) => (
+                        <label key={f.key} className="block text-[11px]">
+                          {f.label} {f.required && <span className="text-red-400">*</span>}
+                          <select
+                            value={tamaraMapping[f.key] ?? -1}
+                            onChange={(e) => setTamaraMapping({ ...tamaraMapping, [f.key]: Number(e.target.value) })}
+                            className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]"
+                          >
+                            <option value={-1}>— بدون —</option>
+                            {headers.map((h, i) => <option key={i} value={i}>{String(h ?? `عمود ${i + 1}`)}</option>)}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {COMMON_FIELDS.map((f) => (
+                <label key={f.key} className="block text-[11px]">
+                  {f.label} {f.required && <span className="text-red-400">*</span>}
+                  <select
+                    value={mapping[f.key] ?? -1}
+                    onChange={(e) => setMapping({ ...mapping, [f.key]: Number(e.target.value) })}
+                    className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]"
+                  >
+                    <option value={-1}>— بدون —</option>
+                    {headers.map((h, i) => <option key={i} value={i}>{String(h ?? `عمود ${i + 1}`)}</option>)}
+                  </select>
+                </label>
+              ))}
+            </div>
+          )}
 
           <div className="border-t border-white/10 pt-3 space-y-2">
             <div className="text-[12px] font-semibold">قوالب محفوظة ({providerLabel})</div>
@@ -854,6 +1010,24 @@ function SettlementImportPage() {
               )}
             </label>
           </div>
+
+          {provider === "tamara" && tamaraSummary && (
+            <div className="rounded-xl border border-gold/30 bg-gold/5 p-3">
+              <div className="text-[11px] font-semibold text-gold mb-2">إجماليات كشف تمارا الرسمية (من ملخص الملف)</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 text-[11px]">
+                <Kpi label="عدد العمليات" value={tamaraSummary.transactionCount != null ? String(tamaraSummary.transactionCount) : "—"} />
+                <Kpi label="Captured" value={tamaraSummary.capturedAmount != null ? tamaraSummary.capturedAmount.toFixed(2) : "—"} tone="text-emerald-300" />
+                <Kpi label="Refunds" value={tamaraSummary.refundAmount != null ? tamaraSummary.refundAmount.toFixed(2) : "—"} tone="text-amber-300" />
+                <Kpi label="Canceled" value={tamaraSummary.canceledAmount != null ? tamaraSummary.canceledAmount.toFixed(2) : "—"} tone="text-muted-foreground" />
+                <Kpi label="Tamara Fees" value={tamaraSummary.feesBeforeVat != null ? tamaraSummary.feesBeforeVat.toFixed(2) : "—"} />
+                <Kpi label="Tamara VAT" value={tamaraSummary.feesVat != null ? tamaraSummary.feesVat.toFixed(2) : "—"} />
+                <Kpi label="Payable to Merchant" value={tamaraSummary.payableToMerchant != null ? tamaraSummary.payableToMerchant.toFixed(2) : "—"} tone="text-gold" />
+              </div>
+              <div className="text-[10px] text-muted-foreground mt-2">
+                يجب أن تتطابق هذه القيم مع الصافي المحسوب أدناه (فرق ≤ 0.02). لن يتم إنشاء فواتير مبيعات جديدة من كشف تمارا.
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <Kpi label="عدد الصفوف" value={String(summary.count)} />
