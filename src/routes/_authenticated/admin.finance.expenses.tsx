@@ -109,11 +109,9 @@ function ExpensesPage() {
   }, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus]);
 
   const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus]);
-  const rows = pg.rows;
-  const setRows = (updater: (prev: any[]) => any[]) => {
-    // in-place row mutation from child components (status editor) — safe optimistic update
-    (pg as any).rows = updater(pg.rows);
-  };
+  const [rows, setLocalRows] = useState<any[]>([]);
+  useEffect(() => { setLocalRows(pg.rows); }, [pg.rows]);
+  const setRows = (updater: (prev: any[]) => any[]) => setLocalRows((p) => updater(p));
   const loading = pg.loading;
   const load = useCallback(() => { pg.reload(); refreshCounts(); }, [pg.reload, refreshCounts]);
 
