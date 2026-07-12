@@ -672,7 +672,7 @@ const COLLECTION_TYPES = [
   { value: "other", label: "أخرى" },
 ];
 
-function IncomeDialog({ row, sources, roles, onClose, onSaved }: any) {
+function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any) {
   const isNew = !row;
   const accountantOnly = !roles.canManage && roles.canAccountant;
   const canReview = roles.canManage || roles.canAccountant;
