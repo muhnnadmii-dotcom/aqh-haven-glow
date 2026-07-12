@@ -1011,6 +1011,24 @@ function SettlementImportPage() {
             </label>
           </div>
 
+          {provider === "tamara" && tamaraSummary && (
+            <div className="rounded-xl border border-gold/30 bg-gold/5 p-3">
+              <div className="text-[11px] font-semibold text-gold mb-2">إجماليات كشف تمارا الرسمية (من ملخص الملف)</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 text-[11px]">
+                <Kpi label="عدد العمليات" value={tamaraSummary.transactionCount != null ? String(tamaraSummary.transactionCount) : "—"} />
+                <Kpi label="Captured" value={tamaraSummary.capturedAmount != null ? tamaraSummary.capturedAmount.toFixed(2) : "—"} tone="text-emerald-300" />
+                <Kpi label="Refunds" value={tamaraSummary.refundAmount != null ? tamaraSummary.refundAmount.toFixed(2) : "—"} tone="text-amber-300" />
+                <Kpi label="Canceled" value={tamaraSummary.canceledAmount != null ? tamaraSummary.canceledAmount.toFixed(2) : "—"} tone="text-muted-foreground" />
+                <Kpi label="Tamara Fees" value={tamaraSummary.feesBeforeVat != null ? tamaraSummary.feesBeforeVat.toFixed(2) : "—"} />
+                <Kpi label="Tamara VAT" value={tamaraSummary.feesVat != null ? tamaraSummary.feesVat.toFixed(2) : "—"} />
+                <Kpi label="Payable to Merchant" value={tamaraSummary.payableToMerchant != null ? tamaraSummary.payableToMerchant.toFixed(2) : "—"} tone="text-gold" />
+              </div>
+              <div className="text-[10px] text-muted-foreground mt-2">
+                يجب أن تتطابق هذه القيم مع الصافي المحسوب أدناه (فرق ≤ 0.02). لن يتم إنشاء فواتير مبيعات جديدة من كشف تمارا.
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <Kpi label="عدد الصفوف" value={String(summary.count)} />
             <Kpi label="مبيعات" value={String(summary.sales)} tone="text-emerald-300" />
