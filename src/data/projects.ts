@@ -617,7 +617,7 @@ export const projects: Project[] = [
   },
 ];
 
-const fmtSAR = (n: number) => n.toLocaleString("ar-SA");
+const fmtSAR = (n: number) => n.toLocaleString("en-US");
 
 export function formatPriceRange(p: Project["priceRange"], type?: Project["priceType"]) {
   const t = type ?? (p.min && p.max && p.min !== p.max ? "range" : p.min ? "fixed" : "hidden");

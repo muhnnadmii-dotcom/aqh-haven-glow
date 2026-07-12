@@ -108,7 +108,7 @@ function TankDetail() {
             {reports.map((r) => (
               <li key={r.id} className="glass rounded-xl p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="font-semibold text-sm">{new Date(r.visit_date).toLocaleDateString("ar-SA")}</div>
+                  <div className="font-semibold text-sm">{new Date(r.visit_date).toLocaleDateString("en-US")}</div>
                   {r.overall_status && <span className="text-xs px-2 py-0.5 rounded-md bg-gold/10 text-gold">{r.overall_status}</span>}
                 </div>
                 {r.technician && <div className="text-xs text-muted-foreground mt-1">الفني: {r.technician}</div>}
@@ -136,7 +136,7 @@ function TankDetail() {
               <tbody>
                 {tests.map((t) => (
                   <tr key={t.id} className="border-t border-white/5">
-                    <td className="p-2">{new Date(t.test_date).toLocaleDateString("ar-SA")}</td>
+                    <td className="p-2">{new Date(t.test_date).toLocaleDateString("en-US")}</td>
                     <td>{t.ph ?? "—"}</td><td>{t.ammonia ?? "—"}</td><td>{t.nitrite ?? "—"}</td><td>{t.nitrate ?? "—"}</td>
                     <td>{t.kh ?? "—"}</td><td>{t.gh ?? "—"}</td><td>{t.tds ?? "—"}</td><td>{t.temperature ?? "—"}</td>
                   </tr>

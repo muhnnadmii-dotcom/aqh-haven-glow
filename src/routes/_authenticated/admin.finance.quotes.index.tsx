@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/quotes/")({
   component: QuotesList,
 });
 
-const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(n || 0);
+const SAR = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n || 0);
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "مسودة", sent: "مُرسل", accepted: "مقبول", rejected: "مرفوض",
@@ -136,7 +136,7 @@ function QuotesList() {
                     </Badge>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground" dir="ltr">
-                    {r.created_at ? new Date(r.created_at).toLocaleDateString("ar-SA") : "—"}
+                    {r.created_at ? new Date(r.created_at).toLocaleDateString("en-US") : "—"}
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1">

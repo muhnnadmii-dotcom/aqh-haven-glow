@@ -192,7 +192,7 @@ function AccountHome() {
                 <div className="min-w-0">
                   <div className="text-sm font-semibold truncate">{REQUEST_TYPE_LABEL[r.type]}</div>
                   <div className="text-[11px] text-muted-foreground">
-                    {new Date(r.created_at).toLocaleDateString("ar-SA")}
+                    {new Date(r.created_at).toLocaleDateString("en-US")}
                   </div>
                 </div>
                 <span className={`shrink-0 text-[11px] px-2 py-0.5 rounded-md ${REQUEST_STATUS_COLOR[r.status]}`}>
@@ -220,7 +220,7 @@ function AccountHome() {
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold">{labelKind(nextAppt.kind)}</div>
               <div className="text-[11px] text-muted-foreground">
-                {nextAppt.preferred_date && new Date(nextAppt.preferred_date).toLocaleString("ar-SA")}
+                {nextAppt.preferred_date && new Date(nextAppt.preferred_date).toLocaleString("en-US")}
               </div>
             </div>
             <ChevronLeft size={14} className="text-muted-foreground" />

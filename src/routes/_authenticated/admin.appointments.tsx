@@ -150,7 +150,7 @@ function AppointmentsAdmin() {
                   <Calendar size={11} /> {r.kind}
                 </span>
                 <span className="text-muted-foreground">
-                  {r.preferred_date ? new Date(r.preferred_date).toLocaleString("ar-SA") : NA}
+                  {r.preferred_date ? new Date(r.preferred_date).toLocaleString("en-US") : NA}
                 </span>
               </div>
               {r.notes && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{r.notes}</p>}

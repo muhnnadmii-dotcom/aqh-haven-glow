@@ -67,4 +67,4 @@ export const ATTACHMENT_LABEL: Record<string, string> = {
 };
 
 export const SAR = (n: number) =>
-  new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(Number(n) || 0);
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(Number(n) || 0);

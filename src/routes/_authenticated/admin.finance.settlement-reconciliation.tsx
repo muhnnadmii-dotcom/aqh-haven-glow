@@ -112,9 +112,9 @@ const MATCH_COLOR: Record<string, string> = {
   no_match: "text-red-400 border-red-500/40 bg-red-500/10",
 };
 
-const fmt = (n: number) => new Intl.NumberFormat("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
+const fmt = (n: number) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
 const MS_PER_DAY = 86400000;
-const RIYADH_DATE_TIME = new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Riyadh" });
+const RIYADH_DATE_TIME = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Riyadh" });
 const dateMs = (d: string) => {
   const [y, m, day] = d.split("-").map(Number);
   return Date.UTC(y, (m || 1) - 1, day || 1);
@@ -724,7 +724,7 @@ function ReconciliationPage() {
                     </div>
                     <div className="text-muted-foreground">{DIFF_TYPE_LABEL[a.difference_type ?? ""] ?? "—"} {a.difference_note ? `— ${a.difference_note}` : ""}</div>
                     <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">{new Date(a.confirmed_at ?? a.created_at).toLocaleString("ar-SA")}</span>
+                      <span className="text-muted-foreground">{new Date(a.confirmed_at ?? a.created_at).toLocaleString("en-US")}</span>
                       {a.status === "confirmed" && (
                         <button onClick={() => reverse(a.id)} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
                           <RotateCcw className="w-3 h-3" /> عكس

@@ -614,7 +614,7 @@ function RecentList({ title, rows, dateField, subField, linkTo }: { title: strin
 
 function fmtArDate(iso: string) {
   try {
-    return new Date(iso).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
+    return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   } catch { return iso; }
 }
 

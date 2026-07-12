@@ -29,10 +29,10 @@ function AppointmentsPage() {
               <div className="font-semibold">{labelKind(a.kind)}</div>
               <span className={`text-xs px-2 py-0.5 rounded-md ${statusClass(a.status)}`}>{labelStatus(a.status)}</span>
             </div>
-            {a.preferred_date && <div className="text-xs text-muted-foreground mt-1">التاريخ المفضل: {new Date(a.preferred_date).toLocaleString("ar-SA")}</div>}
+            {a.preferred_date && <div className="text-xs text-muted-foreground mt-1">التاريخ المفضل: {new Date(a.preferred_date).toLocaleString("en-US")}</div>}
             {a.notes && <p className="text-sm mt-2">{a.notes}</p>}
             {a.admin_notes && <p className="text-sm mt-2 text-gold"><b>رد الإدارة:</b> {a.admin_notes}</p>}
-            <div className="text-xs text-muted-foreground mt-2">{new Date(a.created_at).toLocaleString("ar-SA")}</div>
+            <div className="text-xs text-muted-foreground mt-2">{new Date(a.created_at).toLocaleString("en-US")}</div>
           </div>
         ))}
       </div>

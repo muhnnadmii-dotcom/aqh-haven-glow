@@ -89,7 +89,7 @@ function SecurityPage() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm truncate">{f.friendly_name || "جهاز TOTP"}</div>
                     <div className="text-[11px] text-muted-foreground">
-                      أُضيف في {new Date(f.created_at).toLocaleDateString("ar-SA")}
+                      أُضيف في {new Date(f.created_at).toLocaleDateString("en-US")}
                     </div>
                   </div>
                   <button

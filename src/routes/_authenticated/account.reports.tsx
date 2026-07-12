@@ -74,7 +74,7 @@ function ReportsPage() {
                 </span>
               </div>
               <div className="text-[11px] text-muted-foreground">
-                {new Date(r.created_at).toLocaleString("ar-SA")}
+                {new Date(r.created_at).toLocaleString("en-US")}
                 {r.service_requests && <> · {REQUEST_TYPE_LABEL[r.service_requests.type]}</>}
               </div>
               {r.body && (

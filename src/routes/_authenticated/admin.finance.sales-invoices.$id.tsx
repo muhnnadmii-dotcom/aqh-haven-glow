@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/sales-invoic
   component: SalesInvoiceEditor,
 });
 
-const SAR = (n: number) => new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 2 }).format(Number(n) || 0);
+const SAR = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(Number(n) || 0);
 
 const TAX_LABEL: Record<string, string> = {
   standard_15: "قياسية 15%", zero_rated: "معدل صفري", exempt: "معفاة", out_of_scope: "خارج النطاق",

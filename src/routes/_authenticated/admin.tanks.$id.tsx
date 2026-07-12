@@ -134,7 +134,7 @@ function AdminTankDetail() {
             {tank.tank_type ?? "—"} {tank.volume_liters ? `· ${tank.volume_liters}L` : ""} {tank.city ? `· ${tank.city}` : ""}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            تاريخ الإضافة: {new Date(tank.created_at).toLocaleDateString("ar-SA")}
+            تاريخ الإضافة: {new Date(tank.created_at).toLocaleDateString("en-US")}
           </div>
         </div>
       </div>
@@ -173,7 +173,7 @@ function AdminTankDetail() {
                 <div className="text-sm">
                   <span className="font-medium">{REQUEST_TYPE_LABEL[q.type]}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-md mr-2 ${REQUEST_STATUS_COLOR[q.status]}`}>{REQUEST_STATUS_LABEL[q.status]}</span>
-                  <span className="text-xs text-muted-foreground">{new Date(q.created_at).toLocaleDateString("ar-SA")}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(q.created_at).toLocaleDateString("en-US")}</span>
                 </div>
                 <Link to="/admin/requests/$id" params={{ id: q.id }} className="text-xs text-gold flex items-center gap-1 hover:underline">
                   فتح الطلب <ExternalLink size={12} />
@@ -196,7 +196,7 @@ function AdminTankDetail() {
               <tbody>
                 {readings.slice(0, 10).map((r: any) => (
                   <tr key={r.id} className="border-t border-white/5">
-                    <td className="p-2">{new Date(r.reading_date).toLocaleDateString("ar-SA")}</td>
+                    <td className="p-2">{new Date(r.reading_date).toLocaleDateString("en-US")}</td>
                     <td>{r.ph ?? "—"}</td><td>{r.ammonia ?? "—"}</td><td>{r.nitrite ?? "—"}</td><td>{r.nitrate ?? "—"}</td>
                     <td>{r.kh ?? "—"}</td><td>{r.temperature ?? "—"}</td><td>{r.salinity ?? "—"}</td>
                     <td>{r.calcium ?? "—"}</td><td>{r.magnesium ?? "—"}</td><td>{r.phosphate ?? "—"}</td>
@@ -247,7 +247,7 @@ function IssueCard({ iss, onChange }: { iss: Issue; onChange: (id: string, s: st
     <li className="glass rounded-xl p-4 space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm font-medium">{ISSUE_LABEL[iss.issue_type] ?? iss.issue_type}</div>
-        <div className="text-[11px] text-muted-foreground">{new Date(iss.created_at).toLocaleDateString("ar-SA")}</div>
+        <div className="text-[11px] text-muted-foreground">{new Date(iss.created_at).toLocaleDateString("en-US")}</div>
       </div>
       {iss.description && <div className="text-xs text-muted-foreground whitespace-pre-wrap">{iss.description}</div>}
       {iss.image_paths && iss.image_paths.length > 0 && (
@@ -321,7 +321,7 @@ function TimelineItem({ e, ownerName }: { e: any; ownerName: string | null }) {
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="text-sm font-medium">{title}</div>
           <div className="text-[11px] text-muted-foreground">
-            {new Date(e.date).toLocaleString("ar-SA")} {ownerName ? `· ${ownerName}` : ""}
+            {new Date(e.date).toLocaleString("en-US")} {ownerName ? `· ${ownerName}` : ""}
           </div>
         </div>
         {detail && <div className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap">{detail}</div>}

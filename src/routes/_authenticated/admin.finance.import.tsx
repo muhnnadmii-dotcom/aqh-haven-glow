@@ -797,7 +797,7 @@ function ImportPage() {
               <tbody>
                 {logs.map((l) => (
                   <tr key={l.id} className="border-t border-white/5">
-                    <td className="p-2">{new Date(l.created_at).toLocaleString("ar-SA")}</td>
+                    <td className="p-2">{new Date(l.created_at).toLocaleString("en-US")}</td>
                     <td className="p-2">{l.import_type === "incomes" ? "دخل" : "مصروفات"}</td>
                     <td className="p-2">{l.file_name}</td>
                     <td className="p-2">{l.sheet_name ?? "—"}</td>

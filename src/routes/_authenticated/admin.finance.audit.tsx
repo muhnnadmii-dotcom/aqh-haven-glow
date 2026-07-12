@@ -83,7 +83,7 @@ function AuditPage() {
           <tbody>
             {filtered.map((r) => (
               <tr key={r.id} className="border-t border-white/5">
-                <td className="px-3 py-2 whitespace-nowrap">{new Date(r.changed_at).toLocaleString("ar-SA")}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{new Date(r.changed_at).toLocaleString("en-US")}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{r.changed_by ? (actors[r.changed_by] ?? "—") : "—"}</td>
                 <td className="px-3 py-2">{RELATED_LABEL[r.related_type] ?? r.related_type}</td>
                 <td className="px-3 py-2">{r.action}</td>

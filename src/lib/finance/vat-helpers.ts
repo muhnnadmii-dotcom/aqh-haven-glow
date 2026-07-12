@@ -15,7 +15,7 @@ export type TaxPeriod = {
 };
 
 export const fmtSAR = (n: number | null | undefined) =>
-  (Number(n ?? 0)).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ﷼";
+  (Number(n ?? 0)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ﷼";
 
 export const fmtDate = (s: string | null | undefined) =>
   s ? new Date(s).toLocaleDateString("en-GB") : "—";

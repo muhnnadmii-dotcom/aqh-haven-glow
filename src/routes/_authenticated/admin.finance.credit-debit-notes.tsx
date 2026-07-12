@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/credit-debit
 });
 
 const SAR = (n: number | null | undefined) =>
-  (Number(n ?? 0)).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ﷼";
+  (Number(n ?? 0)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ﷼";
 
 const TYPE_LABEL: Record<string, string> = {
   sales_credit_note: "دائن — مبيعات",

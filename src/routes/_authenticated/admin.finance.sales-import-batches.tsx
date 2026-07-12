@@ -210,7 +210,7 @@ function SalesBatchesPage() {
               {!loading && rows.length === 0 && <tr><td colSpan={10} className="p-4 text-center text-muted-foreground">لا توجد عمليات استيراد بعد.</td></tr>}
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-white/5">
-                  <td className="p-2">{new Date(r.created_at).toLocaleString("ar-SA")}</td>
+                  <td className="p-2">{new Date(r.created_at).toLocaleString("en-US")}</td>
                   <td className="p-2 font-mono text-[11px]">{r.file_name}</td>
                   <td className="p-2">{r.sales_channel}</td>
                   <td className="p-2">{r.sheet_name ?? "—"}</td>

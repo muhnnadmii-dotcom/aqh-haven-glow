@@ -228,7 +228,7 @@ function AdminRequestsPage() {
                       {r.assignment_department && <span className="text-[10px] text-muted-foreground">{r.assignment_department}</span>}
                     </div>
                   </td>
-                  <td className="p-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("ar-SA")}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("en-US")}</td>
                   <td className="p-3">
                     <div className="flex items-center gap-1.5">
                       <Link to="/admin/requests/$id" params={{ id: r.id }}
@@ -265,7 +265,7 @@ function AdminRequestsPage() {
               </div>
               <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
                 <span>{REQUEST_TYPE_LABEL[r.type]}</span>
-                <span>{new Date(r.created_at).toLocaleDateString("ar-SA")}</span>
+                <span>{new Date(r.created_at).toLocaleDateString("en-US")}</span>
               </div>
               <div className="flex items-center gap-1.5 text-[10px]">
                 <span className={`px-1.5 py-0.5 rounded ${ASSIGNMENT_STATUS_COLOR[r.assignment_status]} inline-flex items-center gap-1`}>
