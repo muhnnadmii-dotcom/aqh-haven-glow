@@ -4794,6 +4794,10 @@ export type Database = {
         Args: { p_period_id: string }
         Returns: undefined
       }
+      delete_settlement_full: {
+        Args: { _reason: string; _settlement_id: string }
+        Returns: Json
+      }
       ensure_accounting_period: { Args: { p_date: string }; Returns: string }
       finance_archive_import_batch: {
         Args: { p_batch_id: string; p_reason: string }
