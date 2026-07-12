@@ -655,11 +655,14 @@ function ReclassifyDialog({ sources, providers, onClose, onDone }: any) {
           accounting_status: "classified",
         }).eq("id", c.id);
         if (error) { fail++; continue; }
-        await supabase.from("finance_audit_logs").insert({
-          related_type: "finance_incomes", related_id: c.id, action: "reclassify_provider",
-          field_name: "transaction_type", old_value: c.currentType ?? null,
-          new_value: "payment_provider_settlement", changed_by: uid,
-          note: `تصنيف تلقائي — وسيط: ${providerAr(c.providerCode)} (${c.sourceName})`,
+        await (supabase as any).rpc("finance_log_manual_audit", {
+          p_related_type: "finance_incomes",
+          p_related_id: c.id,
+          p_action: "reclassify_provider",
+          p_field_name: "transaction_type",
+          p_old_value: c.currentType ?? null,
+          p_new_value: "payment_provider_settlement",
+          p_note: `تصنيف تلقائي — وسيط: ${providerAr(c.providerCode)} (${c.sourceName})`,
         });
         ok++;
       }
