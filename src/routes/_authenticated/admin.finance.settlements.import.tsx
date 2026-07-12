@@ -635,12 +635,11 @@ function SettlementImportPage() {
         if (error) throw error;
       }
 
-      await (supabase as any).from("finance_audit_logs").insert({
-        related_type: "payment_settlements",
-        related_id: settlementId,
-        action: "import_settlement",
-        note: `provider=${provider} · file=${file?.name} · hash=${fileHash.slice(0, 16)} · lines=${rows.length} · review=${summary.review}`,
-        changed_by: uid,
+      await (supabase as any).rpc("finance_log_manual_audit", {
+        p_related_type: "payment_settlements",
+        p_related_id: settlementId,
+        p_action: "import_settlement",
+        p_note: `provider=${provider} · file=${file?.name} · hash=${fileHash.slice(0, 16)} · lines=${rows.length} · review=${summary.review}`,
       });
 
       toast.success(`تم إنشاء التسوية بحالة ${status === "under_review" ? "قيد المراجعة" : "مستوردة"}`);

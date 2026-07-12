@@ -613,12 +613,11 @@ function SalesImportPage() {
         },
       }).eq("id", batchId);
 
-      await (supabase as any).from("finance_audit_logs").insert({
-        related_type: "sales_import_batches",
-        related_id: batchId,
-        action: "commit_sales_import",
-        note: `salla · file=${file?.name} inserted=${inserted} draft_missing_doc=${insertedDraftMissingDoc} cancelled=${buckets.cancelled_order} dupes=${buckets.skipped_duplicate} blocking=${buckets.blocking_review} errors=${errorRows}`,
-        changed_by: uid,
+      await (supabase as any).rpc("finance_log_manual_audit", {
+        p_related_type: "sales_import_batches",
+        p_related_id: batchId,
+        p_action: "commit_sales_import",
+        p_note: `salla · file=${file?.name} inserted=${inserted} draft_missing_doc=${insertedDraftMissingDoc} cancelled=${buckets.cancelled_order} dupes=${buckets.skipped_duplicate} blocking=${buckets.blocking_review} errors=${errorRows}`,
       });
 
       toast.success(
