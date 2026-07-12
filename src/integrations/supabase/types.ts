@@ -2427,6 +2427,7 @@ export type Database = {
           is_active: boolean
           name: string
           notes: string | null
+          payout_fee_fixed: number
           provider_code: Database["public"]["Enums"]["sales_payment_provider"]
           provider_type: Database["public"]["Enums"]["payment_provider_type"]
           rounding_tolerance: number
@@ -2440,6 +2441,7 @@ export type Database = {
           is_active?: boolean
           name: string
           notes?: string | null
+          payout_fee_fixed?: number
           provider_code: Database["public"]["Enums"]["sales_payment_provider"]
           provider_type: Database["public"]["Enums"]["payment_provider_type"]
           rounding_tolerance?: number
@@ -2453,6 +2455,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           notes?: string | null
+          payout_fee_fixed?: number
           provider_code?: Database["public"]["Enums"]["sales_payment_provider"]
           provider_type?: Database["public"]["Enums"]["payment_provider_type"]
           rounding_tolerance?: number
