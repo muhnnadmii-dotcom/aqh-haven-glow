@@ -5013,6 +5013,14 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sync_income_settlement_link: {
+        Args: { _income_id: string }
+        Returns: undefined
+      }
+      sync_settlement_links: {
+        Args: { _settlement_id: string }
+        Returns: undefined
+      }
       vat_get_excluded_invoices: {
         Args: { p_period_id: string }
         Returns: {
