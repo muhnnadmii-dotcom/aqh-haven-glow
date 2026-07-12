@@ -341,6 +341,13 @@ function SettlementImportPage() {
       if (hdr.periodStart && !periodStart) setPeriodStart(hdr.periodStart);
       if (hdr.periodEnd && !periodEnd) setPeriodEnd(hdr.periodEnd);
       if (sum.payableToMerchant != null && !sourceExpectedNet) setSourceExpectedNet(String(sum.payableToMerchant));
+    } else if (provider === "tabby") {
+      const hr = detectTabbyHeaderRow(arr);
+      setHeaderRow(hr);
+      const hs = arr[hr] ?? [];
+      setHeaders(hs);
+      setTamaraHeader(null);
+      setTamaraSummary(null);
     } else {
       const aliases = COMMON_FIELDS.flatMap((f) => f.aliases);
       const hr = detectHeaderRow(arr, aliases);
