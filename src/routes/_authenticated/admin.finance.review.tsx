@@ -167,7 +167,7 @@ function ReviewCenter() {
   const providerMatch = (r: Row): { id: string; name: string } | null => {
     const hay = `${r.note ?? ""} ${r.internal_note ?? ""}`.toLowerCase();
     for (const p of providers as any[]) {
-      const needles = [p.code, p.name, p.name?.replace(/\s+/g, "")].filter(Boolean).map((s: string) => String(s).toLowerCase());
+      const needles = [p.provider_code, p.name, p.name?.replace(/\s+/g, "")].filter(Boolean).map((s: string) => String(s).toLowerCase());
       if (needles.some((n) => hay.includes(n))) return { id: p.id, name: p.name };
     }
     return null;
@@ -570,7 +570,7 @@ function RowDrawer({ row, accounts, suppliers, customers, salesInvoices, purchas
   const providerHint = useMemo(() => {
     const hay = `${row.note ?? ""} ${row.internal_note ?? ""}`.toLowerCase();
     return (providers as any[]).find((p: any) => {
-      const needles = [p.code, p.name, p.name?.replace(/\s+/g, "")].filter(Boolean).map((s: string) => String(s).toLowerCase());
+      const needles = [p.provider_code, p.name, p.name?.replace(/\s+/g, "")].filter(Boolean).map((s: string) => String(s).toLowerCase());
       return needles.some((n) => hay.includes(n));
     });
   }, [row, providers]);
