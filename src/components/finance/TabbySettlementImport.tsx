@@ -76,17 +76,23 @@ export function TabbySettlementImport({
     setLines(built); setGroups(g); setTotals(t);
 
     // Duplicate probe: fingerprints already stored on any payment_settlement_lines.
+    // We wrap in try/catch — PostgREST JSON-path .in() filter may be rejected in some setups; a failed probe just disables per-row dedup.
     const fps = built.map((l) => l.row_fingerprint);
     const seen = new Set<string>();
-    for (const chunk of chunkArr(fps, 200)) {
-      const { data } = await (supabase as any)
-        .from("payment_settlement_lines")
-        .select("raw_row")
-        .in("raw_row->>_row_fingerprint", chunk);
-      (data ?? []).forEach((r: any) => {
-        const fp = r?.raw_row?._row_fingerprint;
-        if (fp) seen.add(String(fp));
-      });
+    try {
+      for (const chunk of chunkArr(fps, 200)) {
+        const { data, error } = await (supabase as any)
+          .from("payment_settlement_lines")
+          .select("raw_row")
+          .in("raw_row->>_row_fingerprint", chunk);
+        if (error) throw error;
+        (data ?? []).forEach((r: any) => {
+          const fp = r?.raw_row?._row_fingerprint;
+          if (fp) seen.add(String(fp));
+        });
+      }
+    } catch {
+      // silently fall back — file-hash guard still prevents whole-file duplicates.
     }
     setExistingFps(seen);
 
