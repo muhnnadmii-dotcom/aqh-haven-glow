@@ -516,8 +516,13 @@ function SettlementImportPage() {
 
   async function goPreview() {
     if (!aoa.length) { toast.error("لم يتم رفع ملف"); return; }
-    const req = COMMON_FIELDS.filter((f) => f.required).filter((f) => mapping[f.key] == null || mapping[f.key] === -1);
-    if (req.length) { toast.error(`أعمدة مطلوبة غير مربوطة: ${req.map((r) => r.label).join("، ")}`); return; }
+    if (provider === "tamara") {
+      const missing = TAMARA_FIELDS.filter((f) => f.required).filter((f) => tamaraMapping[f.key] == null || tamaraMapping[f.key] === -1);
+      if (missing.length) { toast.error(`أعمدة تمارا مطلوبة غير مربوطة: ${missing.map((r) => r.label).join("، ")}`); return; }
+    } else {
+      const req = COMMON_FIELDS.filter((f) => f.required).filter((f) => mapping[f.key] == null || mapping[f.key] === -1);
+      if (req.length) { toast.error(`أعمدة مطلوبة غير مربوطة: ${req.map((r) => r.label).join("، ")}`); return; }
+    }
 
     const parsed = buildRows();
 
