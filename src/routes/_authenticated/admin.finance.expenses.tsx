@@ -204,7 +204,7 @@ function ExpensesPage() {
         <Select v={fAtt} onChange={setFAtt} ph="المرفق" opts={ATTACHMENT_STATUS.map((a) => ({ value: a.value, label: a.label }))} />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+      <div className={`overflow-x-auto rounded-xl border border-white/10 bg-white/5 ${loading ? "opacity-70" : ""}`}>
         <table className="w-full text-[12px]">
           <thead className="bg-white/5 text-muted-foreground">
             <tr>
