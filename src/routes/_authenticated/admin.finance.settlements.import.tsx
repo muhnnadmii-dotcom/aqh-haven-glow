@@ -905,16 +905,16 @@ function SettlementImportPage() {
       )}
 
       {/* Step 2 */}
-      {step === 2 && provider === "tabby" && (
+      {(step === 2 || step === 3) && provider === "tabby" && (
         <TabbySettlementImport
-          step={2}
+          step={step === 3 ? 3 : 2}
           aoa={aoa}
           headerRow={headerRow}
           file={file}
           fileHash={fileHash}
           providerRow={providerRow}
           canManage={canManage}
-          onBack={() => setStep(1)}
+          onBack={() => setStep(step === 3 ? 2 : 1)}
           onGotoPreview={() => setStep(3)}
         />
       )}
