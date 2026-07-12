@@ -4806,6 +4806,18 @@ export type Database = {
           name: string
         }[]
       }
+      finance_log_manual_audit: {
+        Args: {
+          p_action: string
+          p_field_name?: string
+          p_new_value?: string
+          p_note?: string
+          p_old_value?: string
+          p_related_id: string
+          p_related_type: string
+        }
+        Returns: string
+      }
       finance_restore_import_batch: {
         Args: { p_batch_id: string }
         Returns: Json
