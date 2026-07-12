@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { Plus, X, ChevronLeft, Upload, RefreshCcw, Pencil, CalendarX } from "lucide-react";
 import { toast } from "sonner";
+import { useMemo } from "react";
+import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
+import { PaginationBar } from "@/components/finance/PaginationBar";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/")({
   ssr: false,
@@ -32,32 +35,47 @@ const STATUS_COLOR: Record<string, string> = {
   cancelled: "text-red-400",
 };
 
+// Columns needed for the list view (no notes / raw / snapshot payload).
+const LIST_COLS =
+  "id,provider_id,settlement_reference,settlement_date,gross_sales_amount," +
+  "fees_before_vat,fees_vat_amount,payout_fee,expected_net_amount,actual_bank_amount," +
+  "difference_amount,status";
+
 function SettlementsPage() {
   const roles = useFinanceRoles();
-  const [rows, setRows] = useState<any[]>([]);
   const [providers, setProviders] = useState<any[]>([]);
   const [filterProvider, setFilterProvider] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
 
-  const load = async () => {
-    const [s, p] = await Promise.all([
-      supabase.from("payment_settlements" as any).select("*").order("settlement_date", { ascending: false }),
-      supabase.from("payment_providers" as any).select("*").eq("is_active", true).order("name"),
-    ]);
-    if (s.error) toast.error(s.error.message); else setRows(s.data ?? []);
-    setProviders(p.data ?? []);
-  };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    supabase.from("payment_providers" as any).select("id, name, provider_code, is_active").eq("is_active", true).order("name")
+      .then(({ data }) => setProviders(data ?? []));
+  }, []);
 
-  const filtered = useMemo(() => rows.filter((r) => {
-    if (filterProvider && r.provider_id !== filterProvider) return false;
-    if (filterStatus && r.status !== filterStatus) return false;
-    return true;
-  }), [rows, filterProvider, filterStatus]);
+  const fetcher = useCallback(async ({ page, pageSize }: { page: number; pageSize: PageSize }) => {
+    let q = supabase.from("payment_settlements" as any)
+      .select(LIST_COLS, { count: "exact" })
+      .order("settlement_date", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false });
+    if (filterProvider) q = q.eq("provider_id", filterProvider);
+    if (filterStatus) q = q.eq("status", filterStatus);
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, count, error } = await q.range(from, to);
+    if (error) throw new Error(error.message);
+    return { rows: (data as any[]) ?? [], total: count ?? 0 };
+  }, [filterProvider, filterStatus]);
 
-  const providerName = (id: string) => providers.find((p) => p.id === id)?.name ?? "—";
+  const pg = usePaginatedQuery(fetcher, [filterProvider, filterStatus]);
+  useEffect(() => { if (pg.error) toast.error(pg.error); }, [pg.error]);
+  const reload = pg.reload;
+
+  const providerName = useMemo(() => {
+    const m = new Map(providers.map((p) => [p.id, p.name]));
+    return (id: string) => m.get(id) ?? "—";
+  }, [providers]);
 
   return (
     <div className="space-y-4">
@@ -68,8 +86,8 @@ function SettlementsPage() {
         </div>
         {roles.canManage && (
           <div className="flex items-center gap-2">
-            <DateRepairButton onDone={load} />
-            <RematchAllButton onDone={load} />
+            <DateRepairButton onDone={reload} />
+            <RematchAllButton onDone={reload} />
             <Link to="/admin/finance/settlements/import" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/20 border border-gold/40 text-gold text-[12px] hover:bg-gold/30">
               <Upload size={14} /> استيراد تسوية
             </Link>
@@ -94,7 +112,7 @@ function SettlementsPage() {
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+      <div className={`overflow-x-auto rounded-xl border border-white/10 bg-white/5 ${pg.loading ? "opacity-70" : ""}`}>
         <table className="w-full text-[12px]">
           <thead className="bg-white/5 text-muted-foreground">
             <tr>
@@ -111,10 +129,10 @@ function SettlementsPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && (
+            {pg.rows.length === 0 && !pg.loading && (
               <tr><td colSpan={10} className="px-3 py-6 text-center text-muted-foreground">لا توجد تسويات</td></tr>
             )}
-            {filtered.map((r) => {
+            {pg.rows.map((r) => {
               const feesTotal = Number(r.fees_before_vat) + Number(r.fees_vat_amount) + Number(r.payout_fee);
               const diff = Number(r.difference_amount);
               return (
@@ -145,20 +163,21 @@ function SettlementsPage() {
             })}
           </tbody>
         </table>
+        <PaginationBar page={pg.page} pageCount={pg.pageCount} pageSize={pg.pageSize} total={pg.total} loading={pg.loading} onPage={pg.setPage} onPageSize={pg.setPageSize} />
       </div>
 
       {creating && (
         <SettlementForm
           providers={providers}
           onClose={() => setCreating(false)}
-          onSaved={() => { setCreating(false); load(); }}
+          onSaved={() => { setCreating(false); reload(); }}
         />
       )}
       {editing && (
         <SettlementMetaForm
           settlement={editing}
           onClose={() => setEditing(null)}
-          onSaved={() => { setEditing(null); load(); }}
+          onSaved={() => { setEditing(null); reload(); }}
         />
       )}
     </div>

@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Loader2, Receipt } from "lucide-react";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
+import { PaginationBar } from "@/components/finance/PaginationBar";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/sales-invoices/")({
   ssr: false,
@@ -29,32 +31,69 @@ const PAY_LABEL: Record<string, string> = {
   unpaid: "غير مدفوعة", partially_paid: "جزئي", paid: "مدفوعة", overpaid: "زائد",
 };
 
+const LIST_COLS = "id,invoice_number,issue_date,customer_id,customer_name_snapshot,order_id,taxable_amount,vat_amount,total_amount,paid_amount,remaining_amount,status,payment_status";
+
+function monthOptions(): string[] {
+  const out: string[] = [];
+  const now = new Date();
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+  return out;
+}
+
 function SalesInvoicesList() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [fStatus, setFStatus] = useState("");
   const [fPay, setFPay] = useState("");
   const [fMonth, setFMonth] = useState("");
   const [fLinked, setFLinked] = useState("");
 
-  const { data: invoices = [], isLoading } = useQuery({
-    queryKey: ["sales_invoices"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sales_invoices")
-        .select("*")
-        .order("issue_date", { ascending: false })
-        .order("id", { ascending: false });
-      if (error) throw error;
-      return data as any[];
-    },
-  });
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
 
+  const fetcher = useCallback(async ({ page, pageSize }: { page: number; pageSize: PageSize }) => {
+    let query = supabase.from("sales_invoices").select(LIST_COLS, { count: "exact" })
+      .order("issue_date", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false });
+    if (fStatus) query = query.eq("status", fStatus as any);
+    if (fPay) query = query.eq("payment_status", fPay as any);
+    if (fMonth) {
+      const [y, m] = fMonth.split("-").map(Number);
+      const from = `${y}-${String(m).padStart(2, "0")}-01`;
+      const nextM = m === 12 ? 1 : m + 1;
+      const nextY = m === 12 ? y + 1 : y;
+      const to = `${nextY}-${String(nextM).padStart(2, "0")}-01`;
+      query = query.gte("issue_date", from).lt("issue_date", to);
+    }
+    if (fLinked === "linked") query = query.not("order_id", "is", null);
+    if (fLinked === "unlinked") query = query.is("order_id", null);
+    if (debouncedQ) {
+      const like = `%${debouncedQ.replace(/[%_]/g, (m) => "\\" + m)}%`;
+      query = query.or(`invoice_number.ilike.${like},customer_name_snapshot.ilike.${like},notes.ilike.${like}`);
+    }
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, count, error } = await query.range(from, to);
+    if (error) throw new Error(error.message);
+    return { rows: (data as any[]) ?? [], total: count ?? 0 };
+  }, [debouncedQ, fStatus, fPay, fMonth, fLinked]);
+
+  const pg = usePaginatedQuery(fetcher, [debouncedQ, fStatus, fPay, fMonth, fLinked]);
+  useEffect(() => { if (pg.error) toast.error(pg.error); }, [pg.error]);
+
+  const customerIds = useMemo(() => Array.from(new Set(pg.rows.map((r) => r.customer_id).filter(Boolean))), [pg.rows]);
   const { data: customers = [] } = useQuery({
-    queryKey: ["profiles_customers_min"],
+    queryKey: ["profiles_by_ids", customerIds.join(",")],
+    enabled: customerIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id, full_name").limit(2000);
+      const { data } = await supabase.from("profiles").select("id, full_name").in("id", customerIds as string[]);
       return (data ?? []) as any[];
     },
   });
@@ -69,38 +108,20 @@ function SalesInvoicesList() {
   const create = useMutation({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      const { data, error } = await supabase
-        .from("sales_invoices")
-        .insert({ created_by: u.user?.id ?? null } as any)
-        .select("id")
-        .single();
+      const { data, error } = await supabase.from("sales_invoices").insert({ created_by: u.user?.id ?? null } as any).select("id").single();
       if (error) throw error;
       return data.id as number;
     },
     onSuccess: (id) => {
       qc.invalidateQueries({ queryKey: ["sales_invoices"] });
+      pg.reload();
       navigate({ to: "/admin/finance/sales-invoices/$id", params: { id: String(id) } });
     },
     onError: (e: any) => toast.error("تعذر إنشاء الفاتورة: " + e.message),
   });
 
-  const filtered = useMemo(() => invoices.filter((r) => {
-    if (q) {
-      const s = q.toLowerCase();
-      const hay = `${r.invoice_number ?? ""} ${custName(r)} ${r.customer_name_snapshot ?? ""} ${r.notes ?? ""}`.toLowerCase();
-      if (!hay.includes(s)) return false;
-    }
-    if (fStatus && r.status !== fStatus) return false;
-    if (fPay && r.payment_status !== fPay) return false;
-    if (fMonth && (r.issue_date ?? "").slice(0, 7) !== fMonth) return false;
-    if (fLinked === "linked" && !r.order_id) return false;
-    if (fLinked === "unlinked" && r.order_id) return false;
-    return true;
-  }), [invoices, q, fStatus, fPay, fMonth, fLinked, customers]);
-
-  const months = useMemo(() => Array.from(new Set(invoices.map((r) => (r.issue_date ?? "").slice(0, 7)).filter(Boolean))).sort().reverse(), [invoices]);
-
-  const totals = filtered.reduce((a, r) => ({
+  const months = useMemo(() => monthOptions(), []);
+  const pageTotals = pg.rows.reduce((a, r) => ({
     total: a.total + Number(r.total_amount ?? 0),
     paid: a.paid + Number(r.paid_amount ?? 0),
     remaining: a.remaining + Number(r.remaining_amount ?? 0),
@@ -120,10 +141,10 @@ function SalesInvoicesList() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="عدد الفواتير" value={filtered.length.toString()} />
-        <StatCard label="إجمالي" value={SAR(totals.total)} />
-        <StatCard label="مدفوع" value={SAR(totals.paid)} tone="emerald" />
-        <StatCard label="متبقي" value={SAR(totals.remaining)} tone="amber" />
+        <StatCard label="عدد الفواتير (المطابقة للفلاتر)" value={String(pg.total)} />
+        <StatCard label="إجمالي الصفحة" value={SAR(pageTotals.total)} />
+        <StatCard label="مدفوع (الصفحة)" value={SAR(pageTotals.paid)} tone="emerald" />
+        <StatCard label="متبقي (الصفحة)" value={SAR(pageTotals.remaining)} tone="amber" />
       </div>
 
       <div className="flex flex-wrap gap-2 items-center rounded-xl bg-white/5 border border-white/10 p-2">
@@ -150,7 +171,7 @@ function SalesInvoicesList() {
         </select>
       </div>
 
-      <div className="rounded-xl border border-white/10 overflow-hidden bg-white/[0.02]">
+      <div className={`rounded-xl border border-white/10 overflow-hidden bg-white/[0.02] ${pg.loading ? "opacity-70" : ""}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-white/5 text-muted-foreground text-xs">
@@ -168,16 +189,16 @@ function SalesInvoicesList() {
               </tr>
             </thead>
             <tbody>
-              {isLoading && (
+              {pg.loading && pg.rows.length === 0 && (
                 <tr><td colSpan={10} className="p-6 text-center text-muted-foreground"><Loader2 className="inline w-4 h-4 animate-spin ml-2" />جاري التحميل...</td></tr>
               )}
-              {!isLoading && filtered.length === 0 && (
+              {!pg.loading && pg.rows.length === 0 && (
                 <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">
                   <Receipt className="w-8 h-8 mx-auto mb-2 opacity-40" />
                   لا توجد فواتير مطابقة
                 </td></tr>
               )}
-              {filtered.map((r) => (
+              {pg.rows.map((r) => (
                 <tr key={r.id} className="border-t border-white/5 hover:bg-white/[0.03]">
                   <td className="p-2">
                     <Link to="/admin/finance/sales-invoices/$id" params={{ id: String(r.id) }} className="text-gold hover:underline font-mono">
@@ -198,6 +219,7 @@ function SalesInvoicesList() {
             </tbody>
           </table>
         </div>
+        <PaginationBar page={pg.page} pageCount={pg.pageCount} pageSize={pg.pageSize} total={pg.total} loading={pg.loading} onPage={pg.setPage} onPageSize={pg.setPageSize} />
       </div>
     </div>
   );

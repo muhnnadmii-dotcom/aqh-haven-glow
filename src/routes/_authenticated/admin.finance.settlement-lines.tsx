@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RefreshCcw } from "lucide-react";
+import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
+import { PaginationBar } from "@/components/finance/PaginationBar";
+
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlement-lines")({
   ssr: false,
@@ -54,7 +57,6 @@ const MATCH_LABEL: Record<string, { text: string; tone: string }> = {
 
 function SettlementLinesPage() {
   const search = Route.useSearch();
-  const [rows, setRows] = useState<any[]>([]);
   const [settlements, setSettlements] = useState<any[]>([]);
   const [providers, setProviders] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<Record<string, { id: number; invoice_number: string }>>({});
@@ -63,44 +65,62 @@ function SettlementLinesPage() {
   const [filterMatch, setFilterMatch] = useState("");
   const [filterSettlement, setFilterSettlement] = useState(search.settlement || "");
   const [filterProvider, setFilterProvider] = useState(search.provider || "");
+  const [filterOrder, setFilterOrder] = useState("");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<any | null>(null);
 
-  const load = async () => {
-    const [l, s, p] = await Promise.all([
-      supabase.from("payment_settlement_lines" as any).select("*").order("transaction_date", { ascending: false }).limit(2000),
-      supabase.from("payment_settlements" as any).select("id,settlement_reference,settlement_date,report_reference,source_file_name,provider_id"),
-      supabase.from("payment_providers" as any).select("id,name"),
-    ]);
-    if (l.error) toast.error(l.error.message);
-    const lines = l.data ?? [];
-    setRows(lines);
-    setSettlements(s.data ?? []);
-    setProviders(p.data ?? []);
+  useEffect(() => {
+    (async () => {
+      const [s, p] = await Promise.all([
+        supabase.from("payment_settlements" as any).select("id,settlement_reference,settlement_date,report_reference,source_file_name,provider_id"),
+        supabase.from("payment_providers" as any).select("id,name"),
+      ]);
+      setSettlements(s.data ?? []);
+      setProviders(p.data ?? []);
+    })();
+  }, []);
 
-    const invIds = Array.from(new Set(lines.map((x: any) => x.sales_invoice_id).filter(Boolean)));
-    const ordIds = Array.from(new Set(lines.map((x: any) => x.salla_order_id).filter(Boolean)));
-    if (invIds.length) {
-      const { data } = await supabase.from("sales_invoices" as any).select("id,invoice_number").in("id", invIds);
-      const map: any = {}; (data ?? []).forEach((r: any) => { map[r.id] = r; }); setInvoices(map);
-    } else setInvoices({});
-    if (ordIds.length) {
-      const { data } = await supabase.from("salla_orders" as any).select("id,external_order_id,order_status").in("id", ordIds);
-      const map: any = {}; (data ?? []).forEach((r: any) => { map[r.id] = r; }); setOrders(map);
-    } else setOrders({});
-  };
-  useEffect(() => { load(); }, []);
+  const providerSettlementIds = useMemo(() => {
+    if (!filterProvider) return null;
+    return settlements.filter((s) => s.provider_id === filterProvider).map((s) => s.id);
+  }, [filterProvider, settlements]);
 
-  const filtered = useMemo(() => rows.filter((r) => {
-    if (filterType && r.line_type !== filterType) return false;
-    if (filterSettlement && r.settlement_id !== filterSettlement) return false;
-    if (filterMatch && (r.matching_status ?? "unclassified") !== filterMatch) return false;
-    if (filterProvider) {
-      const st = settlements.find((s) => s.id === r.settlement_id);
-      if (!st || st.provider_id !== filterProvider) return false;
+  const fetcher = useCallback(async ({ page, pageSize }: { page: number; pageSize: PageSize }) => {
+    let q = supabase.from("payment_settlement_lines" as any)
+      .select("*", { count: "exact" })
+      .order("transaction_date", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false });
+    if (filterSettlement) q = q.eq("settlement_id", filterSettlement);
+    if (filterType) q = q.eq("line_type", filterType);
+    if (filterMatch) q = q.eq("matching_status", filterMatch);
+    if (filterOrder.trim()) q = q.eq("external_order_id", filterOrder.trim());
+    if (providerSettlementIds) {
+      if (providerSettlementIds.length === 0) return { rows: [], total: 0 };
+      q = q.in("settlement_id", providerSettlementIds);
     }
-    return true;
-  }), [rows, filterType, filterMatch, filterSettlement, filterProvider, settlements]);
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, count, error } = await q.range(from, to);
+    if (error) throw new Error(error.message);
+    const lines = (data as any[]) ?? [];
+
+    const invIds = Array.from(new Set(lines.map((x) => x.sales_invoice_id).filter(Boolean)));
+    const ordIds = Array.from(new Set(lines.map((x) => x.salla_order_id).filter(Boolean)));
+    const [invRes, ordRes] = await Promise.all([
+      invIds.length ? supabase.from("sales_invoices" as any).select("id,invoice_number").in("id", invIds) : Promise.resolve({ data: [] as any[] }),
+      ordIds.length ? supabase.from("salla_orders" as any).select("id,external_order_id,order_status").in("id", ordIds) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const invMap: any = {}; (invRes.data ?? []).forEach((r: any) => { invMap[r.id] = r; });
+    const ordMap: any = {}; (ordRes.data ?? []).forEach((r: any) => { ordMap[r.id] = r; });
+    setInvoices(invMap);
+    setOrders(ordMap);
+
+    return { rows: lines, total: count ?? 0 };
+  }, [filterSettlement, filterType, filterMatch, filterOrder, providerSettlementIds]);
+
+  const pg = usePaginatedQuery(fetcher, [filterSettlement, filterType, filterMatch, filterOrder, filterProvider]);
+  useEffect(() => { if (pg.error) toast.error(pg.error); }, [pg.error]);
+  const load = pg.reload;
 
   const stRef = (id: string) => {
     const s = settlements.find((x) => x.id === id);
@@ -127,6 +147,7 @@ function SettlementLinesPage() {
     setPreview(null);
     load();
   };
+
 
   return (
     <div className="space-y-4">
@@ -157,9 +178,10 @@ function SettlementLinesPage() {
           <option value="">كل حالات المطابقة</option>
           {Object.entries(MATCH_LABEL).map(([k, v]) => <option key={k} value={k}>{v.text}</option>)}
         </select>
+        <input value={filterOrder} onChange={(e) => setFilterOrder(e.target.value)} placeholder="رقم الطلب" className="bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px] w-32" />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+      <div className={`overflow-x-auto rounded-xl border border-white/10 bg-white/5 ${pg.loading ? "opacity-70" : ""}`}>
         <table className="w-full text-[12px]">
           <thead className="bg-white/5 text-muted-foreground">
             <tr>
@@ -174,10 +196,10 @@ function SettlementLinesPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && (
+            {pg.rows.length === 0 && !pg.loading && (
               <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">لا توجد حركات</td></tr>
             )}
-            {filtered.map((r) => {
+            {pg.rows.map((r: any) => {
               const inv = r.sales_invoice_id ? invoices[r.sales_invoice_id] : null;
               const ord = r.salla_order_id ? orders[r.salla_order_id] : null;
               const m = MATCH_LABEL[r.matching_status] ?? { text: r.matching_status ?? "غير مصنّف", tone: "text-muted-foreground" };
@@ -209,7 +231,9 @@ function SettlementLinesPage() {
             })}
           </tbody>
         </table>
+        <PaginationBar page={pg.page} pageCount={pg.pageCount} pageSize={pg.pageSize} total={pg.total} loading={pg.loading} onPage={pg.setPage} onPageSize={pg.setPageSize} />
       </div>
+
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPreview(null)}>

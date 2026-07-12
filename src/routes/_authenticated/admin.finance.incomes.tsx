@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
+import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
+import { PaginationBar } from "@/components/finance/PaginationBar";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, fmtSAR, labelOf } from "@/lib/finance/constants";
 import { INCOMING_TYPES, ACCOUNTING_STATUSES, incomingLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
 
@@ -70,19 +72,20 @@ function providerAr(code?: string | null): string {
 function IncomesPage() {
   const roles = useFinanceRoles();
   const navigate = useNavigate();
-  const [rows, setRows] = useState<Income[]>([]);
   const [sources, setSources] = useState<{ id: string; name: string }[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [allocs, setAllocs] = useState<Alloc[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [pageAllocs, setPageAllocs] = useState<Alloc[]>([]);
   const [editing, setEditing] = useState<Income | null>(null);
   const [creating, setCreating] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const [reclassifyOpen, setReclassifyOpen] = useState(false);
   const [linkedDialog, setLinkedDialog] = useState<{ income: Income; settlements: Settlement[]; allocs: Alloc[] } | null>(null);
+  const [unclassifiedCount, setUnclassifiedCount] = useState(0);
+  const [deletedCount, setDeletedCount] = useState(0);
 
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [fMonth, setFMonth] = useState("");
   const [fSource, setFSource] = useState("");
   const [fAccount, setFAccount] = useState("");
@@ -99,27 +102,93 @@ function IncomesPage() {
     setFAcct(""); setFAtt(""); setFTxnType(""); setFAccStatus(""); setFProvider(""); setFLink("");
   };
 
-  const load = async () => {
-    setLoading(true);
-    const [{ data: incs }, { data: srcs }, { data: prov }, { data: setts }, { data: als }] = await Promise.all([
-      supabase.from("finance_incomes").select("*").order("income_date", { ascending: false }),
-      supabase.from("finance_income_sources").select("id, name").eq("is_active", true).order("display_order"),
-      supabase.from("payment_providers").select("id, name, provider_code"),
-      supabase.from("payment_settlements").select("id, provider_id, settlement_reference, settlement_date, expected_net_amount, actual_bank_amount, status, bank_income_id"),
-      supabase.from("settlement_bank_allocations").select("id, settlement_id, transaction_id, allocated_amount, status, difference_type, difference_amount").eq("status", "confirmed"),
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: srcs }, { data: prov }, { data: setts }] = await Promise.all([
+        supabase.from("finance_income_sources").select("id, name").eq("is_active", true).order("display_order"),
+        supabase.from("payment_providers").select("id, name, provider_code"),
+        supabase.from("payment_settlements").select("id, provider_id, settlement_reference, settlement_date, expected_net_amount, actual_bank_amount, status, bank_income_id"),
+      ]);
+      setSources(srcs ?? []);
+      setProviders((prov as any) ?? []);
+      setSettlements((setts as any) ?? []);
+    })();
+  }, []);
+
+  const providerByCode = useMemo(() => new Map(providers.map((p) => [p.provider_code, p])), [providers]);
+
+  const refreshCounts = useCallback(async () => {
+    const [u, d] = await Promise.all([
+      supabase.from("finance_incomes").select("id", { count: "exact", head: true }).is("deleted_at", null).or("accounting_status.is.null,accounting_status.eq.unclassified"),
+      supabase.from("finance_incomes").select("id", { count: "exact", head: true }).not("deleted_at", "is", null),
     ]);
-    setRows(incs ?? []);
-    setSources(srcs ?? []);
-    setProviders((prov as any) ?? []);
-    setSettlements((setts as any) ?? []);
-    setAllocs((als as any) ?? []);
-    setLoading(false);
-  };
-  useEffect(() => { load(); }, []);
+    setUnclassifiedCount(u.count ?? 0);
+    setDeletedCount(d.count ?? 0);
+  }, []);
+  useEffect(() => { refreshCounts(); }, [refreshCounts]);
+
+  const fetcher = useCallback(async ({ page, pageSize }: { page: number; pageSize: PageSize }) => {
+    let query = supabase.from("finance_incomes").select("*", { count: "exact" })
+      .order("income_date", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false });
+    if (showDeleted) query = query.not("deleted_at", "is", null);
+    else query = query.is("deleted_at", null);
+    if (debouncedQ) {
+      const like = `%${debouncedQ.replace(/[%_]/g, (m) => "\\" + m)}%`;
+      query = query.ilike("note", like);
+    }
+    if (fMonth) query = query.eq("month", fMonth);
+    if (fSource) query = query.eq("income_source_id", fSource);
+    if (fAccount) query = query.eq("account_type", fAccount as any);
+    if (fInternal) query = query.eq("internal_review_status", fInternal as any);
+    if (fAcct) query = query.eq("accountant_status", fAcct as any);
+    if (fAtt) query = query.eq("attachment_status", fAtt as any);
+    if (fTxnType) query = query.eq("transaction_type", fTxnType as any);
+    if (fAccStatus) {
+      if (fAccStatus === "unclassified") query = query.or("accounting_status.is.null,accounting_status.eq.unclassified");
+      else query = query.eq("accounting_status", fAccStatus as any);
+    }
+    if (fProvider === "none") query = query.is("payment_provider_id", null);
+    else if (fProvider) {
+      const p = providerByCode.get(fProvider);
+      if (!p) return { rows: [], total: 0 };
+      query = query.eq("payment_provider_id", p.id);
+    }
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, count, error } = await query.range(from, to);
+    if (error) throw new Error(error.message);
+    const incRows = (data as any[]) ?? [];
+
+    // Fetch confirmed allocations only for current page rows.
+    const ids = incRows.map((r) => r.id);
+    if (ids.length) {
+      const { data: als } = await supabase.from("settlement_bank_allocations")
+        .select("id, settlement_id, transaction_id, allocated_amount, status, difference_type, difference_amount")
+        .eq("status", "confirmed").in("transaction_id", ids);
+      setPageAllocs((als as any) ?? []);
+    } else {
+      setPageAllocs([]);
+    }
+    return { rows: incRows, total: count ?? 0 };
+  }, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, providerByCode]);
+
+  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider]);
+  const [rows, setLocalRows] = useState<Income[]>([]);
+  useEffect(() => { setLocalRows(pg.rows); }, [pg.rows]);
+  const setRows = (updater: (prev: any[]) => any[]) => setLocalRows((p) => updater(p));
+  const loading = pg.loading;
+  const load = useCallback(() => { pg.reload(); refreshCounts(); }, [pg.reload, refreshCounts]);
+  const allocs = pageAllocs;
+
 
   const sourceName = (id: string | null) => sources.find((s) => s.id === id)?.name ?? "—";
   const providerById = useMemo(() => new Map(providers.map((p) => [p.id, p])), [providers]);
-  const providerByCode = useMemo(() => new Map(providers.map((p) => [p.provider_code, p])), [providers]);
   const settlementById = useMemo(() => new Map(settlements.map((s) => [s.id, s])), [settlements]);
 
   // Per-income enrichment
@@ -189,26 +258,12 @@ function IncomesPage() {
     return out;
   }, [rows, allocs, settlements, sources, providerById, settlementById]);
 
+  // Server-side filters already applied; keep fLink as page-scope client filter.
   const filtered = useMemo(() => rows.filter((r) => {
-    if (!showDeleted && r.deleted_at) return false;
-    if (showDeleted && !r.deleted_at) return false;
-    if (q && !(r.note ?? "").toLowerCase().includes(q.toLowerCase()) && !sourceName(r.income_source_id).toLowerCase().includes(q.toLowerCase())) return false;
-    if (fMonth && r.month !== fMonth) return false;
-    if (fSource && r.income_source_id !== fSource) return false;
-    if (fAccount && r.account_type !== fAccount) return false;
-    if (fInternal && r.internal_review_status !== fInternal) return false;
-    if (fAcct && r.accountant_status !== fAcct) return false;
-    if (fAtt && r.attachment_status !== fAtt) return false;
-    if (fTxnType && r.transaction_type !== fTxnType) return false;
-    if (fAccStatus && (r.accounting_status ?? "unclassified") !== fAccStatus) return false;
+    if (!fLink) return true;
     const en = enrichment.get(r.id);
-    if (fProvider) {
-      if (fProvider === "none") { if (en?.providerCode) return false; }
-      else if (en?.providerCode !== fProvider) return false;
-    }
-    if (fLink && en?.linkStatus !== fLink) return false;
-    return true;
-  }), [rows, q, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, fLink, sources, showDeleted, enrichment]);
+    return en?.linkStatus === fLink;
+  }), [rows, fLink, enrichment]);
 
   const summary = useMemo(() => {
     const s = { unmatched: 0, suggested: 0, partial: 0, full: 0, needsReview: 0, unallocated: 0 };
@@ -226,14 +281,17 @@ function IncomesPage() {
     return s;
   }, [rows, enrichment]);
 
-  const unclassifiedCount = useMemo(
-    () => rows.filter((r) => !r.deleted_at && (r.accounting_status ?? "unclassified") === "unclassified").length,
-    [rows],
-  );
-
-  const months = useMemo(() => Array.from(new Set(rows.map((r) => r.month).filter(Boolean))).sort().reverse(), [rows]);
+  const months = useMemo(() => {
+    const out: string[] = [];
+    const now = new Date();
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return out;
+  }, []);
   const total = filtered.reduce((a, b) => a + Number(b.amount ?? 0), 0);
-  const deletedCount = rows.filter((r) => r.deleted_at).length;
+
 
   const softDelete = async (r: Income) => {
     const en = enrichment.get(r.id);
@@ -332,7 +390,7 @@ function IncomesPage() {
         <button onClick={resetFilters} className="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[12px] inline-flex items-center gap-1"><RotateCcw size={12} /> إعادة ضبط</button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+      <div className={`overflow-x-auto rounded-xl border border-white/10 bg-white/5 ${loading ? "opacity-70" : ""}`}>
         <table className="w-full text-[12px]">
           <thead className="bg-white/5 text-muted-foreground">
             <tr>
@@ -436,9 +494,10 @@ function IncomesPage() {
             )}
           </tbody>
           <tfoot className="bg-white/5 font-semibold">
-            <tr><td className="px-3 py-2">الإجمالي</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={10}></td></tr>
+            <tr><td className="px-3 py-2">إجمالي الصفحة</td><td className="px-3 py-2 font-mono">{fmtSAR(total)}</td><td colSpan={10} className="text-muted-foreground text-[11px]">{pg.total} سجل مطابق</td></tr>
           </tfoot>
         </table>
+        <PaginationBar page={pg.page} pageCount={pg.pageCount} pageSize={pg.pageSize} total={pg.total} loading={pg.loading} onPage={pg.setPage} onPageSize={pg.setPageSize} />
       </div>
 
       {(editing || creating) && (
@@ -454,13 +513,13 @@ function IncomesPage() {
 
       {reclassifyOpen && (
         <ReclassifyDialog
-          rows={rows}
           sources={sources}
           providers={providers}
           onClose={() => setReclassifyOpen(false)}
           onDone={() => { setReclassifyOpen(false); load(); }}
         />
       )}
+
 
       {linkedDialog && (
         <LinkedSettlementsDialog
@@ -536,7 +595,19 @@ type ReclassifyPlan = {
   toChange: number; conflicts: number; skipped: number;
 };
 
-function ReclassifyDialog({ rows, sources, providers, onClose, onDone }: any) {
+function ReclassifyDialog({ sources, providers, onClose, onDone }: any) {
+  const [rows, setRows] = useState<Income[]>([]);
+  useEffect(() => {
+    (async () => {
+      // Fetch only candidates: non-deleted, positive amount, no explicit payment_provider_id.
+      const { data } = await supabase.from("finance_incomes")
+        .select("id, income_date, amount, income_source_id, payment_provider_id, account_type, transaction_type, deleted_at")
+        .is("deleted_at", null).gt("amount", 0).is("payment_provider_id", null)
+        .order("income_date", { ascending: false }).limit(5000);
+      setRows((data as any) ?? []);
+    })();
+  }, []);
+
   const [applying, setApplying] = useState(false);
 
   const plan: ReclassifyPlan = useMemo(() => {

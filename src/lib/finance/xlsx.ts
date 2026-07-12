@@ -1,6 +1,13 @@
-import * as XLSX from "xlsx";
+// xlsx is loaded lazily on first use to keep it out of shared bundles.
+// Import via dynamic import inside the exported helpers only.
 
-export function exportCSV(name: string, headers: string[], rows: (string | number | null)[][]) {
+let _xlsxPromise: Promise<typeof import("xlsx")> | null = null;
+function loadXLSX() {
+  if (!_xlsxPromise) _xlsxPromise = import("xlsx");
+  return _xlsxPromise;
+}
+
+export async function exportCSV(name: string, headers: string[], rows: (string | number | null)[][]) {
   const esc = (v: any) => {
     const s = v == null ? "" : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -10,15 +17,15 @@ export function exportCSV(name: string, headers: string[], rows: (string | numbe
   triggerDownload(name, blob);
 }
 
-export function exportXLSX(
+export async function exportXLSX(
   name: string,
   sheets: { name: string; headers: string[]; rows: (string | number | null)[][] }[],
 ) {
+  const XLSX = await loadXLSX();
   const wb = XLSX.utils.book_new();
   for (const s of sheets) {
     const aoa = [s.headers, ...s.rows];
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    // Right-to-left for Arabic
     (ws as any)["!cols"] = s.headers.map(() => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, ws, s.name.slice(0, 30));
   }
