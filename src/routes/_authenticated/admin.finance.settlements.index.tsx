@@ -154,6 +154,11 @@ function SettlementsPage() {
                           <Pencil size={12} /> تعديل بيانات التسوية
                         </button>
                       )}
+                      {roles.canManage && (
+                        <button onClick={() => setDeleting(r)} className="inline-flex items-center gap-1 text-red-400 hover:text-red-300" title="حذف التسوية وإعادة استيرادها">
+                          <Trash2 size={12} /> حذف / إعادة استيراد
+                        </button>
+                      )}
                       <button onClick={() => window.location.assign(`/admin/finance/settlement-lines?settlement=${r.id}`)} className="inline-flex items-center gap-1 text-gold hover:underline">
                         الحركات <ChevronLeft size={12} />
                       </button>
