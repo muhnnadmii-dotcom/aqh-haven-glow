@@ -35,6 +35,9 @@ function PurchaseInvoicesList() {
   const [fAttach, setFAttach] = useState("");
   const [fPersonal, setFPersonal] = useState("");
   const [fMonth, setFMonth] = useState("");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["purchase_invoices"],
