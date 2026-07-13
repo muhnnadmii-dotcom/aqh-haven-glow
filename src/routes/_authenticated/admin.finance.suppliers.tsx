@@ -132,7 +132,9 @@ function SupplierDialog({ row, onClose, onSaved }: any) {
     supplier_type: row?.supplier_type ?? "",
     notes: row?.notes ?? "",
     is_active: row?.is_active ?? true,
+    is_vat_registered: row?.is_vat_registered ?? false,
   });
+
   const [saving, setSaving] = useState(false);
   const save = async () => {
     setSaving(true);
