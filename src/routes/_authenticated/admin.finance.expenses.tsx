@@ -39,23 +39,30 @@ function ExpensesPage() {
   const [unclassifiedCount, setUnclassifiedCount] = useState(0);
   const [deletedCount, setDeletedCount] = useState(0);
 
-  const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
-  const [fMonth, setFMonth] = useState("");
-  const [fSup, setFSup] = useState("");
-  const [fMain, setFMain] = useState("");
-  const [fSub, setFSub] = useState("");
-  const [fAccount, setFAccount] = useState("");
-  const [fInternal, setFInternal] = useState("");
-  const [fAcct, setFAcct] = useState("");
-  const [fAtt, setFAtt] = useState("");
-  const [fTxnType, setFTxnType] = useState("");
-  const [fAccStatus, setFAccStatus] = useState("");
+  const [q, setQ] = useState(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get("q") ?? "";
+    }
+    return "";
+  });
+  const [debouncedQ, setDebouncedQ] = useUrlState("q", "", { debounceMs: 400 });
+  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fSup, setFSup] = useUrlState("sup", "");
+  const [fMain, setFMain] = useUrlState("main", "");
+  const [fSub, setFSub] = useUrlState("sub", "");
+  const [fAccount, setFAccount] = useUrlState("acc", "");
+  const [fInternal, setFInternal] = useUrlState("internal", "");
+  const [fAcct, setFAcct] = useUrlState("acct", "");
+  const [fAtt, setFAtt] = useUrlState("att", "");
+  const [fTxnType, setFTxnType] = useUrlState("txn", "");
+  const [fAccStatus, setFAccStatus] = useUrlState("astatus", "");
+  const initialPage = useInitialUrlPage();
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, setDebouncedQ]);
 
   useEffect(() => {
     (async () => {
