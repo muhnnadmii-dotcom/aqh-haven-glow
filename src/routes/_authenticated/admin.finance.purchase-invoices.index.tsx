@@ -14,6 +14,7 @@ import {
   PURCHASE_PAY_LABEL,
   VAT_DEDUCTIBILITY_LABEL,
   ATTACHMENT_LABEL,
+  NON_DEDUCTIBLE_REASON_LABEL,
   SAR,
 } from "@/lib/finance/purchase-constants";
 
