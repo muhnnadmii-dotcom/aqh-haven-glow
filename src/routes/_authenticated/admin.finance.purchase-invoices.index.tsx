@@ -96,6 +96,8 @@ function PurchaseInvoicesList() {
     onError: (e: any) => toast.error("تعذر إنشاء الفاتورة: " + e.message),
   });
 
+  const attStatusOf = (r: any) => (hasAttachment(r.id) ? "attached" : "not_attached");
+
   const filtered = useMemo(() => {
     return invoices.filter((r) => {
       if (fStatus && r.status !== fStatus) return false;
@@ -106,16 +108,7 @@ function PurchaseInvoicesList() {
       if (fPersonal === "yes" && !r.paid_from_personal_account) return false;
       if (fPersonal === "no" && r.paid_from_personal_account) return false;
       if (fMonth && !(r.issue_date ?? "").startsWith(fMonth)) return false;
-      if (fAttach) {
-        const status = !r.attachment_required
-          ? "not_required"
-          : r.attachment_exception_reason
-          ? "not_required"
-          : hasAttachment(r.id)
-          ? "attached"
-          : "not_attached";
-        if (status !== fAttach) return false;
-      }
+      if (fAttach && attStatusOf(r) !== fAttach) return false;
       if (q) {
         const s = q.toLowerCase();
         const hay = `${r.internal_reference} ${r.supplier_invoice_number ?? ""} ${supName(r.supplier_id)} ${r.notes ?? ""}`.toLowerCase();
@@ -124,6 +117,7 @@ function PurchaseInvoicesList() {
       return true;
     });
   }, [invoices, fStatus, fPay, fType, fVat, fSupplier, fPersonal, fMonth, fAttach, q, attachments]);
+
 
   const kpis = useMemo(() => {
     const total = filtered.reduce((s, r) => s + Number(r.total_amount || 0), 0);
