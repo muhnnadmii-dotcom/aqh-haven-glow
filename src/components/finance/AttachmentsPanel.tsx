@@ -11,7 +11,9 @@ const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.csv";
 export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote" | "purchase_invoice";
 const isBigintRelated = (t: FinanceAttachRelatedType) => t === "purchase_invoice";
 
-export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relatedType: FinanceAttachRelatedType; relatedId: string; canManage: boolean }) {
+export type LinkedRef = { relatedType: FinanceAttachRelatedType; relatedId: string };
+
+export function AttachmentsPanel({ relatedType, relatedId, canManage, linkedRefs = [] }: { relatedType: FinanceAttachRelatedType; relatedId: string; canManage: boolean; linkedRefs?: LinkedRef[] }) {
   const [rows, setRows] = useState<Att[]>([]);
   const [uploading, setUploading] = useState(false);
   const [type, setType] = useState(ATTACHMENT_TYPES[0]);
@@ -38,13 +40,23 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage }: { relate
     load();
   };
 
+  const linkedKey = linkedRefs.map((r) => `${r.relatedType}:${r.relatedId}`).sort().join("|");
   const load = async () => {
-    const col = isBigintRelated(relatedType) ? "related_bigint_id" : "related_id";
-    const val: any = isBigintRelated(relatedType) ? Number(relatedId) : relatedId;
-    const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", relatedType).eq(col, val).order("created_at", { ascending: false });
-    setRows((data as any) ?? []);
+    const refs: LinkedRef[] = [{ relatedType, relatedId }, ...linkedRefs.filter((r) => r.relatedId)];
+    const results = await Promise.all(refs.map(async (r) => {
+      const col = isBigintRelated(r.relatedType) ? "related_bigint_id" : "related_id";
+      const val: any = isBigintRelated(r.relatedType) ? Number(r.relatedId) : r.relatedId;
+      const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", r.relatedType).eq(col, val).order("created_at", { ascending: false });
+      return (data as any[]) ?? [];
+    }));
+    // Dedup by id
+    const seen = new Set<string>();
+    const merged: Att[] = [];
+    for (const arr of results) for (const a of arr) if (!seen.has(a.id)) { seen.add(a.id); merged.push(a); }
+    merged.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+    setRows(merged);
   };
-  useEffect(() => { load(); }, [relatedType, relatedId]);
+  useEffect(() => { load(); }, [relatedType, relatedId, linkedKey]);
 
   const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);

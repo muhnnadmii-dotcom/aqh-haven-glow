@@ -124,8 +124,8 @@ function PurchaseInvoiceEditor() {
         deductible_percentage: header.vat_deductibility === "partially_deductible" ? Number(header.deductible_percentage || 0) : 100,
         non_deductible_reason: header.vat_deductibility === "non_deductible" ? header.non_deductible_reason : null,
         reviewer_note: header.reviewer_note || null,
-        attachment_required: !!header.attachment_required,
-        attachment_exception_reason: header.attachment_exception_reason || null,
+        attachment_required: false,
+        attachment_exception_reason: null,
         paid_from_personal_account: !!header.paid_from_personal_account,
         duplicate_override_reason: header.duplicate_override_reason || null,
         notes: header.notes || null,
@@ -320,17 +320,7 @@ function PurchaseInvoiceEditor() {
             نعم — مدفوعة من حساب المالك الشخصي للنشاط
           </label>
         </Field>
-        <Field label="مرفق مطلوب">
-          <label className="inline-flex items-center gap-2 text-sm bg-black/40 border border-white/10 rounded-md px-2 py-1.5 cursor-pointer">
-            <input type="checkbox" checked={!!header.attachment_required} disabled={!canEdit} onChange={(e) => setHeader({ ...header, attachment_required: e.target.checked })} />
-            المرفق إلزامي
-          </label>
-        </Field>
-        {header.attachment_required && (
-          <Field label="سبب استثناء المرفق (إن وجد)">
-            <Input value={header.attachment_exception_reason ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, attachment_exception_reason: e.target.value })} className="bg-black/40 border-white/10" />
-          </Field>
-        )}
+        {/* المرفقات اختيارية — لا يوجد إلزام برفع ملف */}
 
         <Field label="سبب تجاوز تكرار الرقم (للمدير)">
           <Input value={header.duplicate_override_reason ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, duplicate_override_reason: e.target.value })} className="bg-black/40 border-white/10" placeholder="اختياري — يستخدم عند تكرار رقم فاتورة المورد" />
@@ -519,7 +509,7 @@ function PurchaseInvoiceEditor() {
       </div>
 
       {/* Attachments */}
-      <AttachmentsPanel relatedType="purchase_invoice" relatedId={String(invoiceId)} canManage={canEdit} />
+      <AttachmentsPanel relatedType="purchase_invoice" relatedId={String(invoiceId)} canManage={canEdit} linkedRefs={linkedPayments.map((p: any) => ({ relatedType: "expense" as const, relatedId: String(p.id) }))} />
 
       {/* Credit & Debit Notes */}
       {!canEdit && header.status !== "cancelled" && (

@@ -540,7 +540,7 @@ function ExpenseDialog({ row, initial, suppliers, mains, subs, roles, ownerDrawC
               <div className="mt-3"><PendingAttachmentsPicker items={pending} setItems={setPending} /></div>
             )}
             {!isNew && (
-              <div className="mt-3"><AttachmentsPanel relatedType="expense" relatedId={row.id} canManage={roles.canManage} /></div>
+              <div className="mt-3"><AttachmentsPanel relatedType="expense" relatedId={row.id} canManage={roles.canManage} linkedRefs={row.purchase_invoice_id ? [{ relatedType: "purchase_invoice", relatedId: String(row.purchase_invoice_id) }] : []} /></div>
             )}
           </SectionCard>
 
