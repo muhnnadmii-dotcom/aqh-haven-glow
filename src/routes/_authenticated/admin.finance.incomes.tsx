@@ -571,7 +571,10 @@ function LinkedSettlementsDialog({ income, settlements, allocs, providers, onClo
               <div key={s.id} className="rounded-lg border border-white/10 bg-white/5 p-3 text-[12px] space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-gold">{providerAr(p?.provider_code)}</span>
-                  <span className="font-mono text-[11px] text-muted-foreground">#{s.settlement_reference ?? s.id.slice(0, 8)}</span>
+                  <button onClick={() => onOpen(s.id)} className="font-mono text-[11px] text-sky-300 hover:underline inline-flex items-center gap-1">
+                    #{s.settlement_reference ?? s.id.slice(0, 8)}
+                    <ExternalLink size={10} />
+                  </button>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 text-[11px]">
                   <div>الصافي المتوقع: <span className="font-mono">{fmtSAR(s.expected_net_amount)}</span></div>
@@ -579,7 +582,7 @@ function LinkedSettlementsDialog({ income, settlements, allocs, providers, onClo
                   <div>حالة التسوية: {s.status ?? "—"}</div>
                   <div>التاريخ: {s.settlement_date ?? "—"}</div>
                 </div>
-                <button onClick={() => onOpen(income.id)} className="text-[11px] text-sky-300 hover:underline inline-flex items-center gap-1"><ExternalLink size={11} /> فتح مركز المطابقة</button>
+                <button onClick={() => onOpen(s.id)} className="text-[11px] text-sky-300 hover:underline inline-flex items-center gap-1"><ExternalLink size={11} /> عرض حركات التسوية</button>
               </div>
             );
           })}
