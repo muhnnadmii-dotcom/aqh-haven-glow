@@ -1,0 +1,1 @@
+ALTER TABLE public.finance_suppliers ADD COLUMN IF NOT EXISTS is_vat_registered boolean NOT NULL DEFAULT false;

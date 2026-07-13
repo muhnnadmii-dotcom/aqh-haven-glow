@@ -73,6 +73,7 @@ function SuppliersPage() {
               <th className="text-start px-3 py-2">الشركة</th>
               <th className="text-start px-3 py-2">الجوال</th>
               <th className="text-start px-3 py-2">النوع</th>
+              <th className="text-start px-3 py-2">مسجل ضريبيًا</th>
               <th className="text-start px-3 py-2">عدد العمليات</th>
               <th className="text-start px-3 py-2">إجمالي المصروفات</th>
               <th className="text-start px-3 py-2">نشط</th>
@@ -86,6 +87,11 @@ function SuppliersPage() {
                 <td className="px-3 py-2">{r.company_name || "—"}</td>
                 <td className="px-3 py-2">{r.phone || "—"}</td>
                 <td className="px-3 py-2">{r.supplier_type || "—"}</td>
+                <td className="px-3 py-2">
+                  {r.is_vat_registered
+                    ? <span className="text-emerald-300 text-[11px]">نعم — يصدر فاتورة ضريبية</span>
+                    : <span className="text-muted-foreground text-[11px]">لا</span>}
+                </td>
                 <td className="px-3 py-2">{totals[r.id]?.count ?? 0}</td>
                 <td className="px-3 py-2 font-mono">{fmtSAR(totals[r.id]?.total ?? 0)}</td>
                 <td className="px-3 py-2">{r.is_active ? "نعم" : "لا"}</td>
@@ -100,7 +106,8 @@ function SuppliersPage() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">لا يوجد موردين</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={9} className="text-center py-8 text-muted-foreground">لا يوجد موردين</td></tr>}
+
           </tbody>
         </table>
       </div>
@@ -125,7 +132,9 @@ function SupplierDialog({ row, onClose, onSaved }: any) {
     supplier_type: row?.supplier_type ?? "",
     notes: row?.notes ?? "",
     is_active: row?.is_active ?? true,
+    is_vat_registered: row?.is_vat_registered ?? false,
   });
+
   const [saving, setSaving] = useState(false);
   const save = async () => {
     setSaving(true);
@@ -164,6 +173,14 @@ function SupplierDialog({ row, onClose, onSaved }: any) {
           <label className="col-span-2 inline-flex items-center gap-2 text-[12px]">
             <input type="checkbox" checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} /> نشط
           </label>
+          <label className="col-span-2 inline-flex items-start gap-2 text-[12px] rounded bg-white/5 border border-white/10 p-2">
+            <input type="checkbox" className="mt-0.5" checked={f.is_vat_registered} onChange={(e) => setF({ ...f, is_vat_registered: e.target.checked })} />
+            <div>
+              <div>مسجل في ضريبة القيمة المضافة (يصدر فاتورة ضريبية)</div>
+              <div className="text-[10.5px] text-muted-foreground mt-0.5">اتركها فارغة لموردي الخدمات/الفريلانسر — سيتم اعتبار مشترياتهم "غير قابلة للخصم" تلقائيًا في فواتير المشتريات.</div>
+            </div>
+          </label>
+
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-white/10">
           <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] bg-white/5 hover:bg-white/10">إلغاء</button>

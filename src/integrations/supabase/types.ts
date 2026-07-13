@@ -2105,6 +2105,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_vat_registered: boolean
           name: string
           notes: string | null
           phone: string | null
@@ -2120,6 +2121,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_vat_registered?: boolean
           name: string
           notes?: string | null
           phone?: string | null
@@ -2135,6 +2137,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_vat_registered?: boolean
           name?: string
           notes?: string | null
           phone?: string | null

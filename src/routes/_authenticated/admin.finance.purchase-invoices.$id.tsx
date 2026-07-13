@@ -87,9 +87,12 @@ function PurchaseInvoiceEditor() {
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["finance_suppliers_min"],
-    queryFn: async () => (await supabase.from("finance_suppliers").select("id, name").eq("is_active", true).order("name")).data as any[],
+    queryKey: ["finance_suppliers_min_vat"],
+    queryFn: async () => (await supabase.from("finance_suppliers").select("id, name, is_vat_registered").eq("is_active", true).order("name")).data as any[],
   });
+  const selectedSupplier = suppliers.find((s: any) => s.id === header?.supplier_id);
+  const supplierIsVat = selectedSupplier?.is_vat_registered ?? true;
+
 
   const { data: categories = [] } = useQuery({
     queryKey: ["finance_categories_min"],
@@ -272,11 +275,38 @@ function PurchaseInvoiceEditor() {
       {/* Header form */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 rounded-xl bg-white/5 border border-white/10 p-4">
         <Field label="المورد">
-          <select value={header.supplier_id ?? ""} onChange={(e) => setHeader({ ...header, supplier_id: e.target.value || null })} disabled={!canEdit} className="w-full bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm">
+          <select
+            value={header.supplier_id ?? ""}
+            onChange={(e) => {
+              const newId = e.target.value || null;
+              const sup = suppliers.find((s: any) => s.id === newId);
+              const nextHeader: any = { ...header, supplier_id: newId };
+              if (sup && sup.is_vat_registered === false) {
+                nextHeader.vat_deductibility = "non_deductible";
+                if (!header.non_deductible_reason) nextHeader.non_deductible_reason = "missing_tax_invoice";
+              }
+              setHeader(nextHeader);
+              // Cascade to draft (unsaved) lines: default to out_of_scope for non-VAT suppliers
+              if (sup && sup.is_vat_registered === false) {
+                setRows((rs) => rs.map((x) => (!x.id ? { ...x, tax_code: "out_of_scope" } : x)));
+              }
+            }}
+            disabled={!canEdit}
+            className="w-full bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm"
+          >
             <option value="">— بدون مورد —</option>
-            {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {suppliers.map((s: any) => (
+              <option key={s.id} value={s.id}>{s.name}{s.is_vat_registered ? "" : " — بدون ضريبة"}</option>
+            ))}
           </select>
+          {header.supplier_id && !supplierIsVat && (
+            <div className="text-[10.5px] text-amber-300 mt-1 flex items-start gap-1">
+              <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+              هذا المورد غير مسجل ضريبيًا — تم تحديد الفاتورة تلقائيًا كـ "غير قابلة للخصم" والبنود الجديدة "خارج النطاق". يمكنك التعديل يدويًا عند رفع فاتورة ضريبية.
+            </div>
+          )}
         </Field>
+
         <Field label="رقم فاتورة المورد">
           <Input value={header.supplier_invoice_number ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, supplier_invoice_number: e.target.value })} className="bg-black/40 border-white/10" />
         </Field>
@@ -387,7 +417,7 @@ function PurchaseInvoiceEditor() {
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold">البنود</h3>
           {canEdit && (
-            <Button size="sm" variant="outline" onClick={() => setRows((rs) => [...rs, { description: "", quantity: 1, unit_price: 0, discount_amount: 0, tax_code: "standard_15", sort_order: rs.length }])}>
+            <Button size="sm" variant="outline" onClick={() => setRows((rs) => [...rs, { description: "", quantity: 1, unit_price: 0, discount_amount: 0, tax_code: supplierIsVat ? "standard_15" : "out_of_scope", sort_order: rs.length }])}>
               <Plus className="w-4 h-4 ml-1" />إضافة بند
             </Button>
           )}
