@@ -94,7 +94,8 @@ function SalesInvoicesList() {
     return { rows: (data as any[]) ?? [], total: count ?? 0 };
   }, [debouncedQ, fStatus, fPay, fMonth, fLinked]);
 
-  const pg = usePaginatedQuery(fetcher, [debouncedQ, fStatus, fPay, fMonth, fLinked]);
+  const pg = usePaginatedQuery(fetcher, [debouncedQ, fStatus, fPay, fMonth, fLinked], undefined, initialPage);
+  useSyncPageToUrl(pg.page);
   useEffect(() => { if (pg.error) toast.error(pg.error); }, [pg.error]);
 
   const customerIds = useMemo(() => Array.from(new Set(pg.rows.map((r) => r.customer_id).filter(Boolean))), [pg.rows]);
