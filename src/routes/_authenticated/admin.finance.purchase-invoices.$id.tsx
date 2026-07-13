@@ -519,7 +519,7 @@ function PurchaseInvoiceEditor() {
       </div>
 
       {/* Attachments */}
-      <AttachmentsPanel relatedType="purchase_invoice" relatedId={String(invoiceId)} canManage={canEdit} />
+      <AttachmentsPanel relatedType="purchase_invoice" relatedId={String(invoiceId)} canManage={canEdit} linkedRefs={linkedPayments.map((p: any) => ({ relatedType: "expense" as const, relatedId: String(p.id) }))} />
 
       {/* Credit & Debit Notes */}
       {!canEdit && header.status !== "cancelled" && (
