@@ -114,6 +114,10 @@ function PurchaseInvoiceEditor() {
   const canEdit = header?.status === "draft" || header?.status === "under_review" || header?.status === "rejected";
   const isRejected = header?.status === "rejected";
 
+  const NON_STD_CODES = new Set(["out_of_scope", "zero_rated", "exempt"]);
+  const allLinesNonStandard = (items?.length ?? 0) > 0 && (items as any[]).every((it: any) => NON_STD_CODES.has(it.tax_code));
+  const isNonTaxable = supplierIsVat === false || allLinesNonStandard;
+
   const saveHeader = useMutation({
     mutationFn: async () => {
       const payload: any = {
