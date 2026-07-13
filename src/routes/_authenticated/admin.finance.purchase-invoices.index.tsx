@@ -180,6 +180,83 @@ function PurchaseInvoicesList() {
         <Input type="month" value={fMonth} onChange={(e) => setFMonth(e.target.value)} className="bg-black/40 border-white/10 text-sm" />
       </div>
 
+      {/* Bulk actions bar */}
+      {selected.size > 0 && (
+        <div className="rounded-xl border border-gold/30 bg-gold/10 p-3 flex flex-wrap items-center gap-2 text-[12px]">
+          <span className="font-semibold text-gold">تم تحديد {selected.size} فاتورة</span>
+          <span className="mx-1 text-muted-foreground">—</span>
+          <BulkSel
+            placeholder="تغيير الحالة"
+            disabled={bulkBusy}
+            onPick={async (v) => {
+              if (!v) return;
+              setBulkBusy(true);
+              const ids = Array.from(selected);
+              const { error } = await supabase.from("purchase_invoices" as any).update({ status: v } as any).in("id", ids);
+              setBulkBusy(false);
+              if (error) return toast.error(error.message);
+              toast.success(`تم تحديث ${ids.length} فاتورة`);
+              setSelected(new Set());
+              qc.invalidateQueries({ queryKey: ["purchase_invoices"] });
+            }}
+          >
+            {Object.entries(PURCHASE_STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </BulkSel>
+          <BulkSel
+            placeholder="تغيير قابلية الخصم"
+            disabled={bulkBusy}
+            onPick={async (v) => {
+              if (!v) return;
+              setBulkBusy(true);
+              const ids = Array.from(selected);
+              const { error } = await supabase.from("purchase_invoices" as any).update({ vat_deductibility: v } as any).in("id", ids);
+              setBulkBusy(false);
+              if (error) return toast.error(error.message);
+              toast.success("تم التحديث");
+              setSelected(new Set());
+              qc.invalidateQueries({ queryKey: ["purchase_invoices"] });
+            }}
+          >
+            {Object.entries(VAT_DEDUCTIBILITY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </BulkSel>
+          <BulkSel
+            placeholder="تغيير المورد"
+            disabled={bulkBusy}
+            onPick={async (v) => {
+              if (!v) return;
+              setBulkBusy(true);
+              const ids = Array.from(selected);
+              const { error } = await supabase.from("purchase_invoices" as any).update({ supplier_id: v } as any).in("id", ids);
+              setBulkBusy(false);
+              if (error) return toast.error(error.message);
+              toast.success("تم التحديث");
+              setSelected(new Set());
+              qc.invalidateQueries({ queryKey: ["purchase_invoices"] });
+            }}
+          >
+            {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </BulkSel>
+          <button
+            disabled={bulkBusy}
+            onClick={async () => {
+              const ids = Array.from(selected);
+              const targets = invoices.filter((r) => ids.includes(r.id) && (r.status === "draft" || r.status === "rejected"));
+              if (targets.length === 0) return toast.error("لا يمكن الحذف إلا للمسودات والمرفوضة");
+              if (!confirm(`حذف ${targets.length} فاتورة نهائيًا؟`)) return;
+              setBulkBusy(true);
+              const { error } = await supabase.from("purchase_invoices" as any).delete().in("id", targets.map((t) => t.id));
+              setBulkBusy(false);
+              if (error) return toast.error(error.message);
+              toast.success("تم الحذف");
+              setSelected(new Set());
+              qc.invalidateQueries({ queryKey: ["purchase_invoices"] });
+            }}
+            className="px-3 py-1.5 rounded-md bg-red-500/15 border border-red-500/30 text-red-300 hover:bg-red-500/25 text-[12px]"
+          >حذف المحدد (مسودة/مرفوضة)</button>
+          <button onClick={() => setSelected(new Set())} className="ms-auto p-1.5 rounded hover:bg-white/10" title="إلغاء التحديد"><X size={14} /></button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5">
         {isLoading ? (
@@ -193,6 +270,18 @@ function PurchaseInvoicesList() {
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr>
+                <th className="p-2 w-8">
+                  <input
+                    type="checkbox"
+                    checked={filtered.length > 0 && filtered.every((r) => selected.has(r.id))}
+                    onChange={(e) => {
+                      const next = new Set(selected);
+                      if (e.target.checked) filtered.forEach((r) => next.add(r.id));
+                      else filtered.forEach((r) => next.delete(r.id));
+                      setSelected(next);
+                    }}
+                  />
+                </th>
                 <th className="text-right p-2">المرجع الداخلي</th>
                 <th className="text-right p-2">رقم فاتورة المورد</th>
                 <th className="text-right p-2">المورد</th>
@@ -212,15 +301,21 @@ function PurchaseInvoicesList() {
             </thead>
             <tbody>
               {filtered.map((r) => {
-                const attStatus = !r.attachment_required
-                  ? "not_required"
-                  : r.attachment_exception_reason
-                  ? "not_required"
-                  : hasAttachment(r.id)
-                  ? "attached"
-                  : "not_attached";
+                const attStatus = attStatusOf(r);
+                const isSel = selected.has(r.id);
                 return (
-                  <tr key={r.id} className="border-t border-white/5 hover:bg-white/5 cursor-pointer" onClick={() => navigate({ to: "/admin/finance/purchase-invoices/$id", params: { id: String(r.id) } })}>
+                  <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 cursor-pointer ${isSel ? "bg-gold/5" : ""}`} onClick={() => navigate({ to: "/admin/finance/purchase-invoices/$id", params: { id: String(r.id) } })}>
+                    <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSel}
+                        onChange={(e) => {
+                          const next = new Set(selected);
+                          if (e.target.checked) next.add(r.id); else next.delete(r.id);
+                          setSelected(next);
+                        }}
+                      />
+                    </td>
                     <td className="p-2 font-mono text-xs">{r.internal_reference}</td>
                     <td className="p-2">{r.supplier_invoice_number ?? "—"}</td>
                     <td className="p-2">
@@ -236,13 +331,14 @@ function PurchaseInvoicesList() {
                     <td className="p-2 font-semibold">{SAR(r.total_amount)}</td>
                     <td className="p-2 text-emerald-300">{SAR(r.paid_amount)}</td>
                     <td className="p-2 text-amber-300">{SAR(r.remaining_amount)}</td>
-                    <td className="p-2 text-xs">{ATTACHMENT_LABEL[attStatus]}</td>
+                    <td className={`p-2 text-xs ${attStatus === "attached" ? "text-emerald-300" : "text-amber-300"}`}>{ATTACHMENT_LABEL[attStatus]}</td>
                     <td className="p-2"><Badge variant="outline" className={PURCHASE_STATUS_CLASS[r.status] ?? ""}>{PURCHASE_STATUS_LABEL[r.status] ?? r.status}</Badge></td>
                     <td className="p-2 text-xs">{PURCHASE_PAY_LABEL[r.payment_status] ?? r.payment_status}</td>
                   </tr>
                 );
               })}
             </tbody>
+
           </table>
         )}
       </div>
