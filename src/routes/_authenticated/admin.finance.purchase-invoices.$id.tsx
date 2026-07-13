@@ -417,7 +417,7 @@ function PurchaseInvoiceEditor() {
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold">البنود</h3>
           {canEdit && (
-            <Button size="sm" variant="outline" onClick={() => setRows((rs) => [...rs, { description: "", quantity: 1, unit_price: 0, discount_amount: 0, tax_code: "standard_15", sort_order: rs.length }])}>
+            <Button size="sm" variant="outline" onClick={() => setRows((rs) => [...rs, { description: "", quantity: 1, unit_price: 0, discount_amount: 0, tax_code: supplierIsVat ? "standard_15" : "out_of_scope", sort_order: rs.length }])}>
               <Plus className="w-4 h-4 ml-1" />إضافة بند
             </Button>
           )}
