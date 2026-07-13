@@ -116,7 +116,8 @@ function ExpensesPage() {
     return { rows: (data as any[]) ?? [], total: count ?? 0 };
   }, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus]);
 
-  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus]);
+  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus], undefined, initialPage);
+  useSyncPageToUrl(pg.page);
   const [rows, setLocalRows] = useState<any[]>([]);
   useEffect(() => { setLocalRows(pg.rows); }, [pg.rows]);
   const setRows = (updater: (prev: any[]) => any[]) => setLocalRows((p) => updater(p));
