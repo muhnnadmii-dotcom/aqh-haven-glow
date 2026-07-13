@@ -171,8 +171,8 @@ function PurchaseInvoicesList() {
         <Sel value={fAttach} onChange={setFAttach} placeholder="المرفق">
           <option value="attached">مرفق</option>
           <option value="not_attached">غير مرفق</option>
-          <option value="not_required">مستثنى</option>
         </Sel>
+
         <Sel value={fPersonal} onChange={setFPersonal} placeholder="من حساب شخصي">
           <option value="yes">نعم</option>
           <option value="no">لا</option>
