@@ -528,7 +528,7 @@ function IncomesPage() {
           allocs={linkedDialog.allocs}
           providers={providers}
           onClose={() => setLinkedDialog(null)}
-          onOpen={(id: string) => { setLinkedDialog(null); openReconciliation(id); }}
+          onOpen={(settlementId: string) => { setLinkedDialog(null); navigate({ to: "/admin/finance/settlement-lines", search: { settlement: settlementId } }); }}
         />
       )}
     </div>
