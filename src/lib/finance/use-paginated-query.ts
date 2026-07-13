@@ -16,8 +16,9 @@ export function usePaginatedQuery<T>(
   fetcher: (args: { page: number; pageSize: PageSize; signal: AbortSignal }) => Promise<FetchResult<T>>,
   deps: any[],
   initialPageSize: PageSize = DEFAULT_PAGE_SIZE,
+  initialPage: number = 1,
 ) {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState<PageSize>(initialPageSize);
   const [rows, setRows] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
