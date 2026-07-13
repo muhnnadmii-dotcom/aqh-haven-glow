@@ -484,12 +484,17 @@ function PurchaseInvoiceEditor() {
         <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-2 text-sm">
           <TotalCell label="قبل الخصم" value={SAR(header.subtotal)} />
           <TotalCell label="الخصم" value={SAR(header.discount_amount)} />
-          <TotalCell label="القاعدة الضريبية" value={SAR(header.taxable_amount)} />
-          <TotalCell label="الضريبة" value={SAR(header.vat_amount)} />
-          <TotalCell label="القابل للخصم" value={SAR(header.deductible_vat_amount)} tone="blue" />
+          {!isNonTaxable && <TotalCell label="القاعدة الضريبية" value={SAR(header.taxable_amount)} />}
+          {!isNonTaxable && <TotalCell label="الضريبة" value={SAR(header.vat_amount)} />}
+          {!isNonTaxable && <TotalCell label="القابل للخصم" value={SAR(header.deductible_vat_amount)} tone="blue" />}
           <TotalCell label="الإجمالي" value={SAR(header.total_amount)} highlight />
         </div>
-        {Number(header.non_deductible_vat_amount || 0) > 0 && (
+        {isNonTaxable && (
+          <div className="mt-2">
+            <Badge variant="outline" className="bg-muted/20 text-muted-foreground border-muted-foreground/30">غير خاضعة للضريبة</Badge>
+          </div>
+        )}
+        {!isNonTaxable && Number(header.non_deductible_vat_amount || 0) > 0 && (
           <div className="mt-2 text-xs text-amber-300 flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" />
             ضريبة غير قابلة للخصم: {SAR(header.non_deductible_vat_amount)}
