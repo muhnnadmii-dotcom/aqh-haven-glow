@@ -463,9 +463,13 @@ function PurchaseInvoiceEditor() {
                     <td className="p-1"><Input type="number" step="0.01" value={r.unit_price} disabled={!canEdit} onChange={(e) => setRows((rs) => rs.map((x, j) => j === i ? { ...x, unit_price: Number(e.target.value) } : x))} className="bg-black/40 border-white/10 h-8" /></td>
                     <td className="p-1"><Input type="number" step="0.01" value={r.discount_amount} disabled={!canEdit} onChange={(e) => setRows((rs) => rs.map((x, j) => j === i ? { ...x, discount_amount: Number(e.target.value) } : x))} className="bg-black/40 border-white/10 h-8" /></td>
                     <td className="p-1">
-                      <select value={r.tax_code} disabled={!canEdit} onChange={(e) => setRows((rs) => rs.map((x, j) => j === i ? { ...x, tax_code: e.target.value } : x))} className="w-full bg-black/40 border border-white/10 rounded-md px-1 py-1 text-xs h-8">
-                        {Object.entries(TAX_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
+                      {supplierIsVat ? (
+                        <select value={r.tax_code} disabled={!canEdit} onChange={(e) => setRows((rs) => rs.map((x, j) => j === i ? { ...x, tax_code: e.target.value } : x))} className="w-full bg-black/40 border border-white/10 rounded-md px-1 py-1 text-xs h-8">
+                          {Object.entries(TAX_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
+                      ) : (
+                        <div className="text-[10.5px] text-muted-foreground px-1 py-1 h-8 flex items-center">مورد غير مسجل بالضريبة</div>
+                      )}
                     </td>
                     <td className="p-1 text-muted-foreground">{SAR(sub)}</td>
                     <td className="p-1 font-semibold">{SAR(sub + tax)}</td>
