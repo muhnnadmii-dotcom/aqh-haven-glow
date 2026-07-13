@@ -73,6 +73,7 @@ function SuppliersPage() {
               <th className="text-start px-3 py-2">الشركة</th>
               <th className="text-start px-3 py-2">الجوال</th>
               <th className="text-start px-3 py-2">النوع</th>
+              <th className="text-start px-3 py-2">مسجل ضريبيًا</th>
               <th className="text-start px-3 py-2">عدد العمليات</th>
               <th className="text-start px-3 py-2">إجمالي المصروفات</th>
               <th className="text-start px-3 py-2">نشط</th>
@@ -86,6 +87,11 @@ function SuppliersPage() {
                 <td className="px-3 py-2">{r.company_name || "—"}</td>
                 <td className="px-3 py-2">{r.phone || "—"}</td>
                 <td className="px-3 py-2">{r.supplier_type || "—"}</td>
+                <td className="px-3 py-2">
+                  {r.is_vat_registered
+                    ? <span className="text-emerald-300 text-[11px]">نعم — يصدر فاتورة ضريبية</span>
+                    : <span className="text-muted-foreground text-[11px]">لا</span>}
+                </td>
                 <td className="px-3 py-2">{totals[r.id]?.count ?? 0}</td>
                 <td className="px-3 py-2 font-mono">{fmtSAR(totals[r.id]?.total ?? 0)}</td>
                 <td className="px-3 py-2">{r.is_active ? "نعم" : "لا"}</td>
@@ -100,7 +106,8 @@ function SuppliersPage() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">لا يوجد موردين</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={9} className="text-center py-8 text-muted-foreground">لا يوجد موردين</td></tr>}
+
           </tbody>
         </table>
       </div>
