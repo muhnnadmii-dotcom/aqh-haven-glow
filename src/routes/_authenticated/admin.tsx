@@ -211,7 +211,7 @@ function AdminLayout() {
 
         {/* Main content */}
         <main className="flex-1 lg:mr-64 min-w-0">
-          <div className="px-4 sm:px-6 lg:px-8 py-5 lg:py-8 max-w-6xl mx-auto">
+          <div className={`px-4 md:px-6 lg:px-8 py-5 lg:py-8 ${pathname.startsWith("/admin/finance") ? "w-full" : "max-w-6xl mx-auto"}`}>
             <AdminMfaGate isAdmin={(Route.useRouteContext() as any).isAdmin ?? false}>
               <RouteAccessGate pathname={pathname}>
                 <Outlet />

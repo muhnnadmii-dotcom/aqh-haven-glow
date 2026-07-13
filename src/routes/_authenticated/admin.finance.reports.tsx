@@ -171,7 +171,7 @@ function ReportsPage() {
 
         {reportKind === "cash" ? (
           <>
-            <table className="w-full text-[13px] mb-8">
+            <div className="overflow-x-auto"><table className="min-w-full text-[13px] mb-8">
               <tbody>
                 <TR label="إجمالي المقبوضات" v={totIncome} tone="text-emerald-300 print:text-black" bold />
                 <TR label="إجمالي المدفوعات" v={-totOp} tone="text-red-300 print:text-black" />
@@ -182,16 +182,16 @@ function ReportsPage() {
                 <TR label="سحوبات المالك" v={-totDraws} tone="text-gold print:text-black" />
                 <TR label="صافي التدفق بعد سحوبات المالك" v={netAfter} tone={netAfter >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
               </tbody>
-            </table>
+            </table></div>
 
             <div className="border-t border-white/10 print:border-gray-300 pt-4">
               <h2 className="text-lg font-semibold mb-3">المركز النقدي</h2>
-              <table className="w-full text-[13px]">
+              <div className="overflow-x-auto"><table className="min-w-full text-[13px]">
                 <tbody>
                   <TR label="رأس المال المستثمر حتى نهاية الشهر" v={invested} />
                   <TR label="الرصيد النقدي في نهاية الشهر" v={cashAtEnd} tone={cashAtEnd >= 0 ? "text-gold print:text-black" : "text-red-300 print:text-black"} bold />
                 </tbody>
-              </table>
+              </table></div>
             </div>
 
             <div className="mt-4 text-[11px] text-muted-foreground print:text-gray-600">
@@ -204,7 +204,7 @@ function ReportsPage() {
               <div className="text-[12px] text-muted-foreground">تعذر تحميل بيانات الأداء المحاسبي.</div>
             ) : (
               <>
-                <table className="w-full text-[13px] mb-6">
+                <div className="overflow-x-auto"><table className="min-w-full text-[13px] mb-6">
                   <tbody>
                     <TR label="المبيعات (قبل الضريبة)" v={Number(perf.gross_sales ?? 0)} tone="text-emerald-300 print:text-black" bold />
                     <TR label="تكلفة المبيعات (COGS)" v={-Number(perf.cogs ?? 0)} tone="text-red-300 print:text-black" muted={perf.cogs == null} />
@@ -214,11 +214,11 @@ function ReportsPage() {
                     <TR label="صافي الربح المحاسبي" v={Number(perf.net_profit ?? 0)}
                       tone={Number(perf.net_profit ?? 0) >= 0 ? "text-emerald-300 print:text-black" : "text-red-300 print:text-black"} bold divider />
                   </tbody>
-                </table>
+                </table></div>
 
                 <div className="border-t border-white/10 print:border-gray-300 pt-4">
                   <h2 className="text-lg font-semibold mb-3">ذمم وضرائب</h2>
-                  <table className="w-full text-[13px]">
+                  <div className="overflow-x-auto"><table className="min-w-full text-[13px]">
                     <tbody>
                       <TR label="ذمم مدينة (عملاء) — نهاية الفترة" v={Number(perf.ar_balance ?? 0)} />
                       <TR label="ذمم دائنة (موردون) — نهاية الفترة" v={Number(perf.ap_balance ?? 0)} />
@@ -226,7 +226,7 @@ function ReportsPage() {
                       <TR label="ضريبة المدخلات القابلة للخصم" v={Number(perf.deductible_input_vat ?? 0)} />
                       <TR label="صافي الضريبة المستحقة" v={Number(perf.net_vat ?? 0)} bold />
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
 
                 {perf.cogs == null && (

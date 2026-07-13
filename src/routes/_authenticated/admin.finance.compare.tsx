@@ -117,7 +117,7 @@ function ComparePage() {
 
       <div className="text-sm font-semibold text-gold/90 mt-2">مقارنة نقدية</div>
       <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        <table className="w-full text-[13px]">
+        <div className="overflow-x-auto"><table className="min-w-full text-[13px]">
           <thead className="bg-white/5 text-[11px] text-muted-foreground">
             <tr>
               <th className="text-right p-3">البند</th>
@@ -157,7 +157,7 @@ function ComparePage() {
               );
             })}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       <div className="text-sm font-semibold text-gold/90 mt-2">مقارنة محاسبية</div>
@@ -165,7 +165,7 @@ function ComparePage() {
         {!acctA || !acctB ? (
           <div className="p-4 text-xs text-muted-foreground">غير متاح — تعذر تحميل بيانات الأداء المحاسبي</div>
         ) : (
-          <table className="w-full text-[13px]">
+          <div className="overflow-x-auto"><table className="min-w-full text-[13px]">
             <thead className="bg-white/5 text-[11px] text-muted-foreground">
               <tr>
                 <th className="text-right p-3">البند</th>
@@ -210,7 +210,7 @@ function ComparePage() {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 
