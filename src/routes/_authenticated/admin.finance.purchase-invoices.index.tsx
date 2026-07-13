@@ -364,3 +364,18 @@ function Sel({ value, onChange, placeholder, children }: { value: string; onChan
     </select>
   );
 }
+
+function BulkSel({ placeholder, onPick, disabled, children }: { placeholder: string; onPick: (v: string) => void; disabled?: boolean; children: any }) {
+  return (
+    <select
+      disabled={disabled}
+      defaultValue=""
+      onChange={(e) => { const v = e.target.value; e.target.value = ""; if (v) onPick(v); }}
+      className="bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-[12px] disabled:opacity-50"
+    >
+      <option value="">{placeholder}</option>
+      {children}
+    </select>
+  );
+}
+
