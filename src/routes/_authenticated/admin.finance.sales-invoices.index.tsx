@@ -47,17 +47,25 @@ function monthOptions(): string[] {
 function SalesInvoicesList() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
-  const [fStatus, setFStatus] = useState("");
-  const [fPay, setFPay] = useState("");
-  const [fMonth, setFMonth] = useState("");
-  const [fLinked, setFLinked] = useState("");
+  const [q, setQ] = useState(() => {
+    // seed instant input from URL so back-nav restores it visibly
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get("q") ?? "";
+    }
+    return "";
+  });
+  const [debouncedQ, setDebouncedQ] = useUrlState("q", "", { debounceMs: 400 });
+  const [fStatus, setFStatus] = useUrlState("status", "");
+  const [fPay, setFPay] = useUrlState("pay", "");
+  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fLinked, setFLinked] = useUrlState("linked", "");
+  const initialPage = useInitialUrlPage();
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, setDebouncedQ]);
 
   const fetcher = useCallback(async ({ page, pageSize }: { page: number; pageSize: PageSize }) => {
     let query = supabase.from("sales_invoices").select(LIST_COLS, { count: "exact" })
