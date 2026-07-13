@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Plus, Loader2, ShoppingCart, User, X } from "lucide-react";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useUrlState } from "@/lib/finance/use-url-state";
 import {
   PURCHASE_TYPE_LABEL,
   PURCHASE_STATUS_LABEL,
