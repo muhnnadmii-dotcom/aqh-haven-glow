@@ -8,6 +8,7 @@ import { Plus, Search, Loader2, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
+import { useUrlState, useInitialUrlPage, useSyncPageToUrl } from "@/lib/finance/use-url-state";
 import { PaginationBar } from "@/components/finance/PaginationBar";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/sales-invoices/")({
