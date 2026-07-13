@@ -320,17 +320,7 @@ function PurchaseInvoiceEditor() {
             نعم — مدفوعة من حساب المالك الشخصي للنشاط
           </label>
         </Field>
-        <Field label="مرفق مطلوب">
-          <label className="inline-flex items-center gap-2 text-sm bg-black/40 border border-white/10 rounded-md px-2 py-1.5 cursor-pointer">
-            <input type="checkbox" checked={!!header.attachment_required} disabled={!canEdit} onChange={(e) => setHeader({ ...header, attachment_required: e.target.checked })} />
-            المرفق إلزامي
-          </label>
-        </Field>
-        {header.attachment_required && (
-          <Field label="سبب استثناء المرفق (إن وجد)">
-            <Input value={header.attachment_exception_reason ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, attachment_exception_reason: e.target.value })} className="bg-black/40 border-white/10" />
-          </Field>
-        )}
+        {/* المرفقات اختيارية — لا يوجد إلزام برفع ملف */}
 
         <Field label="سبب تجاوز تكرار الرقم (للمدير)">
           <Input value={header.duplicate_override_reason ?? ""} disabled={!canEdit} onChange={(e) => setHeader({ ...header, duplicate_override_reason: e.target.value })} className="bg-black/40 border-white/10" placeholder="اختياري — يستخدم عند تكرار رقم فاتورة المورد" />
