@@ -8,6 +8,7 @@ import { Plus, Search, Loader2, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
+import { useUrlState, useInitialUrlPage, useSyncPageToUrl } from "@/lib/finance/use-url-state";
 import { PaginationBar } from "@/components/finance/PaginationBar";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/sales-invoices/")({
@@ -46,17 +47,25 @@ function monthOptions(): string[] {
 function SalesInvoicesList() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
-  const [fStatus, setFStatus] = useState("");
-  const [fPay, setFPay] = useState("");
-  const [fMonth, setFMonth] = useState("");
-  const [fLinked, setFLinked] = useState("");
+  const [q, setQ] = useState(() => {
+    // seed instant input from URL so back-nav restores it visibly
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get("q") ?? "";
+    }
+    return "";
+  });
+  const [debouncedQ, setDebouncedQ] = useUrlState("q", "", { debounceMs: 400 });
+  const [fStatus, setFStatus] = useUrlState("status", "");
+  const [fPay, setFPay] = useUrlState("pay", "");
+  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fLinked, setFLinked] = useUrlState("linked", "");
+  const initialPage = useInitialUrlPage();
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, setDebouncedQ]);
 
   const fetcher = useCallback(async ({ page, pageSize }: { page: number; pageSize: PageSize }) => {
     let query = supabase.from("sales_invoices").select(LIST_COLS, { count: "exact" })
@@ -85,7 +94,8 @@ function SalesInvoicesList() {
     return { rows: (data as any[]) ?? [], total: count ?? 0 };
   }, [debouncedQ, fStatus, fPay, fMonth, fLinked]);
 
-  const pg = usePaginatedQuery(fetcher, [debouncedQ, fStatus, fPay, fMonth, fLinked]);
+  const pg = usePaginatedQuery(fetcher, [debouncedQ, fStatus, fPay, fMonth, fLinked], undefined, initialPage);
+  useSyncPageToUrl(pg.page);
   useEffect(() => { if (pg.error) toast.error(pg.error); }, [pg.error]);
 
   const customerIds = useMemo(() => Array.from(new Set(pg.rows.map((r) => r.customer_id).filter(Boolean))), [pg.rows]);

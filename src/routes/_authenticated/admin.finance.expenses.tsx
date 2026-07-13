@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
 import { PaginationBar } from "@/components/finance/PaginationBar";
+import { useUrlState, useInitialUrlPage, useSyncPageToUrl } from "@/lib/finance/use-url-state";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, OWNER_DRAW_SLUG, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
 import { OUTGOING_TYPES, ACCOUNTING_STATUSES, outgoingLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
 
@@ -38,23 +39,30 @@ function ExpensesPage() {
   const [unclassifiedCount, setUnclassifiedCount] = useState(0);
   const [deletedCount, setDeletedCount] = useState(0);
 
-  const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
-  const [fMonth, setFMonth] = useState("");
-  const [fSup, setFSup] = useState("");
-  const [fMain, setFMain] = useState("");
-  const [fSub, setFSub] = useState("");
-  const [fAccount, setFAccount] = useState("");
-  const [fInternal, setFInternal] = useState("");
-  const [fAcct, setFAcct] = useState("");
-  const [fAtt, setFAtt] = useState("");
-  const [fTxnType, setFTxnType] = useState("");
-  const [fAccStatus, setFAccStatus] = useState("");
+  const [q, setQ] = useState(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get("q") ?? "";
+    }
+    return "";
+  });
+  const [debouncedQ, setDebouncedQ] = useUrlState("q", "", { debounceMs: 400 });
+  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fSup, setFSup] = useUrlState("sup", "");
+  const [fMain, setFMain] = useUrlState("main", "");
+  const [fSub, setFSub] = useUrlState("sub", "");
+  const [fAccount, setFAccount] = useUrlState("acc", "");
+  const [fInternal, setFInternal] = useUrlState("internal", "");
+  const [fAcct, setFAcct] = useUrlState("acct", "");
+  const [fAtt, setFAtt] = useUrlState("att", "");
+  const [fTxnType, setFTxnType] = useUrlState("txn", "");
+  const [fAccStatus, setFAccStatus] = useUrlState("astatus", "");
+  const initialPage = useInitialUrlPage();
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, setDebouncedQ]);
 
   useEffect(() => {
     (async () => {
@@ -108,7 +116,8 @@ function ExpensesPage() {
     return { rows: (data as any[]) ?? [], total: count ?? 0 };
   }, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus]);
 
-  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus]);
+  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSup, fMain, fSub, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus], undefined, initialPage);
+  useSyncPageToUrl(pg.page);
   const [rows, setLocalRows] = useState<any[]>([]);
   useEffect(() => { setLocalRows(pg.rows); }, [pg.rows]);
   const setRows = (updater: (prev: any[]) => any[]) => setLocalRows((p) => updater(p));

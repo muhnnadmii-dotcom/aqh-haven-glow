@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Plus, Loader2, ShoppingCart, User, X } from "lucide-react";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useUrlState } from "@/lib/finance/use-url-state";
 import {
   PURCHASE_TYPE_LABEL,
   PURCHASE_STATUS_LABEL,
@@ -27,15 +28,28 @@ export const Route = createFileRoute("/_authenticated/admin/finance/purchase-inv
 function PurchaseInvoicesList() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [q, setQ] = useState("");
-  const [fStatus, setFStatus] = useState("");
-  const [fPay, setFPay] = useState("");
-  const [fType, setFType] = useState("");
-  const [fVat, setFVat] = useState("");
-  const [fSupplier, setFSupplier] = useState("");
-  const [fAttach, setFAttach] = useState("");
-  const [fPersonal, setFPersonal] = useState("");
-  const [fMonth, setFMonth] = useState("");
+  const [q, setQ] = useState(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get("q") ?? "";
+    }
+    return "";
+  });
+  const [urlQ, setUrlQ] = useUrlState("q", "", { debounceMs: 400 });
+  useEffect(() => {
+    const t = setTimeout(() => setUrlQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q, setUrlQ]);
+  // reference urlQ to avoid unused-var lint
+  void urlQ;
+  const [fStatus, setFStatus] = useUrlState("status", "");
+  const [fPay, setFPay] = useUrlState("pay", "");
+  const [fType, setFType] = useUrlState("type", "");
+  const [fVat, setFVat] = useUrlState("vat", "");
+  const [fSupplier, setFSupplier] = useUrlState("sup", "");
+  const [fAttach, setFAttach] = useUrlState("att", "");
+  const [fPersonal, setFPersonal] = useUrlState("pers", "");
+  const [fMonth, setFMonth] = useUrlState("month", "");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
