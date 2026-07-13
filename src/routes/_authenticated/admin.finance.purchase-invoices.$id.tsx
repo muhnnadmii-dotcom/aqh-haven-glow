@@ -87,9 +87,12 @@ function PurchaseInvoiceEditor() {
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["finance_suppliers_min"],
-    queryFn: async () => (await supabase.from("finance_suppliers").select("id, name").eq("is_active", true).order("name")).data as any[],
+    queryKey: ["finance_suppliers_min_vat"],
+    queryFn: async () => (await supabase.from("finance_suppliers").select("id, name, is_vat_registered").eq("is_active", true).order("name")).data as any[],
   });
+  const selectedSupplier = suppliers.find((s: any) => s.id === header?.supplier_id);
+  const supplierIsVat = selectedSupplier?.is_vat_registered ?? true;
+
 
   const { data: categories = [] } = useQuery({
     queryKey: ["finance_categories_min"],
