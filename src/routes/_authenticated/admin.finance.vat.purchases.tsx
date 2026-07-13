@@ -30,11 +30,13 @@ function VatPurchasesPage() {
     return arr;
   }, [lines, filter]);
 
+  const isNonTaxable = (r: any) => Number(r.vat_amount || 0) === 0;
+
   const totals = useMemo(
     () =>
       filtered.reduce(
         (a: any, r: any) => {
-          a.taxable += Number(r.taxable_amount || 0);
+          if (!isNonTaxable(r)) a.taxable += Number(r.taxable_amount || 0);
           a.vat += Number(r.vat_amount || 0);
           a.ded += Number(r.deductible_vat_amount || 0);
           a.nd += Number(r.non_deductible_vat_amount || 0);
@@ -121,7 +123,7 @@ function VatPurchasesPage() {
                 </td>
                 <td className="p-2">{r.supplier_name || "—"}</td>
                 <td className="p-2">{fmtDate(r.invoice_date)}</td>
-                <td className="p-2">{fmtSAR(r.taxable_amount)}</td>
+                <td className="p-2">{isNonTaxable(r) ? <span className="text-[10.5px] text-muted-foreground">غير خاضعة</span> : fmtSAR(r.taxable_amount)}</td>
                 <td className="p-2">{fmtSAR(r.vat_amount)}</td>
                 <td className="p-2">
                   {fmtSAR(r.deductible_vat_amount)}

@@ -114,6 +114,10 @@ function PurchaseInvoiceEditor() {
   const canEdit = header?.status === "draft" || header?.status === "under_review" || header?.status === "rejected";
   const isRejected = header?.status === "rejected";
 
+  const NON_STD_CODES = new Set(["out_of_scope", "zero_rated", "exempt"]);
+  const allLinesNonStandard = (items?.length ?? 0) > 0 && (items as any[]).every((it: any) => NON_STD_CODES.has(it.tax_code));
+  const isNonTaxable = supplierIsVat === false || allLinesNonStandard;
+
   const saveHeader = useMutation({
     mutationFn: async () => {
       const payload: any = {
@@ -459,9 +463,13 @@ function PurchaseInvoiceEditor() {
                     <td className="p-1"><Input type="number" step="0.01" value={r.unit_price} disabled={!canEdit} onChange={(e) => setRows((rs) => rs.map((x, j) => j === i ? { ...x, unit_price: Number(e.target.value) } : x))} className="bg-black/40 border-white/10 h-8" /></td>
                     <td className="p-1"><Input type="number" step="0.01" value={r.discount_amount} disabled={!canEdit} onChange={(e) => setRows((rs) => rs.map((x, j) => j === i ? { ...x, discount_amount: Number(e.target.value) } : x))} className="bg-black/40 border-white/10 h-8" /></td>
                     <td className="p-1">
-                      <select value={r.tax_code} disabled={!canEdit} onChange={(e) => setRows((rs) => rs.map((x, j) => j === i ? { ...x, tax_code: e.target.value } : x))} className="w-full bg-black/40 border border-white/10 rounded-md px-1 py-1 text-xs h-8">
-                        {Object.entries(TAX_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
+                      {supplierIsVat ? (
+                        <select value={r.tax_code} disabled={!canEdit} onChange={(e) => setRows((rs) => rs.map((x, j) => j === i ? { ...x, tax_code: e.target.value } : x))} className="w-full bg-black/40 border border-white/10 rounded-md px-1 py-1 text-xs h-8">
+                          {Object.entries(TAX_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
+                      ) : (
+                        <div className="text-[10.5px] text-muted-foreground px-1 py-1 h-8 flex items-center">مورد غير مسجل بالضريبة</div>
+                      )}
                     </td>
                     <td className="p-1 text-muted-foreground">{SAR(sub)}</td>
                     <td className="p-1 font-semibold">{SAR(sub + tax)}</td>
@@ -476,12 +484,17 @@ function PurchaseInvoiceEditor() {
         <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-2 text-sm">
           <TotalCell label="قبل الخصم" value={SAR(header.subtotal)} />
           <TotalCell label="الخصم" value={SAR(header.discount_amount)} />
-          <TotalCell label="القاعدة الضريبية" value={SAR(header.taxable_amount)} />
-          <TotalCell label="الضريبة" value={SAR(header.vat_amount)} />
-          <TotalCell label="القابل للخصم" value={SAR(header.deductible_vat_amount)} tone="blue" />
+          {!isNonTaxable && <TotalCell label="القاعدة الضريبية" value={SAR(header.taxable_amount)} />}
+          {!isNonTaxable && <TotalCell label="الضريبة" value={SAR(header.vat_amount)} />}
+          {!isNonTaxable && <TotalCell label="القابل للخصم" value={SAR(header.deductible_vat_amount)} tone="blue" />}
           <TotalCell label="الإجمالي" value={SAR(header.total_amount)} highlight />
         </div>
-        {Number(header.non_deductible_vat_amount || 0) > 0 && (
+        {isNonTaxable && (
+          <div className="mt-2">
+            <Badge variant="outline" className="bg-muted/20 text-muted-foreground border-muted-foreground/30">غير خاضعة للضريبة</Badge>
+          </div>
+        )}
+        {!isNonTaxable && Number(header.non_deductible_vat_amount || 0) > 0 && (
           <div className="mt-2 text-xs text-amber-300 flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" />
             ضريبة غير قابلة للخصم: {SAR(header.non_deductible_vat_amount)}
