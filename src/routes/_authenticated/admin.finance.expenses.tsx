@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
 import { PaginationBar } from "@/components/finance/PaginationBar";
+import { useUrlState, useInitialUrlPage, useSyncPageToUrl } from "@/lib/finance/use-url-state";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, OWNER_DRAW_SLUG, fmtSAR, labelOf, toneOf } from "@/lib/finance/constants";
 import { OUTGOING_TYPES, ACCOUNTING_STATUSES, outgoingLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
 
