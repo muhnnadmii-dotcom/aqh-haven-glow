@@ -190,7 +190,8 @@ function IncomesPage() {
     return { rows: incRows, total: count ?? 0 };
   }, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, providerByCode]);
 
-  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider]);
+  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider], undefined, initialPage);
+  useSyncPageToUrl(pg.page);
   const [rows, setLocalRows] = useState<Income[]>([]);
   useEffect(() => { setLocalRows(pg.rows); }, [pg.rows]);
   const setRows = (updater: (prev: any[]) => any[]) => setLocalRows((p) => updater(p));
