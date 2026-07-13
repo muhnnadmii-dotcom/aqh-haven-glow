@@ -53,7 +53,7 @@ function JournalEntriesPage() {
 
       {isLoading ? <Loader2 className="animate-spin" /> : (
         <div className="border border-white/10 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="min-w-full text-sm">
             <thead className="bg-white/5 text-xs">
               <tr>
                 <th className="p-2 text-right">الرقم</th>
@@ -86,7 +86,7 @@ function JournalEntriesPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
 
@@ -122,7 +122,7 @@ function EntryDrawer({ id, onClose }: { id: string; onClose: () => void }) {
             <div><span className="text-muted-foreground">الوصف:</span> {data?.entry?.description}</div>
             <div><span className="text-muted-foreground">الحالة:</span> <Badge variant="outline">{data?.entry?.status}</Badge></div>
           </div>
-          <table className="w-full text-xs">
+          <div className="overflow-x-auto"><table className="min-w-full text-xs">
             <thead className="bg-white/5">
               <tr><th className="p-2 text-right">الحساب</th><th className="p-2 text-right">الوصف</th><th className="p-2 text-right">مدين</th><th className="p-2 text-right">دائن</th></tr>
             </thead>
@@ -141,7 +141,7 @@ function EntryDrawer({ id, onClose }: { id: string; onClose: () => void }) {
                 <td className="p-2 font-mono">{Number(data?.entry?.total_debit || 0).toFixed(2)}</td>
                 <td className="p-2 font-mono">{Number(data?.entry?.total_credit || 0).toFixed(2)}</td></tr>
             </tfoot>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>

@@ -50,7 +50,7 @@ function GeneralLedgerPage() {
       {!accountId ? <p className="text-muted-foreground text-sm">اختر حساب لعرض الحركات</p> :
         isLoading ? <Loader2 className="animate-spin" /> : (
         <div className="border border-white/10 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="min-w-full text-sm">
             <thead className="bg-white/5 text-xs">
               <tr>
                 <th className="p-2 text-right">التاريخ</th>
@@ -76,7 +76,7 @@ function GeneralLedgerPage() {
                 <tr><td colSpan={6} className="p-4 text-center text-muted-foreground text-sm">لا توجد حركات</td></tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

@@ -110,7 +110,7 @@ function OwnerAccountPage() {
         <div>
           <div className="text-[12px] font-semibold mb-2">آخر مقبوضات على الحسابات الشخصية</div>
           <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-            <table className="w-full text-[11px]">
+            <div className="overflow-x-auto"><table className="min-w-full text-[11px]">
               <thead className="bg-white/5 text-muted-foreground">
                 <tr><th className="text-start px-2 py-1.5">التاريخ</th><th className="text-start px-2 py-1.5">البيان</th><th className="text-start px-2 py-1.5">العلاقة</th><th className="text-start px-2 py-1.5">المبلغ</th></tr>
               </thead>
@@ -125,14 +125,14 @@ function OwnerAccountPage() {
                 ))}
                 {incs.length === 0 && <tr><td colSpan={4} className="text-center py-4 text-muted-foreground">{loading ? "..." : "لا توجد حركات"}</td></tr>}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
 
         <div>
           <div className="text-[12px] font-semibold mb-2">آخر مدفوعات من الحسابات الشخصية</div>
           <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-            <table className="w-full text-[11px]">
+            <div className="overflow-x-auto"><table className="min-w-full text-[11px]">
               <thead className="bg-white/5 text-muted-foreground">
                 <tr><th className="text-start px-2 py-1.5">التاريخ</th><th className="text-start px-2 py-1.5">البيان</th><th className="text-start px-2 py-1.5">العلاقة</th><th className="text-start px-2 py-1.5">المبلغ</th></tr>
               </thead>
@@ -147,7 +147,7 @@ function OwnerAccountPage() {
                 ))}
                 {exps.length === 0 && <tr><td colSpan={4} className="text-center py-4 text-muted-foreground">{loading ? "..." : "لا توجد حركات"}</td></tr>}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       </div>

@@ -43,7 +43,7 @@ function TrialBalancePage() {
 
       {isLoading ? <Loader2 className="animate-spin" /> : (
         <div className="border border-white/10 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="min-w-full text-sm">
             <thead className="bg-white/5 text-xs">
               <tr>
                 <th className="p-2 text-right">الكود</th>
@@ -74,7 +74,7 @@ function TrialBalancePage() {
                 <td className="p-2 font-mono">{(totals.d - totals.c).toFixed(2)}</td>
               </tr>
             </tfoot>
-          </table>
+          </table></div>
         </div>
       )}
     </div>
