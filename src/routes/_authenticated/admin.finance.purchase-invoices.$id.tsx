@@ -90,9 +90,6 @@ function PurchaseInvoiceEditor() {
     queryKey: ["finance_suppliers_min_vat"],
     queryFn: async () => (await supabase.from("finance_suppliers").select("id, name, is_vat_registered").eq("is_active", true).order("name")).data as any[],
   });
-  const selectedSupplier = suppliers.find((s: any) => s.id === header?.supplier_id);
-  const supplierIsVat = selectedSupplier?.is_vat_registered ?? true;
-
 
   const { data: categories = [] } = useQuery({
     queryKey: ["finance_categories_min"],
@@ -109,6 +106,9 @@ function PurchaseInvoiceEditor() {
 
   const [rows, setRows] = useState<Item[]>([]);
   useEffect(() => { setRows(items as any[]); }, [items]);
+
+  const selectedSupplier = suppliers.find((s: any) => s.id === header?.supplier_id);
+  const supplierIsVat = selectedSupplier?.is_vat_registered ?? true;
 
   const isDraft = header?.status === "draft";
   const canEdit = header?.status === "draft" || header?.status === "under_review" || header?.status === "rejected";
