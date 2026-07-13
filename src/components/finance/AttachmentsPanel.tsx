@@ -49,10 +49,10 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage, linkedRefs
       const { data } = await supabase.from("finance_attachments").select("*").eq("related_type", r.relatedType).eq(col, val).order("created_at", { ascending: false });
       return (data as any[]) ?? [];
     }));
-    // Dedup by id
+    // Dedup by file_url (main relatedType first, so it wins on collisions)
     const seen = new Set<string>();
     const merged: Att[] = [];
-    for (const arr of results) for (const a of arr) if (!seen.has(a.id)) { seen.add(a.id); merged.push(a); }
+    for (const arr of results) for (const a of arr) if (!seen.has(a.file_url)) { seen.add(a.file_url); merged.push(a); }
     merged.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
     setRows(merged);
   };
