@@ -14,6 +14,7 @@ import {
   PURCHASE_PAY_LABEL,
   VAT_DEDUCTIBILITY_LABEL,
   ATTACHMENT_LABEL,
+  NON_DEDUCTIBLE_REASON_LABEL,
   SAR,
 } from "@/lib/finance/purchase-constants";
 
@@ -207,9 +208,21 @@ function PurchaseInvoicesList() {
             disabled={bulkBusy}
             onPick={async (v) => {
               if (!v) return;
+              const patch: any = { vat_deductibility: v };
+              if (v === "non_deductible") {
+                const reasons = Object.entries(NON_DEDUCTIBLE_REASON_LABEL);
+                const list = reasons.map(([k, l], i) => `${i + 1}. ${l}`).join("\n");
+                const pick = window.prompt(`اختر سبب عدم قابلية الخصم:\n${list}\n\nأدخل الرقم:`, "1");
+                if (!pick) return;
+                const idx = Number(pick) - 1;
+                if (!reasons[idx]) return toast.error("اختيار غير صالح");
+                patch.non_deductible_reason = reasons[idx][0];
+              } else {
+                patch.non_deductible_reason = null;
+              }
               setBulkBusy(true);
               const ids = Array.from(selected);
-              const { error } = await supabase.from("purchase_invoices" as any).update({ vat_deductibility: v } as any).in("id", ids);
+              const { error } = await supabase.from("purchase_invoices" as any).update(patch).in("id", ids);
               setBulkBusy(false);
               if (error) return toast.error(error.message);
               toast.success("تم التحديث");
