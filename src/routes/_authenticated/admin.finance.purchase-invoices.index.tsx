@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Plus, Loader2, ShoppingCart, User } from "lucide-react";
+import { Plus, Loader2, ShoppingCart, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import {
@@ -16,6 +16,7 @@ import {
   ATTACHMENT_LABEL,
   SAR,
 } from "@/lib/finance/purchase-constants";
+
 
 export const Route = createFileRoute("/_authenticated/admin/finance/purchase-invoices/")({
   ssr: false,
