@@ -296,7 +296,6 @@ function PurchaseInvoicesList() {
                   />
                 </th>
                 <th className="text-right p-2">المرجع الداخلي</th>
-                <th className="text-right p-2">رقم فاتورة المورد</th>
                 <th className="text-right p-2">المورد</th>
                 <th className="text-right p-2">التاريخ</th>
                 <th className="text-right p-2">النوع</th>
@@ -305,8 +304,6 @@ function PurchaseInvoicesList() {
                 <th className="text-right p-2">القابل للخصم</th>
                 <th className="text-right p-2">غير القابل</th>
                 <th className="text-right p-2">الإجمالي</th>
-                <th className="text-right p-2">المدفوع</th>
-                <th className="text-right p-2">المتبقي</th>
                 <th className="text-right p-2">المرفق</th>
                 <th className="text-right p-2">الحالة</th>
                 <th className="text-right p-2">السداد</th>
