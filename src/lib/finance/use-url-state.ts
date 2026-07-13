@@ -11,19 +11,19 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
  * - Empty / default values are OMITTED from the URL to keep it clean.
  * - Any filter change resets `page` (unless the key itself is `page`).
  */
-export function useUrlState<T extends string = string>(
+export function useUrlState(
   key: string,
-  defaultValue: T,
+  defaultValue: string,
   opts?: { debounceMs?: number; resetPageOnChange?: boolean },
-): [T, (v: T) => void] {
+): [string, (v: string) => void] {
   const navigate = useNavigate();
   const search = useSearch({ strict: false }) as Record<string, any>;
   const debounceMs = opts?.debounceMs ?? 0;
   const resetPage = opts?.resetPageOnChange ?? key !== "page";
 
-  const [value, setValue] = useState<T>(() => {
+  const [value, setValue] = useState<string>(() => {
     const v = search?.[key];
-    return v == null || v === "" ? defaultValue : (String(v) as T);
+    return v == null || v === "" ? defaultValue : String(v);
   });
 
   const first = useRef(true);
