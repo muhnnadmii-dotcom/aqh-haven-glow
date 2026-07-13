@@ -39,18 +39,6 @@ export function RowAttachmentControl({
 
   const setStatus = async (next: "attached" | "not_attached" | "not_required") => {
     setMenu(false);
-    if (next === "attached") {
-      const { count } = await supabase
-        .from("finance_attachments")
-        .select("id", { count: "exact", head: true })
-        .eq("related_type", relatedType)
-        .eq("related_id", relatedId);
-      if (!count || count === 0) {
-        toast.error("لا يمكن تعيين الحالة كمرفق بدون رفع ملف.");
-        setOpen(true);
-        return;
-      }
-    }
     const { error } = await supabase.from(table).update({ attachment_status: next }).eq("id", relatedId);
     if (error) {
       toast.error("تعذر تحديث الحالة: " + error.message);
