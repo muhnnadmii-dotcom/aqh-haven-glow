@@ -327,7 +327,6 @@ function PurchaseInvoicesList() {
                       />
                     </td>
                     <td className="p-2 font-mono text-xs">{r.internal_reference}</td>
-                    <td className="p-2">{r.supplier_invoice_number ?? "—"}</td>
                     <td className="p-2">
                       {supName(r.supplier_id)}
                       {r.paid_from_personal_account && <User className="inline w-3 h-3 mr-1 text-amber-300" />}
@@ -339,8 +338,6 @@ function PurchaseInvoicesList() {
                     <td className="p-2 text-blue-300">{SAR(r.deductible_vat_amount)}</td>
                     <td className="p-2 text-muted-foreground">{SAR(r.non_deductible_vat_amount)}</td>
                     <td className="p-2 font-semibold">{SAR(r.total_amount)}</td>
-                    <td className="p-2 text-emerald-300">{SAR(r.paid_amount)}</td>
-                    <td className="p-2 text-amber-300">{SAR(r.remaining_amount)}</td>
                     <td className={`p-2 text-xs ${attStatus === "attached" ? "text-emerald-300" : "text-amber-300"}`}>{ATTACHMENT_LABEL[attStatus]}</td>
                     <td className="p-2"><Badge variant="outline" className={PURCHASE_STATUS_CLASS[r.status] ?? ""}>{PURCHASE_STATUS_LABEL[r.status] ?? r.status}</Badge></td>
                     <td className="p-2 text-xs">{PURCHASE_PAY_LABEL[r.payment_status] ?? r.payment_status}</td>
