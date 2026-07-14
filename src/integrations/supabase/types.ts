@@ -5192,6 +5192,7 @@ export type Database = {
         | "owner_contribution"
         | "owner_withdrawal"
         | "internal_transfer"
+        | "payment_settlement_payout"
       payment_provider_type: "payment_gateway" | "bnpl" | "marketplace"
       payment_settlement_line_type:
         | "sale"
@@ -5563,6 +5564,7 @@ export const Constants = {
         "owner_contribution",
         "owner_withdrawal",
         "internal_transfer",
+        "payment_settlement_payout",
       ],
       payment_provider_type: ["payment_gateway", "bnpl", "marketplace"],
       payment_settlement_line_type: [
