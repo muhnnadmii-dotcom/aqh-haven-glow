@@ -1221,6 +1221,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "credit_debit_notes_original_sales_invoice_id_fkey"
+            columns: ["original_sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_gateway_collection_exceptions"
+            referencedColumns: ["invoice_id"]
+          },
+          {
             foreignKeyName: "credit_debit_notes_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
@@ -1834,6 +1841,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sales_invoices"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_gateway_collection_exceptions"
+            referencedColumns: ["invoice_id"]
           },
           {
             foreignKeyName: "finance_expenses_split_parent_id_fkey"
@@ -2547,6 +2561,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sales_invoices"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_settlement_lines_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_gateway_collection_exceptions"
+            referencedColumns: ["invoice_id"]
           },
           {
             foreignKeyName: "payment_settlement_lines_salla_order_id_fkey"
@@ -3584,6 +3605,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_gateway_collection_exceptions"
+            referencedColumns: ["invoice_id"]
+          },
+          {
             foreignKeyName: "sales_invoice_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -3828,6 +3856,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sales_invoices"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_refunds_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_gateway_collection_exceptions"
+            referencedColumns: ["invoice_id"]
           },
         ]
       }
@@ -4577,6 +4612,32 @@ export type Database = {
         }
         Relationships: []
       }
+      v_gateway_collection_exceptions: {
+        Row: {
+          invoice_id: number | null
+          invoice_provider: string | null
+          net_amount: number | null
+          provider_count: number | null
+          reason: string | null
+          single_provider_code: string | null
+          total_amount: number | null
+        }
+        Relationships: []
+      }
+      v_gateway_draft_summary: {
+        Row: {
+          collection_drafts: number | null
+          collection_total: number | null
+          exceptions_by_reason: Json | null
+          excluded_invoices: number | null
+          expected_clearing_balance: number | null
+          payout_drafts: number | null
+          payout_total: number | null
+          provider_code: string | null
+          provider_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _salla_settlement_from_provider: {
@@ -4758,6 +4819,15 @@ export type Database = {
         Returns: number
       }
       aqh_next_quote_no: { Args: never; Returns: string }
+      build_gateway_journal_drafts: {
+        Args: {
+          p_expected_collection_count?: number
+          p_expected_collection_total?: number
+          p_expected_payout_count?: number
+          p_expected_payout_total?: number
+        }
+        Returns: Json
+      }
       cancel_credit_debit_note: {
         Args: { p_note_id: number; p_reason: string }
         Returns: {
@@ -5192,6 +5262,7 @@ export type Database = {
         | "owner_contribution"
         | "owner_withdrawal"
         | "internal_transfer"
+        | "payment_settlement_payout"
       payment_provider_type: "payment_gateway" | "bnpl" | "marketplace"
       payment_settlement_line_type:
         | "sale"
@@ -5563,6 +5634,7 @@ export const Constants = {
         "owner_contribution",
         "owner_withdrawal",
         "internal_transfer",
+        "payment_settlement_payout",
       ],
       payment_provider_type: ["payment_gateway", "bnpl", "marketplace"],
       payment_settlement_line_type: [
