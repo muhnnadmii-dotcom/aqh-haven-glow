@@ -4982,6 +4982,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      recompute_sales_invoice_settlement_status: {
+        Args: { p_invoice_id: number }
+        Returns: undefined
+      }
       recompute_settlement_status: {
         Args: { _settlement_id: string }
         Returns: undefined
