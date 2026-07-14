@@ -4882,6 +4882,22 @@ export type Database = {
         Args: { p_batch_id: string; p_reason: string }
         Returns: Json
       }
+      finance_expenses_backfill_link: {
+        Args: { p_limit?: number; p_only_supplier_kind?: string }
+        Returns: {
+          action: string
+          amount: number
+          expense_date: string
+          expense_id: string
+          invoice_subtotal: number
+          invoice_total: number
+          invoice_vat: number
+          purchase_invoice_id: number
+          supplier_id: string
+          supplier_vat_registered: boolean
+          transaction_type: Database["public"]["Enums"]["finance_outgoing_type"]
+        }[]
+      }
       finance_get_actor_names: {
         Args: { ids: string[] }
         Returns: {
