@@ -119,28 +119,51 @@ function VatDashboard() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className={`rounded-xl border p-4 ${errors.length ? "border-rose-500/40 bg-rose-500/10" : "border-emerald-500/30 bg-emerald-500/5"}`}>
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                {errors.length ? <AlertTriangle size={14} className="text-rose-300" /> : <CheckCircle2 size={14} className="text-emerald-300" />}
-                أخطاء حرجة ({errors.length})
+          {issuesFailed ? (
+            <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-rose-200">
+                <AlertTriangle size={14} className="text-rose-300" />
+                تعذّر تشغيل التحقق من الإقرار
               </div>
-              <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-32 overflow-auto">
-                {errors.length === 0 && <li>لا توجد أخطاء تمنع الاعتماد.</li>}
-                {errors.slice(0, 6).map((e: any, i: number) => <li key={i}>{e.message}</li>)}
-              </ul>
+              <p className="mt-2 text-[11px] text-rose-100/80">
+                {(issuesError as any)?.message ?? "حدث خطأ أثناء تنفيذ vat_validate_return."}
+              </p>
+              <p className="mt-1 text-[11px] text-rose-100/60">
+                لا يمكن اعتبار النتيجة "بدون أخطاء" ما دام التحقق فشل.
+              </p>
             </div>
-            <div className={`rounded-xl border p-4 ${warnings.length ? "border-amber-500/30 bg-amber-500/10" : "border-white/10 bg-white/5"}`}>
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <AlertTriangle size={14} className={warnings.length ? "text-amber-300" : "text-muted-foreground"} />
-                تنبيهات ({warnings.length})
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className={`rounded-xl border p-4 ${errors.length ? "border-rose-500/40 bg-rose-500/10" : "border-emerald-500/30 bg-emerald-500/5"}`}>
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  {issuesLoading ? (
+                    <AlertTriangle size={14} className="text-muted-foreground" />
+                  ) : errors.length ? (
+                    <AlertTriangle size={14} className="text-rose-300" />
+                  ) : (
+                    <CheckCircle2 size={14} className="text-emerald-300" />
+                  )}
+                  أخطاء حرجة {issuesLoading ? "(جاري التحقق…)" : `(${errors.length})`}
+                </div>
+                <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-32 overflow-auto">
+                  {issuesLoading && <li>جاري تشغيل التحقق…</li>}
+                  {!issuesLoading && errors.length === 0 && <li>لا توجد أخطاء تمنع الاعتماد.</li>}
+                  {!issuesLoading && errors.slice(0, 6).map((e: any, i: number) => <li key={i}>{e.message}</li>)}
+                </ul>
               </div>
-              <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-32 overflow-auto">
-                {warnings.length === 0 && <li>لا توجد تنبيهات.</li>}
-                {warnings.slice(0, 6).map((e: any, i: number) => <li key={i}>{e.message}</li>)}
-              </ul>
+              <div className={`rounded-xl border p-4 ${warnings.length ? "border-amber-500/30 bg-amber-500/10" : "border-white/10 bg-white/5"}`}>
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <AlertTriangle size={14} className={warnings.length ? "text-amber-300" : "text-muted-foreground"} />
+                  تنبيهات {issuesLoading ? "(جاري التحقق…)" : `(${warnings.length})`}
+                </div>
+                <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-32 overflow-auto">
+                  {issuesLoading && <li>جاري تشغيل التحقق…</li>}
+                  {!issuesLoading && warnings.length === 0 && <li>لا توجد تنبيهات.</li>}
+                  {!issuesLoading && warnings.slice(0, 6).map((e: any, i: number) => <li key={i}>{e.message}</li>)}
+                </ul>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex justify-end">
             <Link
