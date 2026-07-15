@@ -26,10 +26,11 @@ function VatDraftPage() {
     queryFn: () => fetchSummary(activeId),
     enabled: !!activeId,
   });
-  const { data: issues } = useQuery({
+  const { data: issues, isLoading: issuesLoading, isError: issuesFailed, error: issuesError } = useQuery({
     queryKey: ["vat-validate", activeId],
     queryFn: () => validateReturn(activeId),
     enabled: !!activeId,
+    retry: false,
   });
   const errors = (issues ?? []).filter((i: any) => i.severity === "error");
   const warnings = (issues ?? []).filter((i: any) => i.severity === "warning");
@@ -112,28 +113,51 @@ function VatDraftPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className={`rounded-xl border p-4 ${errors.length ? "border-rose-500/40 bg-rose-500/10" : "border-emerald-500/30 bg-emerald-500/5"}`}>
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            {errors.length ? <AlertTriangle size={14} className="text-rose-300" /> : <CheckCircle2 size={14} className="text-emerald-300" />}
-            أخطاء حرجة ({errors.length})
+      {issuesFailed ? (
+        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-rose-200">
+            <AlertTriangle size={14} className="text-rose-300" />
+            تعذّر تشغيل التحقق من الإقرار
           </div>
-          <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-40 overflow-auto">
-            {errors.length === 0 && <li>لا توجد أخطاء تمنع الاعتماد.</li>}
-            {errors.map((e: any, i: number) => <li key={i}>{e.message}</li>)}
-          </ul>
+          <p className="mt-2 text-[11px] text-rose-100/80">
+            {(issuesError as any)?.message ?? "حدث خطأ أثناء تنفيذ vat_validate_return."}
+          </p>
+          <p className="mt-1 text-[11px] text-rose-100/60">
+            لا يمكن تجميد الإقرار حتى ينجح التحقق. لا تُعتبر النتيجة "بدون أخطاء" في هذه الحالة.
+          </p>
         </div>
-        <div className={`rounded-xl border p-4 ${warnings.length ? "border-amber-500/30 bg-amber-500/10" : "border-white/10 bg-white/5"}`}>
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <AlertTriangle size={14} className={warnings.length ? "text-amber-300" : "text-muted-foreground"} />
-            تنبيهات ({warnings.length})
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className={`rounded-xl border p-4 ${errors.length ? "border-rose-500/40 bg-rose-500/10" : "border-emerald-500/30 bg-emerald-500/5"}`}>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              {issuesLoading ? (
+                <AlertTriangle size={14} className="text-muted-foreground" />
+              ) : errors.length ? (
+                <AlertTriangle size={14} className="text-rose-300" />
+              ) : (
+                <CheckCircle2 size={14} className="text-emerald-300" />
+              )}
+              أخطاء حرجة {issuesLoading ? "(جاري التحقق…)" : `(${errors.length})`}
+            </div>
+            <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-40 overflow-auto">
+              {issuesLoading && <li>جاري تشغيل التحقق…</li>}
+              {!issuesLoading && errors.length === 0 && <li>لا توجد أخطاء تمنع الاعتماد.</li>}
+              {!issuesLoading && errors.map((e: any, i: number) => <li key={i}>{e.message}</li>)}
+            </ul>
           </div>
-          <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-40 overflow-auto">
-            {warnings.length === 0 && <li>لا توجد تنبيهات.</li>}
-            {warnings.map((e: any, i: number) => <li key={i}>{e.message}</li>)}
-          </ul>
+          <div className={`rounded-xl border p-4 ${warnings.length ? "border-amber-500/30 bg-amber-500/10" : "border-white/10 bg-white/5"}`}>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <AlertTriangle size={14} className={warnings.length ? "text-amber-300" : "text-muted-foreground"} />
+              تنبيهات {issuesLoading ? "(جاري التحقق…)" : `(${warnings.length})`}
+            </div>
+            <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-40 overflow-auto">
+              {issuesLoading && <li>جاري تشغيل التحقق…</li>}
+              {!issuesLoading && warnings.length === 0 && <li>لا توجد تنبيهات.</li>}
+              {!issuesLoading && warnings.map((e: any, i: number) => <li key={i}>{e.message}</li>)}
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
 
       {!alreadyFiled && canManage && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
@@ -153,7 +177,13 @@ function VatDraftPage() {
           <div className="flex justify-end">
             <button
               onClick={() => fileIt.mutate()}
-              disabled={fileIt.isPending || (errors.length > 0 && !overrideReason.trim())}
+              disabled={
+                fileIt.isPending ||
+                issuesLoading ||
+                issuesFailed ||
+                (errors.length > 0 && !overrideReason.trim())
+              }
+              title={issuesFailed ? "لا يمكن التجميد قبل نجاح التحقق" : issuesLoading ? "جاري التحقق…" : undefined}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/20 border border-gold/40 text-gold text-[12px] disabled:opacity-50"
             >
               <Lock size={13} /> {fileIt.isPending ? "جاري التجميد…" : "تجميد وحفظ الإقرار"}
