@@ -1,0 +1,2 @@
+UPDATE public.journal_entries SET status='reversed' WHERE id='0ba2213f-65f3-4962-a99c-a00a59f3a3f8';
+UPDATE public.finance_expenses SET updated_at=now() WHERE id='f85cfbf6-7050-46dd-b9ae-ba0492da2d00';
