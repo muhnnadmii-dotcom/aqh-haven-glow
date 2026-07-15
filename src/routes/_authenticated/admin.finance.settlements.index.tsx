@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useMemo } from "react";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
 import { PaginationBar } from "@/components/finance/PaginationBar";
+import { currentYm } from "@/lib/finance/current-month";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/")({
   ssr: false,
