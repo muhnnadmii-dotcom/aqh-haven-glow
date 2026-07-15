@@ -58,7 +58,7 @@ function SalesInvoicesList() {
   const [debouncedQ, setDebouncedQ] = useUrlState("q", "", { debounceMs: 400 });
   const [fStatus, setFStatus] = useUrlState("status", "");
   const [fPay, setFPay] = useUrlState("pay", "");
-  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fMonth, setFMonth] = useUrlState("month", currentYm());
   const [fLinked, setFLinked] = useUrlState("linked", "");
   const initialPage = useInitialUrlPage();
 
