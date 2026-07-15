@@ -177,7 +177,13 @@ function VatDraftPage() {
           <div className="flex justify-end">
             <button
               onClick={() => fileIt.mutate()}
-              disabled={fileIt.isPending || (errors.length > 0 && !overrideReason.trim())}
+              disabled={
+                fileIt.isPending ||
+                issuesLoading ||
+                issuesFailed ||
+                (errors.length > 0 && !overrideReason.trim())
+              }
+              title={issuesFailed ? "لا يمكن التجميد قبل نجاح التحقق" : issuesLoading ? "جاري التحقق…" : undefined}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/20 border border-gold/40 text-gold text-[12px] disabled:opacity-50"
             >
               <Lock size={13} /> {fileIt.isPending ? "جاري التجميد…" : "تجميد وحفظ الإقرار"}
