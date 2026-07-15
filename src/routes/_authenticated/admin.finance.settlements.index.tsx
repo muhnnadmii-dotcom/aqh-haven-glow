@@ -47,6 +47,7 @@ function SettlementsPage() {
   const [providers, setProviders] = useState<any[]>([]);
   const [filterProvider, setFilterProvider] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
+  const [filterMonth, setFilterMonth] = useState<string>(() => currentYm());
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [deleting, setDeleting] = useState<any | null>(null);
@@ -63,14 +64,22 @@ function SettlementsPage() {
       .order("id", { ascending: false });
     if (filterProvider) q = q.eq("provider_id", filterProvider);
     if (filterStatus) q = q.eq("status", filterStatus);
+    if (filterMonth) {
+      const [y, m] = filterMonth.split("-").map(Number);
+      const from = `${y}-${String(m).padStart(2, "0")}-01`;
+      const nextM = m === 12 ? 1 : m + 1;
+      const nextY = m === 12 ? y + 1 : y;
+      const to = `${nextY}-${String(nextM).padStart(2, "0")}-01`;
+      q = q.gte("settlement_date", from).lt("settlement_date", to);
+    }
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     const { data, count, error } = await q.range(from, to);
     if (error) throw new Error(error.message);
     return { rows: (data as any[]) ?? [], total: count ?? 0 };
-  }, [filterProvider, filterStatus]);
+  }, [filterProvider, filterStatus, filterMonth]);
 
-  const pg = usePaginatedQuery(fetcher, [filterProvider, filterStatus]);
+  const pg = usePaginatedQuery(fetcher, [filterProvider, filterStatus, filterMonth]);
   useEffect(() => { if (pg.error) toast.error(pg.error); }, [pg.error]);
   const reload = pg.reload;
 
