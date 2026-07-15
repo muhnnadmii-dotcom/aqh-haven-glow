@@ -49,7 +49,7 @@ function PurchaseInvoicesList() {
   const [fSupplier, setFSupplier] = useUrlState("sup", "");
   const [fAttach, setFAttach] = useUrlState("att", "");
   const [fPersonal, setFPersonal] = useUrlState("pers", "");
-  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fMonth, setFMonth] = useUrlState("month", currentYm());
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
