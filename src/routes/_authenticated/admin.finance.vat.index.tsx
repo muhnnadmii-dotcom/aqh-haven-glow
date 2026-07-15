@@ -24,10 +24,11 @@ function VatDashboard() {
     enabled: !!activeId,
   });
 
-  const { data: issues } = useQuery({
+  const { data: issues, isLoading: issuesLoading, isError: issuesFailed, error: issuesError } = useQuery({
     queryKey: ["vat-validate", activeId],
     queryFn: () => validateReturn(activeId),
     enabled: !!activeId,
+    retry: false,
   });
 
   const errors = (issues ?? []).filter((i: any) => i.severity === "error");
