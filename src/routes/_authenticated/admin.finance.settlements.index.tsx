@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useMemo } from "react";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
 import { PaginationBar } from "@/components/finance/PaginationBar";
+import { currentYm } from "@/lib/finance/current-month";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/settlements/")({
   ssr: false,
@@ -46,6 +47,7 @@ function SettlementsPage() {
   const [providers, setProviders] = useState<any[]>([]);
   const [filterProvider, setFilterProvider] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
+  const [filterMonth, setFilterMonth] = useState<string>(() => currentYm());
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [deleting, setDeleting] = useState<any | null>(null);
@@ -62,14 +64,22 @@ function SettlementsPage() {
       .order("id", { ascending: false });
     if (filterProvider) q = q.eq("provider_id", filterProvider);
     if (filterStatus) q = q.eq("status", filterStatus);
+    if (filterMonth) {
+      const [y, m] = filterMonth.split("-").map(Number);
+      const from = `${y}-${String(m).padStart(2, "0")}-01`;
+      const nextM = m === 12 ? 1 : m + 1;
+      const nextY = m === 12 ? y + 1 : y;
+      const to = `${nextY}-${String(nextM).padStart(2, "0")}-01`;
+      q = q.gte("settlement_date", from).lt("settlement_date", to);
+    }
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     const { data, count, error } = await q.range(from, to);
     if (error) throw new Error(error.message);
     return { rows: (data as any[]) ?? [], total: count ?? 0 };
-  }, [filterProvider, filterStatus]);
+  }, [filterProvider, filterStatus, filterMonth]);
 
-  const pg = usePaginatedQuery(fetcher, [filterProvider, filterStatus]);
+  const pg = usePaginatedQuery(fetcher, [filterProvider, filterStatus, filterMonth]);
   useEffect(() => { if (pg.error) toast.error(pg.error); }, [pg.error]);
   const reload = pg.reload;
 
@@ -111,6 +121,22 @@ function SettlementsPage() {
           <option value="">كل الحالات</option>
           {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        <input
+          type="month"
+          value={filterMonth}
+          onChange={(e) => setFilterMonth(e.target.value)}
+          className="bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]"
+          title="الشهر"
+        />
+        {filterMonth && (
+          <button
+            type="button"
+            onClick={() => setFilterMonth("")}
+            className="text-[11px] text-muted-foreground hover:text-foreground underline"
+          >
+            كل الأشهر
+          </button>
+        )}
       </div>
 
       <div className={`overflow-x-auto rounded-xl border border-white/10 bg-white/5 ${pg.loading ? "opacity-70" : ""}`}>

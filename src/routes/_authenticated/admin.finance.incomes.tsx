@@ -5,6 +5,7 @@ import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
 import { PaginationBar } from "@/components/finance/PaginationBar";
 import { useUrlState, useInitialUrlPage, useSyncPageToUrl } from "@/lib/finance/use-url-state";
+import { currentYm } from "@/lib/finance/current-month";
 import { ACCOUNT_TYPES, ACCOUNTANT_STATUS, ATTACHMENT_STATUS, INTERNAL_REVIEW, fmtSAR, labelOf } from "@/lib/finance/constants";
 import { INCOMING_TYPES, ACCOUNTING_STATUSES, incomingLabel, defaultBusinessRelation } from "@/lib/finance/transaction-types";
 
@@ -93,7 +94,7 @@ function IncomesPage() {
     return "";
   });
   const [debouncedQ, setDebouncedQ] = useUrlState("q", "", { debounceMs: 400 });
-  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fMonth, setFMonth] = useUrlState("month", currentYm());
   const [fSource, setFSource] = useUrlState("src", "");
   const [fAccount, setFAccount] = useUrlState("acc", "");
   const [fInternal, setFInternal] = useUrlState("internal", "");

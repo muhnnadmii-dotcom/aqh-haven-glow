@@ -8,6 +8,7 @@ import { Plus, Loader2, ShoppingCart, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { useUrlState } from "@/lib/finance/use-url-state";
+import { currentYm } from "@/lib/finance/current-month";
 import {
   PURCHASE_TYPE_LABEL,
   PURCHASE_STATUS_LABEL,
@@ -49,7 +50,7 @@ function PurchaseInvoicesList() {
   const [fSupplier, setFSupplier] = useUrlState("sup", "");
   const [fAttach, setFAttach] = useUrlState("att", "");
   const [fPersonal, setFPersonal] = useUrlState("pers", "");
-  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fMonth, setFMonth] = useUrlState("month", currentYm());
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 

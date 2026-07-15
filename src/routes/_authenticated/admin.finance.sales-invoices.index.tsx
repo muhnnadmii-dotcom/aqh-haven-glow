@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
 import { useUrlState, useInitialUrlPage, useSyncPageToUrl } from "@/lib/finance/use-url-state";
+import { currentYm } from "@/lib/finance/current-month";
 import { PaginationBar } from "@/components/finance/PaginationBar";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/sales-invoices/")({
@@ -58,7 +59,7 @@ function SalesInvoicesList() {
   const [debouncedQ, setDebouncedQ] = useUrlState("q", "", { debounceMs: 400 });
   const [fStatus, setFStatus] = useUrlState("status", "");
   const [fPay, setFPay] = useUrlState("pay", "");
-  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fMonth, setFMonth] = useUrlState("month", currentYm());
   const [fLinked, setFLinked] = useUrlState("linked", "");
   const initialPage = useInitialUrlPage();
 
