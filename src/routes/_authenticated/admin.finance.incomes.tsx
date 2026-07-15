@@ -94,7 +94,7 @@ function IncomesPage() {
     return "";
   });
   const [debouncedQ, setDebouncedQ] = useUrlState("q", "", { debounceMs: 400 });
-  const [fMonth, setFMonth] = useUrlState("month", "");
+  const [fMonth, setFMonth] = useUrlState("month", currentYm());
   const [fSource, setFSource] = useUrlState("src", "");
   const [fAccount, setFAccount] = useUrlState("acc", "");
   const [fInternal, setFInternal] = useUrlState("internal", "");
