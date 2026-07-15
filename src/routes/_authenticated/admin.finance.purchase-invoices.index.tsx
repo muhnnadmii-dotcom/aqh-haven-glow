@@ -8,6 +8,7 @@ import { Plus, Loader2, ShoppingCart, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { useUrlState } from "@/lib/finance/use-url-state";
+import { currentYm } from "@/lib/finance/current-month";
 import {
   PURCHASE_TYPE_LABEL,
   PURCHASE_STATUS_LABEL,
