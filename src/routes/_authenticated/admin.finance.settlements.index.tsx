@@ -121,6 +121,22 @@ function SettlementsPage() {
           <option value="">كل الحالات</option>
           {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        <input
+          type="month"
+          value={filterMonth}
+          onChange={(e) => setFilterMonth(e.target.value)}
+          className="bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[12px]"
+          title="الشهر"
+        />
+        {filterMonth && (
+          <button
+            type="button"
+            onClick={() => setFilterMonth("")}
+            className="text-[11px] text-muted-foreground hover:text-foreground underline"
+          >
+            كل الأشهر
+          </button>
+        )}
       </div>
 
       <div className={`overflow-x-auto rounded-xl border border-white/10 bg-white/5 ${pg.loading ? "opacity-70" : ""}`}>
