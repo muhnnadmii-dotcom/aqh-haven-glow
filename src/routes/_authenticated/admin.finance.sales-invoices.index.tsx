@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePaginatedQuery, type PageSize } from "@/lib/finance/use-paginated-query";
 import { useUrlState, useInitialUrlPage, useSyncPageToUrl } from "@/lib/finance/use-url-state";
+import { currentYm } from "@/lib/finance/current-month";
 import { PaginationBar } from "@/components/finance/PaginationBar";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/sales-invoices/")({
