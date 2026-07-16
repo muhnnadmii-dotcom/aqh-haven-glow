@@ -406,7 +406,8 @@ function SalesImportPage() {
       });
     }
 
-    // تصنيف نهائي بالأولوية: blocking > duplicate > cancelled > missing_tax_doc > ready
+    // تصنيف نهائي بالأولوية: blocking > cancelled > duplicate > missing_tax_doc > ready
+    // cancelled_order يسبق duplicate حتى لا يُستورد الطلب المحذوف كفاتورة نشطة لاحقًا.
     parsed.forEach((r) => {
       const hardBlocking =
         !r.external_order_id ||
@@ -414,8 +415,8 @@ function SalesImportPage() {
         r.original_gross_amount == null ||
         (r.original_gross_amount != null && r.original_gross_amount < 0 && !r.cancelled);
       if (hardBlocking) r.classification = "blocking_review";
-      else if (r.duplicate) r.classification = "skipped_duplicate";
       else if (r.cancelled) r.classification = "cancelled_order";
+      else if (r.duplicate) r.classification = "skipped_duplicate";
       else if (!r.external_invoice_number) r.classification = "importable_missing_tax_document";
       else r.classification = "ready_to_import";
     });
