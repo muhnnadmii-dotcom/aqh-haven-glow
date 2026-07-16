@@ -311,6 +311,7 @@ function PendingDocumentsPanel({ rows }: { rows: any[] }) {
 const REFUND_CLASS_LABEL: Record<string, string> = {
   cancelled_order_no_invoice: "طلب ملغي بدون فاتورة",
   netted_in_source: "مُصفَّى من المصدر",
+  credit_note_recorded: "إشعار دائن مسجل",
   needs_credit_note: "يحتاج إشعار دائن",
   amount_mismatch: "فرق مبالغ — يحتاج مراجعة",
 };
@@ -318,6 +319,7 @@ const REFUND_CLASS_LABEL: Record<string, string> = {
 const REFUND_CLASS_TONE: Record<string, string> = {
   cancelled_order_no_invoice: "text-muted-foreground",
   netted_in_source: "text-emerald-300",
+  credit_note_recorded: "text-emerald-300",
   needs_credit_note: "text-amber-300",
   amount_mismatch: "text-rose-300",
 };
