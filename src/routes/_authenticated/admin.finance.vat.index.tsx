@@ -253,6 +253,74 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
+function IssueList({
+  title, items, loading, tone, emptyText,
+}: { title: string; items: any[]; loading: boolean; tone: "error" | "warning"; emptyText: string }) {
+  const [showAll, setShowAll] = useState(false);
+  const count = items.length;
+  const shown = showAll ? items : items.slice(0, 6);
+  const errorBorder = tone === "error"
+    ? (count ? "border-rose-500/40 bg-rose-500/10" : "border-emerald-500/30 bg-emerald-500/5")
+    : (count ? "border-amber-500/30 bg-amber-500/10" : "border-white/10 bg-white/5");
+  const iconColor = tone === "error"
+    ? (count ? "text-rose-300" : "text-emerald-300")
+    : (count ? "text-amber-300" : "text-muted-foreground");
+  const linkColor = tone === "error" ? "text-rose-200 hover:text-rose-100" : "text-amber-200 hover:text-amber-100";
+
+  return (
+    <div className={`rounded-xl border p-4 ${errorBorder}`}>
+      <div className="flex items-center gap-2 text-sm font-semibold">
+        {loading ? (
+          <AlertTriangle size={14} className="text-muted-foreground" />
+        ) : count === 0 && tone === "error" ? (
+          <CheckCircle2 size={14} className="text-emerald-300" />
+        ) : (
+          <AlertTriangle size={14} className={iconColor} />
+        )}
+        {title} {loading ? "(جاري التحقق…)" : `(${count})`}
+      </div>
+      <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground pr-1">
+        {loading && <li>جاري تشغيل التحقق…</li>}
+        {!loading && count === 0 && <li>{emptyText}</li>}
+        {!loading && shown.map((e: any, i: number) => {
+          const link = issueLinkProps(e.code, e.related_id);
+          if (link) {
+            return (
+              <li key={i}>
+                <Link
+                  to={link.to}
+                  params={link.params}
+                  className={`flex items-start gap-1 rounded-md px-2 py-1 -mx-1 transition hover:bg-white/5 ${linkColor}`}
+                >
+                  <ExternalLink size={11} className="mt-0.5 opacity-70 shrink-0" />
+                  <span className="flex-1">{e.message}</span>
+                  <span className="text-[10px] opacity-70 shrink-0">فتح</span>
+                </Link>
+              </li>
+            );
+          }
+          return (
+            <li key={i} className="flex items-start gap-1 px-2 py-1 -mx-1">
+              <span className="w-2.5 shrink-0">•</span>
+              <span className="flex-1">{e.message}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {!loading && count > 6 && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          className="mt-2 inline-flex items-center gap-1 text-[11px] text-gold hover:underline"
+        >
+          {showAll ? (<><ChevronDown size={12} /> عرض أقل</>) : (<><ChevronLeft size={12} /> إظهار الكل ({count})</>)}
+        </button>
+      )}
+    </div>
+  );
+}
+
+
 function PendingDocumentsPanel({ rows }: { rows: any[] }) {
   const total = rows.reduce((s, r) => s + Number(r.pending_vat_amount || 0), 0);
   return (
