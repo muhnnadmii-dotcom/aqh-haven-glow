@@ -129,7 +129,8 @@ function parseAmount(v: any): number | null {
 }
 const amount0 = (v: any) => parseAmount(v) ?? 0;
 
-const CANCELLED_RX = /cancel|ملغى|ملغي|ملغاة|إلغاء|الغاء/i;
+// Includes deleted/removed variants so Salla "محذوف" orders are treated as cancelled.
+const CANCELLED_RX = /cancel|ملغى|ملغي|ملغاة|إلغاء|الغاء|deleted|removed|محذوف|حذف/i;
 const isCancelled = (s: string | null) => !!s && CANCELLED_RX.test(s);
 
 type Classification =
