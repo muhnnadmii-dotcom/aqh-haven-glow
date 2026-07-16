@@ -131,6 +131,10 @@ function VatDashboard() {
             </Card>
           </div>
 
+          <PendingDocumentsPanel rows={pendingDocs ?? []} />
+
+
+
           {issuesFailed ? (
             <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-rose-200">
