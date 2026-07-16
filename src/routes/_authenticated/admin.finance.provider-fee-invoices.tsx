@@ -103,6 +103,9 @@ function ProviderFeeInvoicesPage() {
                 <th className="text-end px-3 py-2">مطابق</th>
                 <th className="text-end px-3 py-2">غير مطابق</th>
                 <th className="text-start px-3 py-2">حالة المستند</th>
+                <th className="text-start px-3 py-2">حالة الفاتورة</th>
+                <th className="text-end px-3 py-2">مدفوع من رصيد البوابة</th>
+                <th className="text-end px-3 py-2">المتبقي</th>
                 <th className="text-start px-3 py-2"></th>
               </tr>
             </thead>
@@ -111,6 +114,7 @@ function ProviderFeeInvoicesPage() {
                 const prov = providerById(r.payment_provider_id);
                 const period = r.fee_period_start || r.fee_period_end
                   ? `${r.fee_period_start ?? "—"} → ${r.fee_period_end ?? "—"}` : "—";
+                const paidWallet = walletPaid[r.id] ?? 0;
                 return (
                   <>
                     <tr key={r.id} className="border-t border-white/5">
@@ -127,16 +131,22 @@ function ProviderFeeInvoicesPage() {
                       <td className="px-3 py-2 tabular-nums text-end text-emerald-400">{fmt(r.matched_fee_amount)}</td>
                       <td className="px-3 py-2 tabular-nums text-end text-amber-400">{fmt(r.unmatched_fee_amount)}</td>
                       <td className="px-3 py-2">{VAT_DOC_LABEL[r.vat_document_status ?? "pending_review"] ?? "—"}</td>
+                      <td className="px-3 py-2">{STATUS_LABEL[r.status] ?? r.status}</td>
+                      <td className="px-3 py-2 tabular-nums text-end text-emerald-300">{fmt(paidWallet)}</td>
+                      <td className="px-3 py-2 tabular-nums text-end">{fmt(r.remaining_amount)}</td>
                       <td className="px-3 py-2">
-                        <button className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-                          onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
-                          {expanded === r.id ? "إغلاق" : "إدارة الربط"}
-                        </button>
+                        <div className="flex gap-1">
+                          <a href={`/admin/finance/purchase-invoices/${r.id}`} className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20">فتح</a>
+                          <button className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                            onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
+                            {expanded === r.id ? "إغلاق" : "إدارة الربط"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     {expanded === r.id && (
                       <tr>
-                        <td colSpan={10} className="bg-white/5 px-3 py-3">
+                        <td colSpan={13} className="bg-white/5 px-3 py-3">
                           <LinkSettlementsPanel invoice={r} providerId={r.payment_provider_id} onChanged={load} />
                         </td>
                       </tr>
