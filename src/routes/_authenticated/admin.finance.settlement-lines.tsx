@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/settlement-l
   validateSearch: (s: Record<string, unknown>) => ({
     settlement: (s.settlement as string) || undefined,
     provider: (s.provider as string) || undefined,
+    order: (s.order as string) || undefined,
   }),
 });
 
@@ -65,7 +66,7 @@ function SettlementLinesPage() {
   const [filterMatch, setFilterMatch] = useState("");
   const [filterSettlement, setFilterSettlement] = useState(search.settlement || "");
   const [filterProvider, setFilterProvider] = useState(search.provider || "");
-  const [filterOrder, setFilterOrder] = useState("");
+  const [filterOrder, setFilterOrder] = useState(search.order || "");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<any | null>(null);
 
