@@ -8,6 +8,7 @@ import { ArrowRight, CheckCircle2, Loader2, Plus, Trash2, XCircle, Link2, AlertT
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
+import { ProviderWalletPaymentsPanel } from "@/components/finance/ProviderWalletPaymentsPanel";
 import { CreditDebitNotesPanel } from "@/components/finance/CreditDebitNotesPanel";
 import {
   PURCHASE_TYPE_LABEL,
