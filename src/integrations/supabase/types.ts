@@ -5185,6 +5185,20 @@ export type Database = {
         Args: { p_override_reason?: string; p_period_id: string }
         Returns: string
       }
+      vat_review_refunds: {
+        Args: { p_period_id: string }
+        Returns: {
+          action_required: string
+          classification: string
+          external_order_id: string
+          gross_sale: number
+          invoice_number: string
+          invoice_total: number
+          provider_name: string
+          refund_total: number
+          sales_invoice_id: number
+        }[]
+      }
       vat_validate_return: {
         Args: { p_period_id: string }
         Returns: {

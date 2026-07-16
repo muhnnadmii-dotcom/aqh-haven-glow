@@ -52,6 +52,12 @@ export async function fetchPendingDocumentInvoices(periodId: string) {
   if (error) throw error;
   return (data ?? []) as any[];
 }
+
+export async function fetchRefundReview(periodId: string) {
+  const { data, error } = await supabase.rpc("vat_review_refunds" as any, { p_period_id: periodId });
+  if (error) throw error;
+  return (data ?? []) as any[];
+}
 export async function fetchExcluded(periodId: string) {
   const { data, error } = await supabase.rpc("vat_get_excluded_invoices" as any, { p_period_id: periodId });
   if (error) throw error;
