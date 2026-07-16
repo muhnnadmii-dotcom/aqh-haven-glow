@@ -2450,6 +2450,7 @@ export type Database = {
           rounding_tolerance: number
           supplier_id: string | null
           updated_at: string
+          wallet_account_id: string | null
         }
         Insert: {
           clearing_account_id?: string | null
@@ -2464,6 +2465,7 @@ export type Database = {
           rounding_tolerance?: number
           supplier_id?: string | null
           updated_at?: string
+          wallet_account_id?: string | null
         }
         Update: {
           clearing_account_id?: string | null
@@ -2478,6 +2480,7 @@ export type Database = {
           rounding_tolerance?: number
           supplier_id?: string | null
           updated_at?: string
+          wallet_account_id?: string | null
         }
         Relationships: [
           {
@@ -2492,6 +2495,13 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "finance_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_providers_wallet_account_id_fkey"
+            columns: ["wallet_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -3053,6 +3063,95 @@ export type Database = {
             columns: ["purchase_invoice_id"]
             isOneToOne: false
             referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_invoice_provider_payments: {
+        Row: {
+          amount: number
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          journal_entry_id: string | null
+          notes: string | null
+          payment_date: string
+          provider_id: string
+          purchase_invoice_id: number
+          reversed_at: string | null
+          reversed_by: string | null
+          reversed_reason: string | null
+          source_account_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          payment_date?: string
+          provider_id: string
+          purchase_invoice_id: number
+          reversed_at?: string | null
+          reversed_by?: string | null
+          reversed_reason?: string | null
+          source_account_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          payment_date?: string
+          provider_id?: string
+          purchase_invoice_id?: number
+          reversed_at?: string | null
+          reversed_by?: string | null
+          reversed_reason?: string | null
+          source_account_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_invoice_provider_payments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoice_provider_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "payment_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoice_provider_payments_purchase_invoice_id_fkey"
+            columns: ["purchase_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoice_provider_payments_source_account_id_fkey"
+            columns: ["source_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -4873,6 +4972,16 @@ export type Database = {
         Args: { p_period_id: string }
         Returns: undefined
       }
+      confirm_provider_invoice_payment: {
+        Args: {
+          p_amount: number
+          p_invoice_id: number
+          p_notes?: string
+          p_payment_date?: string
+          p_source_account_id?: string
+        }
+        Returns: Json
+      }
       delete_settlement_full: {
         Args: { _reason: string; _settlement_id: string }
         Returns: Json
@@ -5016,6 +5125,10 @@ export type Database = {
           affected_count: number
         }[]
       }
+      preview_provider_invoice_payment: {
+        Args: { p_amount?: number; p_invoice_id: number }
+        Returns: Json
+      }
       purchase_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
         Returns: undefined
@@ -5091,6 +5204,10 @@ export type Database = {
       reverse_journal_entry: {
         Args: { p_entry_id: string; p_reason: string }
         Returns: string
+      }
+      reverse_provider_invoice_payment: {
+        Args: { p_payment_id: string; p_reason: string }
+        Returns: Json
       }
       reverse_settlement_allocation: {
         Args: { _allocation_id: string; _reason: string }

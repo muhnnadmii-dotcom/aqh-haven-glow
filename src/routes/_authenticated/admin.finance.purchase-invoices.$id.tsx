@@ -8,6 +8,7 @@ import { ArrowRight, CheckCircle2, Loader2, Plus, Trash2, XCircle, Link2, AlertT
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
+import { ProviderWalletPaymentsPanel } from "@/components/finance/ProviderWalletPaymentsPanel";
 import { CreditDebitNotesPanel } from "@/components/finance/CreditDebitNotesPanel";
 import {
   PURCHASE_TYPE_LABEL,
@@ -550,6 +551,16 @@ function PurchaseInvoiceEditor() {
           </div>
         )}
       </div>
+
+      {/* Provider wallet payments (separate from finance_expenses) */}
+      <ProviderWalletPaymentsPanel
+        invoiceId={invoiceId}
+        invoiceStatus={header.status}
+        paymentProviderId={header.payment_provider_id}
+        remaining={Number(header.remaining_amount || 0)}
+        canManage={!canEdit && header.status !== "cancelled"}
+        onChanged={() => qc.invalidateQueries({ queryKey: ["purchase_invoice", invoiceId] })}
+      />
 
       {/* Attachments */}
       <AttachmentsPanel relatedType="purchase_invoice" relatedId={String(invoiceId)} canManage={canEdit} linkedRefs={linkedPayments.map((p: any) => ({ relatedType: "expense" as const, relatedId: String(p.id) }))} />

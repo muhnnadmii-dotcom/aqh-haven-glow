@@ -20,6 +20,7 @@ function fmt(n: any) { return Number(n ?? 0).toFixed(2); }
 function ProviderFeeInvoicesPage() {
   const [providers, setProviders] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [walletPaid, setWalletPaid] = useState<Record<number, number>>({});
   const [filterProvider, setFilterProvider] = useState("");
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -35,6 +36,20 @@ function ProviderFeeInvoicesPage() {
       .order("issue_date", { ascending: false });
     if (error) toast.error(error.message);
     else setInvoices(inv ?? []);
+
+    const ids = (inv ?? []).map((r: any) => r.id);
+    if (ids.length) {
+      const { data: pays } = await supabase
+        .from("purchase_invoice_provider_payments" as any)
+        .select("purchase_invoice_id, amount, status")
+        .in("purchase_invoice_id", ids)
+        .eq("status", "confirmed");
+      const acc: Record<number, number> = {};
+      for (const r of (pays as any[]) ?? []) {
+        acc[r.purchase_invoice_id] = (acc[r.purchase_invoice_id] ?? 0) + Number(r.amount ?? 0);
+      }
+      setWalletPaid(acc);
+    } else setWalletPaid({});
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -42,12 +57,21 @@ function ProviderFeeInvoicesPage() {
   const providerById = (id: string) => providers.find((p) => p.id === id);
   const filtered = invoices.filter((inv) => !filterProvider || inv.payment_provider_id === filterProvider);
 
+  const STATUS_LABEL: Record<string, string> = {
+    draft: "مسودة", under_review: "قيد المراجعة", approved: "معتمدة", rejected: "مرفوضة",
+    partially_paid: "مدفوعة جزئياً", paid: "مدفوعة",
+  };
+
+
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-base font-semibold">فواتير رسوم الوسطاء</h2>
         <p className="text-[11px] text-muted-foreground mt-1">
           فواتير المشتريات المرتبطة ببوابة دفع (سلة، تابي، تمارا). اربطها بالتسويات لتغطية الرسوم دون تكرار.
+        </p>
+        <p className="text-[11px] text-amber-300/80 mt-1">
+          ملاحظة: <b>مطابقة الرسوم بالتسويات</b> (الأعمدة "مطابق/غير مطابق") تعكس التغطية المحاسبية للرسوم فقط، وليست دليلًا على أن الفاتورة مدفوعة. <b>مصدر السداد الفعلي</b> يظهر في عمود <b>حالة الفاتورة</b> و<b>المدفوع من رصيد البوابة</b> أدناه.
         </p>
       </div>
 
@@ -79,6 +103,9 @@ function ProviderFeeInvoicesPage() {
                 <th className="text-end px-3 py-2">مطابق</th>
                 <th className="text-end px-3 py-2">غير مطابق</th>
                 <th className="text-start px-3 py-2">حالة المستند</th>
+                <th className="text-start px-3 py-2">حالة الفاتورة</th>
+                <th className="text-end px-3 py-2">مدفوع من رصيد البوابة</th>
+                <th className="text-end px-3 py-2">المتبقي</th>
                 <th className="text-start px-3 py-2"></th>
               </tr>
             </thead>
@@ -87,6 +114,7 @@ function ProviderFeeInvoicesPage() {
                 const prov = providerById(r.payment_provider_id);
                 const period = r.fee_period_start || r.fee_period_end
                   ? `${r.fee_period_start ?? "—"} → ${r.fee_period_end ?? "—"}` : "—";
+                const paidWallet = walletPaid[r.id] ?? 0;
                 return (
                   <>
                     <tr key={r.id} className="border-t border-white/5">
@@ -103,16 +131,22 @@ function ProviderFeeInvoicesPage() {
                       <td className="px-3 py-2 tabular-nums text-end text-emerald-400">{fmt(r.matched_fee_amount)}</td>
                       <td className="px-3 py-2 tabular-nums text-end text-amber-400">{fmt(r.unmatched_fee_amount)}</td>
                       <td className="px-3 py-2">{VAT_DOC_LABEL[r.vat_document_status ?? "pending_review"] ?? "—"}</td>
+                      <td className="px-3 py-2">{STATUS_LABEL[r.status] ?? r.status}</td>
+                      <td className="px-3 py-2 tabular-nums text-end text-emerald-300">{fmt(paidWallet)}</td>
+                      <td className="px-3 py-2 tabular-nums text-end">{fmt(r.remaining_amount)}</td>
                       <td className="px-3 py-2">
-                        <button className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20"
-                          onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
-                          {expanded === r.id ? "إغلاق" : "إدارة الربط"}
-                        </button>
+                        <div className="flex gap-1">
+                          <a href={`/admin/finance/purchase-invoices/${r.id}`} className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20">فتح</a>
+                          <button className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+                            onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
+                            {expanded === r.id ? "إغلاق" : "إدارة الربط"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     {expanded === r.id && (
                       <tr>
-                        <td colSpan={10} className="bg-white/5 px-3 py-3">
+                        <td colSpan={13} className="bg-white/5 px-3 py-3">
                           <LinkSettlementsPanel invoice={r} providerId={r.payment_provider_id} onChanged={load} />
                         </td>
                       </tr>
