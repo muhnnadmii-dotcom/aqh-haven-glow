@@ -552,6 +552,16 @@ function PurchaseInvoiceEditor() {
         )}
       </div>
 
+      {/* Provider wallet payments (separate from finance_expenses) */}
+      <ProviderWalletPaymentsPanel
+        invoiceId={invoiceId}
+        invoiceStatus={header.status}
+        paymentProviderId={header.payment_provider_id}
+        remaining={Number(header.remaining_amount || 0)}
+        canManage={!canEdit && header.status !== "cancelled"}
+        onChanged={() => qc.invalidateQueries({ queryKey: ["purchase_invoice", invoiceId] })}
+      />
+
       {/* Attachments */}
       <AttachmentsPanel relatedType="purchase_invoice" relatedId={String(invoiceId)} canManage={canEdit} linkedRefs={linkedPayments.map((p: any) => ({ relatedType: "expense" as const, relatedId: String(p.id) }))} />
 
