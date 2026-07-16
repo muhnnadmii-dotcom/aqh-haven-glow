@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin/finance/settlement-l
   validateSearch: (s: Record<string, unknown>) => ({
     settlement: (s.settlement as string) || undefined,
     provider: (s.provider as string) || undefined,
+    order: (s.order as string) || undefined,
   }),
 });
 
