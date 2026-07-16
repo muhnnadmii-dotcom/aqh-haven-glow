@@ -432,9 +432,10 @@ function RefundReviewPanel({ rows }: { rows: any[] }) {
         فقط هي التي تحتاج تدخّلًا يدويًا — لا يتم إنشاء أي إشعار تلقائيًا.
       </p>
       <div className="mt-3 overflow-x-auto rounded-lg border border-white/10">
-        <table className="w-full text-[12px] min-w-[820px]">
+        <table className="w-full text-[12px] min-w-[880px]">
           <thead className="bg-white/5 text-muted-foreground">
             <tr>
+              <th className="p-2 w-6"></th>
               <th className="text-right p-2">الطلب</th>
               <th className="text-right p-2">الفاتورة</th>
               <th className="text-right p-2">المزوّد</th>
@@ -447,38 +448,130 @@ function RefundReviewPanel({ rows }: { rows: any[] }) {
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={`${r.external_order_id}-${i}`} className="border-t border-white/10 hover:bg-white/5">
-                <td className="p-2 font-mono">{r.external_order_id}</td>
-                <td className="p-2">
-                  {r.sales_invoice_id ? (
-                    <Link
-                      to="/admin/finance/sales-invoices/$id"
-                      params={{ id: String(r.sales_invoice_id) }}
-                      className="text-gold hover:underline font-mono"
-                    >
-                      {r.invoice_number ?? `#${r.sales_invoice_id}`}
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </td>
-                <td className="p-2">{r.provider_name ?? "—"}</td>
-                <td className="p-2 font-mono">{fmtSAR(r.gross_sale)}</td>
-                <td className="p-2 font-mono text-rose-200">{fmtSAR(r.refund_total)}</td>
-                <td className="p-2 font-mono">{r.invoice_total != null ? fmtSAR(r.invoice_total) : "—"}</td>
-                <td className={`p-2 ${REFUND_CLASS_TONE[r.classification] ?? ""}`}>
-                  {REFUND_CLASS_LABEL[r.classification] ?? r.classification}
-                </td>
-                <td className="p-2 text-[11px]">
-                  {r.action_required === "create_credit_note" && <span className="text-amber-300">إنشاء إشعار دائن يدويًا</span>}
-                  {r.action_required === "review" && <span className="text-rose-300">مراجعة يدوية</span>}
-                  {r.action_required === "none" && <span className="text-muted-foreground">لا يوجد</span>}
-                </td>
-              </tr>
+              <RefundReviewRow key={`${r.external_order_id}-${i}`} r={r} />
             ))}
           </tbody>
         </table>
       </div>
     </div>
+  );
+}
+
+function RefundReviewRow({ r }: { r: any }) {
+  const [open, setOpen] = useState(false);
+  const gross = Number(r.gross_sale || 0);
+  const refund = Number(r.refund_total || 0);
+  const expectedAfterRefund = Math.max(0, gross - refund);
+  const invoiceTotal = r.invoice_total != null ? Number(r.invoice_total) : null;
+  const diff = invoiceTotal != null ? invoiceTotal - expectedAfterRefund : null;
+  const diffAbs = diff != null ? Math.abs(diff) : null;
+  const diffDir = diff == null ? null : diff < 0 ? "الفاتورة أقل" : diff > 0 ? "الفاتورة أعلى" : "مطابقة";
+
+  return (
+    <>
+      <tr className="border-t border-white/10 hover:bg-white/5">
+        <td className="p-2 align-top">
+          <button
+            type="button"
+            aria-label={open ? "طي" : "توسيع"}
+            onClick={() => setOpen((v) => !v)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {open ? <ChevronDown size={13} /> : <ChevronLeft size={13} />}
+          </button>
+        </td>
+        <td className="p-2 font-mono align-top">{r.external_order_id}</td>
+        <td className="p-2 align-top">
+          {r.sales_invoice_id ? (
+            <Link
+              to="/admin/finance/sales-invoices/$id"
+              params={{ id: String(r.sales_invoice_id) }}
+              className="text-gold hover:underline font-mono"
+            >
+              {r.invoice_number ?? `#${r.sales_invoice_id}`}
+            </Link>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </td>
+        <td className="p-2 align-top">{r.provider_name ?? "—"}</td>
+        <td className="p-2 font-mono align-top">{fmtSAR(gross)}</td>
+        <td className="p-2 font-mono text-rose-200 align-top">{fmtSAR(refund)}</td>
+        <td className="p-2 font-mono align-top">{invoiceTotal != null ? fmtSAR(invoiceTotal) : "—"}</td>
+        <td className={`p-2 align-top ${REFUND_CLASS_TONE[r.classification] ?? ""}`}>
+          {REFUND_CLASS_LABEL[r.classification] ?? r.classification}
+        </td>
+        <td className="p-2 text-[11px] align-top">
+          {r.action_required === "create_credit_note" && <span className="text-amber-300">إنشاء إشعار دائن يدويًا</span>}
+          {r.action_required === "review" && <span className="text-rose-300">مراجعة يدوية</span>}
+          {r.action_required === "none" && <span className="text-muted-foreground">لا يوجد</span>}
+        </td>
+      </tr>
+      {open && (
+        <tr className="border-t border-white/5 bg-white/[0.02]">
+          <td></td>
+          <td colSpan={8} className="p-3 text-[11px] space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+              <div>
+                <span className="text-muted-foreground">المتوقع بعد المرتجع: </span>
+                <span className="font-mono">{fmtSAR(gross)} − {fmtSAR(refund)} = <b>{fmtSAR(expectedAfterRefund)}</b></span>
+              </div>
+              {invoiceTotal != null && (
+                <div>
+                  <span className="text-muted-foreground">قيمة الفاتورة: </span>
+                  <span className="font-mono">{fmtSAR(invoiceTotal)}</span>
+                </div>
+              )}
+              {diffAbs != null && (
+                <div className={diffAbs > 0.02 ? (diff! < 0 ? "text-rose-200" : "text-amber-200") : "text-emerald-300"}>
+                  <span className="text-muted-foreground">الفرق: </span>
+                  <span className="font-mono">{fmtSAR(diffAbs)}</span>
+                  {diffAbs > 0.02 && <span> — {diffDir} من المتوقع</span>}
+                </div>
+              )}
+            </div>
+
+            {r.classification === "amount_mismatch" && diffAbs != null && diffAbs > 0.02 && (
+              <div className="rounded-md bg-rose-500/10 border border-rose-500/30 p-2 text-rose-100/90">
+                {fmtSAR(gross)} − {fmtSAR(refund)} = {fmtSAR(expectedAfterRefund)} متوقع، قيمة الفاتورة {fmtSAR(invoiceTotal ?? 0)}،
+                {" "}{diffDir} بـ {fmtSAR(diffAbs)}.
+                <div className="mt-1 text-muted-foreground">
+                  الإجراء المقترح: التحقق من خصم أو مرتجع إضافي بقيمة {fmtSAR(diffAbs)} في مصدر سلة/بوابة الدفع. لا يتم أي تعديل تلقائي للمبالغ.
+                </div>
+              </div>
+            )}
+            {r.classification === "needs_credit_note" && (
+              <div className="rounded-md bg-amber-500/10 border border-amber-500/30 p-2 text-amber-100/90">
+                الفاتورة لا تزال بقيمة البيع قبل المرتجع ({fmtSAR(gross)}). الإشعار الدائن المطلوب: <b>{fmtSAR(refund)}</b>.
+              </div>
+            )}
+            {r.classification === "cancelled_order_no_invoice" && (
+              <div className="rounded-md bg-white/5 border border-white/10 p-2 text-muted-foreground">
+                طلب ملغي ولا توجد فاتورة لفتحها — لا إجراء ضريبي.
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Link
+                to="/admin/finance/settlement-lines"
+                search={{ order: r.external_order_id }}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[11px] hover:bg-white/10"
+              >
+                <ExternalLink size={11} /> فتح حركات التسوية
+              </Link>
+              {r.sales_invoice_id && (
+                <Link
+                  to="/admin/finance/sales-invoices/$id"
+                  params={{ id: String(r.sales_invoice_id) }}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gold/15 border border-gold/30 text-gold text-[11px]"
+                >
+                  <ExternalLink size={11} /> فتح الفاتورة
+                </Link>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
