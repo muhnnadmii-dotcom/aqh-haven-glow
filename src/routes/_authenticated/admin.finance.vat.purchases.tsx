@@ -89,6 +89,10 @@ function VatPurchasesPage() {
         </button>
       </div>
 
+      <div className="text-[11px] text-muted-foreground">
+        تعرض هذه الصفحة فواتير المشتريات ذات ضريبة فعلية فقط (vat_amount &gt; 0). الفواتير الصفرية/المعفاة/خارج النطاق مستبعدة من الجدول والإجماليات والتصدير.
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px]">
         <Stat label="خاضع" value={fmtSAR(totals.taxable)} />
         <Stat label="إجمالي الضريبة" value={fmtSAR(totals.vat)} />
