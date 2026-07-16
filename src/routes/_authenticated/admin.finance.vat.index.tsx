@@ -139,6 +139,10 @@ function VatDashboard() {
 
           <PendingDocumentsPanel rows={pendingDocs ?? []} />
 
+          <RefundReviewPanel rows={refundReview ?? []} />
+
+
+
 
 
           {issuesFailed ? (
