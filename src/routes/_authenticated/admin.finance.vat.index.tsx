@@ -231,3 +231,69 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function PendingDocumentsPanel({ rows }: { rows: any[] }) {
+  const total = rows.reduce((s, r) => s + Number(r.pending_vat_amount || 0), 0);
+  return (
+    <div className={`rounded-xl border p-4 ${rows.length ? "border-amber-500/40 bg-amber-500/10" : "border-emerald-500/25 bg-emerald-500/5"}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Paperclip size={14} className={rows.length ? "text-amber-300" : "text-emerald-300"} />
+          فواتير تحتاج مستند {rows.length ? `(${rows.length})` : ""}
+        </div>
+        <div className="text-[12px] text-muted-foreground">
+          إجمالي الضريبة المعلّقة:{" "}
+          <span className={`font-mono font-semibold ${rows.length ? "text-amber-200" : "text-foreground"}`}>{fmtSAR(total)}</span>
+        </div>
+      </div>
+      {rows.length === 0 ? (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          كل فواتير الفترة التي تخصم ضريبة لديها مرفق أو استثناء موثق.
+        </p>
+      ) : (
+        <>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            هذه الفواتير ضريبتها لا تُخصم في الإقرار إلى حين إرفاق فاتورة المورد. الضريبة تبقى ضمن إجمالي المدخلات ولا تُحسب ضمن غير القابل للخصم.
+          </p>
+          <div className="mt-3 overflow-x-auto rounded-lg border border-white/10">
+            <table className="w-full text-[12px] min-w-[640px]">
+              <thead className="bg-white/5 text-muted-foreground">
+                <tr>
+                  <th className="text-right p-2">المرجع</th>
+                  <th className="text-right p-2">المورد</th>
+                  <th className="text-right p-2">التاريخ</th>
+                  <th className="text-right p-2">الضريبة المعلّقة</th>
+                  <th className="text-right p-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.invoice_id} className="border-t border-white/10 hover:bg-white/5">
+                    <td className="p-2">
+                      <div className="font-mono">{r.internal_reference}</div>
+                      {r.supplier_invoice_number && (
+                        <div className="text-[10px] text-muted-foreground">مورد: {r.supplier_invoice_number}</div>
+                      )}
+                    </td>
+                    <td className="p-2">{r.supplier_name || "—"}</td>
+                    <td className="p-2">{fmtDate(r.invoice_date)}</td>
+                    <td className="p-2 font-mono text-amber-200">{fmtSAR(r.pending_vat_amount)}</td>
+                    <td className="p-2">
+                      <Link
+                        to="/admin/finance/purchase-invoices/$id"
+                        params={{ id: String(r.invoice_id) }}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gold/15 border border-gold/30 text-gold text-[11px]"
+                      >
+                        فتح ورفع المستند
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
