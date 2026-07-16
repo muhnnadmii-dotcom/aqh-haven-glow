@@ -26,6 +26,8 @@ function issueLinkProps(code: string, relatedId: number | string | null | undefi
     // sales invoice destinations
     case "refund_needs_credit_note":
     case "refund_amount_mismatch":
+    case "sale_draft":
+    case "cancelled_by_credit_note":
       return { to: "/admin/finance/sales-invoices/$id", params: { id: idStr } };
     // refund_without_credit_note → related_id is sales_refunds.id; no direct route we can guarantee
     default:
