@@ -20,6 +20,7 @@ function fmt(n: any) { return Number(n ?? 0).toFixed(2); }
 function ProviderFeeInvoicesPage() {
   const [providers, setProviders] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [walletPaid, setWalletPaid] = useState<Record<number, number>>({});
   const [filterProvider, setFilterProvider] = useState("");
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -35,12 +36,32 @@ function ProviderFeeInvoicesPage() {
       .order("issue_date", { ascending: false });
     if (error) toast.error(error.message);
     else setInvoices(inv ?? []);
+
+    const ids = (inv ?? []).map((r: any) => r.id);
+    if (ids.length) {
+      const { data: pays } = await supabase
+        .from("purchase_invoice_provider_payments" as any)
+        .select("purchase_invoice_id, amount, status")
+        .in("purchase_invoice_id", ids)
+        .eq("status", "confirmed");
+      const acc: Record<number, number> = {};
+      for (const r of (pays as any[]) ?? []) {
+        acc[r.purchase_invoice_id] = (acc[r.purchase_invoice_id] ?? 0) + Number(r.amount ?? 0);
+      }
+      setWalletPaid(acc);
+    } else setWalletPaid({});
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
   const providerById = (id: string) => providers.find((p) => p.id === id);
   const filtered = invoices.filter((inv) => !filterProvider || inv.payment_provider_id === filterProvider);
+
+  const STATUS_LABEL: Record<string, string> = {
+    draft: "مسودة", under_review: "قيد المراجعة", approved: "معتمدة", rejected: "مرفوضة",
+    partially_paid: "مدفوعة جزئياً", paid: "مدفوعة",
+  };
+
 
   return (
     <div className="space-y-4">
