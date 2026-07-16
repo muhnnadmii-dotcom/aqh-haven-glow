@@ -307,3 +307,97 @@ function PendingDocumentsPanel({ rows }: { rows: any[] }) {
     </div>
   );
 }
+
+const REFUND_CLASS_LABEL: Record<string, string> = {
+  cancelled_order_no_invoice: "طلب ملغي بدون فاتورة",
+  netted_in_source: "مُصفَّى من المصدر",
+  needs_credit_note: "يحتاج إشعار دائن",
+  amount_mismatch: "فرق مبالغ — يحتاج مراجعة",
+};
+
+const REFUND_CLASS_TONE: Record<string, string> = {
+  cancelled_order_no_invoice: "text-muted-foreground",
+  netted_in_source: "text-emerald-300",
+  needs_credit_note: "text-amber-300",
+  amount_mismatch: "text-rose-300",
+};
+
+function RefundReviewPanel({ rows }: { rows: any[] }) {
+  if (!rows.length) return null;
+  const counts = rows.reduce<Record<string, number>>((a, r) => {
+    a[r.classification] = (a[r.classification] ?? 0) + 1;
+    return a;
+  }, {});
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Undo2 size={14} className="text-sky-300" />
+          مراجعة المرتجعات ({rows.length})
+        </div>
+        <div className="flex flex-wrap gap-2 text-[11px]">
+          {Object.entries(counts).map(([k, v]) => (
+            <span key={k} className={`px-2 py-0.5 rounded-md bg-white/5 border border-white/10 ${REFUND_CLASS_TONE[k] ?? ""}`}>
+              {REFUND_CLASS_LABEL[k] ?? k}: <span className="font-mono">{v}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        تصنيف كل طلب فيه مرتجع داخل الفترة. الطلبات الملغاة والمُصفّاة من المصدر لا تحتاج أي إجراء ولا تُنشئ إشعارًا. الإجراءات
+        <span className="text-amber-200"> يحتاج إشعار دائن </span>
+        و
+        <span className="text-rose-200"> فرق مبالغ </span>
+        فقط هي التي تحتاج تدخّلًا يدويًا — لا يتم إنشاء أي إشعار تلقائيًا.
+      </p>
+      <div className="mt-3 overflow-x-auto rounded-lg border border-white/10">
+        <table className="w-full text-[12px] min-w-[820px]">
+          <thead className="bg-white/5 text-muted-foreground">
+            <tr>
+              <th className="text-right p-2">الطلب</th>
+              <th className="text-right p-2">الفاتورة</th>
+              <th className="text-right p-2">المزوّد</th>
+              <th className="text-right p-2">البيع</th>
+              <th className="text-right p-2">المرتجع</th>
+              <th className="text-right p-2">قيمة الفاتورة</th>
+              <th className="text-right p-2">التصنيف</th>
+              <th className="text-right p-2">الإجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={`${r.external_order_id}-${i}`} className="border-t border-white/10 hover:bg-white/5">
+                <td className="p-2 font-mono">{r.external_order_id}</td>
+                <td className="p-2">
+                  {r.sales_invoice_id ? (
+                    <Link
+                      to="/admin/finance/sales-invoices/$id"
+                      params={{ id: String(r.sales_invoice_id) }}
+                      className="text-gold hover:underline font-mono"
+                    >
+                      {r.invoice_number ?? `#${r.sales_invoice_id}`}
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="p-2">{r.provider_name ?? "—"}</td>
+                <td className="p-2 font-mono">{fmtSAR(r.gross_sale)}</td>
+                <td className="p-2 font-mono text-rose-200">{fmtSAR(r.refund_total)}</td>
+                <td className="p-2 font-mono">{r.invoice_total != null ? fmtSAR(r.invoice_total) : "—"}</td>
+                <td className={`p-2 ${REFUND_CLASS_TONE[r.classification] ?? ""}`}>
+                  {REFUND_CLASS_LABEL[r.classification] ?? r.classification}
+                </td>
+                <td className="p-2 text-[11px]">
+                  {r.action_required === "create_credit_note" && <span className="text-amber-300">إنشاء إشعار دائن يدويًا</span>}
+                  {r.action_required === "review" && <span className="text-rose-300">مراجعة يدوية</span>}
+                  {r.action_required === "none" && <span className="text-muted-foreground">لا يوجد</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
