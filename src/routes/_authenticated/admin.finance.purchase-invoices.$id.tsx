@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
 import { ProviderWalletPaymentsPanel } from "@/components/finance/ProviderWalletPaymentsPanel";
 import { CreditDebitNotesPanel } from "@/components/finance/CreditDebitNotesPanel";
+import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import {
   PURCHASE_TYPE_LABEL,
   PURCHASE_STATUS_LABEL,
@@ -113,6 +114,8 @@ function PurchaseInvoiceEditor() {
 
   const isDraft = header?.status === "draft";
   const canEdit = header?.status === "draft" || header?.status === "under_review" || header?.status === "rejected";
+  const { isAdmin, canManage: canFinanceManage, canAccountant: canFinanceAccountant } = useFinanceRoles();
+  const canManageProviderPayments = isAdmin || canFinanceManage || canFinanceAccountant;
   const isRejected = header?.status === "rejected";
 
   const NON_STD_CODES = new Set(["out_of_scope", "zero_rated", "exempt"]);
@@ -558,7 +561,7 @@ function PurchaseInvoiceEditor() {
         invoiceStatus={header.status}
         paymentProviderId={header.payment_provider_id}
         remaining={Number(header.remaining_amount || 0)}
-        canManage={!canEdit && header.status !== "cancelled"}
+        canManage={canManageProviderPayments && header.status !== "cancelled"}
         onChanged={() => qc.invalidateQueries({ queryKey: ["purchase_invoice", invoiceId] })}
       />
 
