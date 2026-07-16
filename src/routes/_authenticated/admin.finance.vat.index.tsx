@@ -2,12 +2,37 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { fetchPeriods, fetchSummary, fmtSAR, fmtDate, validateReturn, fetchPendingDocumentInvoices, fetchRefundReview } from "@/lib/finance/vat-helpers";
-import { AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, FileEdit, Paperclip, Undo2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, FileEdit, Paperclip, Undo2, ChevronDown, ChevronLeft, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/vat/")({
   ssr: false,
   component: VatDashboard,
 });
+
+// Map validation-issue `code` → destination for click-through.
+// Only produce a Link when we have a trustworthy destination; otherwise render plain text.
+function issueLinkProps(code: string, relatedId: number | string | null | undefined): { to: string; params?: any; search?: any } | null {
+  if (relatedId == null) return null;
+  const idStr = String(relatedId);
+  switch (code) {
+    // purchase invoice destinations
+    case "missing_attachment":
+    case "deductible_over_total":
+    case "vat_rate_mismatch":
+    case "provider_fees_unmatched":
+    case "pending_review":
+    case "duplicate_invoice":
+      return { to: "/admin/finance/purchase-invoices/$id", params: { id: idStr } };
+    // sales invoice destinations
+    case "refund_needs_credit_note":
+    case "refund_amount_mismatch":
+      return { to: "/admin/finance/sales-invoices/$id", params: { id: idStr } };
+    // refund_without_credit_note → related_id is sales_refunds.id; no direct route we can guarantee
+    default:
+      return null;
+  }
+}
+
 
 function VatDashboard() {
   const [selectedId, setSelectedId] = useState<string>("");
