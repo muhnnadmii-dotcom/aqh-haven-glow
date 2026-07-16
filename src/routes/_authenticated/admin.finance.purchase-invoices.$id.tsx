@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
 import { ProviderWalletPaymentsPanel } from "@/components/finance/ProviderWalletPaymentsPanel";
 import { CreditDebitNotesPanel } from "@/components/finance/CreditDebitNotesPanel";
+import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 import {
   PURCHASE_TYPE_LABEL,
   PURCHASE_STATUS_LABEL,
