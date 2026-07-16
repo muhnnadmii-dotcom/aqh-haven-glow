@@ -47,6 +47,11 @@ export async function fetchPurchaseLines(periodId: string) {
   return (data ?? []) as any[];
 }
 
+export async function fetchPendingDocumentInvoices(periodId: string) {
+  const { data, error } = await supabase.rpc("vat_get_pending_document_invoices" as any, { p_period_id: periodId });
+  if (error) throw error;
+  return (data ?? []) as any[];
+}
 export async function fetchExcluded(periodId: string) {
   const { data, error } = await supabase.rpc("vat_get_excluded_invoices" as any, { p_period_id: periodId });
   if (error) throw error;
