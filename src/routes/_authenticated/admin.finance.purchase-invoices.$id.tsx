@@ -561,7 +561,7 @@ function PurchaseInvoiceEditor() {
         invoiceStatus={header.status}
         paymentProviderId={header.payment_provider_id}
         remaining={Number(header.remaining_amount || 0)}
-        canManage={!canEdit && header.status !== "cancelled"}
+        canManage={canManageProviderPayments && header.status !== "cancelled"}
         onChanged={() => qc.invalidateQueries({ queryKey: ["purchase_invoice", invoiceId] })}
       />
 
