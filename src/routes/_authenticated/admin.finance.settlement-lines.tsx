@@ -66,7 +66,7 @@ function SettlementLinesPage() {
   const [filterMatch, setFilterMatch] = useState("");
   const [filterSettlement, setFilterSettlement] = useState(search.settlement || "");
   const [filterProvider, setFilterProvider] = useState(search.provider || "");
-  const [filterOrder, setFilterOrder] = useState("");
+  const [filterOrder, setFilterOrder] = useState(search.order || "");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<any | null>(null);
 
