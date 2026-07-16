@@ -23,14 +23,16 @@ function VatPurchasesPage() {
     enabled: !!activeId,
   });
 
-  const filtered = useMemo(() => {
-    const arr = lines ?? [];
-    if (filter === "missing") return arr.filter((r: any) => !r.has_attachment);
-    if (filter === "nondeductible") return arr.filter((r: any) => Number(r.non_deductible_vat_amount) > 0);
-    return arr;
-  }, [lines, filter]);
+  // Show only invoices that actually carry VAT (vat_amount > 0).
+  const taxable = useMemo(() => (lines ?? []).filter((r: any) => Number(r.vat_amount || 0) > 0), [lines]);
 
-  const isNonTaxable = (r: any) => Number(r.vat_amount || 0) === 0;
+  const filtered = useMemo(() => {
+    if (filter === "missing") return taxable.filter((r: any) => !r.has_attachment);
+    if (filter === "nondeductible") return taxable.filter((r: any) => Number(r.non_deductible_vat_amount) > 0);
+    return taxable;
+  }, [taxable, filter]);
+
+  const isNonTaxable = (_r: any) => false;
 
   const totals = useMemo(
     () =>
@@ -85,6 +87,10 @@ function VatPurchasesPage() {
         <button onClick={doExport} disabled={!filtered.length} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[12px] disabled:opacity-40">
           <Download size={12} /> تصدير CSV
         </button>
+      </div>
+
+      <div className="text-[11px] text-muted-foreground">
+        تعرض هذه الصفحة فواتير المشتريات ذات ضريبة فعلية فقط (vat_amount &gt; 0). الفواتير الصفرية/المعفاة/خارج النطاق مستبعدة من الجدول والإجماليات والتصدير.
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px]">
