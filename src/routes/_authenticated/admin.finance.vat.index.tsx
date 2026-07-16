@@ -114,7 +114,8 @@ function VatDashboard() {
             <Card title="ملخص المشتريات">
               <Row label="خاضع 15%" value={fmtSAR(summary.purchases.standard_taxable)} />
               <Row label="ضريبة مدخلات" value={fmtSAR(summary.purchases.input_vat_total)} />
-              <Row label="قابل للخصم" value={fmtSAR(summary.purchases.deductible)} />
+              <Row label="قابل للخصم (فعلي)" value={fmtSAR(summary.purchases.deductible)} />
+              <Row label="معلّق مستند" value={fmtSAR(summary.purchases.pending_document_vat ?? 0)} />
               <Row label="غير قابل للخصم" value={fmtSAR(summary.purchases.non_deductible)} />
               <Row label="صفري" value={fmtSAR(summary.purchases.zero_rated)} />
               <Row label="معفى" value={fmtSAR(summary.purchases.exempt)} />
