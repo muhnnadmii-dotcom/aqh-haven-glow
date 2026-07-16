@@ -31,6 +31,12 @@ function VatDashboard() {
     retry: false,
   });
 
+  const { data: pendingDocs } = useQuery({
+    queryKey: ["vat-pending-docs", activeId],
+    queryFn: () => fetchPendingDocumentInvoices(activeId),
+    enabled: !!activeId,
+  });
+
   const errors = (issues ?? []).filter((i: any) => i.severity === "error");
   const warnings = (issues ?? []).filter((i: any) => i.severity === "warning");
 
