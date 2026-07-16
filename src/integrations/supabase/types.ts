@@ -5134,6 +5134,18 @@ export type Database = {
           vat_amount: number
         }[]
       }
+      vat_get_pending_document_invoices: {
+        Args: { p_period_id: string }
+        Returns: {
+          internal_reference: string
+          invoice_date: string
+          invoice_id: number
+          pending_vat_amount: number
+          status: string
+          supplier_invoice_number: string
+          supplier_name: string
+        }[]
+      }
       vat_get_period_summary: { Args: { p_period_id: string }; Returns: Json }
       vat_get_purchase_lines: {
         Args: { p_period_id: string }
