@@ -23,14 +23,16 @@ function VatPurchasesPage() {
     enabled: !!activeId,
   });
 
-  const filtered = useMemo(() => {
-    const arr = lines ?? [];
-    if (filter === "missing") return arr.filter((r: any) => !r.has_attachment);
-    if (filter === "nondeductible") return arr.filter((r: any) => Number(r.non_deductible_vat_amount) > 0);
-    return arr;
-  }, [lines, filter]);
+  // Show only invoices that actually carry VAT (vat_amount > 0).
+  const taxable = useMemo(() => (lines ?? []).filter((r: any) => Number(r.vat_amount || 0) > 0), [lines]);
 
-  const isNonTaxable = (r: any) => Number(r.vat_amount || 0) === 0;
+  const filtered = useMemo(() => {
+    if (filter === "missing") return taxable.filter((r: any) => !r.has_attachment);
+    if (filter === "nondeductible") return taxable.filter((r: any) => Number(r.non_deductible_vat_amount) > 0);
+    return taxable;
+  }, [taxable, filter]);
+
+  const isNonTaxable = (_r: any) => false;
 
   const totals = useMemo(
     () =>
