@@ -185,34 +185,20 @@ function VatDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className={`rounded-xl border p-4 ${errors.length ? "border-rose-500/40 bg-rose-500/10" : "border-emerald-500/30 bg-emerald-500/5"}`}>
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  {issuesLoading ? (
-                    <AlertTriangle size={14} className="text-muted-foreground" />
-                  ) : errors.length ? (
-                    <AlertTriangle size={14} className="text-rose-300" />
-                  ) : (
-                    <CheckCircle2 size={14} className="text-emerald-300" />
-                  )}
-                  أخطاء حرجة {issuesLoading ? "(جاري التحقق…)" : `(${errors.length})`}
-                </div>
-                <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-32 overflow-auto">
-                  {issuesLoading && <li>جاري تشغيل التحقق…</li>}
-                  {!issuesLoading && errors.length === 0 && <li>لا توجد أخطاء تمنع الاعتماد.</li>}
-                  {!issuesLoading && errors.slice(0, 6).map((e: any, i: number) => <li key={i}>{e.message}</li>)}
-                </ul>
-              </div>
-              <div className={`rounded-xl border p-4 ${warnings.length ? "border-amber-500/30 bg-amber-500/10" : "border-white/10 bg-white/5"}`}>
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <AlertTriangle size={14} className={warnings.length ? "text-amber-300" : "text-muted-foreground"} />
-                  تنبيهات {issuesLoading ? "(جاري التحقق…)" : `(${warnings.length})`}
-                </div>
-                <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground list-disc pr-4 max-h-32 overflow-auto">
-                  {issuesLoading && <li>جاري تشغيل التحقق…</li>}
-                  {!issuesLoading && warnings.length === 0 && <li>لا توجد تنبيهات.</li>}
-                  {!issuesLoading && warnings.slice(0, 6).map((e: any, i: number) => <li key={i}>{e.message}</li>)}
-                </ul>
-              </div>
+              <IssueList
+                title="أخطاء حرجة"
+                items={errors}
+                loading={issuesLoading}
+                tone="error"
+                emptyText="لا توجد أخطاء تمنع الاعتماد."
+              />
+              <IssueList
+                title="تنبيهات"
+                items={warnings}
+                loading={issuesLoading}
+                tone="warning"
+                emptyText="لا توجد تنبيهات."
+              />
             </div>
           )}
 
