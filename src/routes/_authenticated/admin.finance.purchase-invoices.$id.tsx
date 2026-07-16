@@ -114,6 +114,8 @@ function PurchaseInvoiceEditor() {
 
   const isDraft = header?.status === "draft";
   const canEdit = header?.status === "draft" || header?.status === "under_review" || header?.status === "rejected";
+  const { isAdmin, canManage: canFinanceManage, canAccountant: canFinanceAccountant } = useFinanceRoles();
+  const canManageProviderPayments = isAdmin || canFinanceManage || canFinanceAccountant;
   const isRejected = header?.status === "rejected";
 
   const NON_STD_CODES = new Set(["out_of_scope", "zero_rated", "exempt"]);
