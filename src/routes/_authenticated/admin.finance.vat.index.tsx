@@ -82,7 +82,11 @@ function VatDashboard() {
             <Kpi
               label="ضريبة المدخلات القابلة للخصم"
               value={fmtSAR(summary.purchases.deductible)}
-              sub={`إجمالي مدخلات: ${fmtSAR(summary.purchases.input_vat_total)}`}
+              sub={
+                Number(summary.purchases.pending_document_vat ?? 0) > 0
+                  ? `قبل الاستبعاد: ${fmtSAR(summary.purchases.deductible_gross ?? summary.purchases.deductible)} · معلّق مستند: ${fmtSAR(summary.purchases.pending_document_vat)}`
+                  : `إجمالي مدخلات: ${fmtSAR(summary.purchases.input_vat_total)}`
+              }
               icon={<TrendingDown size={14} className="text-rose-400" />}
             />
             <Kpi
@@ -92,9 +96,10 @@ function VatDashboard() {
               highlight={summary.result.net_due > 0 ? "danger" : "success"}
             />
             <Kpi
-              label="غير قابل للخصم"
-              value={fmtSAR(summary.purchases.non_deductible)}
-              sub="لا يُخصم من الإقرار"
+              label="معلّق مستند (لا يخصم مؤقتًا)"
+              value={fmtSAR(summary.purchases.pending_document_vat ?? 0)}
+              sub="ضريبة فواتير بدون مرفق — تُستعاد بعد رفع المستند"
+              highlight={Number(summary.purchases.pending_document_vat ?? 0) > 0 ? "danger" : undefined}
             />
           </div>
 
