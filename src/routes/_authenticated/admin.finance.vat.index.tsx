@@ -37,6 +37,12 @@ function VatDashboard() {
     enabled: !!activeId,
   });
 
+  const { data: refundReview } = useQuery({
+    queryKey: ["vat-refund-review", activeId],
+    queryFn: () => fetchRefundReview(activeId),
+    enabled: !!activeId,
+  });
+
   const errors = (issues ?? []).filter((i: any) => i.severity === "error");
   const warnings = (issues ?? []).filter((i: any) => i.severity === "warning");
 
