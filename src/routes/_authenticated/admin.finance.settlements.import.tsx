@@ -326,10 +326,10 @@ function SettlementImportPage() {
     setSheets(wb.SheetNames);
     const first = wb.SheetNames[0];
     setSheet(first);
-    loadSheet(wb, first);
+    loadSheet(wb, first, f.name);
   }
 
-  function loadSheet(wb: XLSX.WorkBook, name: string) {
+  function loadSheet(wb: XLSX.WorkBook, name: string, fileName?: string) {
     const ws = wb.Sheets[name];
     const arr = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: null, raw: true }) as any[][];
     setAoa(arr);
@@ -347,7 +347,7 @@ function SettlementImportPage() {
       if (hdr.statementId && !settlementRef) setSettlementRef(hdr.statementId);
       // New Tamara "Invoice" files omit the statement-date label — fall back
       // to the date embedded in the filename: `_YYYYMMDD_`.
-      const filenameDate = extractTamaraDateFromFileName(file?.name ?? null);
+      const filenameDate = extractTamaraDateFromFileName(fileName ?? file?.name ?? null);
       const effectiveDate = hdr.statementDate ?? filenameDate;
       if (effectiveDate && !settlementDate) setSettlementDate(effectiveDate);
       if (hdr.periodStart && !periodStart) setPeriodStart(hdr.periodStart);
