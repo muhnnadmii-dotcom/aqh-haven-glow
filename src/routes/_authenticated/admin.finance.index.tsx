@@ -132,11 +132,31 @@ function FinanceDashboard() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Exclude personal-account rows from operational cash/expense/income analytics
+  // unless the user explicitly filters by account_type=personal.
+  const excludePersonal = fAccount !== "personal";
+  const opIncomeRows = useMemo(
+    () => (excludePersonal ? incomes.filter((r) => r.account_type !== "personal") : incomes),
+    [incomes, excludePersonal],
+  );
+  const opExpenseRows = useMemo(
+    () => (excludePersonal ? expenses.filter((r) => r.account_type !== "personal") : expenses),
+    [expenses, excludePersonal],
+  );
+  const opPrevIncomeRows = useMemo(
+    () => (excludePersonal ? prevIncomes.filter((r) => r.account_type !== "personal") : prevIncomes),
+    [prevIncomes, excludePersonal],
+  );
+  const opPrevExpenseRows = useMemo(
+    () => (excludePersonal ? prevExpenses.filter((r) => r.account_type !== "personal") : prevExpenses),
+    [prevExpenses, excludePersonal],
+  );
+
   // Derived aggregates
-  const { operating, draws } = useMemo(() => splitExpenses(expenses, ownerDrawCatId), [expenses, ownerDrawCatId]);
-  const { operating: prevOperating, draws: prevDraws } = useMemo(() => splitExpenses(prevExpenses, ownerDrawCatId), [prevExpenses, ownerDrawCatId]);
-  const { operating: opIncomes } = useMemo(() => splitIncomes(incomes), [incomes]);
-  const { operating: prevOpIncomes } = useMemo(() => splitIncomes(prevIncomes), [prevIncomes]);
+  const { operating, draws } = useMemo(() => splitExpenses(opExpenseRows, ownerDrawCatId), [opExpenseRows, ownerDrawCatId]);
+  const { operating: prevOperating, draws: prevDraws } = useMemo(() => splitExpenses(opPrevExpenseRows, ownerDrawCatId), [opPrevExpenseRows, ownerDrawCatId]);
+  const { operating: opIncomes } = useMemo(() => splitIncomes(opIncomeRows), [opIncomeRows]);
+  const { operating: prevOpIncomes } = useMemo(() => splitIncomes(opPrevIncomeRows), [opPrevIncomeRows]);
 
   const totIncome = sum(opIncomes, (x: any) => x.amount);
   const totOpExpense = sum(operating, (x: any) => x.amount);
@@ -152,30 +172,39 @@ function FinanceDashboard() {
 
   // Capital-aware headline numbers (based on all-time data, not filter range)
   const investedCapital = useMemo(() => computeInvestedCapital(capital), [capital]);
-  const cashOnHand = useMemo(() => {
-    const allOp = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id !== ownerDrawCatId) : allExpenses;
-    const allDrawsAll = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
-    return computeCashOnHand({
-      capital,
-      incomes: allIncomes as any,
-      operating: allOp as any,
-      draws: allDrawsAll as any,
-    });
-  }, [capital, allIncomes, allExpenses, ownerDrawCatId]);
 
-  // Live cash = manually-entered cash_actual + income/expense movements after the anchor date
-  const liveCash = useMemo(() => {
-    const allOp = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id !== ownerDrawCatId) : allExpenses;
-    const allDrawsAll = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
-    return computeLiveCash({
-      cashActual: Number(manual?.cash_actual ?? 0),
-      anchorDate: manual?.cash_anchor_date ?? null,
-      incomes: allIncomes as any,
-      operating: allOp as any,
-      draws: allDrawsAll as any,
-    });
-  }, [manual, allIncomes, allExpenses, ownerDrawCatId]);
-  const liveNetWorth = liveCash + Number(manual?.inventory_value ?? 0) + Number(manual?.assets_value ?? 0);
+  // Bank balance = sum of per-account (opening_balance + incomes after opening_date − expenses after opening_date)
+  // across accounts flagged include_in_company_cash_balance. Owner draws are treated
+  // like any other expense here (they leave the bank), but personal-account rows are excluded.
+  const bankBalance = useMemo(() => {
+    const eligible = accounts.filter((a) => a.include_in_company_cash_balance);
+    let total = 0;
+    for (const acc of eligible) {
+      const openDate: string | null = acc.opening_balance_date ?? null;
+      const opening = Number(acc.opening_balance ?? 0);
+      const inc = allIncomes
+        .filter((r: any) => r.account_id === acc.id && r.account_type !== "personal" && (!openDate || (r.income_date && r.income_date > openDate)))
+        .reduce((s, r: any) => s + Number(r.amount ?? 0), 0);
+      const exp = allExpenses
+        .filter((r: any) => r.account_id === acc.id && r.account_type !== "personal" && (!openDate || (r.expense_date && r.expense_date > openDate)))
+        .reduce((s, r: any) => s + Number(r.amount ?? 0), 0);
+      total += opening + inc - exp;
+    }
+    return total;
+  }, [accounts, allIncomes, allExpenses]);
+
+  const openingTotal = useMemo(
+    () => accounts.filter((a) => a.include_in_company_cash_balance).reduce((s, a) => s + Number(a.opening_balance ?? 0), 0),
+    [accounts],
+  );
+  const earliestOpeningDate = useMemo(() => {
+    const dates = accounts
+      .filter((a) => a.include_in_company_cash_balance && a.opening_balance_date)
+      .map((a) => a.opening_balance_date as string);
+    return dates.length ? dates.sort()[0] : null;
+  }, [accounts]);
+
+  const liveNetWorth = bankBalance + Number(manual?.inventory_value ?? 0) + Number(manual?.assets_value ?? 0);
 
 
   // Time series
