@@ -345,7 +345,11 @@ function SettlementImportPage() {
       setTamaraSummary(sum);
       // Prefill settlement metadata (only if empty so user can override)
       if (hdr.statementId && !settlementRef) setSettlementRef(hdr.statementId);
-      if (hdr.statementDate && !settlementDate) setSettlementDate(hdr.statementDate);
+      // New Tamara "Invoice" files omit the statement-date label — fall back
+      // to the date embedded in the filename: `_YYYYMMDD_`.
+      const filenameDate = extractTamaraDateFromFileName(file?.name ?? null);
+      const effectiveDate = hdr.statementDate ?? filenameDate;
+      if (effectiveDate && !settlementDate) setSettlementDate(effectiveDate);
       if (hdr.periodStart && !periodStart) setPeriodStart(hdr.periodStart);
       if (hdr.periodEnd && !periodEnd) setPeriodEnd(hdr.periodEnd);
       if (sum.payableToMerchant != null && !sourceExpectedNet) setSourceExpectedNet(String(sum.payableToMerchant));
