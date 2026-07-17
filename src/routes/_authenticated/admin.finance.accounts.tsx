@@ -129,6 +129,8 @@ function AccountDialog({ row, onClose, onSaved }: any) {
     is_active: row?.is_active ?? true,
     sort_order: row?.sort_order ?? 0,
     notes: row?.notes ?? "",
+    opening_balance: row?.opening_balance ?? 0,
+    opening_balance_date: row?.opening_balance_date ?? "",
   });
   const [saving, setSaving] = useState(false);
 
