@@ -354,9 +354,36 @@ function normalizeOrderId(v: any): string | null {
   return s || null;
 }
 
+// Detect summary/totals rows inside the transactions table.
+// Tamara Invoice files include one or more totals rows where the
+// "Transaction Date DD/MM/YYYY" column holds a label such as "Total".
+function isTamaraSummaryRow(raw: any[], mapping: TamaraMapping): boolean {
+  const summaryRe = /^(total|totals|grand\s*total|credit\s*total|sub\s*total|subtotal)$/i;
+  const check = (idx: number | undefined) => {
+    if (idx == null || idx < 0) return false;
+    const v = raw[idx];
+    if (v == null) return false;
+    const s = String(v).trim();
+    return !!s && summaryRe.test(s);
+  };
+  // The user-visible marker is on the Transaction Date column.
+  if (check(mapping.original_order_date)) return true;
+  // Defensive: also treat totals in the event-date/event-type columns as summary.
+  if (check(mapping.event_date)) return true;
+  if (check(mapping.event_type_raw)) {
+    const v = String(raw[mapping.event_type_raw!] ?? "").trim().toLowerCase();
+    if (summaryRe.test(v)) return true;
+  }
+  return false;
+}
+
 export function buildTamaraRows(aoa: any[][], headerRow: number, mapping: TamaraMapping): TamaraParsedLine[] {
   const headers = aoa[headerRow] ?? [];
-  const body = aoa.slice(headerRow + 1).filter((r) => r.some((c) => c != null && String(c).trim() !== ""));
+  const body = aoa
+    .slice(headerRow + 1)
+    .filter((r) => r.some((c) => c != null && String(c).trim() !== ""))
+    // Drop summary/totals rows so they are never imported as settlement lines.
+    .filter((r) => !isTamaraSummaryRow(r, mapping));
   const get = (raw: any[], k: TamaraFieldKey) => (mapping[k] != null ? raw[mapping[k]!] : null);
 
   return body.map((raw, idx) => {
@@ -375,6 +402,10 @@ export function buildTamaraRows(aoa: any[][], headerRow: number, mapping: Tamara
     const fixedFee = parseNum(get(raw, "fixed_fee_amount")) ?? 0;
     const varFee = parseNum(get(raw, "variable_fee_amount")) ?? 0;
     const varRate = parseNum(get(raw, "variable_fee_rate"));
+    // Strictly read fees from the mapped "Total Fees" column. Do not silently
+    // fall back to fixed+variable — that produced the wrong number (Fixed Fees
+    // only) when the Total Fees column existed but was momentarily blank.
+    const totalFeesMapped = mapping.fees_before_vat != null;
     const totalFees = parseNum(get(raw, "fees_before_vat"));
     const vatFees = parseNum(get(raw, "fees_vat_amount")) ?? 0;
     const netAmount = parseNum(get(raw, "net_amount"));
@@ -387,7 +418,6 @@ export function buildTamaraRows(aoa: any[][], headerRow: number, mapping: Tamara
     else if (evNorm === "refunded") {
       event_type = "refund";
       line_type = "refund";
-      // ensure negative retained
     } else {
       event_type = "needs_review_event";
       line_type = "manual_adjustment";
@@ -395,12 +425,13 @@ export function buildTamaraRows(aoa: any[][], headerRow: number, mapping: Tamara
       else reasons.push("missing_event");
     }
 
-    // Total fees consistency check (only for events with fees)
+    // Fees policy: when the Total Fees column is mapped, trust it (including 0/null → 0).
+    // Only when the column isn't mapped at all, fall back to fixed+variable.
     let feesFinal: number;
-    if (totalFees != null) {
-      feesFinal = totalFees;
+    if (totalFeesMapped) {
+      feesFinal = totalFees ?? 0;
       const sum = round2(fixedFee + varFee);
-      if (Math.abs(sum - totalFees) > 0.02 && (fixedFee !== 0 || varFee !== 0)) {
+      if (totalFees != null && Math.abs(sum - totalFees) > 0.02 && (fixedFee !== 0 || varFee !== 0)) {
         reasons.push("fees_breakdown_mismatch");
       }
     } else {
@@ -448,3 +479,26 @@ export function buildTamaraRows(aoa: any[][], headerRow: number, mapping: Tamara
     };
   });
 }
+
+// Extract statement date from Tamara Invoice filename pattern: `_YYYYMMDD_`.
+// Example: "Tamara_..._Invoice_20260501_SAR_...xlsx" → "2026-05-01".
+export function extractTamaraDateFromFileName(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const m = /_(\d{4})(\d{2})(\d{2})_/.exec(name);
+  if (!m) return null;
+  const [_, y, mo, d] = m;
+  const iso = `${y}-${mo}-${d}`;
+  const t = new Date(iso);
+  return isNaN(t.getTime()) ? null : iso;
+}
+
+// Compute period_start/period_end from actual event dates in parsed rows.
+export function computeTamaraPeriodFromRows(rows: TamaraParsedLine[]): { periodStart: string | null; periodEnd: string | null } {
+  const dates = rows
+    .map((r) => r.event_date ?? r.original_order_date)
+    .filter((d): d is string => !!d)
+    .sort();
+  if (!dates.length) return { periodStart: null, periodEnd: null };
+  return { periodStart: dates[0], periodEnd: dates[dates.length - 1] };
+}
+
