@@ -668,13 +668,12 @@ function BalanceCard({ icon: Icon, label, value, tone, accent, hint, badge, onEd
 }
 
 function EditBalanceDialog({ field, current, onClose, onSaved }: {
-  field: "cash_actual" | "inventory_value" | "assets_value";
+  field: "inventory_value" | "assets_value";
   current: number;
   onClose: () => void;
   onSaved: (val: number) => void;
 }) {
   const labels: Record<string, string> = {
-    cash_actual: "النقد الفعلي (صرافة/بنك)",
     inventory_value: "قيمة المخزون",
     assets_value: "قيمة الأصول",
   };
