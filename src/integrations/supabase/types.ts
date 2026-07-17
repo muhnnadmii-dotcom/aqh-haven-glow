@@ -1525,6 +1525,8 @@ export type Database = {
           name: string
           name_ar: string | null
           notes: string | null
+          opening_balance: number
+          opening_balance_date: string | null
           sort_order: number
           updated_at: string
         }
@@ -1539,6 +1541,8 @@ export type Database = {
           name: string
           name_ar?: string | null
           notes?: string | null
+          opening_balance?: number
+          opening_balance_date?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -1553,6 +1557,8 @@ export type Database = {
           name?: string
           name_ar?: string | null
           notes?: string | null
+          opening_balance?: number
+          opening_balance_date?: string | null
           sort_order?: number
           updated_at?: string
         }
