@@ -58,7 +58,8 @@ function FinanceDashboard() {
   const [allIncomes, setAllIncomes] = useState<any[]>([]);
   const [allExpenses, setAllExpenses] = useState<any[]>([]);
   const [manual, setManual] = useState<ManualBalances | null>(null);
-  const [editField, setEditField] = useState<null | "cash_actual" | "inventory_value" | "assets_value">(null);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [editField, setEditField] = useState<null | "inventory_value" | "assets_value">(null);
 
   const range = useMemo(() => {
     if (pickedMonth) {
