@@ -240,9 +240,10 @@ function FinanceDashboard() {
       .sort((a, b) => b.total - a.total).slice(0, 5);
   }, [operating, sups]);
 
-  // Draws by month (last 6 months)
+  // Draws by month (last 6 months) — use isOwnerDraw so transaction_type='owner_withdrawal' is included
+  // even when the row is not linked to the owner-draw category.
   const drawSeries = useMemo(() => {
-    const filtered = ownerDrawCatId ? allDraws.filter((d) => d.main_category_id === ownerDrawCatId) : [];
+    const filtered = allDraws.filter((d) => d.account_type !== "personal" && isOwnerDraw(d, ownerDrawCatId));
     return drawsByMonth(filtered, 6);
   }, [allDraws, ownerDrawCatId]);
 
