@@ -12,6 +12,8 @@ import {
   extractTamaraHeader,
   extractTamaraSummary,
   buildTamaraRows,
+  extractTamaraDateFromFileName,
+  computeTamaraPeriodFromRows,
   type TamaraMapping,
   type TamaraHeaderInfo,
   type TamaraSummary,
