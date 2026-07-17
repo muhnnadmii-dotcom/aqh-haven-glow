@@ -15,8 +15,9 @@ import {
   type PeriodKey, resolveRange, previousRange, pctChange, sum, splitExpenses, splitIncomes,
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
-import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
-import { getManualBalances, updateManualBalances, totalNetWorth, computeLiveCash, type ManualBalances } from "@/lib/finance/manual-balances";
+import { listCapital, computeInvestedCapital, type CapitalEntry } from "@/lib/finance/capital";
+import { getManualBalances, type ManualBalances } from "@/lib/finance/manual-balances";
+import { isOwnerDraw } from "@/lib/finance/transaction-types";
 import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
