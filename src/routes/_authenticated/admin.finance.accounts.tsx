@@ -148,7 +148,13 @@ function AccountDialog({ row, onClose, onSaved }: any) {
     setSaving(true);
     try {
       if (!f.name.trim()) throw new Error("الاسم مطلوب");
-      const payload = { ...f, name: f.name.trim(), name_ar: f.name_ar.trim() || null };
+      const payload = {
+        ...f,
+        name: f.name.trim(),
+        name_ar: f.name_ar.trim() || null,
+        opening_balance: Number(f.opening_balance) || 0,
+        opening_balance_date: f.opening_balance_date || null,
+      };
       const q = isNew
         ? supabase.from("finance_accounts").insert(payload)
         : supabase.from("finance_accounts").update(payload).eq("id", row.id);
