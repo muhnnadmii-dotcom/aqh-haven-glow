@@ -341,21 +341,20 @@ function FinanceDashboard() {
         </TabsList>
 
         <TabsContent value="cash" className="space-y-5 mt-0">
-      {/* Headline: manual balances (editable) + auto-computed reference */}
+      {/* Headline: bank balance (opening + movements) + inventory + assets + net worth */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <BalanceCard
           icon={Banknote}
-          label="النقد الحالي (فعلي + حركات)"
-          value={liveCash}
+          label="رصيد البنك (افتتاحي + حركات)"
+          value={bankBalance}
           tone="text-gold"
           accent="border-gold/30 bg-gradient-to-br from-gold/10 to-transparent"
-          onEdit={() => setEditField("cash_actual")}
-          hint={manual?.cash_anchor_date
-            ? `الأساس: ${fmtSAR(Number(manual.cash_actual ?? 0))} ر.س`
-            : "اضغط القلم لتحديد النقد الفعلي"}
-          badge={manual?.cash_anchor_date
-            ? `منذ ${fmtArDate(manual.cash_anchor_date)}`
-            : undefined}
+          hint={
+            accounts.some((a) => a.include_in_company_cash_balance)
+              ? `الافتتاحي: ${fmtSAR(openingTotal)} ر.س · يُحدَّث من صفحة الحسابات`
+              : "أضف الرصيد الافتتاحي من صفحة الحسابات المالية"
+          }
+          badge={earliestOpeningDate ? `منذ ${fmtArDate(earliestOpeningDate)}` : undefined}
         />
         <BalanceCard
           icon={Package}
@@ -377,21 +376,12 @@ function FinanceDashboard() {
           value={liveNetWorth}
           tone="text-foreground"
           accent="border-white/20 bg-white/10"
-          hint="النقد الحالي + المخزون + الأصول"
+          hint="رصيد البنك + المخزون + الأصول"
         />
       </div>
 
-      {/* Reference: auto-computed cash and invested capital */}
+      {/* Reference: invested capital */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>الرصيد المحسوب من الحركات (مرجعي)</span>
-            <span className="text-[10px]">= رأس المال + الدخل − المصروفات − السحوبات</span>
-          </div>
-          <div className={`mt-1 text-lg font-semibold font-mono ${cashOnHand >= 0 ? "text-emerald-300" : "text-red-300"}`}>
-            {fmtSAR(cashOnHand)} <span className="text-[10px] text-muted-foreground">ر.س</span>
-          </div>
-        </div>
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>رأس المال المستثمر</span>
@@ -411,11 +401,7 @@ function FinanceDashboard() {
           onSaved={(val) => {
             setManual((prev) => {
               if (!prev) return prev;
-              const next = { ...prev, [editField]: val };
-              if (editField === "cash_actual") {
-                next.cash_anchor_date = new Date().toISOString().slice(0, 10);
-              }
-              return next;
+              return { ...prev, [editField]: val };
             });
             setEditField(null);
           }}
