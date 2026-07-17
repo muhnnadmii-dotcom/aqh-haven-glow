@@ -12,6 +12,8 @@ import {
   extractTamaraHeader,
   extractTamaraSummary,
   buildTamaraRows,
+  extractTamaraDateFromFileName,
+  computeTamaraPeriodFromRows,
   type TamaraMapping,
   type TamaraHeaderInfo,
   type TamaraSummary,
@@ -324,10 +326,10 @@ function SettlementImportPage() {
     setSheets(wb.SheetNames);
     const first = wb.SheetNames[0];
     setSheet(first);
-    loadSheet(wb, first);
+    loadSheet(wb, first, f.name);
   }
 
-  function loadSheet(wb: XLSX.WorkBook, name: string) {
+  function loadSheet(wb: XLSX.WorkBook, name: string, fileName?: string) {
     const ws = wb.Sheets[name];
     const arr = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: null, raw: true }) as any[][];
     setAoa(arr);
@@ -343,7 +345,11 @@ function SettlementImportPage() {
       setTamaraSummary(sum);
       // Prefill settlement metadata (only if empty so user can override)
       if (hdr.statementId && !settlementRef) setSettlementRef(hdr.statementId);
-      if (hdr.statementDate && !settlementDate) setSettlementDate(hdr.statementDate);
+      // New Tamara "Invoice" files omit the statement-date label — fall back
+      // to the date embedded in the filename: `_YYYYMMDD_`.
+      const filenameDate = extractTamaraDateFromFileName(fileName ?? file?.name ?? null);
+      const effectiveDate = hdr.statementDate ?? filenameDate;
+      if (effectiveDate && !settlementDate) setSettlementDate(effectiveDate);
       if (hdr.periodStart && !periodStart) setPeriodStart(hdr.periodStart);
       if (hdr.periodEnd && !periodEnd) setPeriodEnd(hdr.periodEnd);
       if (sum.payableToMerchant != null && !sourceExpectedNet) setSourceExpectedNet(String(sum.payableToMerchant));
@@ -696,8 +702,47 @@ function SettlementImportPage() {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id ?? null;
 
+      // Duplicate-file guard: same provider + same source_file_name = skip.
+      // Prevents re-importing the exact same statement file twice.
+      const sourceFileName = file?.name ?? null;
+      if (sourceFileName) {
+        const { data: dupFile } = await (supabase as any)
+          .from("payment_settlements")
+          .select("id")
+          .eq("provider_id", providerRow.id)
+          .eq("source_file_name", sourceFileName)
+          .limit(1)
+          .maybeSingle();
+        if (dupFile) {
+          toast.warning("ملف مكرر — تم تجاهله (تسوية بنفس اسم الملف موجودة لهذه البوابة)");
+          setCommitting(false);
+          return;
+        }
+      }
+
       const hasBlocking = summary.blocking > 0;
       const status = hasBlocking ? "under_review" : "imported";
+
+      // For Tamara: if period_start/period_end weren't set (new Invoice files
+      // omit the "Statement Period" label), derive them from actual event dates.
+      let effectivePeriodStart = periodStart || null;
+      let effectivePeriodEnd = periodEnd || null;
+      let effectiveSettlementDate = settlementDate || null;
+      if (provider === "tamara") {
+        if (!effectivePeriodStart || !effectivePeriodEnd) {
+          const dates = rows
+            .map((r) => r.transaction_date)
+            .filter((d): d is string => !!d)
+            .sort();
+          if (dates.length) {
+            effectivePeriodStart = effectivePeriodStart || dates[0];
+            effectivePeriodEnd = effectivePeriodEnd || dates[dates.length - 1];
+          }
+        }
+        if (!effectiveSettlementDate) {
+          effectiveSettlementDate = extractTamaraDateFromFileName(sourceFileName) || effectivePeriodEnd;
+        }
+      }
 
       const { data: s, error: sErr } = await (supabase as any)
         .from("payment_settlements")
@@ -705,10 +750,10 @@ function SettlementImportPage() {
           provider_id: providerRow.id,
           settlement_reference: ref,
           report_reference: settlementRef || null,
-          source_file_name: file?.name ?? null,
-          settlement_date: settlementDate || null,
-          period_start: periodStart || null,
-          period_end: periodEnd || null,
+          source_file_name: sourceFileName,
+          settlement_date: effectiveSettlementDate,
+          period_start: effectivePeriodStart,
+          period_end: effectivePeriodEnd,
           gross_sales_amount: summary.gross,
           refunds_amount: summary.refundsAbs,
           adjustments_amount: summary.adjustmentsSigned,

@@ -434,6 +434,19 @@ function BulkImportPage() {
         return { ...entry, status: "skipped", message: `مكرر — تسوية بنفس البصمة موجودة (${existing.settlement_reference})`, settlementId: existing.id, settlementRef: existing.settlement_reference };
       }
 
+      // Additional guard: same provider + same source_file_name (protects when
+      // a re-downloaded file has a different byte-hash but the same name).
+      const { data: dupByName } = await (supabase as any)
+        .from("payment_settlements")
+        .select("id,settlement_reference")
+        .eq("provider_id", providerRow.id)
+        .eq("source_file_name", entry.file.name)
+        .limit(1)
+        .maybeSingle();
+      if (dupByName) {
+        return { ...entry, status: "skipped", message: `ملف مكرر — تم تجاهله (${dupByName.settlement_reference})`, settlementId: dupByName.id, settlementRef: dupByName.settlement_reference };
+      }
+
       // Parse
       const upd1 = { ...entry, status: "parsing" as FileStatus, message: "قراءة الملف…" };
       setFiles((prev) => prev.map((f) => f.id === entry.id ? upd1 : f));
