@@ -129,6 +129,8 @@ function AccountDialog({ row, onClose, onSaved }: any) {
     is_active: row?.is_active ?? true,
     sort_order: row?.sort_order ?? 0,
     notes: row?.notes ?? "",
+    opening_balance: row?.opening_balance ?? 0,
+    opening_balance_date: row?.opening_balance_date ?? "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -146,7 +148,13 @@ function AccountDialog({ row, onClose, onSaved }: any) {
     setSaving(true);
     try {
       if (!f.name.trim()) throw new Error("الاسم مطلوب");
-      const payload = { ...f, name: f.name.trim(), name_ar: f.name_ar.trim() || null };
+      const payload = {
+        ...f,
+        name: f.name.trim(),
+        name_ar: f.name_ar.trim() || null,
+        opening_balance: Number(f.opening_balance) || 0,
+        opening_balance_date: f.opening_balance_date || null,
+      };
       const q = isNew
         ? supabase.from("finance_accounts").insert(payload)
         : supabase.from("finance_accounts").update(payload).eq("id", row.id);
@@ -213,6 +221,27 @@ function AccountDialog({ row, onClose, onSaved }: any) {
               <option value="1">نشط</option>
               <option value="0">غير نشط</option>
             </select>
+          </label>
+
+          <label className="block">
+            <div className="text-[11px] text-muted-foreground mb-1">الرصيد الافتتاحي (ر.س)</div>
+            <input
+              type="number"
+              step="0.01"
+              value={f.opening_balance}
+              onChange={(e) => setF({ ...f, opening_balance: e.target.value as any })}
+              className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px] font-mono"
+            />
+            <div className="text-[10px] text-muted-foreground mt-1">الرصيد الفعلي في هذا التاريخ. تُضاف عليه الحركات بعد التاريخ.</div>
+          </label>
+          <label className="block">
+            <div className="text-[11px] text-muted-foreground mb-1">تاريخ الرصيد الافتتاحي</div>
+            <input
+              type="date"
+              value={f.opening_balance_date ?? ""}
+              onChange={(e) => setF({ ...f, opening_balance_date: e.target.value })}
+              className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px]"
+            />
           </label>
 
           <label className="col-span-2 block">

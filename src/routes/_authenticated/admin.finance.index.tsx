@@ -15,8 +15,9 @@ import {
   type PeriodKey, resolveRange, previousRange, pctChange, sum, splitExpenses, splitIncomes,
   buildTimeSeries, cumulativeCashflow, bucketDraws, drawsByMonth,
 } from "@/lib/finance/dashboard-data";
-import { listCapital, computeInvestedCapital, computeCashOnHand, type CapitalEntry } from "@/lib/finance/capital";
-import { getManualBalances, updateManualBalances, totalNetWorth, computeLiveCash, type ManualBalances } from "@/lib/finance/manual-balances";
+import { listCapital, computeInvestedCapital, type CapitalEntry } from "@/lib/finance/capital";
+import { getManualBalances, updateManualBalances, type ManualBalances } from "@/lib/finance/manual-balances";
+import { isOwnerDraw } from "@/lib/finance/transaction-types";
 import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -57,7 +58,8 @@ function FinanceDashboard() {
   const [allIncomes, setAllIncomes] = useState<any[]>([]);
   const [allExpenses, setAllExpenses] = useState<any[]>([]);
   const [manual, setManual] = useState<ManualBalances | null>(null);
-  const [editField, setEditField] = useState<null | "cash_actual" | "inventory_value" | "assets_value">(null);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [editField, setEditField] = useState<null | "inventory_value" | "assets_value">(null);
 
   const range = useMemo(() => {
     if (pickedMonth) {
@@ -103,16 +105,17 @@ function FinanceDashboard() {
     const drawsFrom = new Date(); drawsFrom.setMonth(drawsFrom.getMonth() - 5); drawsFrom.setDate(1);
     const drawsFromStr = `${drawsFrom.getFullYear()}-${String(drawsFrom.getMonth() + 1).padStart(2, "0")}-01`;
 
-    const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }, capRows, { data: allInc }, { data: allExp }, manualRow] = await Promise.all([
+    const [{ data: inc }, { data: exp }, { data: incP }, { data: expP }, { data: drawsRaw }, capRows, { data: allInc }, { data: allExp }, manualRow, { data: accts }] = await Promise.all([
       buildIncQ(range),
       buildExpQ(range),
       buildIncQ(prev),
       buildExpQ(prev),
-      supabase.from("finance_expenses").select("expense_date, amount, main_category_id").is("deleted_at", null).gte("expense_date", drawsFromStr),
+      supabase.from("finance_expenses").select("expense_date, amount, main_category_id, transaction_type, account_type, account_id").is("deleted_at", null).gte("expense_date", drawsFromStr),
       listCapital().catch(() => [] as CapitalEntry[]),
-      supabase.from("finance_incomes").select("income_date, amount").is("deleted_at", null),
-      supabase.from("finance_expenses").select("expense_date, amount, main_category_id").is("deleted_at", null),
+      supabase.from("finance_incomes").select("income_date, amount, transaction_type, account_type, account_id").is("deleted_at", null),
+      supabase.from("finance_expenses").select("expense_date, amount, main_category_id, transaction_type, account_type, account_id").is("deleted_at", null),
       getManualBalances().catch(() => null),
+      supabase.from("finance_accounts").select("id, opening_balance, opening_balance_date, include_in_company_cash_balance, is_active"),
     ]);
     setIncomes(inc ?? []);
     setExpenses(exp ?? []);
@@ -123,16 +126,37 @@ function FinanceDashboard() {
     setAllIncomes(allInc ?? []);
     setAllExpenses(allExp ?? []);
     setManual(manualRow);
+    setAccounts(accts ?? []);
     setLoading(false);
   }, [range, prev, fMain, fSupplier, fSource, fAccount]);
 
   useEffect(() => { load(); }, [load]);
 
+  // Exclude personal-account rows from operational cash/expense/income analytics
+  // unless the user explicitly filters by account_type=personal.
+  const excludePersonal = fAccount !== "personal";
+  const opIncomeRows = useMemo(
+    () => (excludePersonal ? incomes.filter((r) => r.account_type !== "personal") : incomes),
+    [incomes, excludePersonal],
+  );
+  const opExpenseRows = useMemo(
+    () => (excludePersonal ? expenses.filter((r) => r.account_type !== "personal") : expenses),
+    [expenses, excludePersonal],
+  );
+  const opPrevIncomeRows = useMemo(
+    () => (excludePersonal ? prevIncomes.filter((r) => r.account_type !== "personal") : prevIncomes),
+    [prevIncomes, excludePersonal],
+  );
+  const opPrevExpenseRows = useMemo(
+    () => (excludePersonal ? prevExpenses.filter((r) => r.account_type !== "personal") : prevExpenses),
+    [prevExpenses, excludePersonal],
+  );
+
   // Derived aggregates
-  const { operating, draws } = useMemo(() => splitExpenses(expenses, ownerDrawCatId), [expenses, ownerDrawCatId]);
-  const { operating: prevOperating, draws: prevDraws } = useMemo(() => splitExpenses(prevExpenses, ownerDrawCatId), [prevExpenses, ownerDrawCatId]);
-  const { operating: opIncomes } = useMemo(() => splitIncomes(incomes), [incomes]);
-  const { operating: prevOpIncomes } = useMemo(() => splitIncomes(prevIncomes), [prevIncomes]);
+  const { operating, draws } = useMemo(() => splitExpenses(opExpenseRows, ownerDrawCatId), [opExpenseRows, ownerDrawCatId]);
+  const { operating: prevOperating, draws: prevDraws } = useMemo(() => splitExpenses(opPrevExpenseRows, ownerDrawCatId), [opPrevExpenseRows, ownerDrawCatId]);
+  const { operating: opIncomes } = useMemo(() => splitIncomes(opIncomeRows), [opIncomeRows]);
+  const { operating: prevOpIncomes } = useMemo(() => splitIncomes(opPrevIncomeRows), [opPrevIncomeRows]);
 
   const totIncome = sum(opIncomes, (x: any) => x.amount);
   const totOpExpense = sum(operating, (x: any) => x.amount);
@@ -148,30 +172,39 @@ function FinanceDashboard() {
 
   // Capital-aware headline numbers (based on all-time data, not filter range)
   const investedCapital = useMemo(() => computeInvestedCapital(capital), [capital]);
-  const cashOnHand = useMemo(() => {
-    const allOp = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id !== ownerDrawCatId) : allExpenses;
-    const allDrawsAll = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
-    return computeCashOnHand({
-      capital,
-      incomes: allIncomes as any,
-      operating: allOp as any,
-      draws: allDrawsAll as any,
-    });
-  }, [capital, allIncomes, allExpenses, ownerDrawCatId]);
 
-  // Live cash = manually-entered cash_actual + income/expense movements after the anchor date
-  const liveCash = useMemo(() => {
-    const allOp = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id !== ownerDrawCatId) : allExpenses;
-    const allDrawsAll = ownerDrawCatId ? allExpenses.filter((e) => e.main_category_id === ownerDrawCatId) : [];
-    return computeLiveCash({
-      cashActual: Number(manual?.cash_actual ?? 0),
-      anchorDate: manual?.cash_anchor_date ?? null,
-      incomes: allIncomes as any,
-      operating: allOp as any,
-      draws: allDrawsAll as any,
-    });
-  }, [manual, allIncomes, allExpenses, ownerDrawCatId]);
-  const liveNetWorth = liveCash + Number(manual?.inventory_value ?? 0) + Number(manual?.assets_value ?? 0);
+  // Bank balance = sum of per-account (opening_balance + incomes after opening_date − expenses after opening_date)
+  // across accounts flagged include_in_company_cash_balance. Owner draws are treated
+  // like any other expense here (they leave the bank), but personal-account rows are excluded.
+  const bankBalance = useMemo(() => {
+    const eligible = accounts.filter((a) => a.include_in_company_cash_balance);
+    let total = 0;
+    for (const acc of eligible) {
+      const openDate: string | null = acc.opening_balance_date ?? null;
+      const opening = Number(acc.opening_balance ?? 0);
+      const inc = allIncomes
+        .filter((r: any) => r.account_id === acc.id && r.account_type !== "personal" && (!openDate || (r.income_date && r.income_date > openDate)))
+        .reduce((s, r: any) => s + Number(r.amount ?? 0), 0);
+      const exp = allExpenses
+        .filter((r: any) => r.account_id === acc.id && r.account_type !== "personal" && (!openDate || (r.expense_date && r.expense_date > openDate)))
+        .reduce((s, r: any) => s + Number(r.amount ?? 0), 0);
+      total += opening + inc - exp;
+    }
+    return total;
+  }, [accounts, allIncomes, allExpenses]);
+
+  const openingTotal = useMemo(
+    () => accounts.filter((a) => a.include_in_company_cash_balance).reduce((s, a) => s + Number(a.opening_balance ?? 0), 0),
+    [accounts],
+  );
+  const earliestOpeningDate = useMemo(() => {
+    const dates = accounts
+      .filter((a) => a.include_in_company_cash_balance && a.opening_balance_date)
+      .map((a) => a.opening_balance_date as string);
+    return dates.length ? dates.sort()[0] : null;
+  }, [accounts]);
+
+  const liveNetWorth = bankBalance + Number(manual?.inventory_value ?? 0) + Number(manual?.assets_value ?? 0);
 
 
   // Time series
@@ -207,9 +240,10 @@ function FinanceDashboard() {
       .sort((a, b) => b.total - a.total).slice(0, 5);
   }, [operating, sups]);
 
-  // Draws by month (last 6 months)
+  // Draws by month (last 6 months) — use isOwnerDraw so transaction_type='owner_withdrawal' is included
+  // even when the row is not linked to the owner-draw category.
   const drawSeries = useMemo(() => {
-    const filtered = ownerDrawCatId ? allDraws.filter((d) => d.main_category_id === ownerDrawCatId) : [];
+    const filtered = allDraws.filter((d) => d.account_type !== "personal" && isOwnerDraw(d, ownerDrawCatId));
     return drawsByMonth(filtered, 6);
   }, [allDraws, ownerDrawCatId]);
 
@@ -307,21 +341,20 @@ function FinanceDashboard() {
         </TabsList>
 
         <TabsContent value="cash" className="space-y-5 mt-0">
-      {/* Headline: manual balances (editable) + auto-computed reference */}
+      {/* Headline: bank balance (opening + movements) + inventory + assets + net worth */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <BalanceCard
           icon={Banknote}
-          label="النقد الحالي (فعلي + حركات)"
-          value={liveCash}
+          label="رصيد البنك (افتتاحي + حركات)"
+          value={bankBalance}
           tone="text-gold"
           accent="border-gold/30 bg-gradient-to-br from-gold/10 to-transparent"
-          onEdit={() => setEditField("cash_actual")}
-          hint={manual?.cash_anchor_date
-            ? `الأساس: ${fmtSAR(Number(manual.cash_actual ?? 0))} ر.س`
-            : "اضغط القلم لتحديد النقد الفعلي"}
-          badge={manual?.cash_anchor_date
-            ? `منذ ${fmtArDate(manual.cash_anchor_date)}`
-            : undefined}
+          hint={
+            accounts.some((a) => a.include_in_company_cash_balance)
+              ? `الافتتاحي: ${fmtSAR(openingTotal)} ر.س · يُحدَّث من صفحة الحسابات`
+              : "أضف الرصيد الافتتاحي من صفحة الحسابات المالية"
+          }
+          badge={earliestOpeningDate ? `منذ ${fmtArDate(earliestOpeningDate)}` : undefined}
         />
         <BalanceCard
           icon={Package}
@@ -343,21 +376,12 @@ function FinanceDashboard() {
           value={liveNetWorth}
           tone="text-foreground"
           accent="border-white/20 bg-white/10"
-          hint="النقد الحالي + المخزون + الأصول"
+          hint="رصيد البنك + المخزون + الأصول"
         />
       </div>
 
-      {/* Reference: auto-computed cash and invested capital */}
+      {/* Reference: invested capital */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>الرصيد المحسوب من الحركات (مرجعي)</span>
-            <span className="text-[10px]">= رأس المال + الدخل − المصروفات − السحوبات</span>
-          </div>
-          <div className={`mt-1 text-lg font-semibold font-mono ${cashOnHand >= 0 ? "text-emerald-300" : "text-red-300"}`}>
-            {fmtSAR(cashOnHand)} <span className="text-[10px] text-muted-foreground">ر.س</span>
-          </div>
-        </div>
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>رأس المال المستثمر</span>
@@ -377,11 +401,7 @@ function FinanceDashboard() {
           onSaved={(val) => {
             setManual((prev) => {
               if (!prev) return prev;
-              const next = { ...prev, [editField]: val };
-              if (editField === "cash_actual") {
-                next.cash_anchor_date = new Date().toISOString().slice(0, 10);
-              }
-              return next;
+              return { ...prev, [editField]: val };
             });
             setEditField(null);
           }}
@@ -648,13 +668,12 @@ function BalanceCard({ icon: Icon, label, value, tone, accent, hint, badge, onEd
 }
 
 function EditBalanceDialog({ field, current, onClose, onSaved }: {
-  field: "cash_actual" | "inventory_value" | "assets_value";
+  field: "inventory_value" | "assets_value";
   current: number;
   onClose: () => void;
   onSaved: (val: number) => void;
 }) {
   const labels: Record<string, string> = {
-    cash_actual: "النقد الفعلي (صرافة/بنك)",
     inventory_value: "قيمة المخزون",
     assets_value: "قيمة الأصول",
   };

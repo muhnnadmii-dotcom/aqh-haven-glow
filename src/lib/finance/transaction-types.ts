@@ -126,7 +126,6 @@ export const NON_OPERATING_INCOMING: ReadonlySet<string> = new Set([
   "owner_contribution",
   "internal_transfer_in",
   "loan_received",
-  "payment_provider_settlement", // settlement transfer, not a new sale
 ]);
 
 /**
