@@ -223,6 +223,27 @@ function AccountDialog({ row, onClose, onSaved }: any) {
             </select>
           </label>
 
+          <label className="block">
+            <div className="text-[11px] text-muted-foreground mb-1">الرصيد الافتتاحي (ر.س)</div>
+            <input
+              type="number"
+              step="0.01"
+              value={f.opening_balance}
+              onChange={(e) => setF({ ...f, opening_balance: e.target.value as any })}
+              className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px] font-mono"
+            />
+            <div className="text-[10px] text-muted-foreground mt-1">الرصيد الفعلي في هذا التاريخ. تُضاف عليه الحركات بعد التاريخ.</div>
+          </label>
+          <label className="block">
+            <div className="text-[11px] text-muted-foreground mb-1">تاريخ الرصيد الافتتاحي</div>
+            <input
+              type="date"
+              value={f.opening_balance_date ?? ""}
+              onChange={(e) => setF({ ...f, opening_balance_date: e.target.value })}
+              className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px]"
+            />
+          </label>
+
           <label className="col-span-2 block">
             <div className="text-[11px] text-muted-foreground mb-1">ملاحظات</div>
             <textarea value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} className="w-full px-2 py-1.5 rounded bg-white/5 border border-white/10 text-[12px] min-h-[60px]" />
