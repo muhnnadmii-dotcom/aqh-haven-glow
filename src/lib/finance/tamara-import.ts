@@ -80,7 +80,7 @@ export const TAMARA_FIELDS: TamaraFieldDef[] = [
   { key: "fees_before_vat", label: "إجمالي الرسوم (Total Fees)", required: true, section: "fees",
     aliases: ["total fees", "total_fees", "total fees (sar)", "total fee", "tamara total fees"] },
   { key: "fees_vat_amount", label: "ضريبة الرسوم (VAT Collected by Tamara)", required: true, section: "fees",
-    aliases: ["vat collected by tamara", "vat_collected_by_tamara", "tamara vat", "vat collected", "vat"] },
+    aliases: ["vat collected by tamara", "vat_collected_by_tamara", "tamara vat", "vat collected"] },
   // net
   { key: "net_amount", label: "الصافي (Total Payable to Merchant)", required: true, section: "net",
     aliases: ["total payable to merchant", "payable to merchant", "total_payable_to_merchant"] },
