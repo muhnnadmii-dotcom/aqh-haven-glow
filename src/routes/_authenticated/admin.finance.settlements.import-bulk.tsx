@@ -396,6 +396,11 @@ function BulkImportPage() {
 
   async function onAddFiles(list: FileList | null) {
     if (!list || !list.length) return;
+    if (provider === "tamara") {
+      toast.error("لملفات تمارا استخدم الاستيراد المفرد — الصيغة الجديدة لا تعمل مع الاستيراد الجماعي");
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     const additions: FileEntry[] = [];
     for (const f of Array.from(list)) {
       const buf = await f.arrayBuffer();
@@ -412,6 +417,7 @@ function BulkImportPage() {
     setFiles((prev) => [...prev, ...additions]);
     if (fileRef.current) fileRef.current.value = "";
   }
+
 
   function removeFile(id: string) {
     setFiles((prev) => prev.filter((f) => f.id !== id));
