@@ -663,8 +663,12 @@ function BulkImportPage() {
           </div>
         )}
 
-
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={runAll}
+            disabled={busy || !providerRow?.id || provider === "tamara" || files.filter((f) => f.status === "queued" || f.status === "error").length === 0}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-gold/25 border border-gold/50 text-gold text-[12px] disabled:opacity-50">
+
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
             بدء الاستيراد ({files.filter((f) => f.status === "queued" || f.status === "error").length})
           </button>
