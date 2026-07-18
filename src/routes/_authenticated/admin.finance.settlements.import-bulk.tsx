@@ -396,6 +396,11 @@ function BulkImportPage() {
 
   async function onAddFiles(list: FileList | null) {
     if (!list || !list.length) return;
+    if (provider === "tamara") {
+      toast.error("لملفات تمارا استخدم الاستيراد المفرد — الصيغة الجديدة لا تعمل مع الاستيراد الجماعي");
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     const additions: FileEntry[] = [];
     for (const f of Array.from(list)) {
       const buf = await f.arrayBuffer();
@@ -412,6 +417,7 @@ function BulkImportPage() {
     setFiles((prev) => [...prev, ...additions]);
     if (fileRef.current) fileRef.current.value = "";
   }
+
 
   function removeFile(id: string) {
     setFiles((prev) => prev.filter((f) => f.id !== id));
@@ -632,9 +638,10 @@ function BulkImportPage() {
           </label>
           <label className="block text-[11px]">اختر الملفات (متعددة)
             <div className="mt-1 flex items-center gap-2">
-              <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gold/15 border border-gold/30 text-gold cursor-pointer hover:bg-gold/25">
+              <label className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${provider === "tamara" ? "bg-white/5 border-white/10 text-muted-foreground cursor-not-allowed" : "bg-gold/15 border-gold/30 text-gold cursor-pointer hover:bg-gold/25"}`}>
                 <Upload size={14} /><span>إضافة ملفات</span>
                 <input ref={fileRef} type="file" multiple accept=".xlsx,.xls,.csv" className="hidden"
+                  disabled={provider === "tamara"}
                   onChange={(e) => onAddFiles(e.target.files)} />
               </label>
               <span className="text-[11px] text-muted-foreground">{files.length} ملف</span>
@@ -642,11 +649,26 @@ function BulkImportPage() {
           </label>
         </div>
 
+        {provider === "tamara" && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-200 flex items-start gap-2">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            <div className="space-y-1">
+              <div>الاستيراد الجماعي لا يدعم صيغة ملفات تمارا الجديدة (Invoice).</div>
+              <div>
+                لملفات تمارا استخدم{" "}
+                <Link to="/admin/finance/settlements/import" className="underline text-gold">صفحة الاستيراد المفرد</Link>{" "}
+                — تقرأ الرسوم وضريبتها والتاريخ من اسم الملف وتمنع التكرار تلقائياً.
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-2 pt-1">
           <button
             onClick={runAll}
-            disabled={busy || !providerRow?.id || files.filter((f) => f.status === "queued" || f.status === "error").length === 0}
+            disabled={busy || !providerRow?.id || provider === "tamara" || files.filter((f) => f.status === "queued" || f.status === "error").length === 0}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-gold/25 border border-gold/50 text-gold text-[12px] disabled:opacity-50">
+
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
             بدء الاستيراد ({files.filter((f) => f.status === "queued" || f.status === "error").length})
           </button>
