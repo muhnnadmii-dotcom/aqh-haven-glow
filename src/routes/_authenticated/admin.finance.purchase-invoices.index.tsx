@@ -386,13 +386,19 @@ function PurchaseInvoicesList() {
           ))}
           <div className="mx-2 h-4 w-px bg-white/10" />
           {dateMode === "month" ? (
-            <Input type="month" value={fMonth} onChange={(e) => setFMonth(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
+            <YearMonthPicker value={fMonth} onChange={setFMonth} />
           ) : (
             <>
               <label className="text-muted-foreground">من</label>
               <Input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
               <label className="text-muted-foreground">إلى</label>
               <Input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
+              <button
+                onClick={() => { setFFrom(""); setFTo(""); setFMonth(currentYm()); }}
+                className="px-2 py-1 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 text-[11px]"
+              >
+                رجوع لوضع الشهر
+              </button>
             </>
           )}
         </div>
