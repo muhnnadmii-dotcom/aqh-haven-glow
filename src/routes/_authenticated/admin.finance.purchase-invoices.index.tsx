@@ -38,7 +38,10 @@ const startOfWeek = (d: Date) => { const x = new Date(d); const day = x.getDay()
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
 const startOfQuarter = (d: Date) => new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1);
+const endOfQuarter = (d: Date) => new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3 + 3, 0);
 const startOfYear = (d: Date) => new Date(d.getFullYear(), 0, 1);
+const endOfYear = (d: Date) => new Date(d.getFullYear(), 11, 31);
+const AR_MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
 type SortKey = "issue_date" | "total_amount" | "vat_amount" | "status" | "internal_reference";
 
@@ -265,8 +268,8 @@ function PurchaseInvoicesList() {
       const p = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       setFMonth(""); setFFrom(ymd(startOfMonth(p))); setFTo(ymd(endOfMonth(p)));
     }
-    else if (preset === "quarter") { setFMonth(""); setFFrom(ymd(startOfQuarter(now))); setFTo(ymd(now)); }
-    else if (preset === "year") { setFMonth(""); setFFrom(ymd(startOfYear(now))); setFTo(ymd(now)); }
+    else if (preset === "quarter") { setFMonth(""); setFFrom(ymd(startOfQuarter(now))); setFTo(ymd(endOfQuarter(now))); }
+    else if (preset === "year") { setFMonth(String(now.getFullYear())); setFFrom(""); setFTo(""); }
     else if (preset === "all") { setFMonth(""); setFFrom(""); setFTo(""); }
   };
 
@@ -386,13 +389,19 @@ function PurchaseInvoicesList() {
           ))}
           <div className="mx-2 h-4 w-px bg-white/10" />
           {dateMode === "month" ? (
-            <Input type="month" value={fMonth} onChange={(e) => setFMonth(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
+            <YearMonthPicker value={fMonth} onChange={setFMonth} />
           ) : (
             <>
               <label className="text-muted-foreground">من</label>
               <Input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
               <label className="text-muted-foreground">إلى</label>
               <Input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
+              <button
+                onClick={() => { setFFrom(""); setFTo(""); setFMonth(currentYm()); }}
+                className="px-2 py-1 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 text-[11px]"
+              >
+                رجوع لوضع الشهر
+              </button>
             </>
           )}
         </div>
@@ -748,5 +757,95 @@ function BulkSel({ placeholder, onPick, disabled, children }: { placeholder: str
       <option value="">{placeholder}</option>
       {children}
     </select>
+  );
+}
+
+function YearMonthPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [openY, setOpenY] = useState(false);
+  const [openM, setOpenM] = useState(false);
+  const now = new Date();
+  const curY = now.getFullYear();
+  const parsed = /^(\d{4})(?:-(\d{2}))?$/.exec(value || "");
+  const selY = parsed ? Number(parsed[1]) : curY;
+  const selM = parsed && parsed[2] ? Number(parsed[2]) : null; // null = all months of selY
+  const years: number[] = [];
+  for (let y = curY - 5; y <= curY + 1; y++) years.push(y);
+
+  const label = value
+    ? (selM ? `${AR_MONTHS[selM - 1]} ${selY}` : `كل ${selY}`)
+    : "كل الوقت";
+
+  const setYear = (y: number) => {
+    onChange(selM ? `${y}-${String(selM).padStart(2, "0")}` : String(y));
+    setOpenY(false);
+  };
+  const setMonth = (m: number | null) => {
+    onChange(m ? `${selY}-${String(m).padStart(2, "0")}` : String(selY));
+    setOpenM(false);
+  };
+
+  return (
+    <div className="inline-flex items-center gap-1.5">
+      <span className="text-muted-foreground text-[11px]">{label}</span>
+
+      <Popover open={openY} onOpenChange={setOpenY}>
+        <PopoverTrigger asChild>
+          <button className="px-2 h-8 rounded-md bg-black/40 border border-white/10 hover:bg-black/50 text-sm inline-flex items-center gap-1">
+            {selY}
+            <ChevronsUpDown size={11} className="text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-48 p-2 bg-background border-white/10" align="start">
+          <div className="grid grid-cols-3 gap-1">
+            {years.map((y) => (
+              <button
+                key={y}
+                onClick={() => setYear(y)}
+                className={`px-2 py-1.5 rounded-md text-xs border ${
+                  y === selY ? "bg-gold/20 border-gold/50 text-gold" : "bg-white/5 border-white/10 hover:bg-white/10"
+                }`}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <Popover open={openM} onOpenChange={setOpenM}>
+        <PopoverTrigger asChild>
+          <button className="px-2 h-8 rounded-md bg-black/40 border border-white/10 hover:bg-black/50 text-sm inline-flex items-center gap-1 min-w-[88px] justify-between">
+            {selM ? AR_MONTHS[selM - 1] : "كل الأشهر"}
+            <ChevronsUpDown size={11} className="text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-2 bg-background border-white/10" align="start">
+          <div className="grid grid-cols-3 gap-1">
+            <button
+              onClick={() => setMonth(null)}
+              className={`col-span-3 px-2 py-1.5 rounded-md text-xs border ${
+                !selM ? "bg-gold/20 border-gold/50 text-gold" : "bg-white/5 border-white/10 hover:bg-white/10"
+              }`}
+            >
+              كل الأشهر ({selY})
+            </button>
+            {AR_MONTHS.map((name, i) => {
+              const m = i + 1;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setMonth(m)}
+                  className={`px-2 py-1.5 rounded-md text-xs border ${
+                    m === selM ? "bg-gold/20 border-gold/50 text-gold" : "bg-white/5 border-white/10 hover:bg-white/10"
+                  }`}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
