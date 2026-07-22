@@ -106,7 +106,7 @@ function PurchaseInvoicesList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("purchase_invoices" as any)
-        .select("*")
+        .select("*, supplier:finance_suppliers(name, tax_number)")
         .order("issue_date", { ascending: false })
         .order("id", { ascending: false });
       if (error) throw error;
@@ -284,6 +284,8 @@ function PurchaseInvoicesList() {
       toggle: () => setFStatusCsv(fStatus[0] === "under_review" ? "" : "under_review") },
     { key: "nondec", label: "غير قابل خصم", active: fVat.includes("non_deductible"),
       toggle: () => setFVatCsv(fVat.includes("non_deductible") ? "" : "non_deductible") },
+    { key: "dec", label: "قابلة للخصم", active: fVat.includes("fully_deductible"),
+      toggle: () => setFVatCsv(fVat.includes("fully_deductible") ? "" : "fully_deductible") },
     { key: "pers", label: "من حساب شخصي", active: fPersonal === "yes",
       toggle: () => setFPersonal(fPersonal === "yes" ? "" : "yes") },
   ];
@@ -594,7 +596,7 @@ function PurchaseInvoicesList() {
                     </td>
                     <td className="p-2 font-mono text-xs">{r.internal_reference}</td>
                     <td className="p-2">
-                      {supName(r.supplier_id)}
+                      {r.supplier?.name ?? supName(r.supplier_id)}
                       {r.paid_from_personal_account && <User className="inline w-3 h-3 mr-1 text-amber-300" />}
                     </td>
                     <td className="p-2 whitespace-nowrap">{r.issue_date}</td>
