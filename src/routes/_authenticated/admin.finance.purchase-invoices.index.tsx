@@ -1,10 +1,12 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Plus, Loader2, ShoppingCart, User, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Plus, Loader2, ShoppingCart, User, X, Check, ChevronsUpDown, ArrowUp, ArrowDown, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { useUrlState } from "@/lib/finance/use-url-state";
@@ -26,9 +28,25 @@ export const Route = createFileRoute("/_authenticated/admin/finance/purchase-inv
   component: PurchaseInvoicesList,
 });
 
+// --- URL helpers for CSV multi-value state ---
+const parseCsv = (s: string) => (s ? s.split(",").filter(Boolean) : []);
+const toCsv = (arr: string[]) => arr.join(",");
+
+// --- Date helpers ---
+const ymd = (d: Date) => d.toISOString().slice(0, 10);
+const startOfWeek = (d: Date) => { const x = new Date(d); const day = x.getDay(); x.setDate(x.getDate() - day); return x; };
+const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
+const startOfQuarter = (d: Date) => new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1);
+const startOfYear = (d: Date) => new Date(d.getFullYear(), 0, 1);
+
+type SortKey = "issue_date" | "total_amount" | "vat_amount" | "status" | "internal_reference";
+
 function PurchaseInvoicesList() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+
+  // Search
   const [q, setQ] = useState(() => {
     if (typeof window !== "undefined") {
       const sp = new URLSearchParams(window.location.search);
@@ -36,24 +54,49 @@ function PurchaseInvoicesList() {
     }
     return "";
   });
-  const [urlQ, setUrlQ] = useUrlState("q", "", { debounceMs: 400 });
+  const [, setUrlQ] = useUrlState("q", "", { debounceMs: 400 });
   useEffect(() => {
     const t = setTimeout(() => setUrlQ(q.trim()), 300);
     return () => clearTimeout(t);
   }, [q, setUrlQ]);
-  // reference urlQ to avoid unused-var lint
-  void urlQ;
-  const [fStatus, setFStatus] = useUrlState("status", "");
-  const [fPay, setFPay] = useUrlState("pay", "");
-  const [fType, setFType] = useUrlState("type", "");
-  const [fVat, setFVat] = useUrlState("vat", "");
+
+  // Multi-select filters (CSV in URL)
+  const [fStatusCsv, setFStatusCsv] = useUrlState("status", "");
+  const [fPayCsv, setFPayCsv] = useUrlState("pay", "");
+  const [fTypeCsv, setFTypeCsv] = useUrlState("type", "");
+  const [fVatCsv, setFVatCsv] = useUrlState("vat", "");
+  const fStatus = parseCsv(fStatusCsv);
+  const fPay = parseCsv(fPayCsv);
+  const fType = parseCsv(fTypeCsv);
+  const fVat = parseCsv(fVatCsv);
+
   const [fSupplier, setFSupplier] = useUrlState("sup", "");
   const [fAttach, setFAttach] = useUrlState("att", "");
   const [fPersonal, setFPersonal] = useUrlState("pers", "");
+
+  // Date: month OR from/to range
   const [fMonth, setFMonth] = useUrlState("month", currentYm());
+  const [fFrom, setFFrom] = useUrlState("from", "");
+  const [fTo, setFTo] = useUrlState("to", "");
+  const dateMode: "month" | "range" = fFrom || fTo ? "range" : "month";
+
+  // Amount range
+  const [fMin, setFMin] = useUrlState("min", "");
+  const [fMax, setFMax] = useUrlState("max", "");
+
+  // Sort
+  const [sortKey, setSortKey] = useUrlState("sort", "issue_date");
+  const [sortDir, setSortDir] = useUrlState("dir", "desc");
+
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
+  const toggleInCsv = (csv: string, setter: (v: string) => void, val: string) => {
+    const arr = parseCsv(csv);
+    const next = arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
+    setter(toCsv(next));
+  };
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["purchase_invoices"],
@@ -71,11 +114,12 @@ function PurchaseInvoicesList() {
   const { data: suppliers = [] } = useQuery({
     queryKey: ["finance_suppliers_min"],
     queryFn: async () => {
-      const { data } = await supabase.from("finance_suppliers").select("id, name").eq("is_active", true).order("name");
+      const { data } = await supabase.from("finance_suppliers").select("id, name, tax_number").eq("is_active", true).order("name");
       return (data ?? []) as any[];
     },
   });
   const supName = (id: string | null) => suppliers.find((s) => s.id === id)?.name ?? "—";
+  const supTax = (id: string | null) => suppliers.find((s) => s.id === id)?.tax_number ?? "";
 
   // attachment map
   const invoiceIds = invoices.map((i) => i.id);
@@ -114,26 +158,78 @@ function PurchaseInvoicesList() {
 
   const attStatusOf = (r: any) => (hasAttachment(r.id) ? "attached" : "not_attached");
 
+  // Parse smart search query
+  const searchTokens = useMemo(() => {
+    const raw = q.trim();
+    if (!raw) return { text: [] as string[], refOnly: [] as string[], supOnly: [] as string[], gt: null as number | null, lt: null as number | null };
+    const parts = raw.split(/\s+/);
+    const text: string[] = [];
+    const refOnly: string[] = [];
+    const supOnly: string[] = [];
+    let gt: number | null = null;
+    let lt: number | null = null;
+    for (const p of parts) {
+      if (p.startsWith("#") && p.length > 1) refOnly.push(p.slice(1).toLowerCase());
+      else if (p.startsWith("@") && p.length > 1) supOnly.push(p.slice(1).toLowerCase());
+      else if (p.startsWith(">") && !isNaN(Number(p.slice(1)))) gt = Number(p.slice(1));
+      else if (p.startsWith("<") && !isNaN(Number(p.slice(1)))) lt = Number(p.slice(1));
+      else text.push(p.toLowerCase());
+    }
+    return { text, refOnly, supOnly, gt, lt };
+  }, [q]);
+
   const filtered = useMemo(() => {
-    return invoices.filter((r) => {
-      if (fStatus && r.status !== fStatus) return false;
-      if (fPay && r.payment_status !== fPay) return false;
-      if (fType && r.purchase_type !== fType) return false;
-      if (fVat && r.vat_deductibility !== fVat) return false;
+    const arr = invoices.filter((r) => {
+      if (fStatus.length && !fStatus.includes(r.status)) return false;
+      if (fPay.length && !fPay.includes(r.payment_status)) return false;
+      if (fType.length && !fType.includes(r.purchase_type)) return false;
+      if (fVat.length && !fVat.includes(r.vat_deductibility)) return false;
       if (fSupplier && r.supplier_id !== fSupplier) return false;
       if (fPersonal === "yes" && !r.paid_from_personal_account) return false;
       if (fPersonal === "no" && r.paid_from_personal_account) return false;
-      if (fMonth && !(r.issue_date ?? "").startsWith(fMonth)) return false;
+
+      // Date
+      const d = r.issue_date ?? "";
+      if (dateMode === "range") {
+        if (fFrom && d < fFrom) return false;
+        if (fTo && d > fTo) return false;
+      } else if (fMonth) {
+        if (!d.startsWith(fMonth)) return false;
+      }
+
+      // Amount
+      const tot = Number(r.total_amount || 0);
+      if (fMin && tot < Number(fMin)) return false;
+      if (fMax && tot > Number(fMax)) return false;
+
       if (fAttach && attStatusOf(r) !== fAttach) return false;
-      if (q) {
-        const s = q.toLowerCase();
-        const hay = `${r.internal_reference} ${r.supplier_invoice_number ?? ""} ${supName(r.supplier_id)} ${r.notes ?? ""}`.toLowerCase();
-        if (!hay.includes(s)) return false;
+
+      // Smart search
+      const { text, refOnly, supOnly, gt, lt } = searchTokens;
+      if (gt !== null && tot <= gt) return false;
+      if (lt !== null && tot >= lt) return false;
+      const ref = String(r.internal_reference ?? "").toLowerCase();
+      const sName = String(supName(r.supplier_id)).toLowerCase();
+      for (const t of refOnly) if (!ref.includes(t)) return false;
+      for (const t of supOnly) if (!sName.includes(t)) return false;
+      if (text.length) {
+        const hay = `${ref} ${String(r.supplier_invoice_number ?? "").toLowerCase()} ${sName} ${String(r.notes ?? "").toLowerCase()} ${String(supTax(r.supplier_id)).toLowerCase()}`;
+        for (const t of text) if (!hay.includes(t)) return false;
       }
       return true;
     });
-  }, [invoices, fStatus, fPay, fType, fVat, fSupplier, fPersonal, fMonth, fAttach, q, attachments]);
 
+    // Sort
+    const dir = sortDir === "asc" ? 1 : -1;
+    const key = sortKey as SortKey;
+    arr.sort((a, b) => {
+      const av = a[key];
+      const bv = b[key];
+      if (key === "total_amount" || key === "vat_amount") return (Number(av || 0) - Number(bv || 0)) * dir;
+      return String(av ?? "").localeCompare(String(bv ?? "")) * dir;
+    });
+    return arr;
+  }, [invoices, fStatusCsv, fPayCsv, fTypeCsv, fVatCsv, fSupplier, fPersonal, fMonth, fFrom, fTo, fMin, fMax, fAttach, searchTokens, attachments, sortKey, sortDir]);
 
   const kpis = useMemo(() => {
     const total = filtered.reduce((s, r) => s + Number(r.total_amount || 0), 0);
@@ -143,6 +239,64 @@ function PurchaseInvoicesList() {
     const nondec = filtered.reduce((s, r) => s + Number(r.non_deductible_vat_amount || 0), 0);
     return { total, paid, remaining, deductible, nondec };
   }, [filtered]);
+
+  // Active filters count
+  const activeCount =
+    (q ? 1 : 0) + fStatus.length + fPay.length + fType.length + fVat.length +
+    (fSupplier ? 1 : 0) + (fAttach ? 1 : 0) + (fPersonal ? 1 : 0) +
+    (dateMode === "range" ? ((fFrom ? 1 : 0) + (fTo ? 1 : 0)) : (fMonth !== currentYm() ? 1 : 0)) +
+    (fMin ? 1 : 0) + (fMax ? 1 : 0);
+
+  const clearAll = () => {
+    setQ("");
+    setFStatusCsv(""); setFPayCsv(""); setFTypeCsv(""); setFVatCsv("");
+    setFSupplier(""); setFAttach(""); setFPersonal("");
+    setFMonth(currentYm()); setFFrom(""); setFTo("");
+    setFMin(""); setFMax("");
+  };
+
+  // Quick date presets
+  const applyPreset = (preset: string) => {
+    const now = new Date();
+    if (preset === "today") { setFMonth(""); setFFrom(ymd(now)); setFTo(ymd(now)); }
+    else if (preset === "week") { setFMonth(""); setFFrom(ymd(startOfWeek(now))); setFTo(ymd(now)); }
+    else if (preset === "month") { setFFrom(""); setFTo(""); setFMonth(currentYm()); }
+    else if (preset === "prevmonth") {
+      const p = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      setFMonth(""); setFFrom(ymd(startOfMonth(p))); setFTo(ymd(endOfMonth(p)));
+    }
+    else if (preset === "quarter") { setFMonth(""); setFFrom(ymd(startOfQuarter(now))); setFTo(ymd(now)); }
+    else if (preset === "year") { setFMonth(""); setFFrom(ymd(startOfYear(now))); setFTo(ymd(now)); }
+    else if (preset === "all") { setFMonth(""); setFFrom(""); setFTo(""); }
+  };
+
+  // Quick filter chips
+  type QuickChip = { key: string; label: string; active: boolean; toggle: () => void };
+  const quickChips: QuickChip[] = [
+    { key: "unpaid", label: "غير مسددة", active: fPay.includes("unpaid") && fPay.includes("partially_paid"),
+      toggle: () => setFPayCsv(fPay.includes("unpaid") ? "" : "unpaid,partially_paid") },
+    { key: "att", label: "بدون مرفق", active: fAttach === "not_attached",
+      toggle: () => setFAttach(fAttach === "not_attached" ? "" : "not_attached") },
+    { key: "review", label: "قيد المراجعة", active: fStatus.length === 1 && fStatus[0] === "under_review",
+      toggle: () => setFStatusCsv(fStatus[0] === "under_review" ? "" : "under_review") },
+    { key: "nondec", label: "غير قابل خصم", active: fVat.includes("non_deductible"),
+      toggle: () => setFVatCsv(fVat.includes("non_deductible") ? "" : "non_deductible") },
+    { key: "pers", label: "من حساب شخصي", active: fPersonal === "yes",
+      toggle: () => setFPersonal(fPersonal === "yes" ? "" : "yes") },
+  ];
+
+  const sortHeader = (key: SortKey, label: string) => (
+    <button
+      onClick={() => {
+        if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
+        else { setSortKey(key); setSortDir("desc"); }
+      }}
+      className="inline-flex items-center gap-1 hover:text-foreground"
+    >
+      {label}
+      {sortKey === key ? (sortDir === "asc" ? <ArrowUp size={11} /> : <ArrowDown size={11} />) : <ChevronsUpDown size={11} className="opacity-40" />}
+    </button>
+  );
 
   return (
     <div className="space-y-4">
@@ -166,34 +320,122 @@ function PurchaseInvoicesList() {
         <KPI label="ضريبة قابلة للخصم" value={SAR(kpis.deductible)} tone="blue" />
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 rounded-xl bg-white/5 border border-white/10 p-3">
-        <Input placeholder="بحث..." value={q} onChange={(e) => setQ(e.target.value)} className="bg-black/40 border-white/10 text-sm" />
-        <Sel value={fStatus} onChange={setFStatus} placeholder="حالة الفاتورة">
-          {Object.entries(PURCHASE_STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </Sel>
-        <Sel value={fPay} onChange={setFPay} placeholder="حالة السداد">
-          {Object.entries(PURCHASE_PAY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </Sel>
-        <Sel value={fType} onChange={setFType} placeholder="نوع المشتريات">
-          {Object.entries(PURCHASE_TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </Sel>
-        <Sel value={fVat} onChange={setFVat} placeholder="قابلية الخصم">
-          {Object.entries(VAT_DEDUCTIBILITY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </Sel>
-        <Sel value={fSupplier} onChange={setFSupplier} placeholder="المورد">
-          {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </Sel>
-        <Sel value={fAttach} onChange={setFAttach} placeholder="المرفق">
-          <option value="attached">مرفق</option>
-          <option value="not_attached">غير مرفق</option>
-        </Sel>
+      {/* Quick chips */}
+      <div className="flex flex-wrap items-center gap-2">
+        {quickChips.map((c) => (
+          <button
+            key={c.key}
+            onClick={c.toggle}
+            className={`px-3 py-1 rounded-full text-[11px] border transition ${
+              c.active
+                ? "bg-gold/20 border-gold/50 text-gold"
+                : "bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10"
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+        <div className="ms-auto flex items-center gap-2 text-[11px] text-muted-foreground">
+          {activeCount > 0 && (
+            <>
+              <span className="inline-flex items-center gap-1"><Filter size={11} /> {activeCount} فلتر نشط</span>
+              <button onClick={clearAll} className="px-2 py-1 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 text-foreground">مسح الكل</button>
+            </>
+          )}
+          <button onClick={() => setShowAdvanced((v) => !v)} className="px-2 py-1 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 text-foreground">
+            {showAdvanced ? "إخفاء الفلاتر المتقدمة" : "فلاتر متقدمة"}
+          </button>
+        </div>
+      </div>
 
-        <Sel value={fPersonal} onChange={setFPersonal} placeholder="من حساب شخصي">
-          <option value="yes">نعم</option>
-          <option value="no">لا</option>
-        </Sel>
-        <Input type="month" value={fMonth} onChange={(e) => setFMonth(e.target.value)} className="bg-black/40 border-white/10 text-sm" />
+      {/* Search + date presets */}
+      <div className="rounded-xl bg-white/5 border border-white/10 p-3 space-y-3">
+        <div className="relative">
+          <Input
+            placeholder='بحث ذكي — استخدم "#REF"، "@مورد"، ">500"، "<100" أو كلمات عادية'
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="bg-black/40 border-white/10 text-sm pr-8"
+          />
+          {q && (
+            <button onClick={() => setQ("")} className="absolute inset-y-0 left-2 flex items-center text-muted-foreground hover:text-foreground">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Date presets */}
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <span className="text-muted-foreground">التاريخ:</span>
+          {[
+            { k: "today", l: "اليوم" },
+            { k: "week", l: "هذا الأسبوع" },
+            { k: "month", l: "هذا الشهر" },
+            { k: "prevmonth", l: "الشهر السابق" },
+            { k: "quarter", l: "هذا الربع" },
+            { k: "year", l: "هذه السنة" },
+            { k: "all", l: "كل الوقت" },
+          ].map((p) => (
+            <button
+              key={p.k}
+              onClick={() => applyPreset(p.k)}
+              className="px-2 py-1 rounded-md bg-white/5 border border-white/10 hover:bg-white/10"
+            >
+              {p.l}
+            </button>
+          ))}
+          <div className="mx-2 h-4 w-px bg-white/10" />
+          {dateMode === "month" ? (
+            <Input type="month" value={fMonth} onChange={(e) => setFMonth(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
+          ) : (
+            <>
+              <label className="text-muted-foreground">من</label>
+              <Input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
+              <label className="text-muted-foreground">إلى</label>
+              <Input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} className="bg-black/40 border-white/10 text-sm w-36 h-8" />
+            </>
+          )}
+        </div>
+
+        {/* Advanced filters */}
+        {showAdvanced && (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-2 border-t border-white/5">
+            <MultiSel label="الحالة" options={PURCHASE_STATUS_LABEL} selected={fStatus} onToggle={(v) => toggleInCsv(fStatusCsv, setFStatusCsv, v)} onClear={() => setFStatusCsv("")} />
+            <MultiSel label="حالة السداد" options={PURCHASE_PAY_LABEL} selected={fPay} onToggle={(v) => toggleInCsv(fPayCsv, setFPayCsv, v)} onClear={() => setFPayCsv("")} />
+            <MultiSel label="نوع المشتريات" options={PURCHASE_TYPE_LABEL} selected={fType} onToggle={(v) => toggleInCsv(fTypeCsv, setFTypeCsv, v)} onClear={() => setFTypeCsv("")} />
+            <MultiSel label="قابلية الخصم" options={VAT_DEDUCTIBILITY_LABEL} selected={fVat} onToggle={(v) => toggleInCsv(fVatCsv, setFVatCsv, v)} onClear={() => setFVatCsv("")} />
+
+            <div>
+              <FieldLabel>المورد</FieldLabel>
+              <SupplierCombobox suppliers={suppliers} value={fSupplier} onChange={setFSupplier} />
+            </div>
+
+            <div>
+              <FieldLabel>المرفق</FieldLabel>
+              <Sel value={fAttach} onChange={setFAttach} placeholder="الكل">
+                <option value="attached">مرفق</option>
+                <option value="not_attached">غير مرفق</option>
+              </Sel>
+            </div>
+
+            <div>
+              <FieldLabel>من حساب شخصي</FieldLabel>
+              <Sel value={fPersonal} onChange={setFPersonal} placeholder="الكل">
+                <option value="yes">نعم</option>
+                <option value="no">لا</option>
+              </Sel>
+            </div>
+
+            <div>
+              <FieldLabel>نطاق الإجمالي (ر.س)</FieldLabel>
+              <div className="flex items-center gap-1">
+                <Input type="number" placeholder="من" value={fMin} onChange={(e) => setFMin(e.target.value)} className="bg-black/40 border-white/10 text-sm h-8" />
+                <span className="text-muted-foreground">—</span>
+                <Input type="number" placeholder="إلى" value={fMax} onChange={(e) => setFMax(e.target.value)} className="bg-black/40 border-white/10 text-sm h-8" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bulk actions bar */}
@@ -226,7 +468,7 @@ function PurchaseInvoicesList() {
               const patch: any = { vat_deductibility: v };
               if (v === "non_deductible") {
                 const reasons = Object.entries(NON_DEDUCTIBLE_REASON_LABEL);
-                const list = reasons.map(([k, l], i) => `${i + 1}. ${l}`).join("\n");
+                const list = reasons.map(([_, l], i) => `${i + 1}. ${l}`).join("\n");
                 const pick = window.prompt(`اختر سبب عدم قابلية الخصم:\n${list}\n\nأدخل الرقم:`, "1");
                 if (!pick) return;
                 const idx = Number(pick) - 1;
@@ -292,7 +534,7 @@ function PurchaseInvoicesList() {
         ) : filtered.length === 0 ? (
           <div className="p-10 text-center text-muted-foreground">
             <ShoppingCart className="w-8 h-8 mx-auto opacity-40 mb-2" />
-            لا توجد فواتير
+            لا توجد فواتير مطابقة للفلاتر
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -310,17 +552,17 @@ function PurchaseInvoicesList() {
                     }}
                   />
                 </th>
-                <th className="text-right p-2">المرجع الداخلي</th>
+                <th className="text-right p-2">{sortHeader("internal_reference", "المرجع الداخلي")}</th>
                 <th className="text-right p-2">المورد</th>
-                <th className="text-right p-2">التاريخ</th>
+                <th className="text-right p-2">{sortHeader("issue_date", "التاريخ")}</th>
                 <th className="text-right p-2">النوع</th>
                 <th className="text-right p-2">قبل الضريبة</th>
-                <th className="text-right p-2">الضريبة</th>
+                <th className="text-right p-2">{sortHeader("vat_amount", "الضريبة")}</th>
                 <th className="text-right p-2">القابل للخصم</th>
                 <th className="text-right p-2">غير القابل</th>
-                <th className="text-right p-2">الإجمالي</th>
+                <th className="text-right p-2">{sortHeader("total_amount", "الإجمالي")}</th>
                 <th className="text-right p-2">المرفق</th>
-                <th className="text-right p-2">الحالة</th>
+                <th className="text-right p-2">{sortHeader("status", "الحالة")}</th>
                 <th className="text-right p-2">السداد</th>
               </tr>
             </thead>
@@ -378,12 +620,120 @@ function KPI({ label, value, tone }: { label: string; value: string; tone?: "eme
   );
 }
 
+function FieldLabel({ children }: { children: any }) {
+  return <div className="text-[11px] text-muted-foreground mb-1">{children}</div>;
+}
+
 function Sel({ value, onChange, placeholder, children }: { value: string; onChange: (v: string) => void; placeholder: string; children: any }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className="bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm">
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-sm h-8">
       <option value="">{placeholder}</option>
       {children}
     </select>
+  );
+}
+
+function MultiSel({
+  label, options, selected, onToggle, onClear,
+}: {
+  label: string;
+  options: Record<string, string>;
+  selected: string[];
+  onToggle: (v: string) => void;
+  onClear: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <FieldLabel>{label}</FieldLabel>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button className="w-full h-8 flex items-center justify-between bg-black/40 border border-white/10 rounded-md px-2 text-sm hover:bg-black/50">
+            <span className="truncate text-right">
+              {selected.length === 0 ? <span className="text-muted-foreground">الكل</span>
+                : selected.length === 1 ? options[selected[0]] ?? selected[0]
+                : `${selected.length} محدد`}
+            </span>
+            <ChevronsUpDown size={12} className="text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-2 bg-background border-white/10" align="start">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] text-muted-foreground">{label}</span>
+            {selected.length > 0 && (
+              <button onClick={onClear} className="text-[11px] text-gold hover:underline">مسح</button>
+            )}
+          </div>
+          <div className="max-h-56 overflow-y-auto">
+            {Object.entries(options).map(([k, v]) => {
+              const on = selected.includes(k);
+              return (
+                <button
+                  key={k}
+                  onClick={() => onToggle(k)}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-right hover:bg-white/5 ${on ? "text-gold" : ""}`}
+                >
+                  <span className={`w-4 h-4 flex items-center justify-center rounded border ${on ? "bg-gold border-gold text-black" : "border-white/20"}`}>
+                    {on && <Check size={12} />}
+                  </span>
+                  <span className="flex-1 text-right">{v}</span>
+                </button>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function SupplierCombobox({
+  suppliers, value, onChange,
+}: {
+  suppliers: any[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const current = suppliers.find((s) => s.id === value);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className="w-full h-8 flex items-center justify-between bg-black/40 border border-white/10 rounded-md px-2 text-sm hover:bg-black/50">
+          <span className="truncate text-right">
+            {current ? current.name : <span className="text-muted-foreground">كل الموردين</span>}
+          </span>
+          <ChevronsUpDown size={12} className="text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-0 bg-background border-white/10" align="start">
+        <Command>
+          <CommandInput placeholder="ابحث عن مورد..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>لا يوجد مورد.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem onSelect={() => { onChange(""); setOpen(false); }}>
+                <span className="flex-1">كل الموردين</span>
+                {!value && <Check size={14} />}
+              </CommandItem>
+              {suppliers.map((s) => (
+                <CommandItem
+                  key={s.id}
+                  value={`${s.name} ${s.tax_number ?? ""}`}
+                  onSelect={() => { onChange(s.id); setOpen(false); }}
+                >
+                  <div className="flex-1">
+                    <div>{s.name}</div>
+                    {s.tax_number && <div className="text-[10px] text-muted-foreground">ض: {s.tax_number}</div>}
+                  </div>
+                  {value === s.id && <Check size={14} />}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -400,4 +750,3 @@ function BulkSel({ placeholder, onPick, disabled, children }: { placeholder: str
     </select>
   );
 }
-
