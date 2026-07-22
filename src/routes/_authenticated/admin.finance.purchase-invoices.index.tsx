@@ -594,7 +594,7 @@ function PurchaseInvoicesList() {
                     </td>
                     <td className="p-2 font-mono text-xs">{r.internal_reference}</td>
                     <td className="p-2">
-                      {supName(r.supplier_id)}
+                      {r.supplier?.name ?? supName(r.supplier_id)}
                       {r.paid_from_personal_account && <User className="inline w-3 h-3 mr-1 text-amber-300" />}
                     </td>
                     <td className="p-2 whitespace-nowrap">{r.issue_date}</td>
