@@ -58,6 +58,11 @@ function hashKey(text: string): string {
 export const autoTranslate = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
+    // Per-IP rate limit — cheap defence against script-driven cost abuse.
+    const ip = getClientIp();
+    if (!rateLimit(ip)) {
+      return { translations: {} as Record<string, string>, rate_limited: true };
+    }
     // Normalize + de-duplicate input, cap size to avoid abuse.
     const uniq = Array.from(
       new Set(
@@ -67,6 +72,7 @@ export const autoTranslate = createServerFn({ method: "POST" })
       ),
     ).slice(0, 60);
     if (uniq.length === 0) return { translations: {} as Record<string, string> };
+
 
     const keys = uniq.map(hashKey);
     const keyToText = new Map<string, string>();
