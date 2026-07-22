@@ -106,7 +106,7 @@ function PurchaseInvoicesList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("purchase_invoices" as any)
-        .select("*")
+        .select("*, supplier:finance_suppliers(name, tax_number)")
         .order("issue_date", { ascending: false })
         .order("id", { ascending: false });
       if (error) throw error;
