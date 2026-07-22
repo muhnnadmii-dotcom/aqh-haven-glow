@@ -38,7 +38,10 @@ const startOfWeek = (d: Date) => { const x = new Date(d); const day = x.getDay()
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
 const startOfQuarter = (d: Date) => new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1);
+const endOfQuarter = (d: Date) => new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3 + 3, 0);
 const startOfYear = (d: Date) => new Date(d.getFullYear(), 0, 1);
+const endOfYear = (d: Date) => new Date(d.getFullYear(), 11, 31);
+const AR_MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
 type SortKey = "issue_date" | "total_amount" | "vat_amount" | "status" | "internal_reference";
 
