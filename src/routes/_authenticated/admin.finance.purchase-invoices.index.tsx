@@ -33,7 +33,7 @@ const parseCsv = (s: string) => (s ? s.split(",").filter(Boolean) : []);
 const toCsv = (arr: string[]) => arr.join(",");
 
 // --- Date helpers ---
-const ymd = (d: Date) => d.toISOString().slice(0, 10);
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const startOfWeek = (d: Date) => { const x = new Date(d); const day = x.getDay(); x.setDate(x.getDate() - day); return x; };
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
