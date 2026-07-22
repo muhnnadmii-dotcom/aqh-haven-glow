@@ -268,8 +268,8 @@ function PurchaseInvoicesList() {
       const p = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       setFMonth(""); setFFrom(ymd(startOfMonth(p))); setFTo(ymd(endOfMonth(p)));
     }
-    else if (preset === "quarter") { setFMonth(""); setFFrom(ymd(startOfQuarter(now))); setFTo(ymd(now)); }
-    else if (preset === "year") { setFMonth(""); setFFrom(ymd(startOfYear(now))); setFTo(ymd(now)); }
+    else if (preset === "quarter") { setFMonth(""); setFFrom(ymd(startOfQuarter(now))); setFTo(ymd(endOfQuarter(now))); }
+    else if (preset === "year") { setFMonth(String(now.getFullYear())); setFFrom(""); setFTo(""); }
     else if (preset === "all") { setFMonth(""); setFFrom(""); setFTo(""); }
   };
 
