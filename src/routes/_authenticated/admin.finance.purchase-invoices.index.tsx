@@ -284,6 +284,8 @@ function PurchaseInvoicesList() {
       toggle: () => setFStatusCsv(fStatus[0] === "under_review" ? "" : "under_review") },
     { key: "nondec", label: "غير قابل خصم", active: fVat.includes("non_deductible"),
       toggle: () => setFVatCsv(fVat.includes("non_deductible") ? "" : "non_deductible") },
+    { key: "dec", label: "قابلة للخصم", active: fVat.includes("fully_deductible"),
+      toggle: () => setFVatCsv(fVat.includes("fully_deductible") ? "" : "fully_deductible") },
     { key: "pers", label: "من حساب شخصي", active: fPersonal === "yes",
       toggle: () => setFPersonal(fPersonal === "yes" ? "" : "yes") },
   ];
