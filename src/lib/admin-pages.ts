@@ -54,6 +54,7 @@ export const ADMIN_PAGES: AdminPageDef[] = [
   { key: "/admin/finance/audit",           label: "سجل التعديلات",     group: "finance", financeOnly: true },
   { key: "/admin/finance/quotes",          label: "عروض الأسعار",      group: "finance", financeOnly: true },
   { key: "/admin/finance/settings",        label: "الإعدادات المالية", group: "finance", financeOnly: true },
+  { key: "/admin/finance/health",          label: "فحص سلامة البيانات", group: "finance", financeOnly: true },
 
   // Inventory
   { key: "/admin/inventory", label: "المخزون وإعادة التوريد", group: "inventory" },
