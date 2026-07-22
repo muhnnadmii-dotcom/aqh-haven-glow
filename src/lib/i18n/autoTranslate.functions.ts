@@ -1,8 +1,43 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+
+// --- Abuse controls -------------------------------------------------------
+// Per-IP sliding window rate limit (in-memory; best-effort per worker instance).
+const RL_WINDOW_MS = 60_000;
+const RL_MAX_PER_WINDOW = 20; // requests / minute / IP
+const ipHits = new Map<string, number[]>();
+function rateLimit(ip: string): boolean {
+  const now = Date.now();
+  const arr = (ipHits.get(ip) ?? []).filter((t) => now - t < RL_WINDOW_MS);
+  arr.push(now);
+  ipHits.set(ip, arr);
+  if (ipHits.size > 5000) {
+    // opportunistic cleanup
+    for (const [k, v] of ipHits) if (v.length === 0 || now - v[v.length - 1] > RL_WINDOW_MS) ipHits.delete(k);
+  }
+  return arr.length <= RL_MAX_PER_WINDOW;
+}
+// Global daily budget on NEW AI calls (counts newly inserted auto: rows today).
+const DAILY_NEW_TRANSLATION_CAP = 2000;
+function getClientIp(): string {
+  try {
+    const req = getRequest();
+    const h = req.headers;
+    return (
+      h.get("cf-connecting-ip") ||
+      h.get("x-real-ip") ||
+      (h.get("x-forwarded-for") || "").split(",")[0].trim() ||
+      "unknown"
+    );
+  } catch {
+    return "unknown";
+  }
+}
+
 
 // Public auto-translation endpoint.
 // - No auth: any visitor can trigger translations while browsing.
@@ -23,6 +58,11 @@ function hashKey(text: string): string {
 export const autoTranslate = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
+    // Per-IP rate limit — cheap defence against script-driven cost abuse.
+    const ip = getClientIp();
+    if (!rateLimit(ip)) {
+      return { translations: {} as Record<string, string>, rate_limited: true };
+    }
     // Normalize + de-duplicate input, cap size to avoid abuse.
     const uniq = Array.from(
       new Set(
@@ -32,6 +72,7 @@ export const autoTranslate = createServerFn({ method: "POST" })
       ),
     ).slice(0, 60);
     if (uniq.length === 0) return { translations: {} as Record<string, string> };
+
 
     const keys = uniq.map(hashKey);
     const keyToText = new Map<string, string>();
@@ -65,8 +106,21 @@ export const autoTranslate = createServerFn({ method: "POST" })
     // Missing translations
     const missing = uniq.filter((t) => !cache[t]);
     if (missing.length > 0) {
+      // Global daily budget: cap how many NEW auto-translation rows we mint per day.
+      // Once exceeded, serve cached-only and skip the paid AI call.
+      const dayStart = new Date();
+      dayStart.setUTCHours(0, 0, 0, 0);
+      const { count: todayCount } = await supaPublic
+        .from("ui_translations")
+        .select("key", { count: "exact", head: true })
+        .like("key", "auto:%")
+        .gte("updated_at", dayStart.toISOString());
+      if ((todayCount ?? 0) >= DAILY_NEW_TRANSLATION_CAP) {
+        return { translations: cache, budget_exceeded: true };
+      }
       const key = process.env.LOVABLE_API_KEY;
       if (!key) throw new Error("Missing LOVABLE_API_KEY");
+
       const src = data.to === "en" ? "Arabic" : "English";
       const dst = data.to === "en" ? "English" : "Arabic";
       const system = `You are a professional translator for Aqua Haven — a premium aquarium design & maintenance brand in Riyadh, Saudi Arabia. Translate each item from ${src} to ${dst} with a luxury, professional voice.
