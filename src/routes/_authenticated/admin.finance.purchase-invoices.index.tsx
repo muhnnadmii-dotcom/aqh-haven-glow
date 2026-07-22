@@ -117,12 +117,12 @@ function PurchaseInvoicesList() {
   const { data: suppliers = [] } = useQuery({
     queryKey: ["finance_suppliers_min"],
     queryFn: async () => {
-      const { data } = await supabase.from("finance_suppliers").select("id, name, tax_number").eq("is_active", true).order("name");
+      const { data } = await supabase.from("finance_suppliers").select("id, name").eq("is_active", true).order("name");
       return (data ?? []) as any[];
     },
   });
   const supName = (id: string | null) => suppliers.find((s) => s.id === id)?.name ?? "—";
-  const supTax = (id: string | null) => suppliers.find((s) => s.id === id)?.tax_number ?? "";
+  const supTax = (_id: string | null) => "";
 
   // attachment map
   const invoiceIds = invoices.map((i) => i.id);
