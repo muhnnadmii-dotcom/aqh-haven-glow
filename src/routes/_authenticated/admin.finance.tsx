@@ -136,6 +136,7 @@ const sections: MenuSection[] = [
       { to: "/admin/finance/export", label: "التصدير" },
       { to: "/admin/finance/audit", label: "سجل التعديلات" },
       { to: "/admin/finance/settings", label: "الإعدادات" },
+      { to: "/admin/finance/health", label: "فحص سلامة البيانات" },
     ],
   },
 ];
