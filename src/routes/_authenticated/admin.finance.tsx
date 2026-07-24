@@ -109,6 +109,7 @@ const sections: MenuSection[] = [
       { to: "/admin/finance/vat/draft", label: "مسودة الإقرار" },
       { to: "/admin/finance/vat/periods", label: "الفترات الضريبية" },
       { to: "/admin/finance/credit-debit-notes", label: "الإشعارات الدائنة والمدينة" },
+      { to: "/admin/finance/recovery", label: "فرص استرداد الضريبة" },
     ],
   },
   {
@@ -135,6 +136,7 @@ const sections: MenuSection[] = [
       { to: "/admin/finance/export", label: "التصدير" },
       { to: "/admin/finance/audit", label: "سجل التعديلات" },
       { to: "/admin/finance/settings", label: "الإعدادات" },
+      { to: "/admin/finance/health", label: "فحص سلامة البيانات" },
     ],
   },
 ];
