@@ -124,6 +124,7 @@ import { Route as AuthenticatedAdminFinanceVatPeriodsRouteImport } from './route
 import { Route as AuthenticatedAdminFinanceVatFiledRouteImport } from './routes/_authenticated/admin.finance.vat.filed'
 import { Route as AuthenticatedAdminFinanceVatExcludedRouteImport } from './routes/_authenticated/admin.finance.vat.excluded'
 import { Route as AuthenticatedAdminFinanceVatDraftRouteImport } from './routes/_authenticated/admin.finance.vat.draft'
+import { Route as AuthenticatedAdminFinanceSuppliersIdRouteImport } from './routes/_authenticated/admin.finance.suppliers.$id'
 import { Route as AuthenticatedAdminFinanceSettlementsImportBulkRouteImport } from './routes/_authenticated/admin.finance.settlements.import-bulk'
 import { Route as AuthenticatedAdminFinanceSettlementsImportRouteImport } from './routes/_authenticated/admin.finance.settlements.import'
 import { Route as AuthenticatedAdminFinanceSalesInvoicesIdRouteImport } from './routes/_authenticated/admin.finance.sales-invoices.$id'
@@ -793,6 +794,12 @@ const AuthenticatedAdminFinanceVatDraftRoute =
     path: '/draft',
     getParentRoute: () => AuthenticatedAdminFinanceVatRoute,
   } as any)
+const AuthenticatedAdminFinanceSuppliersIdRoute =
+  AuthenticatedAdminFinanceSuppliersIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminFinanceSuppliersRoute,
+  } as any)
 const AuthenticatedAdminFinanceSettlementsImportBulkRoute =
   AuthenticatedAdminFinanceSettlementsImportBulkRouteImport.update({
     id: '/import-bulk',
@@ -906,7 +913,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/settlement-reconciliation': typeof AuthenticatedAdminFinanceSettlementReconciliationRoute
   '/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRouteWithChildren
   '/admin/finance/settlements-review': typeof AuthenticatedAdminFinanceSettlementsReviewRoute
-  '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRouteWithChildren
   '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/admin/finance/vat': typeof AuthenticatedAdminFinanceVatRouteWithChildren
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -932,6 +939,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
   '/admin/finance/settlements/import-bulk': typeof AuthenticatedAdminFinanceSettlementsImportBulkRoute
+  '/admin/finance/suppliers/$id': typeof AuthenticatedAdminFinanceSuppliersIdRoute
   '/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -1018,7 +1026,7 @@ export interface FileRoutesByTo {
   '/admin/finance/settlement-lines': typeof AuthenticatedAdminFinanceSettlementLinesRoute
   '/admin/finance/settlement-reconciliation': typeof AuthenticatedAdminFinanceSettlementReconciliationRoute
   '/admin/finance/settlements-review': typeof AuthenticatedAdminFinanceSettlementsReviewRoute
-  '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRouteWithChildren
   '/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
   '/admin/inventory/categories': typeof AuthenticatedAdminInventoryCategoriesRoute
@@ -1043,6 +1051,7 @@ export interface FileRoutesByTo {
   '/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
   '/admin/finance/settlements/import-bulk': typeof AuthenticatedAdminFinanceSettlementsImportBulkRoute
+  '/admin/finance/suppliers/$id': typeof AuthenticatedAdminFinanceSuppliersIdRoute
   '/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -1140,7 +1149,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/settlement-reconciliation': typeof AuthenticatedAdminFinanceSettlementReconciliationRoute
   '/_authenticated/admin/finance/settlements': typeof AuthenticatedAdminFinanceSettlementsRouteWithChildren
   '/_authenticated/admin/finance/settlements-review': typeof AuthenticatedAdminFinanceSettlementsReviewRoute
-  '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRoute
+  '/_authenticated/admin/finance/suppliers': typeof AuthenticatedAdminFinanceSuppliersRouteWithChildren
   '/_authenticated/admin/finance/trial-balance': typeof AuthenticatedAdminFinanceTrialBalanceRoute
   '/_authenticated/admin/finance/vat': typeof AuthenticatedAdminFinanceVatRouteWithChildren
   '/_authenticated/admin/inventory/catalog': typeof AuthenticatedAdminInventoryCatalogRoute
@@ -1166,6 +1175,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/sales-invoices/$id': typeof AuthenticatedAdminFinanceSalesInvoicesIdRoute
   '/_authenticated/admin/finance/settlements/import': typeof AuthenticatedAdminFinanceSettlementsImportRoute
   '/_authenticated/admin/finance/settlements/import-bulk': typeof AuthenticatedAdminFinanceSettlementsImportBulkRoute
+  '/_authenticated/admin/finance/suppliers/$id': typeof AuthenticatedAdminFinanceSuppliersIdRoute
   '/_authenticated/admin/finance/vat/draft': typeof AuthenticatedAdminFinanceVatDraftRoute
   '/_authenticated/admin/finance/vat/excluded': typeof AuthenticatedAdminFinanceVatExcludedRoute
   '/_authenticated/admin/finance/vat/filed': typeof AuthenticatedAdminFinanceVatFiledRoute
@@ -1289,6 +1299,7 @@ export interface FileRouteTypes {
     | '/admin/finance/sales-invoices/$id'
     | '/admin/finance/settlements/import'
     | '/admin/finance/settlements/import-bulk'
+    | '/admin/finance/suppliers/$id'
     | '/admin/finance/vat/draft'
     | '/admin/finance/vat/excluded'
     | '/admin/finance/vat/filed'
@@ -1400,6 +1411,7 @@ export interface FileRouteTypes {
     | '/admin/finance/sales-invoices/$id'
     | '/admin/finance/settlements/import'
     | '/admin/finance/settlements/import-bulk'
+    | '/admin/finance/suppliers/$id'
     | '/admin/finance/vat/draft'
     | '/admin/finance/vat/excluded'
     | '/admin/finance/vat/filed'
@@ -1522,6 +1534,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/sales-invoices/$id'
     | '/_authenticated/admin/finance/settlements/import'
     | '/_authenticated/admin/finance/settlements/import-bulk'
+    | '/_authenticated/admin/finance/suppliers/$id'
     | '/_authenticated/admin/finance/vat/draft'
     | '/_authenticated/admin/finance/vat/excluded'
     | '/_authenticated/admin/finance/vat/filed'
@@ -2360,6 +2373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceVatDraftRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceVatRoute
     }
+    '/_authenticated/admin/finance/suppliers/$id': {
+      id: '/_authenticated/admin/finance/suppliers/$id'
+      path: '/$id'
+      fullPath: '/admin/finance/suppliers/$id'
+      preLoaderRoute: typeof AuthenticatedAdminFinanceSuppliersIdRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
+    }
     '/_authenticated/admin/finance/settlements/import-bulk': {
       id: '/_authenticated/admin/finance/settlements/import-bulk'
       path: '/import-bulk'
@@ -2486,6 +2506,21 @@ const AuthenticatedAdminFinanceSettlementsRouteWithChildren =
     AuthenticatedAdminFinanceSettlementsRouteChildren,
   )
 
+interface AuthenticatedAdminFinanceSuppliersRouteChildren {
+  AuthenticatedAdminFinanceSuppliersIdRoute: typeof AuthenticatedAdminFinanceSuppliersIdRoute
+}
+
+const AuthenticatedAdminFinanceSuppliersRouteChildren: AuthenticatedAdminFinanceSuppliersRouteChildren =
+  {
+    AuthenticatedAdminFinanceSuppliersIdRoute:
+      AuthenticatedAdminFinanceSuppliersIdRoute,
+  }
+
+const AuthenticatedAdminFinanceSuppliersRouteWithChildren =
+  AuthenticatedAdminFinanceSuppliersRoute._addFileChildren(
+    AuthenticatedAdminFinanceSuppliersRouteChildren,
+  )
+
 interface AuthenticatedAdminFinanceVatRouteChildren {
   AuthenticatedAdminFinanceVatDraftRoute: typeof AuthenticatedAdminFinanceVatDraftRoute
   AuthenticatedAdminFinanceVatExcludedRoute: typeof AuthenticatedAdminFinanceVatExcludedRoute
@@ -2552,7 +2587,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceSettlementReconciliationRoute: typeof AuthenticatedAdminFinanceSettlementReconciliationRoute
   AuthenticatedAdminFinanceSettlementsRoute: typeof AuthenticatedAdminFinanceSettlementsRouteWithChildren
   AuthenticatedAdminFinanceSettlementsReviewRoute: typeof AuthenticatedAdminFinanceSettlementsReviewRoute
-  AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRoute
+  AuthenticatedAdminFinanceSuppliersRoute: typeof AuthenticatedAdminFinanceSuppliersRouteWithChildren
   AuthenticatedAdminFinanceTrialBalanceRoute: typeof AuthenticatedAdminFinanceTrialBalanceRoute
   AuthenticatedAdminFinanceVatRoute: typeof AuthenticatedAdminFinanceVatRouteWithChildren
   AuthenticatedAdminFinanceIndexRoute: typeof AuthenticatedAdminFinanceIndexRoute
@@ -2626,7 +2661,7 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
     AuthenticatedAdminFinanceSettlementsReviewRoute:
       AuthenticatedAdminFinanceSettlementsReviewRoute,
     AuthenticatedAdminFinanceSuppliersRoute:
-      AuthenticatedAdminFinanceSuppliersRoute,
+      AuthenticatedAdminFinanceSuppliersRouteWithChildren,
     AuthenticatedAdminFinanceTrialBalanceRoute:
       AuthenticatedAdminFinanceTrialBalanceRoute,
     AuthenticatedAdminFinanceVatRoute:
@@ -2830,13 +2865,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
