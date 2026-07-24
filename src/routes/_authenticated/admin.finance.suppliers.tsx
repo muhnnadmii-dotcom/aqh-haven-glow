@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
@@ -83,7 +83,15 @@ function SuppliersPage() {
           <tbody>
             {filtered.map((r) => (
               <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 ${!r.is_active ? "opacity-60" : ""}`}>
-                <td className="px-3 py-2">{r.name}</td>
+                <td className="px-3 py-2">
+                  <Link
+                    to="/admin/finance/suppliers/$id"
+                    params={{ id: r.id }}
+                    className="text-gold hover:underline"
+                  >
+                    {r.name}
+                  </Link>
+                </td>
                 <td className="px-3 py-2">{r.company_name || "—"}</td>
                 <td className="px-3 py-2">{r.phone || "—"}</td>
                 <td className="px-3 py-2">{r.supplier_type || "—"}</td>
@@ -96,6 +104,14 @@ function SuppliersPage() {
                 <td className="px-3 py-2 font-mono">{fmtSAR(totals[r.id]?.total ?? 0)}</td>
                 <td className="px-3 py-2">{r.is_active ? "نعم" : "لا"}</td>
                 <td className="px-3 py-2 flex gap-1">
+                  <Link
+                    to="/admin/finance/suppliers/$id"
+                    params={{ id: r.id }}
+                    className="px-2 py-1 rounded bg-gold/15 border border-gold/30 text-gold text-[11px] hover:bg-gold/25"
+                    title="الملف"
+                  >
+                    الملف
+                  </Link>
                   <button onClick={() => setDetails(r)} className="p-1.5 rounded bg-white/5 hover:bg-white/10" title="تفاصيل"><Info size={11} /></button>
                   {roles.canManage && <button onClick={() => setEditing(r)} className="p-1.5 rounded bg-white/5 hover:bg-white/10" title="تعديل"><Pencil size={11} /></button>}
                   {roles.canManage && (
