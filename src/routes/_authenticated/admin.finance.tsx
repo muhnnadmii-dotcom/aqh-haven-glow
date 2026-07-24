@@ -109,6 +109,7 @@ const sections: MenuSection[] = [
       { to: "/admin/finance/vat/draft", label: "مسودة الإقرار" },
       { to: "/admin/finance/vat/periods", label: "الفترات الضريبية" },
       { to: "/admin/finance/credit-debit-notes", label: "الإشعارات الدائنة والمدينة" },
+      { to: "/admin/finance/recovery", label: "فرص استرداد الضريبة" },
     ],
   },
   {
