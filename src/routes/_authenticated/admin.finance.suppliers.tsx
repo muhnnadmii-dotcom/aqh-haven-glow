@@ -83,7 +83,15 @@ function SuppliersPage() {
           <tbody>
             {filtered.map((r) => (
               <tr key={r.id} className={`border-t border-white/5 hover:bg-white/5 ${!r.is_active ? "opacity-60" : ""}`}>
-                <td className="px-3 py-2">{r.name}</td>
+                <td className="px-3 py-2">
+                  <Link
+                    to="/admin/finance/suppliers/$id"
+                    params={{ id: r.id }}
+                    className="text-gold hover:underline"
+                  >
+                    {r.name}
+                  </Link>
+                </td>
                 <td className="px-3 py-2">{r.company_name || "—"}</td>
                 <td className="px-3 py-2">{r.phone || "—"}</td>
                 <td className="px-3 py-2">{r.supplier_type || "—"}</td>
