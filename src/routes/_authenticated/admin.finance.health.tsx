@@ -139,13 +139,22 @@ function FinanceHealthPage() {
   }, [invoices, attachedSet]);
 
   // --- Detector 4: invoice vs payments mismatch ---
+  // Only flag real anomalies: overpayments (paid > total) OR fully-"paid" status
+  // whose linked expenses still don't match the total. Partial payments and
+  // invoices paid through other channels (provider wallet, notes...) are NOT
+  // conflicts and must not be surfaced as data corruption.
   const mismatches = useMemo(() => {
     const out: any[] = [];
     for (const i of invoices) {
       const paid = paidByInvoice.get(Number(i.id)) ?? 0;
       if (paid <= 0) continue;
-      const diff = paid - Number(i.total_amount || 0);
-      if (Math.abs(diff) > 0.02) out.push({ ...i, paid_sum: paid, difference: diff });
+      const total = Number(i.total_amount || 0);
+      const diff = paid - total;
+      const overpaid = diff > 0.02;
+      const underpaidButMarkedPaid = i.status === "paid" && diff < -0.02;
+      if (overpaid || underpaidButMarkedPaid) {
+        out.push({ ...i, paid_sum: paid, difference: diff });
+      }
     }
     return out;
   }, [invoices, paidByInvoice]);
