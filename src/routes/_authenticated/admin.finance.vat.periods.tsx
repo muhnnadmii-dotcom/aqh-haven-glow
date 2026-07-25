@@ -154,8 +154,8 @@ function CreatePeriodDialog({
 
     const { error } = await supabase.from("tax_periods" as any).insert({
       start_date: start,
-      end_date: end.toISOString().slice(0, 10),
-      due_date: due.toISOString().slice(0, 10),
+      end_date: ymdLocal(end),
+      due_date: ymdLocal(due),
       status: "open",
     });
     setSaving(false);
