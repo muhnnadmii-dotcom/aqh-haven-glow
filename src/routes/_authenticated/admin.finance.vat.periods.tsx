@@ -7,6 +7,8 @@ import { Plus, CalendarRange } from "lucide-react";
 import { fetchPeriods, labelStatus, fmtDate, type TaxPeriod } from "@/lib/finance/vat-helpers";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 
+const ymdLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 export const Route = createFileRoute("/_authenticated/admin/finance/vat/periods")({
   ssr: false,
   component: VatPeriodsPage,
