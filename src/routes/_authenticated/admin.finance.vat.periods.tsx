@@ -140,7 +140,7 @@ function CreatePeriodDialog({
   defaultFrequency: string;
 }) {
   const today = new Date();
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
+  const firstOfMonth = ymdLocal(new Date(today.getFullYear(), today.getMonth(), 1));
   const [freq, setFreq] = useState<"monthly" | "quarterly">(defaultFrequency as any);
   const [start, setStart] = useState(firstOfMonth);
   const [saving, setSaving] = useState(false);
