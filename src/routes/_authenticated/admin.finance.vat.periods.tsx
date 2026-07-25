@@ -7,6 +7,8 @@ import { Plus, CalendarRange } from "lucide-react";
 import { fetchPeriods, labelStatus, fmtDate, type TaxPeriod } from "@/lib/finance/vat-helpers";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
 
+const ymdLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 export const Route = createFileRoute("/_authenticated/admin/finance/vat/periods")({
   ssr: false,
   component: VatPeriodsPage,
@@ -138,7 +140,7 @@ function CreatePeriodDialog({
   defaultFrequency: string;
 }) {
   const today = new Date();
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
+  const firstOfMonth = ymdLocal(new Date(today.getFullYear(), today.getMonth(), 1));
   const [freq, setFreq] = useState<"monthly" | "quarterly">(defaultFrequency as any);
   const [start, setStart] = useState(firstOfMonth);
   const [saving, setSaving] = useState(false);
@@ -152,8 +154,8 @@ function CreatePeriodDialog({
 
     const { error } = await supabase.from("tax_periods" as any).insert({
       start_date: start,
-      end_date: end.toISOString().slice(0, 10),
-      due_date: due.toISOString().slice(0, 10),
+      end_date: ymdLocal(end),
+      due_date: ymdLocal(due),
       status: "open",
     });
     setSaving(false);
