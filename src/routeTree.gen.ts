@@ -87,6 +87,7 @@ import { Route as AuthenticatedAdminFinanceRecoveryRouteImport } from './routes/
 import { Route as AuthenticatedAdminFinancePurchaseInvoicesReviewRouteImport } from './routes/_authenticated/admin.finance.purchase-invoices-review'
 import { Route as AuthenticatedAdminFinanceProviderFeeInvoicesRouteImport } from './routes/_authenticated/admin.finance.provider-fee-invoices'
 import { Route as AuthenticatedAdminFinanceProviderBalancesRouteImport } from './routes/_authenticated/admin.finance.provider-balances'
+import { Route as AuthenticatedAdminFinancePostingReviewRouteImport } from './routes/_authenticated/admin.finance.posting-review'
 import { Route as AuthenticatedAdminFinancePeriodsRouteImport } from './routes/_authenticated/admin.finance.periods'
 import { Route as AuthenticatedAdminFinancePaymentProvidersRouteImport } from './routes/_authenticated/admin.finance.payment-providers'
 import { Route as AuthenticatedAdminFinanceOwnerAccountRouteImport } from './routes/_authenticated/admin.finance.owner-account'
@@ -573,6 +574,12 @@ const AuthenticatedAdminFinanceProviderBalancesRoute =
     path: '/provider-balances',
     getParentRoute: () => AuthenticatedAdminFinanceRoute,
   } as any)
+const AuthenticatedAdminFinancePostingReviewRoute =
+  AuthenticatedAdminFinancePostingReviewRouteImport.update({
+    id: '/posting-review',
+    path: '/posting-review',
+    getParentRoute: () => AuthenticatedAdminFinanceRoute,
+  } as any)
 const AuthenticatedAdminFinancePeriodsRoute =
   AuthenticatedAdminFinancePeriodsRouteImport.update({
     id: '/periods',
@@ -907,6 +914,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/admin/finance/payment-providers': typeof AuthenticatedAdminFinancePaymentProvidersRoute
   '/admin/finance/periods': typeof AuthenticatedAdminFinancePeriodsRoute
+  '/admin/finance/posting-review': typeof AuthenticatedAdminFinancePostingReviewRoute
   '/admin/finance/provider-balances': typeof AuthenticatedAdminFinanceProviderBalancesRoute
   '/admin/finance/provider-fee-invoices': typeof AuthenticatedAdminFinanceProviderFeeInvoicesRoute
   '/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
@@ -1022,6 +1030,7 @@ export interface FileRoutesByTo {
   '/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/admin/finance/payment-providers': typeof AuthenticatedAdminFinancePaymentProvidersRoute
   '/admin/finance/periods': typeof AuthenticatedAdminFinancePeriodsRoute
+  '/admin/finance/posting-review': typeof AuthenticatedAdminFinancePostingReviewRoute
   '/admin/finance/provider-balances': typeof AuthenticatedAdminFinanceProviderBalancesRoute
   '/admin/finance/provider-fee-invoices': typeof AuthenticatedAdminFinanceProviderFeeInvoicesRoute
   '/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
@@ -1145,6 +1154,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance/owner-account': typeof AuthenticatedAdminFinanceOwnerAccountRoute
   '/_authenticated/admin/finance/payment-providers': typeof AuthenticatedAdminFinancePaymentProvidersRoute
   '/_authenticated/admin/finance/periods': typeof AuthenticatedAdminFinancePeriodsRoute
+  '/_authenticated/admin/finance/posting-review': typeof AuthenticatedAdminFinancePostingReviewRoute
   '/_authenticated/admin/finance/provider-balances': typeof AuthenticatedAdminFinanceProviderBalancesRoute
   '/_authenticated/admin/finance/provider-fee-invoices': typeof AuthenticatedAdminFinanceProviderFeeInvoicesRoute
   '/_authenticated/admin/finance/purchase-invoices-review': typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
@@ -1270,6 +1280,7 @@ export interface FileRouteTypes {
     | '/admin/finance/owner-account'
     | '/admin/finance/payment-providers'
     | '/admin/finance/periods'
+    | '/admin/finance/posting-review'
     | '/admin/finance/provider-balances'
     | '/admin/finance/provider-fee-invoices'
     | '/admin/finance/purchase-invoices-review'
@@ -1385,6 +1396,7 @@ export interface FileRouteTypes {
     | '/admin/finance/owner-account'
     | '/admin/finance/payment-providers'
     | '/admin/finance/periods'
+    | '/admin/finance/posting-review'
     | '/admin/finance/provider-balances'
     | '/admin/finance/provider-fee-invoices'
     | '/admin/finance/purchase-invoices-review'
@@ -1507,6 +1519,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance/owner-account'
     | '/_authenticated/admin/finance/payment-providers'
     | '/_authenticated/admin/finance/periods'
+    | '/_authenticated/admin/finance/posting-review'
     | '/_authenticated/admin/finance/provider-balances'
     | '/_authenticated/admin/finance/provider-fee-invoices'
     | '/_authenticated/admin/finance/purchase-invoices-review'
@@ -2127,6 +2140,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFinanceProviderBalancesRouteImport
       parentRoute: typeof AuthenticatedAdminFinanceRoute
     }
+    '/_authenticated/admin/finance/posting-review': {
+      id: '/_authenticated/admin/finance/posting-review'
+      path: '/posting-review'
+      fullPath: '/admin/finance/posting-review'
+      preLoaderRoute: typeof AuthenticatedAdminFinancePostingReviewRouteImport
+      parentRoute: typeof AuthenticatedAdminFinanceRoute
+    }
     '/_authenticated/admin/finance/periods': {
       id: '/_authenticated/admin/finance/periods'
       path: '/periods'
@@ -2594,6 +2614,7 @@ interface AuthenticatedAdminFinanceRouteChildren {
   AuthenticatedAdminFinanceOwnerAccountRoute: typeof AuthenticatedAdminFinanceOwnerAccountRoute
   AuthenticatedAdminFinancePaymentProvidersRoute: typeof AuthenticatedAdminFinancePaymentProvidersRoute
   AuthenticatedAdminFinancePeriodsRoute: typeof AuthenticatedAdminFinancePeriodsRoute
+  AuthenticatedAdminFinancePostingReviewRoute: typeof AuthenticatedAdminFinancePostingReviewRoute
   AuthenticatedAdminFinanceProviderBalancesRoute: typeof AuthenticatedAdminFinanceProviderBalancesRoute
   AuthenticatedAdminFinanceProviderFeeInvoicesRoute: typeof AuthenticatedAdminFinanceProviderFeeInvoicesRoute
   AuthenticatedAdminFinancePurchaseInvoicesReviewRoute: typeof AuthenticatedAdminFinancePurchaseInvoicesReviewRoute
@@ -2656,6 +2677,8 @@ const AuthenticatedAdminFinanceRouteChildren: AuthenticatedAdminFinanceRouteChil
       AuthenticatedAdminFinancePaymentProvidersRoute,
     AuthenticatedAdminFinancePeriodsRoute:
       AuthenticatedAdminFinancePeriodsRoute,
+    AuthenticatedAdminFinancePostingReviewRoute:
+      AuthenticatedAdminFinancePostingReviewRoute,
     AuthenticatedAdminFinanceProviderBalancesRoute:
       AuthenticatedAdminFinanceProviderBalancesRoute,
     AuthenticatedAdminFinanceProviderFeeInvoicesRoute:
