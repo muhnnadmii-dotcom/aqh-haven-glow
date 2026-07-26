@@ -93,6 +93,7 @@ const sections: MenuSection[] = [
     items: [
       { to: "/admin/finance/chart-of-accounts", label: "دليل الحسابات" },
       { to: "/admin/finance/journal-entries", label: "القيود اليومية" },
+      { to: "/admin/finance/posting-review", label: "مراجعة الترحيل" },
       { to: "/admin/finance/general-ledger", label: "دفتر الأستاذ" },
       { to: "/admin/finance/trial-balance", label: "ميزان المراجعة" },
       { to: "/admin/finance/periods", label: "الفترات المحاسبية" },
