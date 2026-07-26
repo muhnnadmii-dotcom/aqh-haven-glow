@@ -5032,17 +5032,66 @@ export type Database = {
         }
         Returns: string
       }
-      finance_posting_scan: {
-        Args: { p_from: string; p_to: string }
+      finance_posting_account_readiness: {
+        Args: never
         Returns: {
+          category: string
+          detail: string
+          label: string
+          present: boolean
+          slot: string
+        }[]
+      }
+      finance_posting_scan: {
+        Args: {
+          p_class?: string
+          p_from: string
+          p_kind?: string
+          p_limit?: number
+          p_offset?: number
+          p_to: string
+        }
+        Returns: {
+          blocked_reason: string
           classification: string
           counterparty: string
           diff_reason: string
+          existing_entry_date: string
           existing_je_id: string
           existing_je_number: string
           existing_lines: Json
           existing_status: string
           existing_total: number
+          expected_lines: Json
+          expected_source_id: string
+          expected_source_type: string
+          expected_total: number
+          op_amount: number
+          op_date: string
+          op_id: string
+          op_kind: string
+          provider_code: string
+          total_count: number
+        }[]
+      }
+      finance_posting_scan_all: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          active_count: number
+          blocked_reason: string
+          classification: string
+          counterparty: string
+          diff_reason: string
+          existing_entry_date: string
+          existing_je_id: string
+          existing_je_number: string
+          existing_lines: Json
+          existing_status: string
+          existing_total: number
+          expected_lines: Json
+          expected_source_id: string
+          expected_source_type: string
+          expected_total: number
           op_amount: number
           op_date: string
           op_id: string
