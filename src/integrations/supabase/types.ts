@@ -5032,6 +5032,33 @@ export type Database = {
         }
         Returns: string
       }
+      finance_posting_scan: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          classification: string
+          counterparty: string
+          diff_reason: string
+          existing_je_id: string
+          existing_je_number: string
+          existing_lines: Json
+          existing_status: string
+          existing_total: number
+          op_amount: number
+          op_date: string
+          op_id: string
+          op_kind: string
+          provider_code: string
+        }[]
+      }
+      finance_posting_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          classification: string
+          cnt: number
+          op_kind: string
+          total_amount: number
+        }[]
+      }
       finance_restore_import_batch: {
         Args: { p_batch_id: string }
         Returns: Json
