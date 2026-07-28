@@ -6,8 +6,9 @@ import type {
   LinkCardsSection, StepListSection, FaqSection, DynamicSlotSection,
   BusinessTabsSection,
   MediaHeroSection, StatBarSection, FeatureGridSection,
-  CaseStudiesSection, SlaTiersSection, LeadFormSection,
+  CaseStudiesSection, SlaTiersSection, LeadFormSection, PortalMockupSection,
 } from "./types";
+
 import { SECTION_TYPE_LABELS, newId } from "./types";
 
 
@@ -554,25 +555,33 @@ function SlaTiersEditor({ section, onChange }: Props<SlaTiersSection>) {
 }
 
 function LeadFormEditor({ section, onChange }: Props<LeadFormSection>) {
-  const listEditor = (key: "industries" | "budgets" | "timelines", title: string) => (
+  const listEditor = (key: "industries" | "budgets" | "timelines" | "facility_types" | "need_types" | "preferred_times", title: string) => (
     <details className="rounded-xl border border-white/10 p-3" open>
       <summary className="cursor-pointer text-sm font-bold">{title}</summary>
       <div className="mt-2 space-y-2">
-        {section[key].map((o, i) => (
+        {(section[key] ?? []).map((o, i) => (
           <div key={o.id} className="flex gap-2">
             <input className={field} value={o.label}
-              onChange={(e) => { const items = section[key].slice(); items[i] = { ...o, label: e.target.value }; onChange({ ...section, [key]: items } as any); }} />
-            <button type="button" onClick={() => onChange({ ...section, [key]: section[key].filter((_, k) => k !== i) } as any)}
+              onChange={(e) => { const items = (section[key] ?? []).slice(); items[i] = { ...o, label: e.target.value }; onChange({ ...section, [key]: items } as any); }} />
+            <button type="button" onClick={() => onChange({ ...section, [key]: (section[key] ?? []).filter((_, k) => k !== i) } as any)}
               className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
           </div>
         ))}
-        <button type="button" onClick={() => onChange({ ...section, [key]: [...section[key], { id: newId(), label: "" }] } as any)}
+        <button type="button" onClick={() => onChange({ ...section, [key]: [...(section[key] ?? []), { id: newId(), label: "" }] } as any)}
           className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف</button>
       </div>
     </details>
   );
+  const preset = section.fields_preset || "default";
   return (
     <div className="grid gap-3 sm:grid-cols-2">
+      <label className="sm:col-span-2"><span className={lbl}>نوع النموذج</span>
+        <select className={field} value={preset}
+          onChange={(e) => onChange({ ...section, fields_preset: e.target.value as any })}>
+          <option value="default">قياسي (اسم/جوال/بريد/شركة/قطاع/مدينة/ميزانية/إطار زمني/رسالة)</option>
+          <option value="business_visit">حجز زيارة موقعية (منشأة/مسؤول/جوال/نوع منشأة/مدينة/احتياج/وقت التواصل/ملاحظات)</option>
+        </select>
+      </label>
       <input className={field} placeholder="Kicker" value={section.kicker ?? ""} onChange={(e) => onChange({ ...section, kicker: e.target.value })} />
       <input className={field} placeholder="العنوان" value={section.heading ?? ""} onChange={(e) => onChange({ ...section, heading: e.target.value })} />
       <textarea className={ta + " sm:col-span-2"} placeholder="الوصف" value={section.description ?? ""} onChange={(e) => onChange({ ...section, description: e.target.value })} />
@@ -584,14 +593,58 @@ function LeadFormEditor({ section, onChange }: Props<LeadFormSection>) {
       <input className={field} placeholder="رسالة واتساب البديلة" value={section.whatsapp_fallback_template ?? ""} onChange={(e) => onChange({ ...section, whatsapp_fallback_template: e.target.value })} />
       <input className={field + " sm:col-span-2"} placeholder="ملاحظة تحت النموذج" value={section.contact_note ?? ""} onChange={(e) => onChange({ ...section, contact_note: e.target.value })} />
       <div className="sm:col-span-2 space-y-2">
-        {listEditor("industries", "قائمة القطاعات")}
-        {listEditor("budgets", "شرائح الميزانية")}
-        {listEditor("timelines", "الإطار الزمني")}
+        {preset === "business_visit" ? (
+          <>
+            {listEditor("facility_types", "أنواع المنشآت")}
+            {listEditor("need_types", "أنواع الاحتياج")}
+            {listEditor("preferred_times", "الأوقات المناسبة للتواصل")}
+          </>
+        ) : (
+          <>
+            {listEditor("industries", "قائمة القطاعات")}
+            {listEditor("budgets", "شرائح الميزانية")}
+            {listEditor("timelines", "الإطار الزمني")}
+          </>
+        )}
       </div>
-      <p className="text-[11px] text-muted-foreground sm:col-span-2">الحقول (الاسم، الجوال، البريد، الشركة، المدينة، الرسالة) ثابتة. القوائم المنسدلة أعلاه تُدار من هنا.</p>
     </div>
   );
 }
+
+function PortalMockupEditor({ section, onChange }: Props<PortalMockupSection>) {
+  const setTile = (i: number, patch: Partial<PortalMockupSection["tiles"][number]>) => {
+    const tiles = section.tiles.slice(); tiles[i] = { ...tiles[i], ...patch }; onChange({ ...section, tiles });
+  };
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input className={field} placeholder="Kicker" value={section.kicker ?? ""} onChange={(e) => onChange({ ...section, kicker: e.target.value })} />
+        <input className={field} placeholder="العنوان" value={section.heading ?? ""} onChange={(e) => onChange({ ...section, heading: e.target.value })} />
+        <textarea className={ta + " sm:col-span-2"} placeholder="الوصف" value={section.description ?? ""} onChange={(e) => onChange({ ...section, description: e.target.value })} />
+        <input className={field} placeholder="اسم مؤشر الحالة (حالة الحوض)" value={section.status_label ?? ""} onChange={(e) => onChange({ ...section, status_label: e.target.value })} />
+        <input className={field} placeholder="قيمة الحالة (ممتازة)" value={section.status_value ?? ""} onChange={(e) => onChange({ ...section, status_value: e.target.value })} />
+        <input className={field} placeholder="اسم المؤشر (Health Score)" value={section.score_label ?? ""} onChange={(e) => onChange({ ...section, score_label: e.target.value })} />
+        <input className={field} placeholder="قيمة المؤشر (94)" value={section.score_value ?? ""} onChange={(e) => onChange({ ...section, score_value: e.target.value })} />
+        <input className={field} placeholder="عنوان آخر زيارة" value={section.last_visit_label ?? ""} onChange={(e) => onChange({ ...section, last_visit_label: e.target.value })} />
+        <input className={field} placeholder="قيمة آخر زيارة" value={section.last_visit_value ?? ""} onChange={(e) => onChange({ ...section, last_visit_value: e.target.value })} />
+        <input className={field + " sm:col-span-2"} placeholder="ملاحظة أسفل البوابة" value={section.note ?? ""} onChange={(e) => onChange({ ...section, note: e.target.value })} />
+      </div>
+      <div className="text-xs text-muted-foreground">بطاقات جانبية:</div>
+      {section.tiles.map((t, i) => (
+        <div key={t.id} className="rounded-xl border border-white/10 p-3 grid gap-2 sm:grid-cols-[120px_1fr_1fr_auto]">
+          <input className={field} placeholder="أيقونة" value={t.icon} onChange={(e) => setTile(i, { icon: e.target.value })} />
+          <input className={field} placeholder="التسمية" value={t.label} onChange={(e) => setTile(i, { label: e.target.value })} />
+          <input className={field} placeholder="القيمة" value={t.value} onChange={(e) => setTile(i, { value: e.target.value })} />
+          <button type="button" onClick={() => onChange({ ...section, tiles: section.tiles.filter((_, k) => k !== i) })}
+            className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange({ ...section, tiles: [...section.tiles, { id: newId(), icon: "Sparkles", label: "", value: "" }] })}
+        className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف بطاقة</button>
+    </div>
+  );
+}
+
 
 export function SectionCard({
 
@@ -643,7 +696,9 @@ export function SectionCard({
       {section.type === "case_studies" && <CaseStudiesEditor section={section} onChange={onChange as any} />}
       {section.type === "sla_tiers" && <SlaTiersEditor section={section} onChange={onChange as any} />}
       {section.type === "lead_form" && <LeadFormEditor section={section} onChange={onChange as any} />}
+      {section.type === "portal_mockup" && <PortalMockupEditor section={section} onChange={onChange as any} />}
     </div>
   );
 }
+
 

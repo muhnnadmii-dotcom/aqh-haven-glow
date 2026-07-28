@@ -17,7 +17,9 @@ export type CmsPageMeta = {
   group: CmsPageGroup;  // full = entire page is CMS, hybrid = injected sections
   hint?: string;        // short admin hint
   defaults: PageDoc;
+  defaults_en?: PageDoc; // optional English default fallback
 };
+
 
 // ─── MAINTENANCE (full CMS) ──────────────────────────────────────────────────
 const maintenanceDefaults: PageDoc = {
@@ -135,202 +137,549 @@ const trustDefaults: PageDoc = {
   ],
 };
 
-// ─── BUSINESS SOLUTIONS (full CMS: enterprise B2B landing) ───────────────────
+// ─── BUSINESS SOLUTIONS (café-first commercial aquatic experiences) ─────────
+
+const WA_VISIT_AR = "السلام عليكم، أرغب بحجز زيارة موقعية لأكوا هيفن.";
+const WA_VISIT_EN = "Hello Aqua Haven, I'd like to book a site visit.";
+const WA_BUSINESS_AR = "السلام عليكم، أرغب بمناقشة تجربة مائية لمنشأتنا.";
+const WA_BUSINESS_EN = "Hello Aqua Haven, I'd like to discuss a managed aquatic experience for our venue.";
 
 const businessDefaults: PageDoc = {
   sections: [
+    // 1) HERO — café-first
     {
       id: newId(), type: "media_hero", enabled: true,
-      kicker: "ENTERPRISE · حلول مؤسسية",
-      title: "شريكك الموثوق في",
-      title_highlight: "أنظمة الأحواض المؤسسية",
-      description: "نصمم وننفذ ونصون أنظمة أحواض مائية بمعايير عالمية للجهات الحكومية، الفنادق، الشركات، المطاعم، المولات، والمستشفيات — بعقود SLA ملزمة وفريق متخصص.",
+      kicker: "COMMERCIAL AQUATIC EXPERIENCES",
+      title: "حوّل مساحتك إلى",
+      title_highlight: "تجربة لا تُنسى",
+      description: "نصمم، ننفذ، وندير التجارب المائية للمنشآت بعقود مرنة تشمل التركيب والتشغيل والعناية المستمرة.",
       image_path: bannerTankAsset.url,
-      primary_label: "اطلب عرض سعر مؤسسي",
-      primary_href: "#quote",
-      secondary_label: "احجز استشارة مجانية",
-      secondary_whatsapp_template: "السلام عليكم، أرغب بحجز استشارة B2B مع أكوا هيفن.",
+      primary_label: "احجز زيارة",
+      primary_href: "#visit",
+      secondary_label: "واتساب · 050 996 6234",
+      secondary_whatsapp_template: WA_VISIT_AR,
       badges: [
-        { id: newId(), text: "مورد معتمد للجهات الحكومية" },
-        { id: newId(), text: "فواتير ضريبية مطابقة" },
-        { id: newId(), text: "ضمان تشغيلي حتى 3 سنوات" },
+        { id: newId(), text: "اتصل الآن: 050 996 6234" },
+        { id: newId(), text: "تصميم · تنفيذ · إدارة" },
       ],
     },
+    // 2) Short value strip (no numbers)
     {
-      id: newId(), type: "stat_bar", enabled: true,
+      id: newId(), type: "badge_grid", enabled: true,
       items: [
-        { id: newId(), icon: "Award", value: "+9", label: "سنوات خبرة مؤسسية" },
-        { id: newId(), icon: "Building2", value: "+240", label: "مشروع منفذ" },
-        { id: newId(), icon: "Clock", value: "24/7", label: "دعم فني للعقود" },
-        { id: newId(), icon: "MapPin", value: "13", label: "منطقة تغطية بالمملكة" },
+        { id: newId(), icon: "PenTool",    title: "تصميم مخصص",           desc: "لكل مساحة وهوية." },
+        { id: newId(), icon: "Handshake",  title: "إدارة كاملة",          desc: "بدون إشغال فريقك." },
+        { id: newId(), icon: "Repeat",     title: "نماذج تعاقد مرنة",     desc: "شراء · اشتراك · تجربة." },
+        { id: newId(), icon: "Sparkles",   title: "تركيب وتشغيل وعناية", desc: "دورة حياة كاملة." },
       ],
     },
+    // 3) More than an aquarium
     {
       id: newId(), type: "feature_grid", enabled: true,
-      kicker: "SOLUTIONS",
-      heading: "حلولنا للشركات",
-      subheading: "منظومة متكاملة تغطي دورة حياة المشروع بالكامل من التصميم حتى الصيانة.",
-      columns: 3,
-      items: [
-        { id: newId(), icon: "Layers", title: "حلول الشركات المتكاملة", desc: "تصميم وتنفيذ أنظمة أحواض تعزز الهوية البصرية لمقر الشركة وتصنع تجربة زوار استثنائية." },
-        { id: newId(), icon: "Waves", title: "الأحواض التجارية", desc: "أحواض عرض للمولات والمعارض ونقاط البيع بمقاسات وأشكال مخصصة تدعم البراند." },
-        { id: newId(), icon: "Cpu", title: "أنظمة الأحواض المركزية", desc: "أنظمة فلترة وتشغيل مركزية لعدة أحواض من غرفة تقنية واحدة." },
-        { id: newId(), icon: "Wrench", title: "الصيانة الدورية بعقود SLA", desc: "زيارات مجدولة وتدخل طارئ خلال 24 ساعة كحد أقصى." },
-        { id: newId(), icon: "PenTool", title: "التصميم والتنفيذ", desc: "مخططات 3D ومحاكاة واقعية قبل التنفيذ، ثم تنفيذ بمعايير هندسية دقيقة." },
-        { id: newId(), icon: "ClipboardCheck", title: "إدارة المشاريع", desc: "مدير مشروع مخصص، جداول زمنية معتمدة، وتقارير تقدم أسبوعية." },
-      ],
-    },
-    {
-      id: newId(), type: "feature_grid", enabled: true,
-      kicker: "INDUSTRIES",
-      heading: "الجهات المستفيدة",
-      subheading: "نخدم قطاعات متنوعة بحلول مخصصة لكل بيئة عمل.",
+      kicker: "MORE THAN AN AQUARIUM",
+      heading: "أكثر من مجرد حوض",
+      subheading: "قيمة تُحس داخل المكان وخارجه.",
       columns: 4,
       items: [
-        { id: newId(), icon: "Landmark", title: "الجهات الحكومية", desc: "بمواصفات المشتريات الحكومية وشهادات الجودة." },
-        { id: newId(), icon: "Hotel", title: "الفنادق والمنتجعات", desc: "لوبيات وأجنحة بمعايير الضيافة الفاخرة." },
-        { id: newId(), icon: "UtensilsCrossed", title: "المطاعم والكافيهات", desc: "أحواض ديكور وأنظمة مأكولات بحرية حية." },
-        { id: newId(), icon: "Briefcase", title: "المكاتب والشركات", desc: "استقبال وقاعات اجتماعات تعكس هوية الشركة." },
-        { id: newId(), icon: "ShoppingBag", title: "المولات ومراكز التسوق", desc: "منحوتات مائية مركزية تصنع نقاط جذب." },
-        { id: newId(), icon: "HeartPulse", title: "المستشفيات والعيادات", desc: "أحواض علاجية بمعايير سلامة صارمة." },
-        { id: newId(), icon: "GraduationCap", title: "المدارس والجامعات", desc: "أحواض تعليمية وأنظمة أكواسكب." },
-        { id: newId(), icon: "Building2", title: "المجمعات السكنية", desc: "أحواض بانورامية للمساحات الفاخرة." },
+        { id: newId(), icon: "Gem",        title: "أجواء أكثر فخامة",           desc: "حضور بصري يرفع مستوى المكان." },
+        { id: newId(), icon: "Smile",      title: "تجربة يتذكرها العملاء",      desc: "لحظة مميزة تصنع انطباعًا يدوم." },
+        { id: newId(), icon: "Camera",     title: "نقطة قابلة للتصوير والمشاركة", desc: "خلفية طبيعية تُشجع على النشر." },
+        { id: newId(), icon: "Handshake",  title: "حل مُدار بالكامل",           desc: "دون تحميل فريق المنشأة أي مسؤولية." },
       ],
     },
+    // 4) The problem
+    {
+      id: newId(), type: "rich_text", enabled: true,
+      heading: "لماذا تتردد المنشآت؟",
+      body:
+        "• تكلفة البداية وحجم الاستثمار المطلوب.\n" +
+        "• مسؤولية العناية المستمرة والوقت الذي تستهلكه.\n" +
+        "• الأعطال والمظهر غير المناسب أمام العملاء.\n" +
+        "• نقص الخبرة داخل فريق المنشأة.\n\n" +
+        "نتولى المنظومة كاملة في أكوا هيفن، من التصميم والتنفيذ إلى الإدارة اليومية — وأنت تركّز على عملك.",
+    },
+    // 5) Cafés-first showcase section
+    {
+      id: newId(), type: "rich_text", enabled: true,
+      heading: "تجربة مائية مصممة لهوية الكافيه",
+      body:
+        "الحوض ليس مجرد ديكور — يمكن أن يصبح عنصرًا بصريًا مميزًا يعبّر عن هوية الكافيه، وخلفية طبيعية تشجع الضيوف على التصوير والمشاركة، مع إدارة كاملة من أكوا هيفن حتى لا يُشغل فريقك بأي تفاصيل تقنية.",
+    },
+    // 6) Contract models — no prices
+    {
+      id: newId(), type: "sla_tiers", enabled: true,
+      kicker: "CONTRACT MODELS",
+      heading: "نماذج التعاقد",
+      subheading: "اختر النموذج الذي يناسب طبيعة منشأتك — بدون التزام مالي معلن مسبقًا.",
+      items: [
+        {
+          id: newId(), name: "الشراء المباشر",
+          features: [
+            { id: newId(), text: "مناسب للمنشأة التي ترغب بامتلاك التجربة بالكامل." },
+            { id: newId(), text: "يشمل التصميم والتنفيذ والتشغيل الأولي والتسليم." },
+            { id: newId(), text: "إمكانية إضافة عقد إدارة وعناية مستمرة لاحقًا." },
+          ],
+          cta_label: "ناقش مشروع الشراء",
+          cta_whatsapp_template: "السلام عليكم، أرغب بمناقشة الشراء المباشر لتجربة مائية.",
+        },
+        {
+          id: newId(), name: "التجربة المائية المُدارة", badge: "Managed Aquarium", highlighted: true,
+          features: [
+            { id: newId(), text: "اشتراك شهري أو سنوي مرن." },
+            { id: newId(), text: "تصميم وتركيب وتشغيل وإدارة مستمرة." },
+            { id: newId(), text: "زيارات دورية وتقارير ودعم." },
+            { id: newId(), text: "مناسب لمن يريد التجربة دون إدارة التفاصيل اليومية." },
+          ],
+          cta_label: "استكشف الاشتراك المُدار",
+          cta_whatsapp_template: "السلام عليكم، أرغب بمناقشة الاشتراك المُدار (Managed Aquarium).",
+        },
+        {
+          id: newId(), name: "برنامج التجربة", badge: "Pilot Program",
+          features: [
+            { id: newId(), text: "تجربة لمدة محددة قبل الالتزام طويل المدى." },
+            { id: newId(), text: "تركيب وإدارة كاملة خلال فترة التجربة." },
+            { id: newId(), text: "مراجعة التجربة في نهاية المدة." },
+            { id: newId(), text: "خيار الاستمرار أو الشراء أو الإنهاء حسب الاتفاق." },
+          ],
+          cta_label: "ابدأ تجربة مرنة",
+          cta_whatsapp_template: "السلام عليكم، أرغب ببدء برنامج تجربة (Pilot).",
+        },
+      ],
+    },
+    // 7) Pilot Program deep dive
     {
       id: newId(), type: "step_list", enabled: true,
-      heading: "مراحل التنفيذ",
+      heading: "ابدأ بتجربة مرنة (Pilot Program)",
       items: [
-        { id: newId(), text: "الاستشارة والمعاينة الموقعية" },
-        { id: newId(), text: "التصميم والمحاكاة 3D" },
-        { id: newId(), text: "عرض السعر والعقد" },
-        { id: newId(), text: "التصنيع والتجهيز" },
-        { id: newId(), text: "التركيب والتشغيل التجريبي" },
-        { id: newId(), text: "الصيانة والدعم المستمر" },
+        { id: newId(), text: "تحديد الموقع والفكرة" },
+        { id: newId(), text: "تجهيز وتركيب التجربة" },
+        { id: newId(), text: "إدارة كاملة خلال المدة" },
+        { id: newId(), text: "مراجعة وخيار الاستمرار أو الشراء" },
       ],
     },
     {
+      id: newId(), type: "rich_text", enabled: true,
+      heading: "لماذا نبدأ بتجربة؟",
+      body: "اختبر أثر التجربة المائية على المكان قبل الالتزام طويل المدى، مع إدارة كاملة طوال فترة البرنامج. يتم تحديد المدة والشروط لكل حالة على حدة.",
+    },
+    // 8) BrandScape showcase
+    {
       id: newId(), type: "feature_grid", enabled: true,
-      kicker: "WHY AQUA HAVEN",
-      heading: "لماذا أكوا هيفن",
-      subheading: "ما يميزنا كشريك مؤسسي طويل الأمد.",
-      columns: 3,
+      kicker: "BRANDSCAPE",
+      heading: "حوّل هوية علامتك إلى مشهد مائي",
+      subheading: "عناصر إبداعية قابلة للتخصيص لكل هوية.",
+      columns: 4,
       items: [
-        { id: newId(), icon: "ShieldCheck", title: "امتثال ومعايير", desc: "توافق مع اشتراطات الدفاع المدني ومواصفات المشتريات الحكومية." },
-        { id: newId(), icon: "Award", title: "خبرة موثقة", desc: "أكثر من 9 سنوات في تنفيذ مشاريع مؤسسية معقدة داخل المملكة." },
-        { id: newId(), icon: "Gauge", title: "SLA ملزم", desc: "استجابة مضمونة، زيارات موثقة، وتقارير أداء قابلة للتدقيق." },
-        { id: newId(), icon: "Users", title: "فريق متخصص", desc: "مهندسون، أخصائيو أحياء مائية، وفنيون معتمدون." },
-        { id: newId(), icon: "FileCheck2", title: "توثيق كامل", desc: "مخططات، أدلة تشغيل، وشهادات ضمان لكل مشروع." },
-        { id: newId(), icon: "TrendingUp", title: "ROI حقيقي", desc: "زيادة موثقة في وقت بقاء العملاء والتفاعل مع نقاط البيع." },
+        { id: newId(), icon: "Sparkles",   title: "شعار ثلاثي الأبعاد داخل الحوض", desc: "شعار العلامة مطبوع 3D يُدمج بذكاء داخل التصميم." },
+        { id: newId(), icon: "Building2",  title: "مجسم مصغر للمبنى أو الواجهة",  desc: "قطعة مركزية تحكي قصة المكان بصريًا." },
+        { id: newId(), icon: "Fish",       title: "Signature Aquarium",             desc: "حوض مُصمم خصيصًا للعلامة، شكل وأسلوب فريد." },
+        { id: newId(), icon: "PenTool",    title: "عناصر قصصية من العلامة",         desc: "مستوحاة من منتجاتك أو قصة براندك." },
       ],
     },
     {
       id: newId(), type: "case_studies", enabled: true,
-      kicker: "PORTFOLIO",
-      heading: "معرض مشاريع B2B",
-      subheading: "نماذج من تنفيذنا للقطاعات المؤسسية.",
+      kicker: "CONCEPTS",
+      heading: "تصورات مقترحة",
+      subheading: "نماذج تجربة قابلة للتخصيص — ليست مشاريع منفذة بأسماء عملاء.",
       items: [
-        { id: newId(), image_path: bannerTankAsset.url, category: "فندق", title: "لوبي فندق فاخر", location: "الرياض" },
-        { id: newId(), image_path: livingRoomTankAsset.url, category: "مجمع سكني", title: "حوض استقبال بانورامي", location: "الرياض" },
-        { id: newId(), image_path: marineCubeAsset.url, category: "مقر شركة", title: "مكعب مرجاني مركزي", location: "جدة" },
-        { id: newId(), image_path: counterAquariumAsset.url, category: "مطعم", title: "نظام عرض مأكولات بحرية", location: "الخبر" },
-        { id: newId(), image_path: bannerTankAsset.url, category: "مول", title: "منحوتة مائية", location: "الرياض" },
-        { id: newId(), image_path: marineCubeAsset.url, category: "جهة حكومية", title: "قاعة استقبال رسمية", location: "الرياض" },
+        { id: newId(), image_path: bannerTankAsset.url,      category: "كافيه",       title: "تجربة مائية في زاوية الكافيه" },
+        { id: newId(), image_path: counterAquariumAsset.url, category: "مطعم",        title: "حوض عرض بجانب الكاونتر" },
+        { id: newId(), image_path: livingRoomTankAsset.url,  category: "لوبي",        title: "قطعة مركزية للاستقبال" },
+        { id: newId(), image_path: marineCubeAsset.url,      category: "Signature",    title: "مكعب Signature للعلامة" },
+      ],
+    },
+    // 9) Events & pop-ups
+    {
+      id: newId(), type: "feature_grid", enabled: true,
+      kicker: "EVENTS",
+      heading: "الفعاليات والأحواض المؤقتة",
+      subheading: "حلول قصيرة المدى تشمل التركيب والفك والتأجير المؤقت.",
+      columns: 3,
+      items: [
+        { id: newId(), icon: "PartyPopper",    title: "الافتتاحات",            desc: "تجربة مائية لافتة في يوم الافتتاح." },
+        { id: newId(), icon: "Presentation",   title: "المعارض والمؤتمرات",   desc: "جناح مميز بمشهد مائي حي." },
+        { id: newId(), icon: "GraduationCap",  title: "المدارس والفعاليات",   desc: "تجربة تعليمية أو ترفيهية مؤقتة." },
+        { id: newId(), icon: "Store",          title: "الأركان الموسمية",     desc: "أحواض مؤقتة داخل المولات والفعاليات." },
+        { id: newId(), icon: "Truck",          title: "تركيب وفك وإدارة",     desc: "خدمة كاملة لفترة الفعالية." },
+        { id: newId(), icon: "Sparkles",       title: "تصميم بحسب الحدث",     desc: "يتماشى مع هوية الفعالية." },
+      ],
+    },
+    // 10) Target segments — cafés first
+    {
+      id: newId(), type: "feature_grid", enabled: true,
+      kicker: "SEGMENTS",
+      heading: "القطاعات المستهدفة",
+      subheading: "الكافيهات هي الأولوية، مع خدمة قطاعات أخرى.",
+      columns: 3,
+      items: [
+        { id: newId(), icon: "Coffee",          title: "الكافيهات",          desc: "تجربة تعكس هوية الكافيه وتصنع لحظة يتذكرها الضيف." },
+        { id: newId(), icon: "UtensilsCrossed", title: "المطاعم",           desc: "حضور بصري يزيد جاذبية المكان." },
+        { id: newId(), icon: "Hotel",           title: "الفنادق",           desc: "قطع مركزية لللوبي والصالات." },
+        { id: newId(), icon: "Briefcase",       title: "المكاتب",           desc: "استقبال يعكس هوية الشركة." },
+        { id: newId(), icon: "GraduationCap",   title: "المدارس",           desc: "تجارب تعليمية آمنة ومُدارة." },
+        { id: newId(), icon: "PartyPopper",     title: "الفعاليات والمعارض", desc: "تركيب مؤقت لفترة الحدث." },
+      ],
+    },
+    // 11) Timeline
+    {
+      id: newId(), type: "step_list", enabled: true,
+      heading: "من الفكرة إلى الخدمة المُدارة",
+      items: [
+        { id: newId(), text: "زيارة الموقع" },
+        { id: newId(), text: "تصميم الفكرة" },
+        { id: newId(), text: "عرض واعتماد" },
+        { id: newId(), text: "التنفيذ" },
+        { id: newId(), text: "الإطلاق" },
+        { id: newId(), text: "الخدمة المُدارة" },
+      ],
+    },
+    // 12) Portal preview (mock dashboard)
+    {
+      id: newId(), type: "portal_mockup", enabled: true,
+      kicker: "CLIENT PORTAL",
+      heading: "كل تفاصيل تجربتك في مكان واحد",
+      description: "يحصل كل عميل على بوابة مخصصة لمتابعة حالة الحوض والزيارات والتقارير والملفات. المحتوى المعروض تصوري لأغراض العرض.",
+      status_label: "حالة الحوض",
+      status_value: "ممتازة",
+      score_label: "Health Score",
+      score_value: "94",
+      last_visit_label: "آخر زيارة",
+      last_visit_value: "قبل 5 أيام",
+      note: "تشمل البوابة العناصر الظاهرة أعلاه، وقد تختلف حسب نطاق العقد.",
+      tiles: [
+        { id: newId(), icon: "Camera",        label: "الصور",         value: "متوفرة" },
+        { id: newId(), icon: "FileText",      label: "التقارير",      value: "تقارير دورية" },
+        { id: newId(), icon: "Receipt",       label: "الفواتير",      value: "متوفرة" },
+        { id: newId(), icon: "ClipboardList", label: "سجل الخدمة",    value: "محدث" },
+        { id: newId(), icon: "FileCheck2",    label: "العقد",         value: "ساري" },
+        { id: newId(), icon: "Wrench",        label: "طلبات الدعم",   value: "قناة مباشرة" },
+      ],
+    },
+    // 13) (case studies already presented as concepts above)
+    // 14) FAQ
+    {
+      id: newId(), type: "faq", enabled: true,
+      heading: "أسئلة شائعة",
+      items: [
+        { id: newId(), q: "هل يمكن البدء بتجربة قبل التعاقد الطويل؟", a: "نعم، لدينا برنامج تجربة (Pilot) بتركيب وإدارة كاملة، ثم مراجعة وخيار الاستمرار أو الشراء أو الإنهاء بحسب الاتفاق." },
+        { id: newId(), q: "هل تتولون الإدارة والعناية بالكامل؟", a: "نعم، الخدمة المُدارة تشمل التصميم والتركيب والتشغيل والزيارات الدورية والتقارير — دون تحميل فريق المنشأة أي مسؤولية تقنية." },
+        { id: newId(), q: "هل يمكن تخصيص الحوض لهوية الكافيه؟", a: "نعم، نصمم عناصر التجربة (شعار داخل الحوض، مجسم، Signature Aquarium، عناصر قصصية) لتتناسب مع هوية علامتك." },
+        { id: newId(), q: "هل يوجد شراء مباشر واشتراك؟", a: "نعم، ثلاثة نماذج للتعاقد: الشراء المباشر، التجربة المُدارة (اشتراك)، وبرنامج التجربة (Pilot)." },
+        { id: newId(), q: "هل تقدمون حلولًا مؤقتة للفعاليات؟", a: "نعم، نوفّر أحواضًا مؤقتة للافتتاحات والمعارض والمؤتمرات مع خدمة تركيب وفك وإدارة." },
+      ],
+    },
+    // 15) Lead form — site visit
+    {
+      id: newId(), type: "lead_form", enabled: true,
+      kicker: "SITE VISIT",
+      heading: "احجز زيارة لموقعك",
+      description: "عبّئ التفاصيل التالية وسنتواصل معك لتحديد موعد الزيارة المناسب.",
+      form_anchor: "visit",
+      submit_label: "إرسال الطلب",
+      success_message: "تم استلام طلبك — سنتواصل معك قريبًا لتأكيد موعد الزيارة.",
+      whatsapp_fallback_label: "أو تواصل عبر واتساب",
+      whatsapp_fallback_template: WA_VISIT_AR,
+      contact_note: "بياناتك سرّية ولا تُشارك مع أي جهة خارجية.",
+      fields_preset: "business_visit",
+      industries: [], budgets: [], timelines: [],
+      facility_types: [
+        { id: newId(), label: "كافيه" },
+        { id: newId(), label: "مطعم" },
+        { id: newId(), label: "فندق" },
+        { id: newId(), label: "مكتب / شركة" },
+        { id: newId(), label: "مدرسة / جامعة" },
+        { id: newId(), label: "فعالية / معرض" },
+        { id: newId(), label: "أخرى" },
+      ],
+      need_types: [
+        { id: newId(), label: "حوض جديد للمنشأة" },
+        { id: newId(), label: "تجربة مائية مُدارة" },
+        { id: newId(), label: "برنامج تجربة (Pilot)" },
+        { id: newId(), label: "حوض مؤقت لفعالية" },
+        { id: newId(), label: "أحتاج استشارة أولية" },
+      ],
+      preferred_times: [
+        { id: newId(), label: "صباحًا (9 – 12)" },
+        { id: newId(), label: "ظهرًا (12 – 3)" },
+        { id: newId(), label: "عصرًا (3 – 6)" },
+        { id: newId(), label: "مساءً (6 – 9)" },
+        { id: newId(), label: "أي وقت" },
+      ],
+      lead_source: "business_lead",
+    },
+    // 16) Final CTA
+    {
+      id: newId(), type: "cta_band", enabled: true,
+      heading: "لنصنع تجربة استثنائية لمكانك",
+      description: "احجز زيارة لموقعك أو تواصل مباشرة مع فريق الأعمال.",
+      primary_label: "احجز زيارة",
+      primary_href: "#visit",
+      secondary_label: "واتساب الأعمال",
+      secondary_href: "https://wa.me/966509966234",
+    },
+  ],
+};
+
+const businessDefaultsEn: PageDoc = {
+  sections: [
+    {
+      id: newId(), type: "media_hero", enabled: true,
+      kicker: "COMMERCIAL AQUATIC EXPERIENCES",
+      title: "Turn your space into",
+      title_highlight: "an unforgettable experience",
+      description: "We design, install, and manage aquatic experiences for venues — flexible contracts covering installation, operation, and ongoing care.",
+      image_path: bannerTankAsset.url,
+      primary_label: "Book a Site Visit",
+      primary_href: "#visit",
+      secondary_label: "WhatsApp · 050 996 6234",
+      secondary_whatsapp_template: WA_VISIT_EN,
+      badges: [
+        { id: newId(), text: "Call now: 050 996 6234" },
+        { id: newId(), text: "Design · Install · Manage" },
       ],
     },
     {
+      id: newId(), type: "badge_grid", enabled: true,
+      items: [
+        { id: newId(), icon: "PenTool",   title: "Custom Design",       desc: "Shaped to your space and brand." },
+        { id: newId(), icon: "Handshake", title: "Fully Managed",       desc: "Zero load on your team." },
+        { id: newId(), icon: "Repeat",    title: "Flexible Contracts",  desc: "Buy · Subscribe · Pilot." },
+        { id: newId(), icon: "Sparkles",  title: "Install & Ongoing Care", desc: "End-to-end lifecycle." },
+      ],
+    },
+    {
+      id: newId(), type: "feature_grid", enabled: true,
+      kicker: "MORE THAN AN AQUARIUM",
+      heading: "More Than an Aquarium",
+      subheading: "Value that shows up inside — and beyond — your venue.",
+      columns: 4,
+      items: [
+        { id: newId(), icon: "Gem",       title: "A More Premium Atmosphere", desc: "A visual anchor that lifts the room." },
+        { id: newId(), icon: "Smile",     title: "A Memorable Experience",    desc: "A moment guests actually remember." },
+        { id: newId(), icon: "Camera",    title: "A Shareable Focal Point",   desc: "A natural backdrop for photos." },
+        { id: newId(), icon: "Handshake", title: "A Fully Managed Solution",  desc: "Without burdening your staff." },
+      ],
+    },
+    {
+      id: newId(), type: "rich_text", enabled: true,
+      heading: "Why do venues hesitate?",
+      body:
+        "• Upfront cost and investment.\n" +
+        "• The burden of ongoing care and time.\n" +
+        "• Malfunctions and inconsistent appearance.\n" +
+        "• Lack of expertise inside the venue's team.\n\n" +
+        "Aqua Haven owns the entire system — from design and installation to daily management — so you can focus on your business.",
+    },
+    {
+      id: newId(), type: "rich_text", enabled: true,
+      heading: "An aquatic experience designed for your café's identity",
+      body: "The aquarium isn't just décor — it becomes a distinctive visual element that expresses the café's identity, a natural backdrop that invites guests to photograph and share, all under Aqua Haven's full management so your team is never distracted by technical detail.",
+    },
+    {
       id: newId(), type: "sla_tiers", enabled: true,
-      kicker: "SLA",
-      heading: "باقات الصيانة المؤسسية",
-      subheading: "ثلاث مستويات خدمة موثقة تناسب حجم أسطولك وحساسية موقعك.",
+      kicker: "CONTRACT MODELS",
+      heading: "Contract Models",
+      subheading: "Pick the model that fits your venue — with no fixed public pricing.",
       items: [
         {
-          id: newId(), name: "أساسي", features: [
-            { id: newId(), text: "زيارة صيانة شهرية" },
-            { id: newId(), text: "استجابة طارئة خلال 72 ساعة" },
-            { id: newId(), text: "تقرير حالة شهري" },
+          id: newId(), name: "Direct Purchase",
+          features: [
+            { id: newId(), text: "For venues that want to fully own the experience." },
+            { id: newId(), text: "Design, installation, initial operation and handover." },
+            { id: newId(), text: "Option to add an ongoing care contract later." },
           ],
-          cta_label: "اطلب عرض سعر", price: "يبدأ من", price_note: "حسب حجم النظام",
+          cta_label: "Discuss a Purchase",
+          cta_whatsapp_template: "Hello Aqua Haven, I'd like to discuss a direct purchase of an aquatic experience.",
         },
         {
-          id: newId(), name: "احترافي", badge: "الأكثر شيوعًا", highlighted: true, features: [
-            { id: newId(), text: "زيارة كل أسبوعين" },
-            { id: newId(), text: "استجابة طارئة خلال 48 ساعة" },
-            { id: newId(), text: "تقارير أسبوعية مفصلة" },
-            { id: newId(), text: "استبدال معدات مشمول" },
+          id: newId(), name: "Managed Aquarium", badge: "Subscription", highlighted: true,
+          features: [
+            { id: newId(), text: "Flexible monthly or annual subscription." },
+            { id: newId(), text: "Design, installation, operation and ongoing management." },
+            { id: newId(), text: "Scheduled visits, reports and support." },
+            { id: newId(), text: "For venues that want the experience without daily details." },
           ],
-          cta_label: "اطلب عرض سعر", price: "الأنسب", price_note: "لمعظم الفنادق والشركات",
+          cta_label: "Explore the Managed Plan",
+          cta_whatsapp_template: "Hello Aqua Haven, I'd like to discuss the Managed Aquarium subscription.",
         },
         {
-          id: newId(), name: "مؤسسي", features: [
-            { id: newId(), text: "زيارة أسبوعية" },
-            { id: newId(), text: "استجابة طارئة خلال 24 ساعة" },
-            { id: newId(), text: "مراقبة عن بعد + تنبيهات فورية" },
-            { id: newId(), text: "مدير حساب مخصص" },
-            { id: newId(), text: "تدريب دوري للكادر" },
+          id: newId(), name: "Pilot Program", badge: "Trial",
+          features: [
+            { id: newId(), text: "A defined trial before any long-term commitment." },
+            { id: newId(), text: "Full installation and management during the pilot." },
+            { id: newId(), text: "Review at the end of the trial period." },
+            { id: newId(), text: "Continue, purchase, or end — by agreement." },
           ],
-          cta_label: "اطلب عرض سعر", price: "مخصص", price_note: "بحسب متطلبات الجهة",
+          cta_label: "Start a Flexible Pilot",
+          cta_whatsapp_template: "Hello Aqua Haven, I'd like to start a Pilot Program.",
         },
+      ],
+    },
+    {
+      id: newId(), type: "step_list", enabled: true,
+      heading: "Start with a Flexible Pilot",
+      items: [
+        { id: newId(), text: "Site & concept scoping" },
+        { id: newId(), text: "Preparation & installation" },
+        { id: newId(), text: "Full management during the pilot" },
+        { id: newId(), text: "Review & option to continue or purchase" },
+      ],
+    },
+    {
+      id: newId(), type: "rich_text", enabled: true,
+      heading: "Why start with a pilot?",
+      body: "Test the impact of an aquatic experience on your space before any long-term commitment, with full management throughout the program. Duration and terms are agreed case by case.",
+    },
+    {
+      id: newId(), type: "feature_grid", enabled: true,
+      kicker: "BRANDSCAPE",
+      heading: "Turn your brand into an aquatic scene",
+      subheading: "Creative elements customized to each identity.",
+      columns: 4,
+      items: [
+        { id: newId(), icon: "Sparkles",  title: "3D Brand Logo Inside the Tank", desc: "Your logo, 3D-printed and integrated into the design." },
+        { id: newId(), icon: "Building2", title: "Miniature of Your Building",     desc: "A signature piece that tells your story visually." },
+        { id: newId(), icon: "Fish",      title: "Signature Aquarium",             desc: "A tank shaped uniquely for your brand." },
+        { id: newId(), icon: "PenTool",   title: "Story Elements from Your Brand", desc: "Inspired by your products or brand narrative." },
+      ],
+    },
+    {
+      id: newId(), type: "case_studies", enabled: true,
+      kicker: "CONCEPTS",
+      heading: "Concept Visualizations",
+      subheading: "Customizable experience concepts — not client projects.",
+      items: [
+        { id: newId(), image_path: bannerTankAsset.url,      category: "Café",       title: "Aquatic corner in a café" },
+        { id: newId(), image_path: counterAquariumAsset.url, category: "Restaurant", title: "Counter-side display tank" },
+        { id: newId(), image_path: livingRoomTankAsset.url,  category: "Lobby",      title: "Reception focal piece" },
+        { id: newId(), image_path: marineCubeAsset.url,      category: "Signature",  title: "Signature brand cube" },
+      ],
+    },
+    {
+      id: newId(), type: "feature_grid", enabled: true,
+      kicker: "EVENTS",
+      heading: "Events & Pop-up Aquariums",
+      subheading: "Short-term solutions including install, teardown, and temporary rental.",
+      columns: 3,
+      items: [
+        { id: newId(), icon: "PartyPopper",   title: "Openings",           desc: "A standout aquatic experience on launch day." },
+        { id: newId(), icon: "Presentation",  title: "Expos & Conferences", desc: "A distinctive booth with a live aquatic scene." },
+        { id: newId(), icon: "GraduationCap", title: "Schools & Events",    desc: "Educational or entertainment installations." },
+        { id: newId(), icon: "Store",         title: "Seasonal Corners",    desc: "Pop-up tanks inside malls and events." },
+        { id: newId(), icon: "Truck",         title: "Install, Teardown & Ops", desc: "Full service across the event window." },
+        { id: newId(), icon: "Sparkles",      title: "Event-Tuned Design",  desc: "Aligned with the event identity." },
+      ],
+    },
+    {
+      id: newId(), type: "feature_grid", enabled: true,
+      kicker: "SEGMENTS",
+      heading: "Target Segments",
+      subheading: "Cafés first, with additional segments supported.",
+      columns: 3,
+      items: [
+        { id: newId(), icon: "Coffee",          title: "Cafés",            desc: "An experience that reflects your identity and creates a memorable guest moment." },
+        { id: newId(), icon: "UtensilsCrossed", title: "Restaurants",      desc: "A visual presence that lifts the room." },
+        { id: newId(), icon: "Hotel",           title: "Hotels",           desc: "Focal pieces for lobbies and lounges." },
+        { id: newId(), icon: "Briefcase",       title: "Offices",          desc: "Reception areas that reflect your identity." },
+        { id: newId(), icon: "GraduationCap",   title: "Schools",          desc: "Safe, managed educational experiences." },
+        { id: newId(), icon: "PartyPopper",     title: "Events & Expos",   desc: "Temporary installations for the event window." },
+      ],
+    },
+    {
+      id: newId(), type: "step_list", enabled: true,
+      heading: "From concept to managed service",
+      items: [
+        { id: newId(), text: "Site Visit" },
+        { id: newId(), text: "Concept Design" },
+        { id: newId(), text: "Proposal & Approval" },
+        { id: newId(), text: "Installation" },
+        { id: newId(), text: "Launch" },
+        { id: newId(), text: "Managed Service" },
+      ],
+    },
+    {
+      id: newId(), type: "portal_mockup", enabled: true,
+      kicker: "CLIENT PORTAL",
+      heading: "Every detail of your experience — in one place",
+      description: "Each client gets a dedicated portal to track tank status, visits, reports, and files. The layout shown is illustrative.",
+      status_label: "Tank Status",
+      status_value: "Excellent",
+      score_label: "Health Score",
+      score_value: "94",
+      last_visit_label: "Last Visit",
+      last_visit_value: "5 days ago",
+      note: "The portal includes the elements shown above; scope may vary by contract.",
+      tiles: [
+        { id: newId(), icon: "Camera",        label: "Photos",       value: "Available" },
+        { id: newId(), icon: "FileText",      label: "Reports",      value: "Scheduled" },
+        { id: newId(), icon: "Receipt",       label: "Invoices",     value: "Available" },
+        { id: newId(), icon: "ClipboardList", label: "Service Log",  value: "Up to date" },
+        { id: newId(), icon: "FileCheck2",    label: "Contract",     value: "Active" },
+        { id: newId(), icon: "Wrench",        label: "Support",      value: "Direct channel" },
       ],
     },
     {
       id: newId(), type: "faq", enabled: true,
-      heading: "الأسئلة الشائعة للجهات المؤسسية",
+      heading: "FAQ",
       items: [
-        { id: newId(), q: "ما مدة تنفيذ المشروع المؤسسي؟", a: "من 3 إلى 10 أسابيع حسب حجم وتعقيد المشروع، ونلتزم بجدول زمني موثق ضمن العقد." },
-        { id: newId(), q: "هل تقدمون فواتير ضريبية معتمدة؟", a: "نعم، جميع فواتيرنا ضريبية مطابقة لهيئة الزكاة والضريبة، ونتعامل مع أنظمة اعتماد الموردين الحكومية." },
-        { id: newId(), q: "ما مستويات عقود SLA المتاحة؟", a: "ثلاث باقات: أساسي (شهري)، احترافي (نصف شهري + استجابة 48 ساعة)، ومؤسسي (أسبوعي + استجابة 24 ساعة + مراقبة عن بعد)." },
-        { id: newId(), q: "هل تغطون خارج الرياض؟", a: "نعم، نغطي 13 منطقة داخل المملكة عبر شبكة فنيين معتمدين." },
-        { id: newId(), q: "هل يمكن ربط الحوض بأنظمة المبنى الذكي؟", a: "نعم، ندعم التكامل مع أنظمة BMS للتحكم بالإضاءة ودرجة الحرارة والتنبيهات." },
+        { id: newId(), q: "Can we start with a trial before any long-term commitment?", a: "Yes — the Pilot Program includes full installation and management, then a review with the option to continue, purchase, or end by agreement." },
+        { id: newId(), q: "Do you fully handle management and care?", a: "Yes — the Managed Aquarium plan covers design, installation, operation, scheduled visits, and reports, with no technical burden on your team." },
+        { id: newId(), q: "Can the aquarium be customized to our café's identity?", a: "Yes — logo elements, signature shapes, and story-driven pieces can all be tailored to your brand." },
+        { id: newId(), q: "Do you offer both direct purchase and subscription?", a: "Yes — three contract models: Direct Purchase, Managed Aquarium (subscription), and Pilot Program." },
+        { id: newId(), q: "Do you provide temporary solutions for events?", a: "Yes — pop-up aquariums for openings, expos, and conferences, with install, teardown, and management included." },
       ],
     },
     {
       id: newId(), type: "lead_form", enabled: true,
-      kicker: "REQUEST QUOTE",
-      heading: "اطلب عرض سعر مؤسسي",
-      description: "عبّئ التفاصيل التالية وسيتواصل معك مدير حسابات خلال يوم عمل واحد.",
-      form_anchor: "quote",
-      submit_label: "إرسال الطلب",
-      success_message: "تم استلام طلبك — سيتواصل معك فريقنا خلال يوم عمل.",
-      whatsapp_fallback_label: "أو تواصل عبر واتساب",
-      whatsapp_fallback_template: "السلام عليكم، أرغب بمناقشة حل مؤسسي مع أكوا هيفن.",
-      contact_note: "بياناتك سرّية ولا تُشارك مع أي جهة خارجية.",
-      industries: [
-        { id: newId(), label: "جهة حكومية" },
-        { id: newId(), label: "فندق / منتجع" },
-        { id: newId(), label: "مطعم / كافيه" },
-        { id: newId(), label: "مكتب / شركة" },
-        { id: newId(), label: "مول / مركز تسوق" },
-        { id: newId(), label: "مستشفى / عيادة" },
-        { id: newId(), label: "مدرسة / جامعة" },
-        { id: newId(), label: "مجمع سكني / فيلا خاصة" },
-        { id: newId(), label: "أخرى" },
+      kicker: "SITE VISIT",
+      heading: "Book a Site Visit",
+      description: "Share the details below and we'll reach out to schedule the visit.",
+      form_anchor: "visit",
+      submit_label: "Send Request",
+      success_message: "Request received — we'll reach out shortly to confirm the visit.",
+      whatsapp_fallback_label: "Or reach us on WhatsApp",
+      whatsapp_fallback_template: WA_VISIT_EN,
+      contact_note: "Your information is confidential and never shared with third parties.",
+      fields_preset: "business_visit",
+      industries: [], budgets: [], timelines: [],
+      facility_types: [
+        { id: newId(), label: "Café" },
+        { id: newId(), label: "Restaurant" },
+        { id: newId(), label: "Hotel" },
+        { id: newId(), label: "Office / Company" },
+        { id: newId(), label: "School / University" },
+        { id: newId(), label: "Event / Expo" },
+        { id: newId(), label: "Other" },
       ],
-      budgets: [
-        { id: newId(), label: "أقل من 25,000 ر.س" },
-        { id: newId(), label: "25,000 – 75,000 ر.س" },
-        { id: newId(), label: "75,000 – 200,000 ر.س" },
-        { id: newId(), label: "أكثر من 200,000 ر.س" },
+      need_types: [
+        { id: newId(), label: "A new aquarium for our venue" },
+        { id: newId(), label: "Managed aquatic experience" },
+        { id: newId(), label: "Pilot Program" },
+        { id: newId(), label: "Temporary aquarium for an event" },
+        { id: newId(), label: "Initial consultation" },
       ],
-      timelines: [
-        { id: newId(), label: "خلال شهر" },
-        { id: newId(), label: "خلال 1–3 أشهر" },
-        { id: newId(), label: "خلال 3–6 أشهر" },
-        { id: newId(), label: "غير محدد" },
+      preferred_times: [
+        { id: newId(), label: "Morning (9 – 12)" },
+        { id: newId(), label: "Midday (12 – 3)" },
+        { id: newId(), label: "Afternoon (3 – 6)" },
+        { id: newId(), label: "Evening (6 – 9)" },
+        { id: newId(), label: "Anytime" },
       ],
       lead_source: "business_lead",
     },
     {
       id: newId(), type: "cta_band", enabled: true,
-      heading: "هل تحتاج تصميمًا ومقابلة؟",
-      description: "زيارة موقعية مجانية داخل الرياض، أو مقابلة أونلاين للجهات خارجها.",
-      primary_label: "تواصل واتساب",
-      primary_whatsapp_template: "السلام عليكم، أرغب بحجز زيارة موقعية / مقابلة أونلاين مع أكوا هيفن للحلول المؤسسية.",
-      secondary_label: "صفحة تواصل",
-      secondary_href: "/contact",
+      heading: "Let's Create Something Extraordinary",
+      description: "Book a site visit, or reach the business team directly.",
+      primary_label: "Book a Site Visit",
+      primary_href: "#visit",
+      secondary_label: "WhatsApp Business",
+      secondary_href: "https://wa.me/966509966234",
     },
   ],
 };
+
+
 
 
 

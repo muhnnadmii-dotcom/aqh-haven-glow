@@ -13,6 +13,11 @@ const schema = z.object({
   message: z.string().trim().min(1).max(4000),
   source: z.string().trim().max(60).optional().default("business_lead"),
   page: z.string().trim().max(120).optional().default(""),
+  // Optional business-visit fields
+  facility_name: z.string().trim().max(160).optional().default(""),
+  facility_type: z.string().trim().max(160).optional().default(""),
+  need_type: z.string().trim().max(160).optional().default(""),
+  preferred_time: z.string().trim().max(160).optional().default(""),
 });
 
 export const submitBusinessLead = createServerFn({ method: "POST" })
@@ -22,9 +27,13 @@ export const submitBusinessLead = createServerFn({ method: "POST" })
 
     const source = data.source || "business_lead";
     const readable = [
-      data.company && `الشركة/الجهة: ${data.company}`,
-      data.industry && `القطاع: ${data.industry}`,
+      data.facility_name && `المنشأة: ${data.facility_name}`,
+      data.company && !data.facility_name && `الشركة/الجهة: ${data.company}`,
+      data.facility_type && `نوع المنشأة: ${data.facility_type}`,
+      data.industry && !data.facility_type && `القطاع: ${data.industry}`,
+      data.need_type && `نوع الاحتياج: ${data.need_type}`,
       data.city && `المدينة: ${data.city}`,
+      data.preferred_time && `الوقت المناسب: ${data.preferred_time}`,
       data.budget && `الميزانية: ${data.budget}`,
       data.timeline && `الإطار الزمني: ${data.timeline}`,
       data.email && `البريد: ${data.email}`,
@@ -33,7 +42,6 @@ export const submitBusinessLead = createServerFn({ method: "POST" })
       data.message,
     ].filter(Boolean).join("\n");
 
-    // Log to contact_requests
     await supabaseAdmin.from("contact_requests").insert({
       name: data.name,
       phone: data.phone,
@@ -41,7 +49,6 @@ export const submitBusinessLead = createServerFn({ method: "POST" })
       message: readable,
     });
 
-    // Insert into service_requests so it appears in /admin/requests
     const { error } = await supabaseAdmin.from("service_requests").insert({
       type: "consultation",
       name: data.name,
@@ -50,7 +57,11 @@ export const submitBusinessLead = createServerFn({ method: "POST" })
       details: {
         source,
         request_subtype: source,
-        company: data.company || null,
+        company: data.company || data.facility_name || null,
+        facility_name: data.facility_name || null,
+        facility_type: data.facility_type || null,
+        need_type: data.need_type || null,
+        preferred_time: data.preferred_time || null,
         industry: data.industry || null,
         city: data.city || null,
         budget: data.budget || null,

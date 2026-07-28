@@ -13,8 +13,9 @@ import { getPageMeta } from "./registry";
 import type {
   Section, PageDoc, BusinessTabsSection,
   MediaHeroSection, StatBarSection, FeatureGridSection,
-  CaseStudiesSection, SlaTiersSection, LeadFormSection,
+  CaseStudiesSection, SlaTiersSection, LeadFormSection, PortalMockupSection,
 } from "./types";
+
 
 
 
@@ -236,8 +237,11 @@ function renderSection(s: Section) {
       return <SlaTiersBlock key={s.id} section={s} />;
     case "lead_form":
       return <LeadFormBlock key={s.id} section={s} />;
+    case "portal_mockup":
+      return <PortalMockupBlock key={s.id} section={s} />;
   }
 }
+
 
 function MediaHeroBlock({ section: s }: { section: MediaHeroSection }) {
   const primaryHref = s.primary_whatsapp_template
@@ -437,18 +441,20 @@ function SlaTiersBlock({ section: s }: { section: SlaTiersSection }) {
 function LeadFormBlock({ section: s }: { section: LeadFormSection }) {
   const submit = useServerFn(submitBusinessLead);
   const anchor = s.form_anchor || "quote";
+  const preset = s.fields_preset || "default";
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [form, setForm] = useState({
     name: "", phone: "", email: "", company: "",
     industry: "", city: "", budget: "", timeline: "", message: "",
+    facility_name: "", facility_type: "", need_type: "", preferred_time: "",
   });
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:border-[color:var(--gold)]/60";
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.phone.trim() || !form.message.trim()) {
-      toast.error("الاسم والجوال والرسالة مطلوبة");
+      toast.error("الاسم والجوال والملاحظات مطلوبة");
       return;
     }
     setSubmitting(true);
@@ -462,7 +468,11 @@ function LeadFormBlock({ section: s }: { section: LeadFormSection }) {
       });
       setSent(true);
       toast.success(s.success_message || "تم استلام طلبك");
-      setForm({ name: "", phone: "", email: "", company: "", industry: "", city: "", budget: "", timeline: "", message: "" });
+      setForm({
+        name: "", phone: "", email: "", company: "", industry: "", city: "",
+        budget: "", timeline: "", message: "",
+        facility_name: "", facility_type: "", need_type: "", preferred_time: "",
+      });
     } catch (err: any) {
       toast.error(err?.message ?? "تعذر الإرسال");
     } finally {
@@ -488,6 +498,47 @@ function LeadFormBlock({ section: s }: { section: LeadFormSection }) {
                 إرسال طلب آخر
               </button>
             </div>
+          ) : preset === "business_visit" ? (
+            <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
+              <input className={inp} placeholder="اسم المنشأة *" value={form.facility_name}
+                onChange={(e) => { set("facility_name", e.target.value); set("company", e.target.value); }} required />
+              <input className={inp} placeholder="اسم المسؤول *" value={form.name} onChange={(e) => set("name", e.target.value)} required />
+              <input className={inp} placeholder="رقم الجوال *" value={form.phone} onChange={(e) => set("phone", e.target.value)} required />
+              <select className={inp} value={form.facility_type}
+                onChange={(e) => { set("facility_type", e.target.value); set("industry", e.target.value); }}>
+                <option value="">نوع المنشأة</option>
+                {(s.facility_types ?? []).map((o) => <option key={o.id} value={o.label}>{o.label}</option>)}
+              </select>
+              <input className={inp} placeholder="المدينة" value={form.city} onChange={(e) => set("city", e.target.value)} />
+              <select className={inp} value={form.need_type} onChange={(e) => set("need_type", e.target.value)}>
+                <option value="">نوع الاحتياج</option>
+                {(s.need_types ?? []).map((o) => <option key={o.id} value={o.label}>{o.label}</option>)}
+              </select>
+              <select className={inp + " sm:col-span-2"} value={form.preferred_time} onChange={(e) => set("preferred_time", e.target.value)}>
+                <option value="">الوقت المناسب للتواصل</option>
+                {(s.preferred_times ?? []).map((o) => <option key={o.id} value={o.label}>{o.label}</option>)}
+              </select>
+              <textarea className={inp + " min-h-[120px] sm:col-span-2"} placeholder="ملاحظات / تفاصيل إضافية *"
+                value={form.message} onChange={(e) => set("message", e.target.value)} required />
+              <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                  <ShieldCheck size={14} className="text-gold" /> {s.contact_note || "بياناتك سرّية."}
+                </div>
+                <div className="flex gap-2">
+                  {s.whatsapp_fallback_template && (
+                    <a href={whatsappLink(s.whatsapp_fallback_template)} target="_blank" rel="noopener noreferrer"
+                      className="btn-outline-gold rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2">
+                      <MessageCircle size={14} /> {s.whatsapp_fallback_label || "أو تواصل عبر واتساب"}
+                    </a>
+                  )}
+                  <button type="submit" disabled={submitting}
+                    className="btn-gold rounded-xl px-6 py-2.5 text-sm inline-flex items-center gap-2 disabled:opacity-60">
+                    {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
+                    {s.submit_label || "إرسال الطلب"}
+                  </button>
+                </div>
+              </div>
+            </form>
           ) : (
             <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
               <input className={inp} placeholder="الاسم الكامل *" value={form.name} onChange={(e) => set("name", e.target.value)} required />
@@ -534,6 +585,65 @@ function LeadFormBlock({ section: s }: { section: LeadFormSection }) {
     </section>
   );
 }
+
+function PortalMockupBlock({ section: s }: { section: PortalMockupSection }) {
+  return (
+    <section className="mb-16">
+      <Reveal>
+        <div className="text-center mb-8">
+          {s.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{s.kicker}</div>}
+          {s.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-3">{s.heading}</h2>}
+          {s.description && <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">{s.description}</p>}
+        </div>
+      </Reveal>
+      <Reveal>
+        <div className="glass rounded-3xl border border-white/10 overflow-hidden shadow-2xl max-w-5xl mx-auto">
+          {/* fake window chrome */}
+          <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/10 bg-black/30">
+            <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
+            <span className="ms-3 text-[11px] text-muted-foreground">portal.aqh.sa</span>
+          </div>
+          <div className="p-6 md:p-8 grid gap-6 md:grid-cols-[1.2fr_1fr]">
+            {/* Left: hero card + score */}
+            <div className="rounded-2xl glass-gold p-6 flex flex-col justify-between min-h-[220px]">
+              <div>
+                <div className="text-xs text-muted-foreground">{s.status_label || "حالة الحوض"}</div>
+                <div className="text-2xl md:text-3xl font-bold mt-1">{s.status_value || "—"}</div>
+                <div className="mt-4 text-xs text-muted-foreground">{s.last_visit_label || "آخر زيارة"}</div>
+                <div className="text-sm font-bold mt-0.5">{s.last_visit_value || "—"}</div>
+              </div>
+              <div className="mt-4 flex items-end justify-between">
+                <div>
+                  <div className="text-[11px] text-muted-foreground">{s.score_label || "Health Score"}</div>
+                  <div className="text-5xl font-black text-gradient-gold leading-none mt-1">{s.score_value || "—"}</div>
+                </div>
+                <div className="text-[11px] text-muted-foreground">/ 100</div>
+              </div>
+            </div>
+            {/* Right: tiles */}
+            <div className="grid grid-cols-2 gap-3">
+              {s.tiles.map((t) => (
+                <div key={t.id} className="rounded-2xl border border-white/10 p-4 bg-white/[0.02]">
+                  <div className="grid place-items-center h-9 w-9 rounded-lg glass-gold mb-3">
+                    <Icon name={t.icon} size={16} className="text-gold" />
+                  </div>
+                  <div className="text-xs text-muted-foreground">{t.label}</div>
+                  <div className="text-sm font-bold mt-0.5">{t.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {s.note && (
+            <div className="px-6 pb-4 text-[11px] text-muted-foreground text-center">{s.note}</div>
+          )}
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
 
 function BusinessTabsBlock({ section }: { section: BusinessTabsSection }) {
   const [openId, setOpenId] = useState<string>(section.items[0]?.id ?? "");
