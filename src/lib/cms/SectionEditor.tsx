@@ -422,9 +422,67 @@ function MediaHeroEditor({ section, onChange }: Props<MediaHeroSection>) {
         <button type="button" onClick={() => onChange({ ...section, badges: [...(section.badges ?? []), { id: newId(), text: "" }] })}
           className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف شارة</button>
       </div>
+
+      {/* Overlay controls */}
+      <div className="sm:col-span-2 rounded-xl border border-white/10 p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className={lbl}>طبقة التعتيم فوق الصورة</div>
+          <label className="inline-flex items-center gap-2 text-xs">
+            <input type="checkbox" checked={section.overlay_enabled !== false}
+              onChange={(e) => onChange({ ...section, overlay_enabled: e.target.checked })} />
+            تفعيل
+          </label>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label><span className={lbl}>نمط الطبقة</span>
+            <select className={field} value={section.overlay_mode ?? "gradient"}
+              onChange={(e) => onChange({ ...section, overlay_mode: e.target.value as "solid" | "gradient" })}>
+              <option value="gradient">تدرج (لونين)</option>
+              <option value="solid">لون واحد</option>
+            </select>
+          </label>
+        </div>
+        {(section.overlay_mode ?? "gradient") === "solid" ? (
+          <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+            <label><span className={lbl}>اللون</span>
+              <input type="color" className={field + " h-10 p-1"} value={section.overlay_color ?? "#000000"}
+                onChange={(e) => onChange({ ...section, overlay_color: e.target.value })} />
+            </label>
+            <label><span className={lbl}>الشفافية: {section.overlay_opacity ?? 60}%</span>
+              <input type="range" min={0} max={100} className="w-full" value={section.overlay_opacity ?? 60}
+                onChange={(e) => onChange({ ...section, overlay_opacity: Number(e.target.value) })} />
+            </label>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-[100px_1fr]">
+              <label><span className={lbl}>لون البداية</span>
+                <input type="color" className={field + " h-10 p-1"} value={section.overlay_from_color ?? "#0a0f19"}
+                  onChange={(e) => onChange({ ...section, overlay_from_color: e.target.value })} />
+              </label>
+              <label><span className={lbl}>شفافية البداية: {section.overlay_from_opacity ?? 60}%</span>
+                <input type="range" min={0} max={100} className="w-full" value={section.overlay_from_opacity ?? 60}
+                  onChange={(e) => onChange({ ...section, overlay_from_opacity: Number(e.target.value) })} />
+              </label>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-[100px_1fr]">
+              <label><span className={lbl}>لون النهاية</span>
+                <input type="color" className={field + " h-10 p-1"} value={section.overlay_to_color ?? "#0a0f19"}
+                  onChange={(e) => onChange({ ...section, overlay_to_color: e.target.value })} />
+              </label>
+              <label><span className={lbl}>شفافية النهاية: {section.overlay_to_opacity ?? 100}%</span>
+                <input type="range" min={0} max={100} className="w-full" value={section.overlay_to_opacity ?? 100}
+                  onChange={(e) => onChange({ ...section, overlay_to_opacity: Number(e.target.value) })} />
+              </label>
+            </div>
+          </div>
+        )}
+        <p className="text-[11px] text-muted-foreground">الافتراضي: تدرج من داكن شفاف إلى خلفية الموقع للحفاظ على الشكل الحالي.</p>
+      </div>
     </div>
   );
 }
+
 
 function StatBarEditor({ section, onChange }: Props<StatBarSection>) {
   return (
