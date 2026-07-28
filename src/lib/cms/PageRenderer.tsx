@@ -223,7 +223,316 @@ function renderSection(s: Section) {
 
     case "business_tabs":
       return <BusinessTabsBlock key={s.id} section={s} />;
+
+    case "media_hero":
+      return <MediaHeroBlock key={s.id} section={s} />;
+    case "stat_bar":
+      return <StatBarBlock key={s.id} section={s} />;
+    case "feature_grid":
+      return <FeatureGridBlock key={s.id} section={s} />;
+    case "case_studies":
+      return <CaseStudiesBlock key={s.id} section={s} />;
+    case "sla_tiers":
+      return <SlaTiersBlock key={s.id} section={s} />;
+    case "lead_form":
+      return <LeadFormBlock key={s.id} section={s} />;
   }
+}
+
+function MediaHeroBlock({ section: s }: { section: MediaHeroSection }) {
+  const primaryHref = s.primary_whatsapp_template
+    ? whatsappLink(s.primary_whatsapp_template)
+    : (s.primary_href || "#");
+  const secondaryHref = s.secondary_whatsapp_template
+    ? whatsappLink(s.secondary_whatsapp_template)
+    : (s.secondary_href || "");
+  const primaryTarget = s.primary_whatsapp_template ? "_blank" : undefined;
+  const secondaryTarget = s.secondary_whatsapp_template ? "_blank" : undefined;
+  return (
+    <section className="relative overflow-hidden -mx-6 -mt-16 mb-16">
+      <div className="absolute inset-0 -z-10">
+        {s.image_path && (
+          <img src={getImageUrl(s.image_path)} onError={onImageError} alt="" className="w-full h-full object-cover opacity-30" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+      </div>
+      <div className="mx-auto max-w-7xl px-6 pt-24 pb-20 sm:pt-32 sm:pb-28">
+        <Reveal>
+          {s.kicker && (
+            <div className="inline-flex items-center gap-2 glass-gold rounded-full px-4 py-1.5 text-xs mb-6">
+              <Sparkles size={14} className="text-gold" /> <span>{s.kicker}</span>
+            </div>
+          )}
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black leading-tight max-w-4xl">
+            {s.title}
+            {s.title_highlight && <span className="block text-gradient-gold">{s.title_highlight}</span>}
+          </h1>
+          {s.description && (
+            <p className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed whitespace-pre-line">{s.description}</p>
+          )}
+          {(s.primary_label || s.secondary_label) && (
+            <div className="mt-8 flex flex-wrap gap-3">
+              {s.primary_label && (
+                <a href={primaryHref} target={primaryTarget} rel={primaryTarget ? "noopener noreferrer" : undefined}
+                  className="btn-gold rounded-xl px-6 py-3.5 text-sm font-bold inline-flex items-center gap-2">
+                  {s.primary_whatsapp_template && <MessageCircle size={16} />}
+                  {s.primary_label}
+                </a>
+              )}
+              {s.secondary_label && secondaryHref && (
+                <a href={secondaryHref} target={secondaryTarget} rel={secondaryTarget ? "noopener noreferrer" : undefined}
+                  className="glass hover:glass-gold rounded-xl px-6 py-3.5 text-sm font-bold inline-flex items-center gap-2 border border-white/10">
+                  {s.secondary_whatsapp_template && <MessageCircle size={16} />}
+                  {s.secondary_label}
+                </a>
+              )}
+            </div>
+          )}
+          {s.badges && s.badges.length > 0 && (
+            <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-muted-foreground">
+              {s.badges.map((b) => (
+                <span key={b.id} className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 size={14} className="text-gold" /> {b.text}
+                </span>
+              ))}
+            </div>
+          )}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function StatBarBlock({ section: s }: { section: StatBarSection }) {
+  if (!s.items.length) return null;
+  return (
+    <section className="border-y border-white/10 bg-black/20 -mx-6 mb-16">
+      <div className="mx-auto max-w-7xl px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-6">
+        {s.items.map((it) => (
+          <div key={it.id} className="text-center">
+            <Icon name={it.icon} size={22} className="mx-auto text-gold mb-2" />
+            <div className="text-3xl sm:text-4xl font-black text-gradient-gold">{it.value}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mt-1">{it.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FeatureGridBlock({ section: s }: { section: FeatureGridSection }) {
+  if (!s.items.length) return null;
+  const cols = Math.max(2, Math.min(4, s.columns ?? 3));
+  const colsCls = ({ 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4" } as Record<number, string>)[cols];
+  return (
+    <section className="mb-16">
+      <Reveal>
+        {(s.kicker || s.heading || s.subheading) && (
+          <div className="text-center mb-10">
+            {s.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{s.kicker}</div>}
+            {s.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-3">{s.heading}</h2>}
+            {s.subheading && <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">{s.subheading}</p>}
+          </div>
+        )}
+      </Reveal>
+      <div className={`grid gap-5 sm:grid-cols-2 ${colsCls}`}>
+        {s.items.map((it, i) => (
+          <Reveal key={it.id} delay={i * 60}>
+            <div className="group glass rounded-2xl p-6 h-full border border-white/10 hover:border-[color:var(--gold)]/40 transition-all">
+              <div className="grid place-items-center h-12 w-12 rounded-xl glass-gold mb-4 group-hover:scale-110 transition-transform">
+                <Icon name={it.icon} size={22} className="text-gold" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">{it.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{it.desc}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CaseStudiesBlock({ section: s }: { section: CaseStudiesSection }) {
+  if (!s.items.length) return null;
+  return (
+    <section className="mb-16">
+      <Reveal>
+        {(s.kicker || s.heading || s.subheading) && (
+          <div className="text-center mb-10">
+            {s.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{s.kicker}</div>}
+            {s.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-3">{s.heading}</h2>}
+            {s.subheading && <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">{s.subheading}</p>}
+          </div>
+        )}
+      </Reveal>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {s.items.map((p, i) => (
+          <Reveal key={p.id} delay={i * 60}>
+            <div className="group relative overflow-hidden rounded-2xl border border-white/10 aspect-[4/3]">
+              {p.image_path && (
+                <img src={getImageUrl(p.image_path)} onError={onImageError} alt={p.title} loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-5">
+                {p.category && <div className="inline-block text-[10px] tracking-wider text-gold mb-1.5 px-2 py-0.5 rounded-md glass-gold">{p.category}</div>}
+                <h3 className="font-bold">{p.title}</h3>
+                {p.location && <div className="text-xs text-muted-foreground mt-0.5">{p.location}</div>}
+              </div>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SlaTiersBlock({ section: s }: { section: SlaTiersSection }) {
+  if (!s.items.length) return null;
+  return (
+    <section className="mb-16">
+      <Reveal>
+        {(s.kicker || s.heading || s.subheading) && (
+          <div className="text-center mb-10">
+            {s.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{s.kicker}</div>}
+            {s.heading && <h2 className="text-3xl sm:text-4xl font-bold mb-3">{s.heading}</h2>}
+            {s.subheading && <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">{s.subheading}</p>}
+          </div>
+        )}
+      </Reveal>
+      <div className="grid gap-5 md:grid-cols-3">
+        {s.items.map((t, i) => {
+          const href = t.cta_whatsapp_template ? whatsappLink(t.cta_whatsapp_template) : "#quote";
+          const target = t.cta_whatsapp_template ? "_blank" : undefined;
+          return (
+            <Reveal key={t.id} delay={i * 80}>
+              <div className={`rounded-2xl p-6 h-full flex flex-col border ${t.highlighted ? "gradient-border glass-gold" : "glass border-white/10"}`}>
+                {t.badge && <div className="inline-block text-[10px] tracking-wider text-gold mb-2 px-2 py-0.5 rounded-md glass-gold self-start">{t.badge}</div>}
+                <h3 className="text-xl font-bold mb-1">{t.name}</h3>
+                {t.price && <div className="text-2xl font-black text-gradient-gold mt-2">{t.price}</div>}
+                {t.price_note && <div className="text-xs text-muted-foreground mb-4">{t.price_note}</div>}
+                <ul className="space-y-2 my-5 flex-1">
+                  {t.features.map((f) => (
+                    <li key={f.id} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 size={15} className="text-gold mt-0.5 shrink-0" />
+                      <span className="text-foreground/90">{f.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                {t.cta_label && (
+                  <a href={href} target={target} rel={target ? "noopener noreferrer" : undefined}
+                    className={`${t.highlighted ? "btn-gold" : "btn-outline-gold"} rounded-xl px-5 py-2.5 text-sm text-center inline-flex justify-center items-center gap-2`}>
+                    {t.cta_whatsapp_template && <MessageCircle size={14} />} {t.cta_label}
+                  </a>
+                )}
+              </div>
+            </Reveal>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function LeadFormBlock({ section: s }: { section: LeadFormSection }) {
+  const submit = useServerFn(submitBusinessLead);
+  const anchor = s.form_anchor || "quote";
+  const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [form, setForm] = useState({
+    name: "", phone: "", email: "", company: "",
+    industry: "", city: "", budget: "", timeline: "", message: "",
+  });
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const inp = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:border-[color:var(--gold)]/60";
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.phone.trim() || !form.message.trim()) {
+      toast.error("الاسم والجوال والرسالة مطلوبة");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await submit({
+        data: {
+          ...form,
+          source: s.lead_source || "business_lead",
+          page: typeof window !== "undefined" ? window.location.pathname : "",
+        },
+      });
+      setSent(true);
+      toast.success(s.success_message || "تم استلام طلبك");
+      setForm({ name: "", phone: "", email: "", company: "", industry: "", city: "", budget: "", timeline: "", message: "" });
+    } catch (err: any) {
+      toast.error(err?.message ?? "تعذر الإرسال");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  return (
+    <section id={anchor} className="mb-16 scroll-mt-24">
+      <Reveal>
+        <div className="glass rounded-3xl p-6 md:p-10 border border-white/10 max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            {s.kicker && <div className="text-xs tracking-widest text-gradient-gold mb-3">{s.kicker}</div>}
+            {s.heading && <h2 className="text-2xl md:text-3xl font-bold mb-3">{s.heading}</h2>}
+            {s.description && <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed whitespace-pre-line">{s.description}</p>}
+          </div>
+          {sent ? (
+            <div className="text-center py-8">
+              <div className="mx-auto grid place-items-center h-14 w-14 rounded-full glass-gold mb-4">
+                <CheckCircle2 size={26} className="text-gold" />
+              </div>
+              <p className="text-lg font-bold mb-2">{s.success_message || "تم استلام طلبك"}</p>
+              <button type="button" onClick={() => setSent(false)} className="mt-4 btn-outline-gold rounded-xl px-4 py-2 text-xs">
+                إرسال طلب آخر
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
+              <input className={inp} placeholder="الاسم الكامل *" value={form.name} onChange={(e) => set("name", e.target.value)} required />
+              <input className={inp} placeholder="رقم الجوال *" value={form.phone} onChange={(e) => set("phone", e.target.value)} required />
+              <input className={inp} placeholder="البريد الإلكتروني" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+              <input className={inp} placeholder="اسم الشركة / الجهة" value={form.company} onChange={(e) => set("company", e.target.value)} />
+              <select className={inp} value={form.industry} onChange={(e) => set("industry", e.target.value)}>
+                <option value="">القطاع</option>
+                {s.industries.map((o) => <option key={o.id} value={o.label}>{o.label}</option>)}
+              </select>
+              <input className={inp} placeholder="المدينة" value={form.city} onChange={(e) => set("city", e.target.value)} />
+              <select className={inp} value={form.budget} onChange={(e) => set("budget", e.target.value)}>
+                <option value="">الميزانية التقريبية</option>
+                {s.budgets.map((o) => <option key={o.id} value={o.label}>{o.label}</option>)}
+              </select>
+              <select className={inp} value={form.timeline} onChange={(e) => set("timeline", e.target.value)}>
+                <option value="">الإطار الزمني</option>
+                {s.timelines.map((o) => <option key={o.id} value={o.label}>{o.label}</option>)}
+              </select>
+              <textarea className={inp + " min-h-[120px] sm:col-span-2"} placeholder="تفاصيل المشروع / المتطلبات *"
+                value={form.message} onChange={(e) => set("message", e.target.value)} required />
+              <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                  <ShieldCheck size={14} className="text-gold" /> {s.contact_note || "بياناتك سرّية."}
+                </div>
+                <div className="flex gap-2">
+                  {s.whatsapp_fallback_template && (
+                    <a href={whatsappLink(s.whatsapp_fallback_template)} target="_blank" rel="noopener noreferrer"
+                      className="btn-outline-gold rounded-xl px-5 py-2.5 text-sm inline-flex items-center gap-2">
+                      <MessageCircle size={14} /> {s.whatsapp_fallback_label || "أو تواصل عبر واتساب"}
+                    </a>
+                  )}
+                  <button type="submit" disabled={submitting}
+                    className="btn-gold rounded-xl px-6 py-2.5 text-sm inline-flex items-center gap-2 disabled:opacity-60">
+                    {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
+                    {s.submit_label || "إرسال الطلب"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
+      </Reveal>
+    </section>
+  );
 }
 
 function BusinessTabsBlock({ section }: { section: BusinessTabsSection }) {
