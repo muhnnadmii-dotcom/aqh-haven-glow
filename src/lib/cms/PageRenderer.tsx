@@ -1,13 +1,21 @@
 import { Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, type FormEvent } from "react";
 import * as Icons from "lucide-react";
-import { CheckCircle2, MessageCircle, ChevronDown, ArrowLeft, Plus, Minus } from "lucide-react";
+import { CheckCircle2, MessageCircle, ChevronDown, ArrowLeft, Plus, Minus, Loader2, Sparkles, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { Reveal } from "@/components/Reveal";
 import { whatsappLink } from "@/components/WhatsAppButton";
 import { getImageUrl, onImageError } from "@/lib/storage";
+import { submitBusinessLead } from "@/lib/business-leads.functions";
 import { usePageDoc } from "./api";
 import { getPageMeta } from "./registry";
-import type { Section, PageDoc, BusinessTabsSection } from "./types";
+import type {
+  Section, PageDoc, BusinessTabsSection,
+  MediaHeroSection, StatBarSection, FeatureGridSection,
+  CaseStudiesSection, SlaTiersSection, LeadFormSection,
+} from "./types";
+
 
 
 function Icon({ name, size = 20, className = "" }: { name: string; size?: number; className?: string }) {
