@@ -122,7 +122,17 @@ export type MediaHeroSection = SectionBase & {
   secondary_href?: string;
   secondary_whatsapp_template?: string;
   badges?: MediaHeroBadge[];
+  // Overlay controls (all optional; safe defaults preserve current look)
+  overlay_enabled?: boolean;         // default true
+  overlay_mode?: "solid" | "gradient"; // default "gradient"
+  overlay_color?: string;            // solid mode color, e.g. "#000000"
+  overlay_opacity?: number;          // 0..100, solid mode
+  overlay_from_color?: string;       // gradient start color
+  overlay_from_opacity?: number;     // 0..100
+  overlay_to_color?: string;         // gradient end color
+  overlay_to_opacity?: number;       // 0..100
 };
+
 
 export type StatItem = { id: string; icon: string; value: string; label: string };
 export type StatBarSection = SectionBase & {

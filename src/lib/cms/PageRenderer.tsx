@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useState, type ReactNode, type FormEvent } from "react";
+import { useState, type ReactNode, type FormEvent, type CSSProperties } from "react";
 import * as Icons from "lucide-react";
 import { CheckCircle2, MessageCircle, ChevronDown, ArrowLeft, Plus, Minus, Loader2, Sparkles, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -243,6 +243,17 @@ function renderSection(s: Section) {
 }
 
 
+function hexToRgba(hex: string | undefined, opacityPct: number | undefined, fallback: string): string {
+  const op = Math.max(0, Math.min(100, opacityPct ?? 60)) / 100;
+  const h = (hex ?? "").trim().replace("#", "");
+  if (!/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(h)) return fallback;
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${op})`;
+}
+
 function MediaHeroBlock({ section: s }: { section: MediaHeroSection }) {
   const primaryHref = s.primary_whatsapp_template
     ? whatsappLink(s.primary_whatsapp_template)
@@ -252,60 +263,77 @@ function MediaHeroBlock({ section: s }: { section: MediaHeroSection }) {
     : (s.secondary_href || "");
   const primaryTarget = s.primary_whatsapp_template ? "_blank" : undefined;
   const secondaryTarget = s.secondary_whatsapp_template ? "_blank" : undefined;
+
+  const overlayOn = s.overlay_enabled !== false;
+  const mode = s.overlay_mode ?? "gradient";
+  let overlayStyle: CSSProperties | undefined;
+  if (overlayOn) {
+    if (mode === "solid") {
+      overlayStyle = { background: hexToRgba(s.overlay_color, s.overlay_opacity ?? 60, "rgba(0,0,0,0.6)") };
+    } else {
+      const from = hexToRgba(s.overlay_from_color, s.overlay_from_opacity ?? 60, "rgba(10,15,25,0.6)");
+      const to = hexToRgba(s.overlay_to_color, s.overlay_to_opacity ?? 100, "hsl(var(--background))");
+      overlayStyle = { background: `linear-gradient(to bottom, ${from}, ${to})` };
+    }
+  }
+
   return (
     <section className="relative overflow-hidden -mx-6 -mt-16 mb-16">
       <div className="absolute inset-0 -z-10">
         {s.image_path && (
-          <img src={getImageUrl(s.image_path)} onError={onImageError} alt="" className="w-full h-full object-cover opacity-30" />
+          <img src={getImageUrl(s.image_path)} onError={onImageError} alt="" className="w-full h-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+        {overlayOn && <div className="absolute inset-0" style={overlayStyle} />}
       </div>
       <div className="mx-auto max-w-7xl px-6 pt-24 pb-20 sm:pt-32 sm:pb-28">
         <Reveal>
-          {s.kicker && (
-            <div className="inline-flex items-center gap-2 glass-gold rounded-full px-4 py-1.5 text-xs mb-6">
-              <Sparkles size={14} className="text-gold" /> <span>{s.kicker}</span>
-            </div>
-          )}
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black leading-tight max-w-4xl">
-            {s.title}
-            {s.title_highlight && <span className="block text-gradient-gold">{s.title_highlight}</span>}
-          </h1>
-          {s.description && (
-            <p className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed whitespace-pre-line">{s.description}</p>
-          )}
-          {(s.primary_label || s.secondary_label) && (
-            <div className="mt-8 flex flex-wrap gap-3">
-              {s.primary_label && (
-                <a href={primaryHref} target={primaryTarget} rel={primaryTarget ? "noopener noreferrer" : undefined}
-                  className="btn-gold rounded-xl px-6 py-3.5 text-sm font-bold inline-flex items-center gap-2">
-                  {s.primary_whatsapp_template && <MessageCircle size={16} />}
-                  {s.primary_label}
-                </a>
-              )}
-              {s.secondary_label && secondaryHref && (
-                <a href={secondaryHref} target={secondaryTarget} rel={secondaryTarget ? "noopener noreferrer" : undefined}
-                  className="glass hover:glass-gold rounded-xl px-6 py-3.5 text-sm font-bold inline-flex items-center gap-2 border border-white/10">
-                  {s.secondary_whatsapp_template && <MessageCircle size={16} />}
-                  {s.secondary_label}
-                </a>
-              )}
-            </div>
-          )}
-          {s.badges && s.badges.length > 0 && (
-            <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-muted-foreground">
-              {s.badges.map((b) => (
-                <span key={b.id} className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 size={14} className="text-gold" /> {b.text}
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-col items-center text-center mx-auto">
+            {s.kicker && (
+              <div className="inline-flex items-center gap-2 glass-gold rounded-full px-4 py-1.5 text-xs mb-6">
+                <Sparkles size={14} className="text-gold" /> <span>{s.kicker}</span>
+              </div>
+            )}
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black leading-tight max-w-4xl mx-auto">
+              {s.title}
+              {s.title_highlight && <span className="block text-gradient-gold">{s.title_highlight}</span>}
+            </h1>
+            {s.description && (
+              <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed whitespace-pre-line">{s.description}</p>
+            )}
+            {(s.primary_label || s.secondary_label) && (
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                {s.primary_label && (
+                  <a href={primaryHref} target={primaryTarget} rel={primaryTarget ? "noopener noreferrer" : undefined}
+                    className="btn-gold rounded-xl px-6 py-3.5 text-sm font-bold inline-flex items-center gap-2">
+                    {s.primary_whatsapp_template && <MessageCircle size={16} />}
+                    {s.primary_label}
+                  </a>
+                )}
+                {s.secondary_label && secondaryHref && (
+                  <a href={secondaryHref} target={secondaryTarget} rel={secondaryTarget ? "noopener noreferrer" : undefined}
+                    className="glass hover:glass-gold rounded-xl px-6 py-3.5 text-sm font-bold inline-flex items-center gap-2 border border-white/10">
+                    {s.secondary_whatsapp_template && <MessageCircle size={16} />}
+                    {s.secondary_label}
+                  </a>
+                )}
+              </div>
+            )}
+            {s.badges && s.badges.length > 0 && (
+              <div className="mt-10 flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-xs text-muted-foreground">
+                {s.badges.map((b) => (
+                  <span key={b.id} className="inline-flex items-center gap-1.5">
+                    <CheckCircle2 size={14} className="text-gold" /> {b.text}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </Reveal>
       </div>
     </section>
   );
 }
+
 
 function StatBarBlock({ section: s }: { section: StatBarSection }) {
   if (!s.items.length) return null;
