@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useState, type ReactNode, type FormEvent } from "react";
+import { useState, type ReactNode, type FormEvent, type CSSProperties } from "react";
 import * as Icons from "lucide-react";
 import { CheckCircle2, MessageCircle, ChevronDown, ArrowLeft, Plus, Minus, Loader2, Sparkles, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
