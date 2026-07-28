@@ -189,10 +189,33 @@ export type LeadFormSection = SectionBase & {
   whatsapp_fallback_label?: string;
   whatsapp_fallback_template?: string;
   contact_note?: string;
+  // "default" = full corporate form; "business_visit" = reduced site-visit form
+  fields_preset?: "default" | "business_visit";
   industries: LeadIndustry[];
   budgets: LeadBudget[];
   timelines: LeadTimeline[];
-  lead_source?: string; // stored on lead as source tag, default "business_lead"
+  // Used when fields_preset === "business_visit"
+  facility_types?: LeadIndustry[];
+  need_types?: LeadIndustry[];
+  preferred_times?: LeadIndustry[];
+  lead_source?: string;
+};
+
+// ─── Portal mockup (visual dashboard preview, editable content) ─────────────
+export type PortalMockupTileItem = { id: string; icon: string; label: string; value: string };
+export type PortalMockupSection = SectionBase & {
+  type: "portal_mockup";
+  kicker?: string;
+  heading?: string;
+  description?: string;
+  status_label?: string;      // e.g. "حالة الحوض"
+  status_value?: string;      // e.g. "ممتازة"
+  score_label?: string;       // e.g. "Health Score"
+  score_value?: string;       // e.g. "94"
+  last_visit_label?: string;  // e.g. "آخر زيارة"
+  last_visit_value?: string;  // e.g. "قبل 5 أيام"
+  tiles: PortalMockupTileItem[]; // side tiles (reports, photos, invoices, contract, log …)
+  note?: string;              // e.g. "المحتوى المعروض تصوري"
 };
 
 export type Section =
@@ -212,7 +235,9 @@ export type Section =
   | FeatureGridSection
   | CaseStudiesSection
   | SlaTiersSection
-  | LeadFormSection;
+  | LeadFormSection
+  | PortalMockupSection;
+
 
 export type SectionType = Section["type"];
 
@@ -238,7 +263,9 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   case_studies: "معرض مشاريع (Case Studies)",
   sla_tiers: "باقات SLA / خدمة",
   lead_form: "نموذج طلب عرض سعر (Lead)",
+  portal_mockup: "بوابة العميل (Portal Mockup)",
 };
+
 
 export function newId() {
   return Math.random().toString(36).slice(2, 10);
@@ -327,5 +354,28 @@ export function emptySection(type: SectionType): Section {
         ],
         lead_source: "business_lead",
       };
+    case "portal_mockup":
+      return {
+        ...base, type,
+        kicker: "CLIENT PORTAL",
+        heading: "كل تفاصيل تجربتك في مكان واحد",
+        description: "يحصل كل عميل على بوابة مخصصة لمتابعة حالة الحوض والزيارات والتقارير والملفات.",
+        status_label: "حالة الحوض",
+        status_value: "ممتازة",
+        score_label: "Health Score",
+        score_value: "94",
+        last_visit_label: "آخر زيارة",
+        last_visit_value: "قبل 5 أيام",
+        note: "المحتوى المعروض تصوري لعرض شكل البوابة.",
+        tiles: [
+          { id: newId(), icon: "Camera",       label: "الصور",         value: "12 صورة" },
+          { id: newId(), icon: "FileText",     label: "التقارير",      value: "3 تقارير" },
+          { id: newId(), icon: "Receipt",      label: "الفواتير",      value: "متوفرة" },
+          { id: newId(), icon: "ClipboardList",label: "سجل الخدمة",    value: "8 زيارات" },
+          { id: newId(), icon: "FileCheck2",   label: "العقد",         value: "ساري" },
+          { id: newId(), icon: "Wrench",       label: "طلبات الدعم",   value: "بدون طلبات مفتوحة" },
+        ],
+      };
   }
 }
+

@@ -14,10 +14,11 @@ export const Route = createFileRoute("/_authenticated/admin/content/$page")({
 
 const ALL_TYPES: SectionType[] = [
   "hero", "media_hero", "badge_grid", "stat_bar", "feature_grid",
-  "pricing_groups", "sla_tiers", "case_studies",
+  "pricing_groups", "sla_tiers", "case_studies", "portal_mockup",
   "checklist", "step_list", "link_cards", "rich_text",
   "faq", "cta_band", "lead_form", "dynamic_slot", "business_tabs",
 ];
+
 
 type Lang = "ar" | "en";
 
