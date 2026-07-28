@@ -266,7 +266,7 @@ function MediaHeroBlock({ section: s }: { section: MediaHeroSection }) {
 
   const overlayOn = s.overlay_enabled !== false;
   const mode = s.overlay_mode ?? "gradient";
-  let overlayStyle: React.CSSProperties | undefined;
+  let overlayStyle: CSSProperties | undefined;
   if (overlayOn) {
     if (mode === "solid") {
       overlayStyle = { background: hexToRgba(s.overlay_color, s.overlay_opacity ?? 60, "rgba(0,0,0,0.6)") };
