@@ -24,7 +24,7 @@ export type PricingTier = { id: string; size: string; price: string; freq: strin
 export type PricingGroup = { id: string; heading: string; desc?: string; tiers: PricingTier[] };
 export type PricingGroupsSection = SectionBase & {
   type: "pricing_groups";
-  whatsapp_template: string; // "السلام عليكم، أرغب بباقة صيانة لحوض {group} — {tier}."
+  whatsapp_template: string;
   cta_label: string;
   items: PricingGroup[];
 };
@@ -57,7 +57,7 @@ export type LinkCardsSection = SectionBase & {
   type: "link_cards";
   heading?: string;
   subheading?: string;
-  columns?: number; // 2..5
+  columns?: number;
   items: LinkCardItem[];
 };
 
@@ -74,39 +74,125 @@ export type FaqSection = SectionBase & {
   items: FaqItem[];
 };
 
-// Renders a built-in dynamic block in place (e.g. the services list grid).
 export type DynamicSlotSection = SectionBase & {
   type: "dynamic_slot";
-  slot: string; // e.g. "services_grid"
+  slot: string;
   note?: string;
 };
 
-// Multi-tab business solutions block (cafes/restaurants/events/...).
 export type BusinessTabItem = {
   id: string;
-  icon: string; // lucide icon name
+  icon: string;
   title: string;
   tagline: string;
   idea: string;
   features: { id: string; text: string }[];
   concerns: { id: string; q: string; a: string }[];
   payment: { id: string; text: string }[];
-  images: { id: string; path: string }[]; // storage path or absolute URL
-  cta: string; // whatsapp message template
+  images: { id: string; path: string }[];
+  cta: string;
 };
 export type BusinessTabsSection = SectionBase & {
   type: "business_tabs";
   heading?: string;
   kicker?: string;
   description?: string;
-  // Labels for the fixed sub-headings inside the active tab (all optional; sensible defaults if empty)
-  tab_badge_prefix?: string;        // default: "قسم" → "قسم كافيهات"
-  features_heading?: string;        // default: "ماذا نوفّر لك"
-  concerns_heading?: string;        // default: "أسئلة ومخاوف شائعة"
-  payment_heading?: string;         // default: "طرق الدفع والاشتراك"
-  cta_heading?: string;             // default: "جاهز لمناقشة مشروعك؟"
-  cta_button_label?: string;        // default: "تواصل عبر واتساب"
+  tab_badge_prefix?: string;
+  features_heading?: string;
+  concerns_heading?: string;
+  payment_heading?: string;
+  cta_heading?: string;
+  cta_button_label?: string;
   items: BusinessTabItem[];
+};
+
+// ─── B2B / enterprise reusable sections ─────────────────────────────────────
+export type MediaHeroBadge = { id: string; text: string };
+export type MediaHeroSection = SectionBase & {
+  type: "media_hero";
+  kicker?: string;
+  title: string;
+  title_highlight?: string;
+  description?: string;
+  image_path?: string;
+  primary_label?: string;
+  primary_href?: string;
+  primary_whatsapp_template?: string;
+  secondary_label?: string;
+  secondary_href?: string;
+  secondary_whatsapp_template?: string;
+  badges?: MediaHeroBadge[];
+};
+
+export type StatItem = { id: string; icon: string; value: string; label: string };
+export type StatBarSection = SectionBase & {
+  type: "stat_bar";
+  items: StatItem[];
+};
+
+export type FeatureItem = { id: string; icon: string; title: string; desc: string };
+export type FeatureGridSection = SectionBase & {
+  type: "feature_grid";
+  kicker?: string;
+  heading?: string;
+  subheading?: string;
+  columns?: number;
+  items: FeatureItem[];
+};
+
+export type CaseStudyItem = {
+  id: string;
+  image_path: string;
+  category: string;
+  title: string;
+  location?: string;
+};
+export type CaseStudiesSection = SectionBase & {
+  type: "case_studies";
+  kicker?: string;
+  heading?: string;
+  subheading?: string;
+  items: CaseStudyItem[];
+};
+
+export type SlaFeature = { id: string; text: string };
+export type SlaTierItem = {
+  id: string;
+  name: string;
+  badge?: string;
+  price?: string;
+  price_note?: string;
+  cta_label?: string;
+  cta_whatsapp_template?: string;
+  features: SlaFeature[];
+  highlighted?: boolean;
+};
+export type SlaTiersSection = SectionBase & {
+  type: "sla_tiers";
+  kicker?: string;
+  heading?: string;
+  subheading?: string;
+  items: SlaTierItem[];
+};
+
+export type LeadIndustry = { id: string; label: string };
+export type LeadBudget = { id: string; label: string };
+export type LeadTimeline = { id: string; label: string };
+export type LeadFormSection = SectionBase & {
+  type: "lead_form";
+  kicker?: string;
+  heading?: string;
+  description?: string;
+  form_anchor?: string;
+  submit_label?: string;
+  success_message?: string;
+  whatsapp_fallback_label?: string;
+  whatsapp_fallback_template?: string;
+  contact_note?: string;
+  industries: LeadIndustry[];
+  budgets: LeadBudget[];
+  timelines: LeadTimeline[];
+  lead_source?: string; // stored on lead as source tag, default "business_lead"
 };
 
 export type Section =
@@ -120,7 +206,13 @@ export type Section =
   | StepListSection
   | FaqSection
   | DynamicSlotSection
-  | BusinessTabsSection;
+  | BusinessTabsSection
+  | MediaHeroSection
+  | StatBarSection
+  | FeatureGridSection
+  | CaseStudiesSection
+  | SlaTiersSection
+  | LeadFormSection;
 
 export type SectionType = Section["type"];
 
@@ -140,6 +232,12 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   faq: "أسئلة شائعة",
   dynamic_slot: "محتوى ديناميكي (قائمة تلقائية)",
   business_tabs: "تبويبات حلول الأعمال",
+  media_hero: "بانر مؤسسي (خلفية صورة + CTA)",
+  stat_bar: "شريط أرقام (Stats)",
+  feature_grid: "شبكة ميزات موسّعة",
+  case_studies: "معرض مشاريع (Case Studies)",
+  sla_tiers: "باقات SLA / خدمة",
+  lead_form: "نموذج طلب عرض سعر (Lead)",
 };
 
 export function newId() {
@@ -171,6 +269,63 @@ export function emptySection(type: SectionType): Section {
       return { ...base, type, slot: "services_grid", note: "" };
     case "business_tabs":
       return { ...base, type, heading: "حلول لأصحاب الأعمال", kicker: "BUSINESS", description: "", items: [] };
+    case "media_hero":
+      return {
+        ...base, type,
+        kicker: "ENTERPRISE",
+        title: "شريكك الموثوق في",
+        title_highlight: "أنظمة الأحواض المؤسسية",
+        description: "نصمم وننفذ ونصون أنظمة أحواض بمعايير عالمية.",
+        image_path: "",
+        primary_label: "اطلب عرض سعر",
+        primary_href: "#quote",
+        secondary_label: "احجز استشارة",
+        secondary_whatsapp_template: "السلام عليكم، أرغب بحجز استشارة مؤسسية.",
+        badges: [],
+      };
+    case "stat_bar":
+      return { ...base, type, items: [] };
+    case "feature_grid":
+      return { ...base, type, kicker: "", heading: "", subheading: "", columns: 3, items: [] };
+    case "case_studies":
+      return { ...base, type, kicker: "PORTFOLIO", heading: "معرض مشاريع", items: [] };
+    case "sla_tiers":
+      return { ...base, type, kicker: "SLA", heading: "باقات الخدمة", items: [] };
+    case "lead_form":
+      return {
+        ...base, type,
+        kicker: "REQUEST QUOTE",
+        heading: "اطلب عرض سعر مؤسسي",
+        description: "عبّئ التفاصيل التالية وسيتواصل معك مدير حسابات خلال يوم عمل.",
+        form_anchor: "quote",
+        submit_label: "إرسال الطلب",
+        success_message: "تم استلام طلبك — سيتواصل معك فريقنا قريبًا.",
+        whatsapp_fallback_label: "أو تواصل عبر واتساب",
+        whatsapp_fallback_template: "السلام عليكم، أرغب بالاستفسار عن حلول أكوا هيفن المؤسسية.",
+        contact_note: "بياناتك سرّية ولا تُشارك مع أي جهة خارجية.",
+        industries: [
+          { id: newId(), label: "جهة حكومية" },
+          { id: newId(), label: "فندق / منتجع" },
+          { id: newId(), label: "مطعم / كافيه" },
+          { id: newId(), label: "مكتب / شركة" },
+          { id: newId(), label: "مول / مركز تسوق" },
+          { id: newId(), label: "مستشفى / عيادة" },
+          { id: newId(), label: "مدرسة / جامعة" },
+          { id: newId(), label: "أخرى" },
+        ],
+        budgets: [
+          { id: newId(), label: "أقل من 25,000 ر.س" },
+          { id: newId(), label: "25,000 – 75,000 ر.س" },
+          { id: newId(), label: "75,000 – 200,000 ر.س" },
+          { id: newId(), label: "أكثر من 200,000 ر.س" },
+        ],
+        timelines: [
+          { id: newId(), label: "خلال شهر" },
+          { id: newId(), label: "خلال 1–3 أشهر" },
+          { id: newId(), label: "خلال 3–6 أشهر" },
+          { id: newId(), label: "غير محدد" },
+        ],
+        lead_source: "business_lead",
+      };
   }
 }
-

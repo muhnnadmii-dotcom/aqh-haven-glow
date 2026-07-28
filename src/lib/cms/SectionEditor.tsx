@@ -5,8 +5,11 @@ import type {
   ChecklistSection, CtaBandSection, RichTextSection,
   LinkCardsSection, StepListSection, FaqSection, DynamicSlotSection,
   BusinessTabsSection,
+  MediaHeroSection, StatBarSection, FeatureGridSection,
+  CaseStudiesSection, SlaTiersSection, LeadFormSection,
 } from "./types";
 import { SECTION_TYPE_LABELS, newId } from "./types";
+
 
 
 const field = "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:border-[color:var(--gold)]/60";
@@ -379,6 +382,217 @@ function BusinessTabsEditor({ section, onChange }: Props<BusinessTabsSection>) {
   );
 }
 
+// ─── New B2B editors ────────────────────────────────────────────────────────
+function MediaHeroEditor({ section, onChange }: Props<MediaHeroSection>) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <label><span className={lbl}>Kicker</span>
+        <input className={field} value={section.kicker ?? ""} onChange={(e) => onChange({ ...section, kicker: e.target.value })} /></label>
+      <label><span className={lbl}>العنوان الرئيسي *</span>
+        <input className={field} value={section.title} onChange={(e) => onChange({ ...section, title: e.target.value })} /></label>
+      <label className="sm:col-span-2"><span className={lbl}>العنوان المُبرَز (سطر ذهبي)</span>
+        <input className={field} value={section.title_highlight ?? ""} onChange={(e) => onChange({ ...section, title_highlight: e.target.value })} /></label>
+      <label className="sm:col-span-2"><span className={lbl}>الوصف</span>
+        <textarea className={ta} value={section.description ?? ""} onChange={(e) => onChange({ ...section, description: e.target.value })} /></label>
+      <div className="sm:col-span-2"><span className={lbl}>صورة الخلفية</span>
+        <ImageUploader value={section.image_path} onChange={(p) => onChange({ ...section, image_path: p ?? undefined })} folder="cms/business" cropAspect="free" /></div>
+      <label><span className={lbl}>نص الزر الأساسي</span>
+        <input className={field} value={section.primary_label ?? ""} onChange={(e) => onChange({ ...section, primary_label: e.target.value })} /></label>
+      <label><span className={lbl}>رابط الزر الأساسي (مثل #quote)</span>
+        <input className={field} value={section.primary_href ?? ""} onChange={(e) => onChange({ ...section, primary_href: e.target.value })} /></label>
+      <label className="sm:col-span-2"><span className={lbl}>أو رسالة واتساب للزر الأساسي</span>
+        <input className={field} value={section.primary_whatsapp_template ?? ""} onChange={(e) => onChange({ ...section, primary_whatsapp_template: e.target.value })} /></label>
+      <label><span className={lbl}>نص الزر الثانوي</span>
+        <input className={field} value={section.secondary_label ?? ""} onChange={(e) => onChange({ ...section, secondary_label: e.target.value })} /></label>
+      <label><span className={lbl}>رابط الزر الثانوي</span>
+        <input className={field} value={section.secondary_href ?? ""} onChange={(e) => onChange({ ...section, secondary_href: e.target.value })} /></label>
+      <label className="sm:col-span-2"><span className={lbl}>أو رسالة واتساب للزر الثانوي</span>
+        <input className={field} value={section.secondary_whatsapp_template ?? ""} onChange={(e) => onChange({ ...section, secondary_whatsapp_template: e.target.value })} /></label>
+      <div className="sm:col-span-2 space-y-2">
+        <div className={lbl}>شارات ثقة (نصوص قصيرة تحت الأزرار)</div>
+        {(section.badges ?? []).map((b, i) => (
+          <div key={b.id} className="flex gap-2">
+            <input className={field} value={b.text}
+              onChange={(e) => { const badges = (section.badges ?? []).slice(); badges[i] = { ...b, text: e.target.value }; onChange({ ...section, badges }); }} />
+            <button type="button" onClick={() => onChange({ ...section, badges: (section.badges ?? []).filter((_, k) => k !== i) })}
+              className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+          </div>
+        ))}
+        <button type="button" onClick={() => onChange({ ...section, badges: [...(section.badges ?? []), { id: newId(), text: "" }] })}
+          className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف شارة</button>
+      </div>
+    </div>
+  );
+}
+
+function StatBarEditor({ section, onChange }: Props<StatBarSection>) {
+  return (
+    <div className="space-y-3">
+      {section.items.map((it, i) => (
+        <div key={it.id} className="grid gap-2 sm:grid-cols-[120px_120px_1fr_auto]">
+          <input className={field} placeholder="أيقونة (Award...)" value={it.icon}
+            onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, icon: e.target.value }; onChange({ ...section, items }); }} />
+          <input className={field} placeholder="القيمة (+9)" value={it.value}
+            onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, value: e.target.value }; onChange({ ...section, items }); }} />
+          <input className={field} placeholder="الوصف" value={it.label}
+            onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, label: e.target.value }; onChange({ ...section, items }); }} />
+          <button type="button" onClick={() => onChange({ ...section, items: section.items.filter((_, k) => k !== i) })}
+            className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange({ ...section, items: [...section.items, { id: newId(), icon: "Sparkles", value: "", label: "" }] })}
+        className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف رقم</button>
+    </div>
+  );
+}
+
+function FeatureGridEditor({ section, onChange }: Props<FeatureGridSection>) {
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_100px]">
+        <input className={field} placeholder="Kicker" value={section.kicker ?? ""} onChange={(e) => onChange({ ...section, kicker: e.target.value })} />
+        <input className={field} placeholder="العنوان" value={section.heading ?? ""} onChange={(e) => onChange({ ...section, heading: e.target.value })} />
+        <input className={field} placeholder="عنوان فرعي" value={section.subheading ?? ""} onChange={(e) => onChange({ ...section, subheading: e.target.value })} />
+        <input type="number" min={2} max={4} className={field} value={section.columns ?? 3}
+          onChange={(e) => onChange({ ...section, columns: Number(e.target.value) || 3 })} />
+      </div>
+      {section.items.map((it, i) => (
+        <div key={it.id} className="rounded-xl border border-white/10 p-3 grid gap-2 sm:grid-cols-[120px_1fr_2fr_auto]">
+          <input className={field} placeholder="أيقونة" value={it.icon}
+            onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, icon: e.target.value }; onChange({ ...section, items }); }} />
+          <input className={field} placeholder="العنوان" value={it.title}
+            onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, title: e.target.value }; onChange({ ...section, items }); }} />
+          <textarea className={field + " min-h-[52px]"} placeholder="الوصف" value={it.desc}
+            onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, desc: e.target.value }; onChange({ ...section, items }); }} />
+          <button type="button" onClick={() => onChange({ ...section, items: section.items.filter((_, k) => k !== i) })}
+            className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange({ ...section, items: [...section.items, { id: newId(), icon: "Sparkles", title: "", desc: "" }] })}
+        className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف ميزة</button>
+    </div>
+  );
+}
+
+function CaseStudiesEditor({ section, onChange }: Props<CaseStudiesSection>) {
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <input className={field} placeholder="Kicker" value={section.kicker ?? ""} onChange={(e) => onChange({ ...section, kicker: e.target.value })} />
+        <input className={field} placeholder="العنوان" value={section.heading ?? ""} onChange={(e) => onChange({ ...section, heading: e.target.value })} />
+        <input className={field} placeholder="عنوان فرعي" value={section.subheading ?? ""} onChange={(e) => onChange({ ...section, subheading: e.target.value })} />
+      </div>
+      {section.items.map((it, i) => (
+        <div key={it.id} className="rounded-xl border border-white/10 p-3 grid gap-3 sm:grid-cols-[220px_1fr_auto]">
+          <ImageUploader value={it.image_path} onChange={(p) => { const items = section.items.slice(); items[i] = { ...it, image_path: p ?? "" }; onChange({ ...section, items }); }} folder="cms/business" cropAspect="free" />
+          <div className="space-y-2">
+            <input className={field} placeholder="التصنيف (فندق، مول ...)" value={it.category}
+              onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, category: e.target.value }; onChange({ ...section, items }); }} />
+            <input className={field} placeholder="عنوان المشروع" value={it.title}
+              onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, title: e.target.value }; onChange({ ...section, items }); }} />
+            <input className={field} placeholder="الموقع (المدينة)" value={it.location ?? ""}
+              onChange={(e) => { const items = section.items.slice(); items[i] = { ...it, location: e.target.value }; onChange({ ...section, items }); }} />
+          </div>
+          <button type="button" onClick={() => onChange({ ...section, items: section.items.filter((_, k) => k !== i) })}
+            className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs h-fit"><Trash2 size={14} /></button>
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange({ ...section, items: [...section.items, { id: newId(), image_path: "", category: "", title: "", location: "" }] })}
+        className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف مشروع</button>
+    </div>
+  );
+}
+
+function SlaTiersEditor({ section, onChange }: Props<SlaTiersSection>) {
+  const setTier = (i: number, patch: Partial<SlaTiersSection["items"][number]>) => {
+    const items = section.items.slice(); items[i] = { ...items[i], ...patch }; onChange({ ...section, items });
+  };
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <input className={field} placeholder="Kicker" value={section.kicker ?? ""} onChange={(e) => onChange({ ...section, kicker: e.target.value })} />
+        <input className={field} placeholder="العنوان" value={section.heading ?? ""} onChange={(e) => onChange({ ...section, heading: e.target.value })} />
+        <input className={field} placeholder="عنوان فرعي" value={section.subheading ?? ""} onChange={(e) => onChange({ ...section, subheading: e.target.value })} />
+      </div>
+      {section.items.map((t, i) => (
+        <details key={t.id} className="rounded-2xl border border-white/10 p-4" open={i === 0}>
+          <summary className="cursor-pointer text-sm font-bold flex items-center justify-between">
+            <span>{t.name || "باقة بدون اسم"}{t.highlighted ? " ⭐" : ""}</span>
+            <button type="button" onClick={(e) => { e.preventDefault(); onChange({ ...section, items: section.items.filter((_, k) => k !== i) }); }}
+              className="px-3 py-1.5 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+          </summary>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <input className={field} placeholder="اسم الباقة" value={t.name} onChange={(e) => setTier(i, { name: e.target.value })} />
+            <input className={field} placeholder="شارة (اختياري: الأكثر شيوعًا)" value={t.badge ?? ""} onChange={(e) => setTier(i, { badge: e.target.value })} />
+            <input className={field} placeholder="السعر" value={t.price ?? ""} onChange={(e) => setTier(i, { price: e.target.value })} />
+            <input className={field} placeholder="ملاحظة تحت السعر" value={t.price_note ?? ""} onChange={(e) => setTier(i, { price_note: e.target.value })} />
+            <input className={field} placeholder="نص الزر" value={t.cta_label ?? ""} onChange={(e) => setTier(i, { cta_label: e.target.value })} />
+            <input className={field} placeholder="رسالة واتساب للزر (اتركها فارغة للربط بـ #quote)" value={t.cta_whatsapp_template ?? ""} onChange={(e) => setTier(i, { cta_whatsapp_template: e.target.value })} />
+            <label className="sm:col-span-2 inline-flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={!!t.highlighted} onChange={(e) => setTier(i, { highlighted: e.target.checked })} /> إبراز هذه الباقة
+            </label>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className={lbl}>مزايا الباقة</div>
+            {t.features.map((f, fi) => (
+              <div key={f.id} className="flex gap-2">
+                <input className={field} value={f.text}
+                  onChange={(e) => { const features = t.features.slice(); features[fi] = { ...f, text: e.target.value }; setTier(i, { features }); }} />
+                <button type="button" onClick={() => setTier(i, { features: t.features.filter((_, k) => k !== fi) })}
+                  className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setTier(i, { features: [...t.features, { id: newId(), text: "" }] })}
+              className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف ميزة</button>
+          </div>
+        </details>
+      ))}
+      <button type="button" onClick={() => onChange({ ...section, items: [...section.items, { id: newId(), name: "باقة جديدة", features: [] }] })}
+        className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف باقة</button>
+    </div>
+  );
+}
+
+function LeadFormEditor({ section, onChange }: Props<LeadFormSection>) {
+  const listEditor = (key: "industries" | "budgets" | "timelines", title: string) => (
+    <details className="rounded-xl border border-white/10 p-3" open>
+      <summary className="cursor-pointer text-sm font-bold">{title}</summary>
+      <div className="mt-2 space-y-2">
+        {section[key].map((o, i) => (
+          <div key={o.id} className="flex gap-2">
+            <input className={field} value={o.label}
+              onChange={(e) => { const items = section[key].slice(); items[i] = { ...o, label: e.target.value }; onChange({ ...section, [key]: items } as any); }} />
+            <button type="button" onClick={() => onChange({ ...section, [key]: section[key].filter((_, k) => k !== i) } as any)}
+              className="px-3 py-2 rounded-xl border border-red-400/20 text-red-300 text-xs"><Trash2 size={14} /></button>
+          </div>
+        ))}
+        <button type="button" onClick={() => onChange({ ...section, [key]: [...section[key], { id: newId(), label: "" }] } as any)}
+          className="text-xs btn-outline-gold rounded-xl px-3 py-2 inline-flex items-center gap-1"><Plus size={14} /> أضف</button>
+      </div>
+    </details>
+  );
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <input className={field} placeholder="Kicker" value={section.kicker ?? ""} onChange={(e) => onChange({ ...section, kicker: e.target.value })} />
+      <input className={field} placeholder="العنوان" value={section.heading ?? ""} onChange={(e) => onChange({ ...section, heading: e.target.value })} />
+      <textarea className={ta + " sm:col-span-2"} placeholder="الوصف" value={section.description ?? ""} onChange={(e) => onChange({ ...section, description: e.target.value })} />
+      <input className={field} placeholder="Anchor (افتراضي: quote)" value={section.form_anchor ?? ""} onChange={(e) => onChange({ ...section, form_anchor: e.target.value })} />
+      <input className={field} placeholder="tag المصدر (افتراضي: business_lead)" value={section.lead_source ?? ""} onChange={(e) => onChange({ ...section, lead_source: e.target.value })} />
+      <input className={field} placeholder="نص زر الإرسال" value={section.submit_label ?? ""} onChange={(e) => onChange({ ...section, submit_label: e.target.value })} />
+      <input className={field} placeholder="رسالة النجاح" value={section.success_message ?? ""} onChange={(e) => onChange({ ...section, success_message: e.target.value })} />
+      <input className={field} placeholder="نص زر واتساب البديل" value={section.whatsapp_fallback_label ?? ""} onChange={(e) => onChange({ ...section, whatsapp_fallback_label: e.target.value })} />
+      <input className={field} placeholder="رسالة واتساب البديلة" value={section.whatsapp_fallback_template ?? ""} onChange={(e) => onChange({ ...section, whatsapp_fallback_template: e.target.value })} />
+      <input className={field + " sm:col-span-2"} placeholder="ملاحظة تحت النموذج" value={section.contact_note ?? ""} onChange={(e) => onChange({ ...section, contact_note: e.target.value })} />
+      <div className="sm:col-span-2 space-y-2">
+        {listEditor("industries", "قائمة القطاعات")}
+        {listEditor("budgets", "شرائح الميزانية")}
+        {listEditor("timelines", "الإطار الزمني")}
+      </div>
+      <p className="text-[11px] text-muted-foreground sm:col-span-2">الحقول (الاسم، الجوال، البريد، الشركة، المدينة، الرسالة) ثابتة. القوائم المنسدلة أعلاه تُدار من هنا.</p>
+    </div>
+  );
+}
+
 export function SectionCard({
 
   section, index, total, onChange, onDelete, onMoveUp, onMoveDown,
@@ -423,7 +637,13 @@ export function SectionCard({
       {section.type === "faq" && <FaqEditor section={section} onChange={onChange as any} />}
       {section.type === "dynamic_slot" && <DynamicSlotEditor section={section} onChange={onChange as any} />}
       {section.type === "business_tabs" && <BusinessTabsEditor section={section} onChange={onChange as any} />}
-
+      {section.type === "media_hero" && <MediaHeroEditor section={section} onChange={onChange as any} />}
+      {section.type === "stat_bar" && <StatBarEditor section={section} onChange={onChange as any} />}
+      {section.type === "feature_grid" && <FeatureGridEditor section={section} onChange={onChange as any} />}
+      {section.type === "case_studies" && <CaseStudiesEditor section={section} onChange={onChange as any} />}
+      {section.type === "sla_tiers" && <SlaTiersEditor section={section} onChange={onChange as any} />}
+      {section.type === "lead_form" && <LeadFormEditor section={section} onChange={onChange as any} />}
     </div>
   );
 }
+
