@@ -407,8 +407,8 @@ function StatBarBlock({ section: s }: { section: StatBarSection }) {
 
 function FeatureGridBlock({ section: s }: { section: FeatureGridSection }) {
   if (!s.items.length) return null;
-  const cols = Math.max(2, Math.min(4, s.columns ?? 3));
-  const colsCls = ({ 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4" } as Record<number, string>)[cols];
+  const maxCols = Math.max(2, Math.min(4, s.columns ?? 3));
+  const cols = autoCols(s.items.length, maxCols);
   return (
     <section className="mb-16">
       <Reveal>
@@ -420,17 +420,19 @@ function FeatureGridBlock({ section: s }: { section: FeatureGridSection }) {
           </div>
         )}
       </Reveal>
-      <div className={`grid gap-5 sm:grid-cols-2 ${colsCls}`}>
+      <div className={AUTO_CONTAINER[5]}>
         {s.items.map((it, i) => (
-          <Reveal key={it.id} delay={i * 60}>
-            <div className="group glass rounded-2xl p-6 h-full border border-white/10 hover:border-[color:var(--gold)]/40 transition-all">
-              <div className="grid place-items-center h-12 w-12 rounded-xl glass-gold mb-4 group-hover:scale-110 transition-transform">
-                <Icon name={it.icon} size={22} className="text-gold" />
+          <div key={it.id} className={AUTO_ITEM[5][cols]}>
+            <Reveal delay={i * 60} className="w-full">
+              <div className="group glass rounded-2xl p-6 h-full w-full border border-white/10 hover:border-[color:var(--gold)]/40 transition-all">
+                <div className="grid place-items-center h-12 w-12 rounded-xl glass-gold mb-4 group-hover:scale-110 transition-transform">
+                  <Icon name={it.icon} size={22} className="text-gold" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">{it.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{it.desc}</p>
               </div>
-              <h3 className="text-lg font-bold mb-2">{it.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{it.desc}</p>
-            </div>
-          </Reveal>
+            </Reveal>
+          </div>
         ))}
       </div>
     </section>
