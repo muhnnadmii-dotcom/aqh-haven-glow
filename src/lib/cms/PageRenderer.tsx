@@ -857,12 +857,19 @@ export function registerDynamicSlot(key: string, render: () => ReactNode) {
 
 function FaqBlock({ heading, items }: { heading?: string; items: { id: string; q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(0);
+  const [expanded, setExpanded] = useState(false);
+  const { lang } = useLang();
+  const INITIAL = 6;
+  const canToggle = items.length > INITIAL;
+  const visible = canToggle && !expanded ? items.slice(0, INITIAL) : items;
+  const moreLabel = lang === "en" ? "Show More" : "عرض المزيد";
+  const lessLabel = lang === "en" ? "Show Less" : "عرض أقل";
   return (
     <Reveal>
       <section className="mb-16">
         {heading && <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">{heading}</h2>}
         <div className="space-y-3 max-w-3xl mx-auto">
-          {items.map((f, i) => (
+          {visible.map((f, i) => (
             <div key={f.id} className="glass rounded-2xl overflow-hidden">
               <button onClick={() => setOpen(open === i ? null : i)}
                 className="w-full p-5 flex items-center justify-between gap-3 text-right">
@@ -873,6 +880,18 @@ function FaqBlock({ heading, items }: { heading?: string; items: { id: string; q
             </div>
           ))}
         </div>
+        {canToggle && (
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => { setExpanded((v) => !v); setOpen(0); }}
+              className="btn-outline-gold rounded-xl px-6 py-2.5 text-sm inline-flex items-center gap-2"
+            >
+              {expanded ? lessLabel : moreLabel}
+              <ChevronDown size={14} className={`transition ${expanded ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+        )}
       </section>
     </Reveal>
   );
