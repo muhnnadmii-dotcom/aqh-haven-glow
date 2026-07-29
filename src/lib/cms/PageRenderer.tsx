@@ -452,23 +452,28 @@ function CaseStudiesBlock({ section: s }: { section: CaseStudiesSection }) {
           </div>
         )}
       </Reveal>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {s.items.map((p, i) => (
-          <Reveal key={p.id} delay={i * 60}>
-            <div className="group relative overflow-hidden rounded-2xl border border-white/10 aspect-[4/3]">
-              {p.image_path && (
-                <img src={getImageUrl(p.image_path)} onError={onImageError} alt={p.title} loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5">
-                {p.category && <div className="inline-block text-[10px] tracking-wider text-gold mb-1.5 px-2 py-0.5 rounded-md glass-gold">{p.category}</div>}
-                <h3 className="font-bold">{p.title}</h3>
-                {p.location && <div className="text-xs text-muted-foreground mt-0.5">{p.location}</div>}
-              </div>
+      <div className={AUTO_CONTAINER[5]}>
+        {s.items.map((p, i) => {
+          const cols = autoCols(s.items.length, 3);
+          return (
+            <div key={p.id} className={AUTO_ITEM[5][cols]}>
+              <Reveal delay={i * 60} className="w-full">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/10 aspect-[4/3] w-full">
+                  {p.image_path && (
+                    <img src={getImageUrl(p.image_path)} onError={onImageError} alt={p.title} loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    {p.category && <div className="inline-block text-[10px] tracking-wider text-gold mb-1.5 px-2 py-0.5 rounded-md glass-gold">{p.category}</div>}
+                    <h3 className="font-bold">{p.title}</h3>
+                    {p.location && <div className="text-xs text-muted-foreground mt-0.5">{p.location}</div>}
+                  </div>
+                </div>
+              </Reveal>
             </div>
-          </Reveal>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
