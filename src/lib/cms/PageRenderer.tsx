@@ -492,33 +492,36 @@ function SlaTiersBlock({ section: s }: { section: SlaTiersSection }) {
           </div>
         )}
       </Reveal>
-      <div className="grid gap-5 md:grid-cols-3">
+      <div className={AUTO_CONTAINER[5]}>
         {s.items.map((t, i) => {
           const href = t.cta_whatsapp_template ? whatsappLink(t.cta_whatsapp_template) : "#quote";
           const target = t.cta_whatsapp_template ? "_blank" : undefined;
+          const cols = autoCols(s.items.length, 3);
           return (
-            <Reveal key={t.id} delay={i * 80}>
-              <div className={`rounded-2xl p-6 h-full flex flex-col border ${t.highlighted ? "gradient-border glass-gold" : "glass border-white/10"}`}>
-                {t.badge && <div className="inline-block text-[10px] tracking-wider text-gold mb-2 px-2 py-0.5 rounded-md glass-gold self-start">{t.badge}</div>}
-                <h3 className="text-xl font-bold mb-1">{t.name}</h3>
-                {t.price && <div className="text-2xl font-black text-gradient-gold mt-2">{t.price}</div>}
-                {t.price_note && <div className="text-xs text-muted-foreground mb-4">{t.price_note}</div>}
-                <ul className="space-y-2 my-5 flex-1">
-                  {t.features.map((f) => (
-                    <li key={f.id} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 size={15} className="text-gold mt-0.5 shrink-0" />
-                      <span className="text-foreground/90">{f.text}</span>
-                    </li>
-                  ))}
-                </ul>
-                {t.cta_label && (
-                  <a href={href} target={target} rel={target ? "noopener noreferrer" : undefined}
-                    className={`${t.highlighted ? "btn-gold" : "btn-outline-gold"} rounded-xl px-5 py-2.5 text-sm text-center inline-flex justify-center items-center gap-2`}>
-                    {t.cta_whatsapp_template && <MessageCircle size={14} />} {t.cta_label}
-                  </a>
-                )}
-              </div>
-            </Reveal>
+            <div key={t.id} className={AUTO_ITEM[5][cols]}>
+              <Reveal delay={i * 80} className="w-full">
+                <div className={`rounded-2xl p-6 h-full w-full flex flex-col border ${t.highlighted ? "gradient-border glass-gold" : "glass border-white/10"}`}>
+                  {t.badge && <div className="inline-block text-[10px] tracking-wider text-gold mb-2 px-2 py-0.5 rounded-md glass-gold self-start">{t.badge}</div>}
+                  <h3 className="text-xl font-bold mb-1">{t.name}</h3>
+                  {t.price && <div className="text-2xl font-black text-gradient-gold mt-2">{t.price}</div>}
+                  {t.price_note && <div className="text-xs text-muted-foreground mb-4">{t.price_note}</div>}
+                  <ul className="space-y-2 my-5 flex-1">
+                    {t.features.map((f) => (
+                      <li key={f.id} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 size={15} className="text-gold mt-0.5 shrink-0" />
+                        <span className="text-foreground/90">{f.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {t.cta_label && (
+                    <a href={href} target={target} rel={target ? "noopener noreferrer" : undefined}
+                      className={`${t.highlighted ? "btn-gold" : "btn-outline-gold"} rounded-xl px-5 py-2.5 text-sm text-center inline-flex justify-center items-center gap-2`}>
+                      {t.cta_whatsapp_template && <MessageCircle size={14} />} {t.cta_label}
+                    </a>
+                  )}
+                </div>
+              </Reveal>
+            </div>
           );
         })}
       </div>
