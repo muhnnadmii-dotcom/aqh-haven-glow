@@ -116,21 +116,24 @@ function renderSection(s: Section) {
                     {g.desc && <p className="text-sm text-muted-foreground mt-1">{g.desc}</p>}
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className={AUTO_CONTAINER[4]}>
                   {g.tiers.map((tier) => {
                     const msg = s.whatsapp_template
                       .replace("{group}", g.heading)
                       .replace("{tier}", tier.size);
+                    const cols = autoCols(g.tiers.length, 4);
                     return (
-                      <div key={tier.id} className="glass rounded-2xl p-5 hover:glass-gold transition flex flex-col">
-                        <div className="text-xs text-gradient-gold mb-2">{g.heading}</div>
-                        <h3 className="font-bold mb-2 text-sm">{tier.size}</h3>
-                        <div className="text-xl font-bold text-gradient-gold mb-1">{tier.price}</div>
-                        <div className="text-xs text-muted-foreground mb-4">{tier.freq}</div>
-                        <a href={whatsappLink(msg)} target="_blank" rel="noopener noreferrer"
-                          className="mt-auto btn-outline-gold rounded-xl px-4 py-2.5 text-xs text-center inline-flex justify-center">
-                          {s.cta_label || "اطلب الآن"}
-                        </a>
+                      <div key={tier.id} className={AUTO_ITEM[4][cols]}>
+                        <div className="glass rounded-2xl p-5 hover:glass-gold transition flex flex-col w-full h-full">
+                          <div className="text-xs text-gradient-gold mb-2">{g.heading}</div>
+                          <h3 className="font-bold mb-2 text-sm">{tier.size}</h3>
+                          <div className="text-xl font-bold text-gradient-gold mb-1">{tier.price}</div>
+                          <div className="text-xs text-muted-foreground mb-4">{tier.freq}</div>
+                          <a href={whatsappLink(msg)} target="_blank" rel="noopener noreferrer"
+                            className="mt-auto btn-outline-gold rounded-xl px-4 py-2.5 text-xs text-center inline-flex justify-center">
+                            {s.cta_label || "اطلب الآن"}
+                          </a>
+                        </div>
                       </div>
                     );
                   })}
