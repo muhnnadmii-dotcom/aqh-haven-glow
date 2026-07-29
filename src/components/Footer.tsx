@@ -29,9 +29,9 @@ export function Footer() {
   const quickLinks = useNavLinks("footer_quick", FOOTER_FALLBACK);
   const { lang } = useLang();
   return (
-    <footer className="relative mt-20 border-t border-white/10 bg-[oklch(0.10_0.05_245/0.6)] backdrop-blur-xl">
-      <div className="mx-auto max-w-7xl px-6 py-14">
-        <div className="grid gap-10 md:grid-cols-4">
+    <footer className="relative mt-16 border-t border-white/10 bg-[oklch(0.10_0.05_245/0.6)] backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl px-6 py-10 md:py-14">
+        <div className="grid gap-8 md:gap-10 sm:grid-cols-2 md:grid-cols-4">
           <div>
             <div className="mb-4">
               <img src={aqhLogo.url} alt="أكوا هيفن" className="h-12 w-auto" width={144} height={48} />
@@ -50,15 +50,23 @@ export function Footer() {
             </ul>
           </div>
 
-
           <div>
             <h4 className="text-sm font-bold mb-4 text-gradient-gold">تواصل معنا</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2"><Phone size={14} /> +966 52 704 4200</li>
-              <li className="flex items-center gap-2"><MapPin size={14} /> الرياض، المملكة العربية السعودية</li>
-              <li>
-                <a href="https://aqh.sa" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
-                  المتجر الإلكتروني: aqh.sa
+              <li className="flex items-center gap-2">
+                <Phone size={14} className="shrink-0" />
+                <a href="tel:+966527044200" dir="ltr" className="whitespace-nowrap [unicode-bidi:isolate] hover:text-foreground">
+                  +966 52 704 4200
+                </a>
+              </li>
+              <li className="flex items-start gap-2">
+                <MapPin size={14} className="shrink-0 mt-0.5" />
+                <span>الرياض، المملكة العربية السعودية</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="shrink-0 w-[14px]" aria-hidden />
+                <a href="https://aqh.sa" target="_blank" rel="noopener noreferrer" className="hover:text-foreground" dir="ltr">
+                  aqh.sa
                 </a>
               </li>
             </ul>
@@ -79,7 +87,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-white/5 text-center text-xs text-muted-foreground">
+        <div className="mt-8 md:mt-12 pt-6 border-t border-white/5 text-center text-xs text-muted-foreground">
           أكوا هيفن © 2026 — جميع الحقوق محفوظة
         </div>
       </div>
