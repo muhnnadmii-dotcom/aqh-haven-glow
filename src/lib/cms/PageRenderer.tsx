@@ -15,13 +15,49 @@ import type {
   MediaHeroSection, StatBarSection, FeatureGridSection,
   CaseStudiesSection, SlaTiersSection, LeadFormSection, PortalMockupSection,
 } from "./types";
-
-
+import { useLang } from "@/lib/i18n/LangProvider";
 
 
 function Icon({ name, size = 20, className = "" }: { name: string; size?: number; className?: string }) {
   const Cmp = (Icons as any)[name] ?? Icons.Sparkles;
   return <Cmp size={size} className={className} />;
+}
+
+// ─── Auto-balancing card layout ───────────────────────────────────────────
+// Uses flex-wrap + justify-center so the last row centers automatically and
+// cards redistribute when items are added/removed. Works in RTL and LTR.
+type _Cols = 1 | 2 | 3 | 4 | 5;
+type _Gap = 3 | 4 | 5;
+const AUTO_CONTAINER: Record<_Gap, string> = {
+  3: "flex flex-wrap justify-center gap-3",
+  4: "flex flex-wrap justify-center gap-4",
+  5: "flex flex-wrap justify-center gap-5",
+};
+const AUTO_ITEM: Record<_Gap, Record<_Cols, string>> = {
+  3: {
+    1: "basis-full max-w-md min-w-0 flex",
+    2: "basis-full sm:basis-[calc((100%-0.75rem)/2)] min-w-0 flex",
+    3: "basis-full sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-1.5rem)/3)] min-w-0 flex",
+    4: "basis-full sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-2.25rem)/4)] min-w-0 flex",
+    5: "basis-full sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-3rem)/5)] min-w-0 flex",
+  },
+  4: {
+    1: "basis-full max-w-md min-w-0 flex",
+    2: "basis-full sm:basis-[calc((100%-1rem)/2)] min-w-0 flex",
+    3: "basis-full sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)] min-w-0 flex",
+    4: "basis-full sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-3rem)/4)] min-w-0 flex",
+    5: "basis-full sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-4rem)/5)] min-w-0 flex",
+  },
+  5: {
+    1: "basis-full max-w-md min-w-0 flex",
+    2: "basis-full sm:basis-[calc((100%-1.25rem)/2)] min-w-0 flex",
+    3: "basis-full sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-2.5rem)/3)] min-w-0 flex",
+    4: "basis-full sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-3.75rem)/4)] min-w-0 flex",
+    5: "basis-full sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-5rem)/5)] min-w-0 flex",
+  },
+};
+function autoCols(count: number, max: number): _Cols {
+  return Math.min(Math.max(1, count), Math.min(5, max)) as _Cols;
 }
 
 function renderSection(s: Section) {
@@ -46,21 +82,26 @@ function renderSection(s: Section) {
 
     case "badge_grid":
       if (!s.items.length) return null;
-      return (
-        <div key={s.id} className="grid gap-3 sm:grid-cols-3 mb-12 max-w-3xl mx-auto">
-          {s.items.map((b, i) => (
-            <Reveal key={b.id} delay={i * 80}>
-              <div className="glass rounded-2xl p-5 text-center">
-                <div className="mx-auto grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
-                  <Icon name={b.icon} size={20} className="text-gold" />
-                </div>
-                <div className="font-bold mb-1">{b.title}</div>
-                <div className="text-xs text-muted-foreground">{b.desc}</div>
+      {
+        const cols = autoCols(s.items.length, 3);
+        return (
+          <div key={s.id} className={`${AUTO_CONTAINER[4]} mb-12 max-w-3xl mx-auto`}>
+            {s.items.map((b, i) => (
+              <div key={b.id} className={AUTO_ITEM[4][cols]}>
+                <Reveal delay={i * 80} className="w-full">
+                  <div className="glass rounded-2xl p-5 text-center h-full w-full">
+                    <div className="mx-auto grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
+                      <Icon name={b.icon} size={20} className="text-gold" />
+                    </div>
+                    <div className="font-bold mb-1">{b.title}</div>
+                    <div className="text-xs text-muted-foreground">{b.desc}</div>
+                  </div>
+                </Reveal>
               </div>
-            </Reveal>
-          ))}
-        </div>
-      );
+            ))}
+          </div>
+        );
+      }
 
     case "pricing_groups":
       if (!s.items.length) return null;
@@ -75,21 +116,24 @@ function renderSection(s: Section) {
                     {g.desc && <p className="text-sm text-muted-foreground mt-1">{g.desc}</p>}
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className={AUTO_CONTAINER[4]}>
                   {g.tiers.map((tier) => {
                     const msg = s.whatsapp_template
                       .replace("{group}", g.heading)
                       .replace("{tier}", tier.size);
+                    const cols = autoCols(g.tiers.length, 4);
                     return (
-                      <div key={tier.id} className="glass rounded-2xl p-5 hover:glass-gold transition flex flex-col">
-                        <div className="text-xs text-gradient-gold mb-2">{g.heading}</div>
-                        <h3 className="font-bold mb-2 text-sm">{tier.size}</h3>
-                        <div className="text-xl font-bold text-gradient-gold mb-1">{tier.price}</div>
-                        <div className="text-xs text-muted-foreground mb-4">{tier.freq}</div>
-                        <a href={whatsappLink(msg)} target="_blank" rel="noopener noreferrer"
-                          className="mt-auto btn-outline-gold rounded-xl px-4 py-2.5 text-xs text-center inline-flex justify-center">
-                          {s.cta_label || "اطلب الآن"}
-                        </a>
+                      <div key={tier.id} className={AUTO_ITEM[4][cols]}>
+                        <div className="glass rounded-2xl p-5 hover:glass-gold transition flex flex-col w-full h-full">
+                          <div className="text-xs text-gradient-gold mb-2">{g.heading}</div>
+                          <h3 className="font-bold mb-2 text-sm">{tier.size}</h3>
+                          <div className="text-xl font-bold text-gradient-gold mb-1">{tier.price}</div>
+                          <div className="text-xs text-muted-foreground mb-4">{tier.freq}</div>
+                          <a href={whatsappLink(msg)} target="_blank" rel="noopener noreferrer"
+                            className="mt-auto btn-outline-gold rounded-xl px-4 py-2.5 text-xs text-center inline-flex justify-center">
+                            {s.cta_label || "اطلب الآن"}
+                          </a>
+                        </div>
                       </div>
                     );
                   })}
@@ -161,8 +205,8 @@ function renderSection(s: Section) {
 
     case "link_cards": {
       if (!s.items.length) return null;
-      const cols = Math.max(2, Math.min(5, s.columns ?? 5));
-      const colsCls = ({ 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4", 5: "lg:grid-cols-5" } as Record<number, string>)[cols];
+      const maxCols = Math.max(2, Math.min(5, s.columns ?? 5));
+      const cols = autoCols(s.items.length, maxCols);
       return (
         <Reveal key={s.id}>
           <section className="mb-16">
@@ -172,10 +216,10 @@ function renderSection(s: Section) {
                 {s.subheading && <p className="text-muted-foreground text-sm">{s.subheading}</p>}
               </div>
             )}
-            <div className={`grid gap-3 sm:grid-cols-2 ${colsCls}`}>
+            <div className={AUTO_CONTAINER[3]}>
               {s.items.map((o) => {
                 const isExternal = /^https?:\/\//.test(o.href) || o.href.startsWith("mailto:") || o.href.startsWith("tel:");
-                const cls = "glass rounded-2xl p-4 hover:glass-gold transition flex flex-col";
+                const cls = "glass rounded-2xl p-4 hover:glass-gold transition flex flex-col w-full h-full";
                 const inner: ReactNode = (
                   <>
                     <div className="font-bold text-sm mb-1.5">{o.title}</div>
@@ -183,10 +227,14 @@ function renderSection(s: Section) {
                     <span className="inline-flex items-center gap-1 text-xs text-gradient-gold mt-3">انتقل <ArrowLeft size={12} /></span>
                   </>
                 );
-                return isExternal ? (
-                  <a key={o.id} href={o.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
-                ) : (
-                  <a key={o.id} href={o.href} className={cls}>{inner}</a>
+                return (
+                  <div key={o.id} className={AUTO_ITEM[3][cols]}>
+                    {isExternal ? (
+                      <a href={o.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+                    ) : (
+                      <a href={o.href} className={cls}>{inner}</a>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -197,21 +245,26 @@ function renderSection(s: Section) {
 
     case "step_list":
       if (!s.items.length) return null;
-      return (
-        <Reveal key={s.id}>
-          <section className="glass rounded-3xl p-8 md:p-10 mb-16">
-            {s.heading && <h2 className="text-2xl font-bold text-center mb-8">{s.heading}</h2>}
-            <div className={`grid gap-4 sm:grid-cols-2 ${s.items.length >= 5 ? "lg:grid-cols-5" : s.items.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
-              {s.items.map((it, i) => (
-                <div key={it.id} className="text-center">
-                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-full glass-gold text-gold font-bold mb-3">{i + 1}</div>
-                  <div className="text-sm">{it.text}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </Reveal>
-      );
+      {
+        const cols = autoCols(s.items.length, 5);
+        return (
+          <Reveal key={s.id}>
+            <section className="glass rounded-3xl p-8 md:p-10 mb-16">
+              {s.heading && <h2 className="text-2xl font-bold text-center mb-8">{s.heading}</h2>}
+              <div className={AUTO_CONTAINER[4]}>
+                {s.items.map((it, i) => (
+                  <div key={it.id} className={AUTO_ITEM[4][cols]}>
+                    <div className="text-center w-full">
+                      <div className="mx-auto grid h-12 w-12 place-items-center rounded-full glass-gold text-gold font-bold mb-3">{i + 1}</div>
+                      <div className="text-sm">{it.text}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </Reveal>
+        );
+      }
 
     case "faq":
       if (!s.items.length) return null;
@@ -354,8 +407,8 @@ function StatBarBlock({ section: s }: { section: StatBarSection }) {
 
 function FeatureGridBlock({ section: s }: { section: FeatureGridSection }) {
   if (!s.items.length) return null;
-  const cols = Math.max(2, Math.min(4, s.columns ?? 3));
-  const colsCls = ({ 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4" } as Record<number, string>)[cols];
+  const maxCols = Math.max(2, Math.min(4, s.columns ?? 3));
+  const cols = autoCols(s.items.length, maxCols);
   return (
     <section className="mb-16">
       <Reveal>
@@ -367,17 +420,19 @@ function FeatureGridBlock({ section: s }: { section: FeatureGridSection }) {
           </div>
         )}
       </Reveal>
-      <div className={`grid gap-5 sm:grid-cols-2 ${colsCls}`}>
+      <div className={AUTO_CONTAINER[5]}>
         {s.items.map((it, i) => (
-          <Reveal key={it.id} delay={i * 60}>
-            <div className="group glass rounded-2xl p-6 h-full border border-white/10 hover:border-[color:var(--gold)]/40 transition-all">
-              <div className="grid place-items-center h-12 w-12 rounded-xl glass-gold mb-4 group-hover:scale-110 transition-transform">
-                <Icon name={it.icon} size={22} className="text-gold" />
+          <div key={it.id} className={AUTO_ITEM[5][cols]}>
+            <Reveal delay={i * 60} className="w-full">
+              <div className="group glass rounded-2xl p-6 h-full w-full border border-white/10 hover:border-[color:var(--gold)]/40 transition-all">
+                <div className="grid place-items-center h-12 w-12 rounded-xl glass-gold mb-4 group-hover:scale-110 transition-transform">
+                  <Icon name={it.icon} size={22} className="text-gold" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">{it.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{it.desc}</p>
               </div>
-              <h3 className="text-lg font-bold mb-2">{it.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{it.desc}</p>
-            </div>
-          </Reveal>
+            </Reveal>
+          </div>
         ))}
       </div>
     </section>
@@ -397,23 +452,28 @@ function CaseStudiesBlock({ section: s }: { section: CaseStudiesSection }) {
           </div>
         )}
       </Reveal>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {s.items.map((p, i) => (
-          <Reveal key={p.id} delay={i * 60}>
-            <div className="group relative overflow-hidden rounded-2xl border border-white/10 aspect-[4/3]">
-              {p.image_path && (
-                <img src={getImageUrl(p.image_path)} onError={onImageError} alt={p.title} loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5">
-                {p.category && <div className="inline-block text-[10px] tracking-wider text-gold mb-1.5 px-2 py-0.5 rounded-md glass-gold">{p.category}</div>}
-                <h3 className="font-bold">{p.title}</h3>
-                {p.location && <div className="text-xs text-muted-foreground mt-0.5">{p.location}</div>}
-              </div>
+      <div className={AUTO_CONTAINER[5]}>
+        {s.items.map((p, i) => {
+          const cols = autoCols(s.items.length, 3);
+          return (
+            <div key={p.id} className={AUTO_ITEM[5][cols]}>
+              <Reveal delay={i * 60} className="w-full">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/10 aspect-[4/3] w-full">
+                  {p.image_path && (
+                    <img src={getImageUrl(p.image_path)} onError={onImageError} alt={p.title} loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    {p.category && <div className="inline-block text-[10px] tracking-wider text-gold mb-1.5 px-2 py-0.5 rounded-md glass-gold">{p.category}</div>}
+                    <h3 className="font-bold">{p.title}</h3>
+                    {p.location && <div className="text-xs text-muted-foreground mt-0.5">{p.location}</div>}
+                  </div>
+                </div>
+              </Reveal>
             </div>
-          </Reveal>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -432,33 +492,36 @@ function SlaTiersBlock({ section: s }: { section: SlaTiersSection }) {
           </div>
         )}
       </Reveal>
-      <div className="grid gap-5 md:grid-cols-3">
+      <div className={AUTO_CONTAINER[5]}>
         {s.items.map((t, i) => {
           const href = t.cta_whatsapp_template ? whatsappLink(t.cta_whatsapp_template) : "#quote";
           const target = t.cta_whatsapp_template ? "_blank" : undefined;
+          const cols = autoCols(s.items.length, 3);
           return (
-            <Reveal key={t.id} delay={i * 80}>
-              <div className={`rounded-2xl p-6 h-full flex flex-col border ${t.highlighted ? "gradient-border glass-gold" : "glass border-white/10"}`}>
-                {t.badge && <div className="inline-block text-[10px] tracking-wider text-gold mb-2 px-2 py-0.5 rounded-md glass-gold self-start">{t.badge}</div>}
-                <h3 className="text-xl font-bold mb-1">{t.name}</h3>
-                {t.price && <div className="text-2xl font-black text-gradient-gold mt-2">{t.price}</div>}
-                {t.price_note && <div className="text-xs text-muted-foreground mb-4">{t.price_note}</div>}
-                <ul className="space-y-2 my-5 flex-1">
-                  {t.features.map((f) => (
-                    <li key={f.id} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 size={15} className="text-gold mt-0.5 shrink-0" />
-                      <span className="text-foreground/90">{f.text}</span>
-                    </li>
-                  ))}
-                </ul>
-                {t.cta_label && (
-                  <a href={href} target={target} rel={target ? "noopener noreferrer" : undefined}
-                    className={`${t.highlighted ? "btn-gold" : "btn-outline-gold"} rounded-xl px-5 py-2.5 text-sm text-center inline-flex justify-center items-center gap-2`}>
-                    {t.cta_whatsapp_template && <MessageCircle size={14} />} {t.cta_label}
-                  </a>
-                )}
-              </div>
-            </Reveal>
+            <div key={t.id} className={AUTO_ITEM[5][cols]}>
+              <Reveal delay={i * 80} className="w-full">
+                <div className={`rounded-2xl p-6 h-full w-full flex flex-col border ${t.highlighted ? "gradient-border glass-gold" : "glass border-white/10"}`}>
+                  {t.badge && <div className="inline-block text-[10px] tracking-wider text-gold mb-2 px-2 py-0.5 rounded-md glass-gold self-start">{t.badge}</div>}
+                  <h3 className="text-xl font-bold mb-1">{t.name}</h3>
+                  {t.price && <div className="text-2xl font-black text-gradient-gold mt-2">{t.price}</div>}
+                  {t.price_note && <div className="text-xs text-muted-foreground mb-4">{t.price_note}</div>}
+                  <ul className="space-y-2 my-5 flex-1">
+                    {t.features.map((f) => (
+                      <li key={f.id} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 size={15} className="text-gold mt-0.5 shrink-0" />
+                        <span className="text-foreground/90">{f.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {t.cta_label && (
+                    <a href={href} target={target} rel={target ? "noopener noreferrer" : undefined}
+                      className={`${t.highlighted ? "btn-gold" : "btn-outline-gold"} rounded-xl px-5 py-2.5 text-sm text-center inline-flex justify-center items-center gap-2`}>
+                      {t.cta_whatsapp_template && <MessageCircle size={14} />} {t.cta_label}
+                    </a>
+                  )}
+                </div>
+              </Reveal>
+            </div>
           );
         })}
       </div>
@@ -794,12 +857,19 @@ export function registerDynamicSlot(key: string, render: () => ReactNode) {
 
 function FaqBlock({ heading, items }: { heading?: string; items: { id: string; q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(0);
+  const [expanded, setExpanded] = useState(false);
+  const { lang } = useLang();
+  const INITIAL = 6;
+  const canToggle = items.length > INITIAL;
+  const visible = canToggle && !expanded ? items.slice(0, INITIAL) : items;
+  const moreLabel = lang === "en" ? "Show More" : "عرض المزيد";
+  const lessLabel = lang === "en" ? "Show Less" : "عرض أقل";
   return (
     <Reveal>
       <section className="mb-16">
         {heading && <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">{heading}</h2>}
         <div className="space-y-3 max-w-3xl mx-auto">
-          {items.map((f, i) => (
+          {visible.map((f, i) => (
             <div key={f.id} className="glass rounded-2xl overflow-hidden">
               <button onClick={() => setOpen(open === i ? null : i)}
                 className="w-full p-5 flex items-center justify-between gap-3 text-right">
@@ -810,6 +880,18 @@ function FaqBlock({ heading, items }: { heading?: string; items: { id: string; q
             </div>
           ))}
         </div>
+        {canToggle && (
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => { setExpanded((v) => !v); setOpen(0); }}
+              className="btn-outline-gold rounded-xl px-6 py-2.5 text-sm inline-flex items-center gap-2"
+            >
+              {expanded ? lessLabel : moreLabel}
+              <ChevronDown size={14} className={`transition ${expanded ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+        )}
       </section>
     </Reveal>
   );
