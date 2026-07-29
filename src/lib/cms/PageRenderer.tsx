@@ -205,8 +205,6 @@ function renderSection(s: Section) {
 
     case "link_cards": {
       if (!s.items.length) return null;
-    case "link_cards": {
-      if (!s.items.length) return null;
       const maxCols = Math.max(2, Math.min(5, s.columns ?? 5));
       const cols = autoCols(s.items.length, maxCols);
       return (
