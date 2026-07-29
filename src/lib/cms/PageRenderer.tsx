@@ -205,8 +205,10 @@ function renderSection(s: Section) {
 
     case "link_cards": {
       if (!s.items.length) return null;
-      const cols = Math.max(2, Math.min(5, s.columns ?? 5));
-      const colsCls = ({ 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4", 5: "lg:grid-cols-5" } as Record<number, string>)[cols];
+    case "link_cards": {
+      if (!s.items.length) return null;
+      const maxCols = Math.max(2, Math.min(5, s.columns ?? 5));
+      const cols = autoCols(s.items.length, maxCols);
       return (
         <Reveal key={s.id}>
           <section className="mb-16">
@@ -216,10 +218,10 @@ function renderSection(s: Section) {
                 {s.subheading && <p className="text-muted-foreground text-sm">{s.subheading}</p>}
               </div>
             )}
-            <div className={`grid gap-3 sm:grid-cols-2 ${colsCls}`}>
+            <div className={AUTO_CONTAINER[3]}>
               {s.items.map((o) => {
                 const isExternal = /^https?:\/\//.test(o.href) || o.href.startsWith("mailto:") || o.href.startsWith("tel:");
-                const cls = "glass rounded-2xl p-4 hover:glass-gold transition flex flex-col";
+                const cls = "glass rounded-2xl p-4 hover:glass-gold transition flex flex-col w-full h-full";
                 const inner: ReactNode = (
                   <>
                     <div className="font-bold text-sm mb-1.5">{o.title}</div>
@@ -227,10 +229,14 @@ function renderSection(s: Section) {
                     <span className="inline-flex items-center gap-1 text-xs text-gradient-gold mt-3">انتقل <ArrowLeft size={12} /></span>
                   </>
                 );
-                return isExternal ? (
-                  <a key={o.id} href={o.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
-                ) : (
-                  <a key={o.id} href={o.href} className={cls}>{inner}</a>
+                return (
+                  <div key={o.id} className={AUTO_ITEM[3][cols]}>
+                    {isExternal ? (
+                      <a href={o.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+                    ) : (
+                      <a href={o.href} className={cls}>{inner}</a>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -241,21 +247,26 @@ function renderSection(s: Section) {
 
     case "step_list":
       if (!s.items.length) return null;
-      return (
-        <Reveal key={s.id}>
-          <section className="glass rounded-3xl p-8 md:p-10 mb-16">
-            {s.heading && <h2 className="text-2xl font-bold text-center mb-8">{s.heading}</h2>}
-            <div className={`grid gap-4 sm:grid-cols-2 ${s.items.length >= 5 ? "lg:grid-cols-5" : s.items.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
-              {s.items.map((it, i) => (
-                <div key={it.id} className="text-center">
-                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-full glass-gold text-gold font-bold mb-3">{i + 1}</div>
-                  <div className="text-sm">{it.text}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </Reveal>
-      );
+      {
+        const cols = autoCols(s.items.length, 5);
+        return (
+          <Reveal key={s.id}>
+            <section className="glass rounded-3xl p-8 md:p-10 mb-16">
+              {s.heading && <h2 className="text-2xl font-bold text-center mb-8">{s.heading}</h2>}
+              <div className={AUTO_CONTAINER[4]}>
+                {s.items.map((it, i) => (
+                  <div key={it.id} className={AUTO_ITEM[4][cols]}>
+                    <div className="text-center w-full">
+                      <div className="mx-auto grid h-12 w-12 place-items-center rounded-full glass-gold text-gold font-bold mb-3">{i + 1}</div>
+                      <div className="text-sm">{it.text}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </Reveal>
+        );
+      }
 
     case "faq":
       if (!s.items.length) return null;
