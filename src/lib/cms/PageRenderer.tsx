@@ -82,21 +82,26 @@ function renderSection(s: Section) {
 
     case "badge_grid":
       if (!s.items.length) return null;
-      return (
-        <div key={s.id} className="grid gap-3 sm:grid-cols-3 mb-12 max-w-3xl mx-auto">
-          {s.items.map((b, i) => (
-            <Reveal key={b.id} delay={i * 80}>
-              <div className="glass rounded-2xl p-5 text-center">
-                <div className="mx-auto grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
-                  <Icon name={b.icon} size={20} className="text-gold" />
-                </div>
-                <div className="font-bold mb-1">{b.title}</div>
-                <div className="text-xs text-muted-foreground">{b.desc}</div>
+      {
+        const cols = autoCols(s.items.length, 3);
+        return (
+          <div key={s.id} className={`${AUTO_CONTAINER[4]} mb-12 max-w-3xl mx-auto`}>
+            {s.items.map((b, i) => (
+              <div key={b.id} className={AUTO_ITEM[4][cols]}>
+                <Reveal delay={i * 80} className="w-full">
+                  <div className="glass rounded-2xl p-5 text-center h-full w-full">
+                    <div className="mx-auto grid h-11 w-11 place-items-center rounded-xl glass-gold mb-3">
+                      <Icon name={b.icon} size={20} className="text-gold" />
+                    </div>
+                    <div className="font-bold mb-1">{b.title}</div>
+                    <div className="text-xs text-muted-foreground">{b.desc}</div>
+                  </div>
+                </Reveal>
               </div>
-            </Reveal>
-          ))}
-        </div>
-      );
+            ))}
+          </div>
+        );
+      }
 
     case "pricing_groups":
       if (!s.items.length) return null;
