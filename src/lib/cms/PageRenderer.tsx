@@ -15,13 +15,49 @@ import type {
   MediaHeroSection, StatBarSection, FeatureGridSection,
   CaseStudiesSection, SlaTiersSection, LeadFormSection, PortalMockupSection,
 } from "./types";
-
-
+import { useLang } from "@/lib/i18n/LangProvider";
 
 
 function Icon({ name, size = 20, className = "" }: { name: string; size?: number; className?: string }) {
   const Cmp = (Icons as any)[name] ?? Icons.Sparkles;
   return <Cmp size={size} className={className} />;
+}
+
+// ─── Auto-balancing card layout ───────────────────────────────────────────
+// Uses flex-wrap + justify-center so the last row centers automatically and
+// cards redistribute when items are added/removed. Works in RTL and LTR.
+type _Cols = 1 | 2 | 3 | 4 | 5;
+type _Gap = 3 | 4 | 5;
+const AUTO_CONTAINER: Record<_Gap, string> = {
+  3: "flex flex-wrap justify-center gap-3",
+  4: "flex flex-wrap justify-center gap-4",
+  5: "flex flex-wrap justify-center gap-5",
+};
+const AUTO_ITEM: Record<_Gap, Record<_Cols, string>> = {
+  3: {
+    1: "basis-full max-w-md min-w-0 flex",
+    2: "basis-full sm:basis-[calc((100%-0.75rem)/2)] min-w-0 flex",
+    3: "basis-full sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-1.5rem)/3)] min-w-0 flex",
+    4: "basis-full sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-2.25rem)/4)] min-w-0 flex",
+    5: "basis-full sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-3rem)/5)] min-w-0 flex",
+  },
+  4: {
+    1: "basis-full max-w-md min-w-0 flex",
+    2: "basis-full sm:basis-[calc((100%-1rem)/2)] min-w-0 flex",
+    3: "basis-full sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-2rem)/3)] min-w-0 flex",
+    4: "basis-full sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-3rem)/4)] min-w-0 flex",
+    5: "basis-full sm:basis-[calc((100%-1rem)/2)] lg:basis-[calc((100%-4rem)/5)] min-w-0 flex",
+  },
+  5: {
+    1: "basis-full max-w-md min-w-0 flex",
+    2: "basis-full sm:basis-[calc((100%-1.25rem)/2)] min-w-0 flex",
+    3: "basis-full sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-2.5rem)/3)] min-w-0 flex",
+    4: "basis-full sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-3.75rem)/4)] min-w-0 flex",
+    5: "basis-full sm:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-5rem)/5)] min-w-0 flex",
+  },
+};
+function autoCols(count: number, max: number): _Cols {
+  return Math.min(Math.max(1, count), Math.min(5, max)) as _Cols;
 }
 
 function renderSection(s: Section) {
