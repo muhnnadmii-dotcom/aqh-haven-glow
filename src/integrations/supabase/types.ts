@@ -5108,6 +5108,22 @@ export type Database = {
           total_amount: number
         }[]
       }
+      finance_provider_fee_posting_mismatches: {
+        Args: never
+        Returns: {
+          deductible_vat_amount: number
+          internal_reference: string
+          invoice_id: number
+          issue: string
+          issue_date: string
+          je_credit: number
+          je_debit: number
+          je_input_vat: number
+          journal_entry_id: string
+          total_amount: number
+          vat_amount: number
+        }[]
+      }
       finance_restore_import_batch: {
         Args: { p_batch_id: string }
         Returns: Json
