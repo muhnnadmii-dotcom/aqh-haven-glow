@@ -210,8 +210,19 @@ function PurchaseInvoiceEditor() {
       return data;
     },
     onSuccess: () => { toast.success("تم اعتماد الفاتورة"); qc.invalidateQueries({ queryKey: ["purchase_invoice", invoiceId] }); qc.invalidateQueries({ queryKey: ["purchase_invoices"] }); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => {
+      const raw = String(e?.message ?? "");
+      const arabic = /[\u0600-\u06FF]/.test(raw);
+      toast.error(
+        arabic
+          ? raw
+          : raw.includes("forbidden")
+            ? "لا تملك صلاحية اعتماد فواتير المشتريات"
+            : "تعذّر اعتماد الفاتورة ولم يتم حفظ أي تغيير. راجع البنود وقابلية خصم الضريبة ثم أعد المحاولة.",
+      );
+    },
   });
+
 
   const deleteDraft = useMutation({
     mutationFn: async () => {
