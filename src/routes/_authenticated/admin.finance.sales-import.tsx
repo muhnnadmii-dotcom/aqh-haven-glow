@@ -453,8 +453,7 @@ function SalesImportPage() {
     return acc;
   }, [rows]);
 
-  const canImportRow = (r: ParsedRow) =>
-    r.classification === "ready_to_import" || r.classification === "importable_missing_tax_document";
+  const canImportRow = (r: ParsedRow) => SELECTABLE_ACTIONS.includes(r.classification);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -482,163 +481,46 @@ function SalesImportPage() {
     if (!rows.length) return;
     if (!canWrite) { toast.error("لا تملك صلاحية الاستيراد"); return; }
     const importable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r));
-    if (!importable.length) { toast.error("لا توجد صفوف قابلة للاستيراد ضمن التحديد"); return; }
+    if (!importable.length) { toast.error("لا توجد صفوف قابلة للتنفيذ ضمن التحديد"); return; }
 
-    const readyCount = importable.filter((r) => r.classification === "ready_to_import").length;
-    const missingDocCount = importable.filter((r) => r.classification === "importable_missing_tax_document").length;
-    const cancelledCount = buckets.cancelled_order;
-    const dupCount = buckets.skipped_duplicate;
-    const blockCount = buckets.blocking_review;
-
+    const b = countBuckets(importable);
     const ok = window.confirm(
-      `سيتم استيراد ${importable.length} طلب كمسودة فاتورة:\n` +
-      `• جاهز للاستيراد: ${readyCount}\n` +
-      `• مسودات بمستند ضريبي ناقص: ${missingDocCount}\n\n` +
-      `سيتم حفظ ${cancelledCount} طلب ملغي كسجل طلب فقط (بدون فاتورة نشطة).\n` +
-      `سيتم تجاوز ${dupCount} مكرر و ${blockCount} خطأ.\n\nمتابعة؟`
+      `سيتم تنفيذ ${importable.length} صف داخل عملية واحدة على الخادم:\n` +
+      `• فواتير جديدة مكتملة (ستُعتمد): ${b.new}\n` +
+      `• جديدة بلا رقم فاتورة (تبقى مسودة): ${b.new_missing_invoice_number}\n` +
+      `• تحديث مسودات موجودة: ${b.update_existing_draft}\n` +
+      `• تعارض مع فواتير نهائية (تُعلَّم للمراجعة فقط): ${b.conflict_existing_final}\n` +
+      `• ملغي: ${b.cancelled_new + b.cancel_draft}، إشعار دائن مطلوب: ${b.needs_credit_note}\n\n` +
+      `حالة الدفع لا تُحدَّد من طريقة الدفع — تُحتسب من التسويات أو المقبوضات الفعلية.\n\nمتابعة؟`
     );
     if (!ok) return;
 
     setCommitting(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      const uid = u.user?.id ?? null;
-
-      const { data: batchRow, error: bErr } = await (supabase as any)
-        .from("sales_import_batches")
-        .insert({
-          sales_channel: "salla",
+      const payload = rows.map((r) => ({ ...r, selected: selected.has(r.rowNo) && canImportRow(r) }));
+      const { data, error } = await (supabase as any).rpc("salla_import_commit", {
+        p_batch: {
           file_name: file?.name ?? "salla-import",
           sheet_name: sheet || null,
-          mapping_snapshot: mapping,
-          total_rows: rows.length,
-          summary_json: { headerRow, headers },
-          created_by: uid,
-          status: "committed",
-        })
-        .select("id")
-        .single();
-      if (bErr) throw bErr;
-      const batchId = batchRow.id as string;
-
-      let inserted = 0;
-      let insertedDraftMissingDoc = 0;
-      const failed: { rowNo: number; error: string }[] = [];
-
-      for (const r of importable) {
-        // رقم عرض داخلي — لا نضع external_invoice_number إن كان ناقصاً
-        const invoiceNumber = r.external_invoice_number
-          ? `SALLA-${r.external_order_id}`
-          : `SALLA-${r.external_order_id}`;
-        const missingDoc = r.classification === "importable_missing_tax_document";
-        const settlementStatus =
-          r.payment_provider === "tabby" || r.payment_provider === "tamara" || r.payment_provider === "salla_payments"
-            ? "pending"
-            : r.payment_provider === "bank_transfer"
-              ? "not_applicable"
-              : "manual_review";
-        const noteParts: string[] = [];
-        if (missingDoc) noteParts.push("مسودة — رقم الفاتورة الضريبية مفقود، لا تدخل الإقرار الضريبي حتى الاستكمال");
-        if (!r.payment_method_raw) noteParts.push("طريقة الدفع غير معروفة");
-        const row: any = {
-          invoice_number: invoiceNumber,
-          issue_date: r.order_date,
-          supply_date: r.order_date,
-          order_date: r.order_date,
-          status: "draft",
-          payment_status: r.payment_status === "paid" ? "paid" : "unpaid",
-          sales_channel: "salla",
-          payment_provider: r.payment_provider && r.payment_provider !== "unknown" ? r.payment_provider : null,
-          settlement_status: settlementStatus,
-          original_payment_method: r.payment_method_raw ?? null,
-          external_order_id: r.external_order_id,
-          external_invoice_number: r.external_invoice_number, // يبقى null إن كان مفقوداً
-          customer_name_snapshot: r.customer_name,
-          order_status: r.order_status,
-          original_gross_amount: r.original_gross_amount,
-          refund_amount: 0,
-          net_amount: r.original_gross_amount,
-          shipping_before_vat: r.shipping_before_vat,
-          shipping_vat: r.shipping_vat,
-          subtotal: r.total_before_vat,
-          discount_amount: r.total_discount,
-          taxable_amount: r.total_before_vat,
-          vat_amount: r.total_vat_amount,
-          total_amount: r.original_gross_amount ?? 0,
-          paid_amount: r.payment_status === "paid" ? (r.original_gross_amount ?? 0) : 0,
-          remaining_amount: r.payment_status === "paid" ? 0 : (r.original_gross_amount ?? 0),
-          data_completeness_status: missingDoc ? "missing_original_invoice" : "complete",
-          import_batch_id: batchId,
-          import_row_snapshot: r as any,
-          notes: noteParts.length ? noteParts.join(" · ") : null,
-        };
-
-        const { error: iErr } = await (supabase as any)
-          .from("sales_invoices")
-          .insert(row)
-          .select("id")
-          .single();
-        if (iErr) { failed.push({ rowNo: r.rowNo, error: iErr.message }); continue; }
-        inserted++;
-        if (missingDoc) insertedDraftMissingDoc++;
-      }
-
-      const errorRows = failed.length;
-
-      // Upsert ALL parsed rows into salla_orders (يشمل الملغية والمكررة) لأغراض مطابقة التسويات
-      const orderPayloads = rows
-        .filter((r) => r.external_order_id)
-        .map((r) => ({
-          external_order_id: String(r.external_order_id),
-          order_status: r.order_status,
-          payment_status: r.payment_status,
-          original_total: r.original_gross_amount,
-          refund_total: 0,
-          payment_method: r.payment_method_raw,
-          invoice_number: r.external_invoice_number,
-          cancellation_date: r.cancelled ? r.order_date : null,
-          order_date: r.order_date,
-          customer_name: r.customer_name,
-          batch_id: batchId,
-          raw_snapshot: r as any,
-        }));
-      const oChunk = 500;
-      for (let i = 0; i < orderPayloads.length; i += oChunk) {
-        await (supabase as any).from("salla_orders").upsert(orderPayloads.slice(i, i + oChunk), { onConflict: "external_order_id" });
-      }
-
-      await (supabase as any).from("sales_import_batches").update({
-        imported_rows: inserted,
-        duplicate_rows: buckets.skipped_duplicate,
-        needs_review_rows: buckets.blocking_review,
-        error_rows: errorRows,
-        summary_json: {
-          headerRow, headers, failed,
-          salla_orders_upserted: orderPayloads.length,
-          buckets, issue_counts: issueCounts,
-          drafts_missing_tax_document: insertedDraftMissingDoc,
-          cancelled_saved_as_orders: buckets.cancelled_order,
+          mapping,
+          header_row: headerRow,
         },
-      }).eq("id", batchId);
-
-      await (supabase as any).rpc("finance_log_manual_audit", {
-        p_related_type: "sales_import_batches",
-        p_related_id: batchId,
-        p_action: "commit_sales_import",
-        p_note: `salla · file=${file?.name} inserted=${inserted} draft_missing_doc=${insertedDraftMissingDoc} cancelled=${buckets.cancelled_order} dupes=${buckets.skipped_duplicate} blocking=${buckets.blocking_review} errors=${errorRows}`,
+        p_rows: payload as any,
       });
-
+      if (error) throw error;
+      const res = data ?? {};
       toast.success(
-        `تم استيراد ${inserted} طلب (${insertedDraftMissingDoc} بمستند ناقص). ملغي محفوظ كسجل: ${buckets.cancelled_order}، مكرر متجاوز: ${buckets.skipped_duplicate}، خطأ: ${buckets.blocking_review + errorRows}.`
+        `تم التنفيذ: جديد ${res.new ?? 0}، تحديث مسودات ${res.updated_drafts ?? 0}، معتمد ${res.approved ?? 0}، بنود ${res.items_created ?? 0}، لا تغيير ${res.unchanged ?? 0}، تعارض ${res.conflicts ?? 0}، للمراجعة ${res.needs_review ?? 0}، إشعار دائن ${res.needs_credit_note ?? 0}.`
       );
       setRows([]); setSelected(new Set()); setFile(null); setSheets([]); setSheet(""); setAoa([]); setMapping({});
       if (fileRef.current) fileRef.current.value = "";
     } catch (e: any) {
-      toast.error(`فشل الاستيراد: ${e.message ?? e}`);
+      toast.error(`فشل الاستيراد ولم يُحفظ أي تغيير: ${e.message ?? e}`);
     } finally {
       setCommitting(false);
     }
   }
+
 
 
   async function saveTemplate() {
