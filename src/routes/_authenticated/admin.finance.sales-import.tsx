@@ -644,11 +644,10 @@ function SalesImportPage() {
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <h3 className="text-sm font-semibold">معاينة ({rows.length} صف)</h3>
             <div className="flex items-center gap-1 text-[11px] flex-wrap">
-              <BucketChip active={reviewFilter} k="ready_to_import" n={buckets.ready_to_import} onClick={setReviewFilter} />
-              <BucketChip active={reviewFilter} k="importable_missing_tax_document" n={buckets.importable_missing_tax_document} onClick={setReviewFilter} />
-              <BucketChip active={reviewFilter} k="cancelled_order" n={buckets.cancelled_order} onClick={setReviewFilter} />
-              <BucketChip active={reviewFilter} k="skipped_duplicate" n={buckets.skipped_duplicate} onClick={setReviewFilter} />
-              <BucketChip active={reviewFilter} k="blocking_review" n={buckets.blocking_review} onClick={setReviewFilter} />
+              {ALL_CLASSIFICATIONS.map((k) => (
+                <BucketChip key={k} active={reviewFilter} k={k} n={buckets[k]} onClick={setReviewFilter} />
+              ))}
+
               {reviewFilter !== "all" && (
                 <button onClick={() => setReviewFilter("all")} className="px-2 py-0.5 rounded border border-white/15 text-muted-foreground">عرض الكل</button>
               )}
