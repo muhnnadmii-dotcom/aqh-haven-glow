@@ -720,9 +720,8 @@ function SalesImportPage() {
                   const badge = CLASSIFICATION_CLASS[r.classification];
                   const canSelect = canImportRow(r);
                   const isSel = selected.has(r.rowNo);
-                  const payStatusBadge = r.payment_status === "paid"
-                    ? "text-emerald-300"
-                    : r.payment_status === "unknown" ? "text-amber-300" : "text-muted-foreground";
+                  const payStatusBadge = "text-amber-300";
+
                   return (
                     <tr key={r.rowNo} className="border-b border-white/5">
                       <td className="p-1.5">
