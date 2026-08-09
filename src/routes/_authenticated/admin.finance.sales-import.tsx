@@ -738,7 +738,8 @@ function SalesImportPage() {
                       <td className="p-1.5">{r.customer_name ?? "—"}</td>
                       <td className="p-1.5">{r.order_status ?? "—"}</td>
                       <td className={`p-1.5 ${payStatusBadge}`}>
-                        {r.payment_status === "paid" ? "مدفوع (مستنتج)" : r.payment_status === "unknown" ? "غير معروف" : "غير مدفوع"}
+                        يُحدَّد من دليل السداد
+
                       </td>
                       <td className="p-1.5">{r.payment_method_raw ?? "—"}</td>
                       <td className="p-1.5">{PROVIDERS.find((p) => p.value === r.payment_provider)?.label ?? r.payment_provider}</td>
