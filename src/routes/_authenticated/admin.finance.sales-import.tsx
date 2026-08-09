@@ -684,10 +684,11 @@ function SalesImportPage() {
             ))}
           </div>
 
-          {buckets.blocking_review > 0 && (
+          {buckets.blocked > 0 && (
             <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-[11px] text-red-200">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-              <div>{buckets.blocking_review} صف يحتوي خطأ يمنع الاستيراد. راجعها ثم أعد الاستيراد.</div>
+              <div>{buckets.blocked} صف يحتوي خطأ يمنع الاستيراد. راجعها ثم أعد الاستيراد.</div>
+
             </div>
           )}
 
