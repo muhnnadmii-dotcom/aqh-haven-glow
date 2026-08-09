@@ -463,7 +463,7 @@ function IncomesPage() {
                       </button>
                     ) : <span className="text-muted-foreground text-[10px]">—</span>
                   ) : en.linkedSettlements.length === 1 ? (
-                    <button onClick={() => navigate({ to: "/admin/finance/settlement-lines", search: { settlement: en.linkedSettlements[0].id } })} className="inline-flex items-center gap-1 text-[10px] text-sky-300 hover:underline">
+                    <button onClick={() => navigate({ to: "/admin/finance/settlement-lines", search: { settlement: en.linkedSettlements[0].id, provider: undefined, order: undefined } })} className="inline-flex items-center gap-1 text-[10px] text-sky-300 hover:underline">
                       {providerAr(providerById.get(en.linkedSettlements[0].provider_id)?.provider_code)} — تسوية #{en.linkedSettlements[0].settlement_reference ?? en.linkedSettlements[0].id.slice(0, 8)}
                       <ExternalLink size={10} />
                     </button>
@@ -542,7 +542,7 @@ function IncomesPage() {
           allocs={linkedDialog.allocs}
           providers={providers}
           onClose={() => setLinkedDialog(null)}
-          onOpen={(settlementId: string) => { setLinkedDialog(null); navigate({ to: "/admin/finance/settlement-lines", search: { settlement: settlementId } }); }}
+          onOpen={(settlementId: string) => { setLinkedDialog(null); navigate({ to: "/admin/finance/settlement-lines", search: { settlement: settlementId, provider: undefined, order: undefined } }); }}
         />
       )}
     </div>

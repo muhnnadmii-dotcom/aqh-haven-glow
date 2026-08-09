@@ -133,28 +133,47 @@ const amount0 = (v: any) => parseAmount(v) ?? 0;
 const CANCELLED_RX = /cancel|ملغى|ملغي|ملغاة|إلغاء|الغاء|deleted|removed|محذوف|حذف/i;
 const isCancelled = (s: string | null) => !!s && CANCELLED_RX.test(s);
 
+// Server-side actions returned by salla_classify_row / salla_import_preview
 type Classification =
-  | "ready_to_import"
-  | "importable_missing_tax_document"
-  | "skipped_duplicate"
-  | "cancelled_order"
-  | "blocking_review";
+  | "new"
+  | "new_missing_invoice_number"
+  | "update_existing_draft"
+  | "unchanged"
+  | "conflict_existing_final"
+  | "cancelled_new"
+  | "cancel_draft"
+  | "needs_credit_note"
+  | "blocked";
+
+const ALL_CLASSIFICATIONS: Classification[] = [
+  "new", "new_missing_invoice_number", "update_existing_draft", "unchanged",
+  "conflict_existing_final", "cancelled_new", "cancel_draft", "needs_credit_note", "blocked",
+];
 
 const CLASSIFICATION_LABEL: Record<Classification, string> = {
-  ready_to_import: "جاهز للاستيراد",
-  importable_missing_tax_document: "مسودة — مستند ضريبي ناقص",
-  skipped_duplicate: "مكرر — سيتم تجاوزه",
-  cancelled_order: "طلب ملغي (سجل فقط)",
-  blocking_review: "خطأ يمنع الاستيراد",
+  new: "جديد — مكتمل",
+  new_missing_invoice_number: "جديد — بلا رقم فاتورة (مسودة)",
+  update_existing_draft: "تحديث مسودة موجودة",
+  unchanged: "لا تغيير",
+  conflict_existing_final: "تعارض مع فاتورة نهائية",
+  cancelled_new: "طلب ملغي (سجل فقط)",
+  cancel_draft: "إلغاء مسودة",
+  needs_credit_note: "ملغي بعد الاعتماد — إشعار دائن",
+  blocked: "خطأ يمنع الاستيراد",
 };
 
 const CLASSIFICATION_CLASS: Record<Classification, string> = {
-  ready_to_import: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  importable_missing_tax_document: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-  skipped_duplicate: "bg-white/10 text-muted-foreground border-white/20",
-  cancelled_order: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30",
-  blocking_review: "bg-red-500/15 text-red-300 border-red-500/30",
+  new: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  new_missing_invoice_number: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  update_existing_draft: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+  unchanged: "bg-white/10 text-muted-foreground border-white/20",
+  conflict_existing_final: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  cancelled_new: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30",
+  cancel_draft: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30",
+  needs_credit_note: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+  blocked: "bg-red-500/15 text-red-300 border-red-500/30",
 };
+
 
 type DataIssue =
   | "missing_invoice_number"

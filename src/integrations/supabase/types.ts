@@ -2096,8 +2096,15 @@ export type Database = {
             foreignKeyName: "finance_incomes_sales_invoice_id_fkey"
             columns: ["sales_invoice_id"]
             isOneToOne: false
-            referencedRelation: "aqh_quotes"
+            referencedRelation: "sales_invoices"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_incomes_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_gateway_collection_exceptions"
+            referencedColumns: ["invoice_id"]
           },
           {
             foreignKeyName: "finance_incomes_split_parent_id_fkey"
@@ -3971,6 +3978,45 @@ export type Database = {
           },
         ]
       }
+      salla_backfill_runs: {
+        Row: {
+          applied_at: string | null
+          applied_json: Json | null
+          created_at: string
+          created_by: string | null
+          from_date: string
+          id: string
+          invoice_ids: number[] | null
+          preview_json: Json
+          to_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_json?: Json | null
+          created_at?: string
+          created_by?: string | null
+          from_date: string
+          id?: string
+          invoice_ids?: number[] | null
+          preview_json: Json
+          to_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_json?: Json | null
+          created_at?: string
+          created_by?: string | null
+          from_date?: string
+          id?: string
+          invoice_ids?: number[] | null
+          preview_json?: Json
+          to_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       salla_orders: {
         Row: {
           batch_id: string | null
@@ -5311,6 +5357,10 @@ export type Database = {
         Args: { _allocation_id: string; _reason: string }
         Returns: undefined
       }
+      sales_invoice_payment_evidence: {
+        Args: { p_invoice_id: number }
+        Returns: number
+      }
       sales_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
         Returns: undefined
@@ -5319,8 +5369,17 @@ export type Database = {
         Args: { p_invoice_id: number }
         Returns: undefined
       }
-      salla_backfill_apply: { Args: never; Returns: Json }
-      salla_backfill_preview: { Args: never; Returns: Json }
+      salla_backfill_apply_v2: { Args: { p_preview_id: string }; Returns: Json }
+      salla_backfill_preview_v2: {
+        Args: { p_from?: string; p_invoice_ids?: number[]; p_to?: string }
+        Returns: Json
+      }
+      salla_classify_row: { Args: { p_row: Json }; Returns: Json }
+      salla_import_commit: {
+        Args: { p_batch: Json; p_rows: Json }
+        Returns: Json
+      }
+      salla_import_preview: { Args: { p_rows: Json }; Returns: Json }
       settlement_allocated_total: {
         Args: { _settlement_id: string }
         Returns: number

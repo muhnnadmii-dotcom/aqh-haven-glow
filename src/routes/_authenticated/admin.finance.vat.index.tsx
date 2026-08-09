@@ -556,7 +556,7 @@ function RefundReviewRow({ r }: { r: any }) {
             <div className="flex flex-wrap gap-2 pt-1">
               <Link
                 to="/admin/finance/settlement-lines"
-                search={{ order: r.external_order_id }}
+                search={{ order: r.external_order_id, settlement: undefined, provider: undefined }}
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[11px] hover:bg-white/10"
               >
                 <ExternalLink size={11} /> فتح حركات التسوية
