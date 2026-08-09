@@ -364,13 +364,8 @@ function SalesImportPage() {
       if (!paymentMethodRaw) issues.push("missing_payment_method");
       if (!invoiceNumber) issues.push("missing_invoice_number");
 
-      // حالة الدفع المستنتجة (لا تعتمد على وجود رقم فاتورة)
-      let paymentStatus: PaymentStatus = "unknown";
-      let statusSource: "inferred" | "unknown" = "unknown";
-      if (!cancelled && gross != null && gross > 0 && paymentMethodRaw) {
-        paymentStatus = "paid";
-        statusSource = "inferred";
-      }
+      // حالة الدفع لا تُستنتج من طريقة الدفع — تُحدَّد لاحقًا من دليل السداد الفعلي
+      const paymentStatus: PaymentStatus = "unknown";
 
       return {
         rowNo: headerRow + 2 + idx,
@@ -382,7 +377,7 @@ function SalesImportPage() {
         payment_provider: provider,
         order_status: orderStatus,
         payment_status: paymentStatus,
-        payment_status_source: statusSource,
+        payment_status_source: "evidence_required" as const,
         original_gross_amount: gross,
         total_vat_amount: totalVat,
         shipping_before_vat: shipBefore,
@@ -394,9 +389,13 @@ function SalesImportPage() {
         cancelled,
         duplicate: false,
         issues,
-        classification: "ready_to_import", // مبدئي — سيُعاد تصنيفه أدناه
-        tax_document_status: invoiceNumber ? "present" : "missing",
+        classification: "new" as Classification, // مبدئي — يُحدَّد من الخادم أدناه
+        action_reason: null as string | null,
+        existing_status: null as string | null,
+        tax_document_status: invoiceNumber ? "present" : "missing" as const,
         vat_return_eligible: !!invoiceNumber && !cancelled,
+      };
+
       };
     });
 
