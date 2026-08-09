@@ -395,11 +395,9 @@ function SalesImportPage() {
         tax_document_status: invoiceNumber ? "present" : "missing" as const,
         vat_return_eligible: !!invoiceNumber && !cancelled,
       };
-
-      };
     });
 
-    // تكرار داخل الملف
+    // تكرار داخل الملف (آخر صف يفوز، والصفوف السابقة تُستبعد من التحديد)
     const seen = new Map<string, number>();
     parsed.forEach((r) => {
       if (!r.external_order_id) return;
@@ -412,51 +410,36 @@ function SalesImportPage() {
       }
     });
 
-    // تكرار من قاعدة البيانات
-    const ids = parsed.map((r) => r.external_order_id).filter((x): x is string => !!x);
-    if (ids.length) {
-      const { data: existing } = await (supabase as any)
-        .from("sales_invoices")
-        .select("external_order_id")
-        .eq("sales_channel", "salla")
-        .in("external_order_id", ids);
-      const existSet = new Set((existing || []).map((x: any) => x.external_order_id));
-      parsed.forEach((r) => {
-        if (r.external_order_id && existSet.has(r.external_order_id)) {
-          r.duplicate = true;
-          if (!r.issues.includes("duplicate_order")) r.issues.push("duplicate_order");
-        }
-      });
-    }
-
-    // تصنيف نهائي بالأولوية: blocking > cancelled > duplicate > missing_tax_doc > ready
-    // cancelled_order يسبق duplicate حتى لا يُستورد الطلب المحذوف كفاتورة نشطة لاحقًا.
+    // التصنيف مصدره الخادم (نفس منطق الـ commit)
+    const { data: preview, error: pErr } = await (supabase as any).rpc("salla_import_preview", {
+      p_rows: parsed as any,
+    });
+    if (pErr) { toast.error(`تعذّر تحضير المعاينة: ${pErr.message}`); return; }
+    const byRow = new Map<number, any>();
+    (preview || []).forEach((p: any) => byRow.set(Number(p.rowNo), p));
     parsed.forEach((r) => {
-      const hardBlocking =
-        !r.external_order_id ||
-        !r.order_date ||
-        r.original_gross_amount == null ||
-        (r.original_gross_amount != null && r.original_gross_amount < 0 && !r.cancelled);
-      if (hardBlocking) r.classification = "blocking_review";
-      else if (r.cancelled) r.classification = "cancelled_order";
-      else if (r.duplicate) r.classification = "skipped_duplicate";
-      else if (!r.external_invoice_number) r.classification = "importable_missing_tax_document";
-      else r.classification = "ready_to_import";
+      const p = byRow.get(r.rowNo);
+      r.classification = (p?.action as Classification) ?? "blocked";
+      r.action_reason = p?.reason ?? null;
+      r.existing_status = p?.existing_status ?? null;
+      if (r.classification === "conflict_existing_final" && !r.issues.includes("conflicting_existing_order")) {
+        r.issues.push("conflicting_existing_order");
+      }
     });
 
     setRows(parsed);
-    // اختيار افتراضي: جاهز + مسودة مستند ناقص
     const auto = new Set<number>();
     parsed.forEach((r) => {
-      if (r.classification === "ready_to_import" || r.classification === "importable_missing_tax_document") auto.add(r.rowNo);
+      if (SELECTABLE_ACTIONS.includes(r.classification)) auto.add(r.rowNo);
     });
     setSelected(auto);
 
-    const buckets = countBuckets(parsed);
+    const b = countBuckets(parsed);
     toast.success(
-      `تم تحضير ${parsed.length} صف — جاهز: ${buckets.ready_to_import}، مسودة ناقصة: ${buckets.importable_missing_tax_document}، ملغي: ${buckets.cancelled_order}، مكرر: ${buckets.skipped_duplicate}، أخطاء: ${buckets.blocking_review}`
+      `تم تحضير ${parsed.length} صف — جديد: ${b.new + b.new_missing_invoice_number}، تحديث مسودات: ${b.update_existing_draft}، لا تغيير: ${b.unchanged}، تعارض: ${b.conflict_existing_final}، ملغي: ${b.cancelled_new + b.cancel_draft + b.needs_credit_note}، أخطاء: ${b.blocked}`
     );
   }
+
 
 
   const buckets = useMemo(() => countBuckets(rows), [rows]);
