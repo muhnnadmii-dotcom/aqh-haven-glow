@@ -198,7 +198,7 @@ const ISSUE_LABEL: Record<DataIssue, string> = {
   conflicting_existing_order: "تعارض مع طلب موجود",
 };
 
-type PaymentStatus = "paid" | "unpaid" | "unknown";
+type PaymentStatus = "unpaid" | "unknown";
 
 type Mapping = Partial<Record<FieldKey, number>>;
 type ParsedRow = {
@@ -211,7 +211,7 @@ type ParsedRow = {
   payment_provider: ProviderKey;
   order_status: string | null;
   payment_status: PaymentStatus;
-  payment_status_source: "inferred" | "unknown";
+  payment_status_source: "evidence_required";
   original_gross_amount: number | null;
   total_vat_amount: number;
   shipping_before_vat: number;
@@ -224,18 +224,23 @@ type ParsedRow = {
   duplicate: boolean;
   issues: DataIssue[];
   classification: Classification;
+  action_reason: string | null;
+  existing_status: string | null;
   tax_document_status: "present" | "missing";
   vat_return_eligible: boolean;
 };
 
+const SELECTABLE_ACTIONS: Classification[] = [
+  "new", "new_missing_invoice_number", "update_existing_draft",
+  "cancelled_new", "cancel_draft", "needs_credit_note", "conflict_existing_final",
+];
+
 function countBuckets(rows: ParsedRow[]) {
-  const acc: Record<Classification, number> = {
-    ready_to_import: 0, importable_missing_tax_document: 0,
-    skipped_duplicate: 0, cancelled_order: 0, blocking_review: 0,
-  };
+  const acc = Object.fromEntries(ALL_CLASSIFICATIONS.map((k) => [k, 0])) as Record<Classification, number>;
   rows.forEach((r) => { acc[r.classification]++; });
   return acc;
 }
+
 
 
 
