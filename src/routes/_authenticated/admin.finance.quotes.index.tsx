@@ -52,22 +52,18 @@ function QuotesList() {
     );
   }, [listQ.data, q]);
 
+  const [dupId, setDupId] = useState<number | null>(null);
   const dupM = useMutation({
-    mutationFn: async (id: number) => {
-      const { data: src, error } = await supabase.from("aqh_quotes").select("*").eq("id", id).maybeSingle();
-      if (error || !src) throw error ?? new Error("not found");
-      const { id: _id, quote_no: _qn, created_at: _ca, updated_at: _ua, ...rest } = src as any;
-      const { data: ins, error: e2 } = await supabase
-        .from("aqh_quotes")
-        .insert({ ...rest, quote_no: null, status: "draft" })
-        .select("id")
-        .single();
-      if (e2) throw e2;
-      return ins.id as number;
+    mutationFn: async (id: number) => duplicateQuote(id),
+    onSuccess: (r) => {
+      toast.success(`تم تكرار العرض — الرقم الجديد ${r.quote_no}`);
+      qc.invalidateQueries({ queryKey: ["aqh_quotes_list"] });
+      navigate({ to: "/admin/finance/quotes/$id", params: { id: String(r.id) } });
     },
-    onSuccess: () => { toast.success("تم نسخ العرض"); qc.invalidateQueries({ queryKey: ["aqh_quotes_list"] }); },
-    onError: (e: any) => toast.error(e?.message ?? "فشل النسخ"),
+    onError: (e: any) => toast.error(e?.message ?? "فشل تكرار عرض السعر"),
+    onSettled: () => setDupId(null),
   });
+
 
   const delM = useMutation({
     mutationFn: async (id: number) => {
