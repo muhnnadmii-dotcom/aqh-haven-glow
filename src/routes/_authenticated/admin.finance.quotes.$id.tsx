@@ -7,11 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Plus, Trash2, Save, Printer, Loader2, Search, FileText, Sparkles, ListPlus } from "lucide-react";
+import { ArrowRight, Plus, Trash2, Save, Printer, Loader2, Search, FileText, Sparkles, ListPlus, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AQH_PAYMENT_TERMS, AQH_DELIVERY_TERMS, AQH_WARRANTY_TERMS, AQH_NOTES_TEMPLATES } from "@/lib/aqh-quote-templates";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
+import { duplicateQuote } from "@/lib/aqh-quote-duplicate";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/quotes/$id")({
   ssr: false,
@@ -303,7 +304,18 @@ function QuoteBuilder() {
     onError: (e: any) => toast.error(e?.message ?? "فشل الحفظ"),
   });
 
+  const dupM = useMutation({
+    mutationFn: async () => duplicateQuote(Number(id)),
+    onSuccess: (r) => {
+      toast.success(`تم تكرار العرض — الرقم الجديد ${r.quote_no}`);
+      qc.invalidateQueries({ queryKey: ["aqh_quotes_list"] });
+      navigate({ to: "/admin/finance/quotes/$id", params: { id: String(r.id) } });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل تكرار عرض السعر"),
+  });
+
   const printRef = useRef<HTMLDivElement>(null);
+
 
   return (
     <div className="space-y-4" dir="rtl">
@@ -343,9 +355,21 @@ function QuoteBuilder() {
             <option value="accepted">مقبول</option>
             <option value="rejected">مرفوض</option>
           </select>
+          {!isNew && (
+            <Button
+              variant="outline"
+              className="gap-1"
+              disabled={dupM.isPending}
+              onClick={() => dupM.mutate()}
+              title="تكرار العرض"
+            >
+              {dupM.isPending ? <Loader2 className="animate-spin" size={14} /> : <Copy size={14} />} تكرار العرض
+            </Button>
+          )}
           <Button variant="outline" onClick={() => window.print()} className="gap-1">
             <Printer size={14} /> طباعة / PDF
           </Button>
+
           <Button onClick={() => saveM.mutate()} disabled={saveM.isPending} className="bg-gold/20 border border-gold/40 text-gold hover:bg-gold/30 gap-1">
             {saveM.isPending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} حفظ
           </Button>

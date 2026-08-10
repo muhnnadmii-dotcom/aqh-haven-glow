@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { duplicateQuote } from "@/lib/aqh-quote-duplicate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,9 @@ const STATUS_CLASS: Record<string, string> = {
 
 function QuotesList() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
+
 
   const listQ = useQuery({
     queryKey: ["aqh_quotes_list"],
@@ -52,22 +55,18 @@ function QuotesList() {
     );
   }, [listQ.data, q]);
 
+  const [dupId, setDupId] = useState<number | null>(null);
   const dupM = useMutation({
-    mutationFn: async (id: number) => {
-      const { data: src, error } = await supabase.from("aqh_quotes").select("*").eq("id", id).maybeSingle();
-      if (error || !src) throw error ?? new Error("not found");
-      const { id: _id, quote_no: _qn, created_at: _ca, updated_at: _ua, ...rest } = src as any;
-      const { data: ins, error: e2 } = await supabase
-        .from("aqh_quotes")
-        .insert({ ...rest, quote_no: null, status: "draft" })
-        .select("id")
-        .single();
-      if (e2) throw e2;
-      return ins.id as number;
+    mutationFn: async (id: number) => duplicateQuote(id),
+    onSuccess: (r) => {
+      toast.success(`تم تكرار العرض — الرقم الجديد ${r.quote_no}`);
+      qc.invalidateQueries({ queryKey: ["aqh_quotes_list"] });
+      navigate({ to: "/admin/finance/quotes/$id", params: { id: String(r.id) } });
     },
-    onSuccess: () => { toast.success("تم نسخ العرض"); qc.invalidateQueries({ queryKey: ["aqh_quotes_list"] }); },
-    onError: (e: any) => toast.error(e?.message ?? "فشل النسخ"),
+    onError: (e: any) => toast.error(e?.message ?? "فشل تكرار عرض السعر"),
+    onSettled: () => setDupId(null),
   });
+
 
   const delM = useMutation({
     mutationFn: async (id: number) => {
@@ -147,9 +146,17 @@ function QuotesList() {
                       >
                         فتح
                       </Link>
-                      <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => dupM.mutate(r.id)} title="نسخ">
-                        <Copy size={11} />
+                      <Button
+                        size="sm" variant="outline"
+                        className="h-7 px-2 gap-1 text-xs"
+                        disabled={dupM.isPending}
+                        onClick={() => { setDupId(r.id); dupM.mutate(r.id); }}
+                        title="تكرار العرض"
+                      >
+                        {dupM.isPending && dupId === r.id ? <Loader2 size={11} className="animate-spin" /> : <Copy size={11} />}
+                        تكرار
                       </Button>
+
                       <Button
                         size="sm" variant="outline" className="h-7 px-2 text-red-300 border-red-500/30 hover:bg-red-500/10"
                         onClick={() => { if (confirm("حذف العرض؟")) delM.mutate(r.id); }} title="حذف"
