@@ -146,9 +146,17 @@ function QuotesList() {
                       >
                         فتح
                       </Link>
-                      <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => dupM.mutate(r.id)} title="نسخ">
-                        <Copy size={11} />
+                      <Button
+                        size="sm" variant="outline"
+                        className="h-7 px-2 gap-1 text-xs"
+                        disabled={dupM.isPending}
+                        onClick={() => { setDupId(r.id); dupM.mutate(r.id); }}
+                        title="تكرار العرض"
+                      >
+                        {dupM.isPending && dupId === r.id ? <Loader2 size={11} className="animate-spin" /> : <Copy size={11} />}
+                        تكرار
                       </Button>
+
                       <Button
                         size="sm" variant="outline" className="h-7 px-2 text-red-300 border-red-500/30 hover:bg-red-500/10"
                         onClick={() => { if (confirm("حذف العرض؟")) delM.mutate(r.id); }} title="حذف"
