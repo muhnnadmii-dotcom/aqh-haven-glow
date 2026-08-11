@@ -27,6 +27,7 @@ type Settlement = {
   fees_vat_amount: number;
   payout_fee: number;
   adjustments_amount: number;
+  provider_invoice_deductions_amount?: number | null;
   status: string;
   payout_status: string | null;
   reconciliation_status?: string | null;
@@ -35,6 +36,26 @@ type Settlement = {
 };
 
 type Provider = { id: string; name: string; provider_code: string | null };
+
+type CandidateInvoice = {
+  id: number;
+  internal_reference: string | null;
+  supplier_invoice_number: string | null;
+  invoice_date: string | null;
+  total_amount: number;
+  remaining_amount: number;
+  supplier_name: string | null;
+};
+
+type LinkedDeduction = {
+  id: string;
+  amount: number;
+  payment_date: string;
+  status: string;
+  purchase_invoice_id: number;
+  internal_reference: string | null;
+  supplier_invoice_number: string | null;
+};
 type IncomeSource = { id: string; name: string };
 type Account = { id: string; name: string };
 
@@ -193,13 +214,19 @@ function ReconciliationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editingSettlement, setEditingSettlement] = useState<Settlement | null>(null);
 
+  // Provider-invoice deductions (independent supplier invoices the gateway deducts from the payout)
+  const [candInvoices, setCandInvoices] = useState<CandidateInvoice[]>([]);
+  const [linkedDeductions, setLinkedDeductions] = useState<LinkedDeduction[]>([]);
+  const [deductPreview, setDeductPreview] = useState<any>(null);
+  const [deductBusy, setDeductBusy] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     const [p, src, acc, s, i, a] = await Promise.all([
       supabase.from("payment_providers" as any).select("id,name,provider_code").eq("is_active", true),
       supabase.from("finance_income_sources" as any).select("id,name"),
       supabase.from("finance_accounts" as any).select("id,name"),
-      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,report_reference,source_file_name,settlement_date,period_start,period_end,imported_at,payout_received_date,expected_net_amount,gross_sales_amount,refunds_amount,fees_before_vat,fees_vat_amount,payout_fee,adjustments_amount,status,payout_status,notes").order("settlement_date", { ascending: false, nullsFirst: false }).limit(500),
+      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,report_reference,source_file_name,settlement_date,period_start,period_end,imported_at,payout_received_date,expected_net_amount,gross_sales_amount,refunds_amount,fees_before_vat,fees_vat_amount,payout_fee,adjustments_amount,provider_invoice_deductions_amount,status,payout_status,notes").order("settlement_date", { ascending: false, nullsFirst: false }).limit(500),
       supabase.from("finance_incomes" as any).select("id,income_date,amount,note,transaction_type,business_relation,payment_provider_id,income_source_id,settlement_id,account_id").is("deleted_at", null).order("income_date", { ascending: false }).limit(1000),
       supabase.from("settlement_bank_allocations" as any).select("*").eq("status", "confirmed"),
     ]);
@@ -440,6 +467,117 @@ function ReconciliationPage() {
     await load();
   };
 
+  // ---- Provider invoice deductions (independent broker invoices deducted from the payout) ----
+  const shortfall = selSettlement && selIncome ? settleRemaining - incomeRemaining : 0;
+  const hasShortfall = shortfall > 0.05;
+
+  const loadDeductionContext = useCallback(async (settlement: Settlement | null) => {
+    if (!settlement) { setCandInvoices([]); setLinkedDeductions([]); return; }
+
+    const [inv, links] = await Promise.all([
+      supabase.from("purchase_invoices" as any)
+        .select("id,internal_reference,supplier_invoice_number,invoice_date,total_amount,remaining_amount,supplier_id,status")
+        .eq("payment_provider_id", settlement.provider_id)
+        .in("status", ["approved", "partially_paid", "under_review"])
+        .gt("remaining_amount", 0)
+        .order("invoice_date", { ascending: false })
+        .limit(100),
+      supabase.from("purchase_invoice_provider_payments" as any)
+        .select("id,amount,payment_date,status,purchase_invoice_id")
+        .eq("settlement_id", settlement.id)
+        .neq("status", "reversed"),
+    ]);
+
+    const invRows: any[] = (inv.data as any[]) ?? [];
+    const linkRows: any[] = (links.data as any[]) ?? [];
+
+    const supplierIds = Array.from(new Set(invRows.map(r => r.supplier_id).filter(Boolean)));
+    let supplierNames: Record<string, string> = {};
+    if (supplierIds.length) {
+      const { data: sup } = await supabase.from("finance_suppliers" as any).select("id,name").in("id", supplierIds);
+      supplierNames = Object.fromEntries(((sup as any[]) ?? []).map(s => [s.id, s.name]));
+    }
+
+    const linkedInvoiceIds = new Set(linkRows.map(l => l.purchase_invoice_id));
+
+    setCandInvoices(
+      invRows
+        .filter(r => !linkedInvoiceIds.has(r.id))
+        .map(r => ({
+          id: r.id,
+          internal_reference: r.internal_reference,
+          supplier_invoice_number: r.supplier_invoice_number,
+          invoice_date: r.invoice_date,
+          total_amount: Number(r.total_amount ?? 0),
+          remaining_amount: Number(r.remaining_amount ?? 0),
+          supplier_name: r.supplier_id ? supplierNames[r.supplier_id] ?? null : null,
+        })),
+    );
+
+    const invById = Object.fromEntries(invRows.map(r => [r.id, r]));
+    let extra: Record<string, any> = {};
+    const missing = linkRows.map(l => l.purchase_invoice_id).filter(id => !invById[id]);
+    if (missing.length) {
+      const { data: mi } = await supabase.from("purchase_invoices" as any)
+        .select("id,internal_reference,supplier_invoice_number").in("id", missing);
+      extra = Object.fromEntries(((mi as any[]) ?? []).map(r => [r.id, r]));
+    }
+
+    setLinkedDeductions(linkRows.map(l => {
+      const src = invById[l.purchase_invoice_id] ?? extra[l.purchase_invoice_id] ?? {};
+      return {
+        id: l.id,
+        amount: Number(l.amount ?? 0),
+        payment_date: l.payment_date,
+        status: l.status,
+        purchase_invoice_id: l.purchase_invoice_id,
+        internal_reference: src.internal_reference ?? null,
+        supplier_invoice_number: src.supplier_invoice_number ?? null,
+      };
+    }));
+  }, []);
+
+  useEffect(() => { setDeductPreview(null); loadDeductionContext(selSettlement); }, [selSettlementId, selSettlement, loadDeductionContext]);
+
+  // Exact-amount matches against the shortfall come first.
+  const candidatesRanked = useMemo(() => {
+    if (!hasShortfall) return [];
+    return [...candInvoices]
+      .map(c => ({ c, delta: Math.abs(c.remaining_amount - shortfall) }))
+      .sort((a, b) => a.delta - b.delta)
+      .slice(0, 8);
+  }, [candInvoices, shortfall, hasShortfall]);
+
+  const previewDeduction = async (invoiceId: number) => {
+    if (!selSettlement) return;
+    setDeductBusy(true);
+    const { data, error } = await supabase.rpc("preview_settlement_provider_invoice_deduction" as any, {
+      p_settlement_id: selSettlement.id, p_invoice_id: invoiceId, p_amount: null,
+    });
+    setDeductBusy(false);
+    if (error) { toast.error(error.message); return; }
+    setDeductPreview(data);
+  };
+
+  const confirmDeduction = async () => {
+    if (!selSettlement || !deductPreview) return;
+    const ref = deductPreview.internal_reference ?? deductPreview.supplier_invoice_number ?? "";
+    if (!window.confirm(`تأكيد خصم فاتورة الوسيط ${ref} بمبلغ ${fmt(deductPreview.invoice?.remaining_amount ?? 0)} ر.س من صافي هذه التسوية؟ لن يتأثر البنك أو الكاش.`)) return;
+    setDeductBusy(true);
+    const { error } = await supabase.rpc("confirm_settlement_provider_invoice_deduction" as any, {
+      p_settlement_id: selSettlement.id,
+      p_invoice_id: deductPreview.invoice.id,
+      p_amount: null,
+      p_notes: null,
+    });
+    setDeductBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم ربط فاتورة الوسيط وخصمها من صافي التسوية");
+    setDeductPreview(null);
+    await load();
+  };
+
+
   const resetFilters = () => {
     setSFilterProvider(""); setSFilterPayout(""); setSFilterMatch(""); setSSearch(""); setSDateFrom(""); setSDateTo("");
     setIFilterProvider(""); setIFilterAlloc(""); setIFilterAccount(""); setIShowAll(false); setISearch("");
@@ -608,6 +746,16 @@ function ReconciliationPage() {
                   {Math.abs(Number(selSettlement.adjustments_amount || 0)) > 0.005 && (
                     <Row label="تسويات إضافية" value={fmt(selSettlement.adjustments_amount)} tone={Number(selSettlement.adjustments_amount) < 0 ? "red" : "emerald"} />
                   )}
+                  {Number(selSettlement.provider_invoice_deductions_amount || 0) > 0.005 && (
+                    <>
+                      <Row label="خصم فواتير الوسيط" value={`− ${fmt(Number(selSettlement.provider_invoice_deductions_amount || 0))}`} tone="red" />
+                      {linkedDeductions.map(d => (
+                        <div key={d.id} className="text-[10px] text-muted-foreground ps-2">
+                          • {d.internal_reference ?? "—"}{d.supplier_invoice_number ? ` / ${d.supplier_invoice_number}` : ""} — {fmt(d.amount)} ر.س ({d.payment_date})
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
                 <div className="mt-1 pt-1 border-t border-white/5">
                   <Row label="الصافي المتوقع" value={fmt(selSettlement.expected_net_amount)} bold />
@@ -673,6 +821,64 @@ function ReconciliationPage() {
                 <Row label="البيان" value={selIncome.note ?? "—"} />
               </div>
             )}
+
+            {selSettlement && selIncome && hasShortfall && (
+              <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-amber-300 font-semibold">فواتير وسيط محتملة</div>
+                  <div className="text-[11px] text-muted-foreground">النقص: <b className="text-amber-200">{fmt(shortfall)}</b> ر.س</div>
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  فواتير مشتريات معتمدة غير مسددة لنفس الوسيط قد يكون خصمها من الحوالة. لا يتم أي ربط تلقائي.
+                </div>
+
+                {candidatesRanked.length === 0 ? (
+                  <div className="text-[11px] text-muted-foreground">لا توجد فواتير مرشحة لهذا الوسيط.</div>
+                ) : candidatesRanked.map(({ c, delta }) => (
+                  <div key={c.id} className={`rounded border p-2 space-y-1 bg-black/30 ${delta <= 0.05 ? "border-emerald-500/40" : "border-white/10"}`}>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-amber-200">{c.internal_reference ?? `#${c.id}`}{c.supplier_invoice_number ? ` / ${c.supplier_invoice_number}` : ""}</span>
+                      {delta <= 0.05 && <span className="text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 text-emerald-300">مطابقة دقيقة</span>}
+                    </div>
+                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                      <span>{c.supplier_name ?? "—"}</span>
+                      <span>{c.invoice_date ?? "—"}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span>المتبقي: <b>{fmt(c.remaining_amount)}</b></span>
+                      <span className={delta <= 0.05 ? "text-emerald-300" : "text-amber-300"}>الفرق عن النقص: {fmt(c.remaining_amount - shortfall)}</span>
+                    </div>
+                    <button
+                      onClick={() => previewDeduction(c.id)}
+                      disabled={deductBusy}
+                      className="w-full mt-1 rounded border border-amber-500/40 text-amber-200 hover:bg-amber-500/10 py-1 text-[11px] disabled:opacity-50"
+                    >
+                      معاينة الخصم
+                    </button>
+                  </div>
+                ))}
+
+                {deductPreview && (
+                  <div className="rounded border border-emerald-500/30 bg-emerald-500/5 p-2 space-y-1 text-[11px]">
+                    <div className="text-emerald-300 font-semibold">معاينة خصم فاتورة الوسيط</div>
+                    <Row label="الفاتورة" value={`${deductPreview.internal_reference ?? ""}${deductPreview.supplier_invoice_number ? ` / ${deductPreview.supplier_invoice_number}` : ""}`} />
+                    <Row label="المبلغ" value={fmt(Number(deductPreview.invoice?.remaining_amount ?? 0))} bold />
+                    <Row label="الصافي المتوقع الحالي" value={fmt(Number(deductPreview.settlement?.expected_net_amount ?? 0))} />
+                    <Row label="الصافي المتوقع بعد الخصم" value={fmt(Number(deductPreview.settlement?.new_expected_net_amount ?? 0))} bold tone="emerald" />
+                    <div className="text-[10px] text-muted-foreground">
+                      يُسدَّد الدائنون من حساب مستحقات الوسيط فقط، بقيد مسودة، بلا مصروف أو ضريبة أو حركة بنك.
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={confirmDeduction} disabled={deductBusy} className="flex-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 text-[11px] disabled:opacity-50">
+                        تأكيد الخصم وربطه بالتسوية
+                      </button>
+                      <button onClick={() => setDeductPreview(null)} className="rounded border border-white/10 px-3 py-1.5 text-[11px]">إلغاء</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
 
             {suggestion && selSettlement && selIncome && (
               <div className={`rounded border p-2 ${MATCH_COLOR[suggestion.strength]}`}>
