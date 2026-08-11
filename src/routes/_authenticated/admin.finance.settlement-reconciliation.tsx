@@ -822,6 +822,64 @@ function ReconciliationPage() {
               </div>
             )}
 
+            {selSettlement && selIncome && hasShortfall && (
+              <div className="rounded border border-amber-500/30 bg-amber-500/5 p-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-amber-300 font-semibold">فواتير وسيط محتملة</div>
+                  <div className="text-[11px] text-muted-foreground">النقص: <b className="text-amber-200">{fmt(shortfall)}</b> ر.س</div>
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  فواتير مشتريات معتمدة غير مسددة لنفس الوسيط قد يكون خصمها من الحوالة. لا يتم أي ربط تلقائي.
+                </div>
+
+                {candidatesRanked.length === 0 ? (
+                  <div className="text-[11px] text-muted-foreground">لا توجد فواتير مرشحة لهذا الوسيط.</div>
+                ) : candidatesRanked.map(({ c, delta }) => (
+                  <div key={c.id} className={`rounded border p-2 space-y-1 bg-black/30 ${delta <= 0.05 ? "border-emerald-500/40" : "border-white/10"}`}>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-amber-200">{c.internal_reference ?? `#${c.id}`}{c.supplier_invoice_number ? ` / ${c.supplier_invoice_number}` : ""}</span>
+                      {delta <= 0.05 && <span className="text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40 text-emerald-300">مطابقة دقيقة</span>}
+                    </div>
+                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                      <span>{c.supplier_name ?? "—"}</span>
+                      <span>{c.invoice_date ?? "—"}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px]">
+                      <span>المتبقي: <b>{fmt(c.remaining_amount)}</b></span>
+                      <span className={delta <= 0.05 ? "text-emerald-300" : "text-amber-300"}>الفرق عن النقص: {fmt(c.remaining_amount - shortfall)}</span>
+                    </div>
+                    <button
+                      onClick={() => previewDeduction(c.id)}
+                      disabled={deductBusy}
+                      className="w-full mt-1 rounded border border-amber-500/40 text-amber-200 hover:bg-amber-500/10 py-1 text-[11px] disabled:opacity-50"
+                    >
+                      معاينة الخصم
+                    </button>
+                  </div>
+                ))}
+
+                {deductPreview && (
+                  <div className="rounded border border-emerald-500/30 bg-emerald-500/5 p-2 space-y-1 text-[11px]">
+                    <div className="text-emerald-300 font-semibold">معاينة خصم فاتورة الوسيط</div>
+                    <Row label="الفاتورة" value={`${deductPreview.internal_reference ?? ""}${deductPreview.supplier_invoice_number ? ` / ${deductPreview.supplier_invoice_number}` : ""}`} />
+                    <Row label="المبلغ" value={fmt(Number(deductPreview.invoice?.remaining_amount ?? 0))} bold />
+                    <Row label="الصافي المتوقع الحالي" value={fmt(Number(deductPreview.settlement?.expected_net_amount ?? 0))} />
+                    <Row label="الصافي المتوقع بعد الخصم" value={fmt(Number(deductPreview.settlement?.new_expected_net_amount ?? 0))} bold tone="emerald" />
+                    <div className="text-[10px] text-muted-foreground">
+                      يُسدَّد الدائنون من حساب مستحقات الوسيط فقط، بقيد مسودة، بلا مصروف أو ضريبة أو حركة بنك.
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={confirmDeduction} disabled={deductBusy} className="flex-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 text-[11px] disabled:opacity-50">
+                        تأكيد الخصم وربطه بالتسوية
+                      </button>
+                      <button onClick={() => setDeductPreview(null)} className="rounded border border-white/10 px-3 py-1.5 text-[11px]">إلغاء</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+
             {suggestion && selSettlement && selIncome && (
               <div className={`rounded border p-2 ${MATCH_COLOR[suggestion.strength]}`}>
                 <div className="flex items-center justify-between font-semibold">
