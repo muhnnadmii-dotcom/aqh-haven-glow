@@ -748,7 +748,7 @@ function ReconciliationPage() {
                   )}
                   {Number(selSettlement.provider_invoice_deductions_amount || 0) > 0.005 && (
                     <>
-                      <Row label="خصم فواتير الوسيط" value={`− ${fmt(selSettlement.provider_invoice_deductions_amount)}`} tone="red" />
+                      <Row label="خصم فواتير الوسيط" value={`− ${fmt(Number(selSettlement.provider_invoice_deductions_amount || 0))}`} tone="red" />
                       {linkedDeductions.map(d => (
                         <div key={d.id} className="text-[10px] text-muted-foreground ps-2">
                           • {d.internal_reference ?? "—"}{d.supplier_invoice_number ? ` / ${d.supplier_invoice_number}` : ""} — {fmt(d.amount)} ر.س ({d.payment_date})
