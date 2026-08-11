@@ -194,6 +194,12 @@ function ReconciliationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editingSettlement, setEditingSettlement] = useState<Settlement | null>(null);
 
+  // Provider-invoice deductions (independent supplier invoices the gateway deducts from the payout)
+  const [candInvoices, setCandInvoices] = useState<CandidateInvoice[]>([]);
+  const [linkedDeductions, setLinkedDeductions] = useState<LinkedDeduction[]>([]);
+  const [deductPreview, setDeductPreview] = useState<any>(null);
+  const [deductBusy, setDeductBusy] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     const [p, src, acc, s, i, a] = await Promise.all([
