@@ -746,6 +746,16 @@ function ReconciliationPage() {
                   {Math.abs(Number(selSettlement.adjustments_amount || 0)) > 0.005 && (
                     <Row label="تسويات إضافية" value={fmt(selSettlement.adjustments_amount)} tone={Number(selSettlement.adjustments_amount) < 0 ? "red" : "emerald"} />
                   )}
+                  {Number(selSettlement.provider_invoice_deductions_amount || 0) > 0.005 && (
+                    <>
+                      <Row label="خصم فواتير الوسيط" value={`− ${fmt(selSettlement.provider_invoice_deductions_amount)}`} tone="red" />
+                      {linkedDeductions.map(d => (
+                        <div key={d.id} className="text-[10px] text-muted-foreground ps-2">
+                          • {d.internal_reference ?? "—"}{d.supplier_invoice_number ? ` / ${d.supplier_invoice_number}` : ""} — {fmt(d.amount)} ر.س ({d.payment_date})
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
                 <div className="mt-1 pt-1 border-t border-white/5">
                   <Row label="الصافي المتوقع" value={fmt(selSettlement.expected_net_amount)} bold />
