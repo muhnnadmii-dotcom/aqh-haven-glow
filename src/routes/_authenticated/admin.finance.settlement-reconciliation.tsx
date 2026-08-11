@@ -200,7 +200,7 @@ function ReconciliationPage() {
       supabase.from("payment_providers" as any).select("id,name,provider_code").eq("is_active", true),
       supabase.from("finance_income_sources" as any).select("id,name"),
       supabase.from("finance_accounts" as any).select("id,name"),
-      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,report_reference,source_file_name,settlement_date,period_start,period_end,imported_at,payout_received_date,expected_net_amount,gross_sales_amount,refunds_amount,fees_before_vat,fees_vat_amount,payout_fee,adjustments_amount,status,payout_status,notes").order("settlement_date", { ascending: false, nullsFirst: false }).limit(500),
+      supabase.from("payment_settlements" as any).select("id,provider_id,settlement_reference,report_reference,source_file_name,settlement_date,period_start,period_end,imported_at,payout_received_date,expected_net_amount,gross_sales_amount,refunds_amount,fees_before_vat,fees_vat_amount,payout_fee,adjustments_amount,provider_invoice_deductions_amount,status,payout_status,notes").order("settlement_date", { ascending: false, nullsFirst: false }).limit(500),
       supabase.from("finance_incomes" as any).select("id,income_date,amount,note,transaction_type,business_relation,payment_provider_id,income_source_id,settlement_id,account_id").is("deleted_at", null).order("income_date", { ascending: false }).limit(1000),
       supabase.from("settlement_bank_allocations" as any).select("*").eq("status", "confirmed"),
     ]);
