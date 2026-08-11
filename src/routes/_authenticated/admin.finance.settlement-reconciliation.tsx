@@ -36,6 +36,26 @@ type Settlement = {
 };
 
 type Provider = { id: string; name: string; provider_code: string | null };
+
+type CandidateInvoice = {
+  id: number;
+  internal_reference: string | null;
+  supplier_invoice_number: string | null;
+  invoice_date: string | null;
+  total_amount: number;
+  remaining_amount: number;
+  supplier_name: string | null;
+};
+
+type LinkedDeduction = {
+  id: string;
+  amount: number;
+  payment_date: string;
+  status: string;
+  purchase_invoice_id: number;
+  internal_reference: string | null;
+  supplier_invoice_number: string | null;
+};
 type IncomeSource = { id: string; name: string };
 type Account = { id: string; name: string };
 
