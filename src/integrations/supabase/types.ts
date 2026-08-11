@@ -2632,6 +2632,7 @@ export type Database = {
           period_end: string | null
           period_start: string | null
           provider_id: string
+          provider_invoice_deductions_amount: number
           refunds_amount: number
           report_reference: string | null
           reserve_held: number
@@ -2667,6 +2668,7 @@ export type Database = {
           period_end?: string | null
           period_start?: string | null
           provider_id: string
+          provider_invoice_deductions_amount?: number
           refunds_amount?: number
           report_reference?: string | null
           reserve_held?: number
@@ -2702,6 +2704,7 @@ export type Database = {
           period_end?: string | null
           period_start?: string | null
           provider_id?: string
+          provider_invoice_deductions_amount?: number
           refunds_amount?: number
           report_reference?: string | null
           reserve_held?: number
@@ -3096,6 +3099,7 @@ export type Database = {
           reversed_at: string | null
           reversed_by: string | null
           reversed_reason: string | null
+          settlement_id: string | null
           source_account_id: string
           status: string
           updated_at: string
@@ -3115,6 +3119,7 @@ export type Database = {
           reversed_at?: string | null
           reversed_by?: string | null
           reversed_reason?: string | null
+          settlement_id?: string | null
           source_account_id: string
           status?: string
           updated_at?: string
@@ -3134,6 +3139,7 @@ export type Database = {
           reversed_at?: string | null
           reversed_by?: string | null
           reversed_reason?: string | null
+          settlement_id?: string | null
           source_account_id?: string
           status?: string
           updated_at?: string
@@ -3158,6 +3164,13 @@ export type Database = {
             columns: ["purchase_invoice_id"]
             isOneToOne: false
             referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoice_provider_payments_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "payment_settlements"
             referencedColumns: ["id"]
           },
           {
@@ -5034,6 +5047,15 @@ export type Database = {
         }
         Returns: Json
       }
+      confirm_settlement_provider_invoice_deduction: {
+        Args: {
+          p_amount?: number
+          p_invoice_id: number
+          p_notes?: string
+          p_settlement_id: string
+        }
+        Returns: Json
+      }
       delete_settlement_full: {
         Args: { _reason: string; _settlement_id: string }
         Returns: Json
@@ -5273,6 +5295,14 @@ export type Database = {
         Args: { p_amount?: number; p_invoice_id: number }
         Returns: Json
       }
+      preview_settlement_provider_invoice_deduction: {
+        Args: {
+          p_amount?: number
+          p_invoice_id: number
+          p_settlement_id: string
+        }
+        Returns: Json
+      }
       purchase_invoice_recalc_totals: {
         Args: { p_invoice_id: number }
         Returns: undefined
@@ -5280,6 +5310,10 @@ export type Database = {
       recalc_provider_fee_invoice_matches: {
         Args: { _invoice_id: number }
         Returns: undefined
+      }
+      recalc_settlement_provider_invoice_deductions: {
+        Args: { _settlement_id: string }
+        Returns: number
       }
       recalculate_settlement_totals: {
         Args: { _settlement_id: string }
@@ -5306,6 +5340,7 @@ export type Database = {
           period_end: string | null
           period_start: string | null
           provider_id: string
+          provider_invoice_deductions_amount: number
           refunds_amount: number
           report_reference: string | null
           reserve_held: number
