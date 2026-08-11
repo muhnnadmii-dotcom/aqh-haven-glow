@@ -467,6 +467,117 @@ function ReconciliationPage() {
     await load();
   };
 
+  // ---- Provider invoice deductions (independent broker invoices deducted from the payout) ----
+  const shortfall = selSettlement && selIncome ? settleRemaining - incomeRemaining : 0;
+  const hasShortfall = shortfall > 0.05;
+
+  const loadDeductionContext = useCallback(async (settlement: Settlement | null) => {
+    if (!settlement) { setCandInvoices([]); setLinkedDeductions([]); return; }
+
+    const [inv, links] = await Promise.all([
+      supabase.from("purchase_invoices" as any)
+        .select("id,internal_reference,supplier_invoice_number,invoice_date,total_amount,remaining_amount,supplier_id,status")
+        .eq("payment_provider_id", settlement.provider_id)
+        .in("status", ["approved", "partially_paid", "under_review"])
+        .gt("remaining_amount", 0)
+        .order("invoice_date", { ascending: false })
+        .limit(100),
+      supabase.from("purchase_invoice_provider_payments" as any)
+        .select("id,amount,payment_date,status,purchase_invoice_id")
+        .eq("settlement_id", settlement.id)
+        .neq("status", "reversed"),
+    ]);
+
+    const invRows: any[] = (inv.data as any[]) ?? [];
+    const linkRows: any[] = (links.data as any[]) ?? [];
+
+    const supplierIds = Array.from(new Set(invRows.map(r => r.supplier_id).filter(Boolean)));
+    let supplierNames: Record<string, string> = {};
+    if (supplierIds.length) {
+      const { data: sup } = await supabase.from("finance_suppliers" as any).select("id,name").in("id", supplierIds);
+      supplierNames = Object.fromEntries(((sup as any[]) ?? []).map(s => [s.id, s.name]));
+    }
+
+    const linkedInvoiceIds = new Set(linkRows.map(l => l.purchase_invoice_id));
+
+    setCandInvoices(
+      invRows
+        .filter(r => !linkedInvoiceIds.has(r.id))
+        .map(r => ({
+          id: r.id,
+          internal_reference: r.internal_reference,
+          supplier_invoice_number: r.supplier_invoice_number,
+          invoice_date: r.invoice_date,
+          total_amount: Number(r.total_amount ?? 0),
+          remaining_amount: Number(r.remaining_amount ?? 0),
+          supplier_name: r.supplier_id ? supplierNames[r.supplier_id] ?? null : null,
+        })),
+    );
+
+    const invById = Object.fromEntries(invRows.map(r => [r.id, r]));
+    let extra: Record<string, any> = {};
+    const missing = linkRows.map(l => l.purchase_invoice_id).filter(id => !invById[id]);
+    if (missing.length) {
+      const { data: mi } = await supabase.from("purchase_invoices" as any)
+        .select("id,internal_reference,supplier_invoice_number").in("id", missing);
+      extra = Object.fromEntries(((mi as any[]) ?? []).map(r => [r.id, r]));
+    }
+
+    setLinkedDeductions(linkRows.map(l => {
+      const src = invById[l.purchase_invoice_id] ?? extra[l.purchase_invoice_id] ?? {};
+      return {
+        id: l.id,
+        amount: Number(l.amount ?? 0),
+        payment_date: l.payment_date,
+        status: l.status,
+        purchase_invoice_id: l.purchase_invoice_id,
+        internal_reference: src.internal_reference ?? null,
+        supplier_invoice_number: src.supplier_invoice_number ?? null,
+      };
+    }));
+  }, []);
+
+  useEffect(() => { setDeductPreview(null); loadDeductionContext(selSettlement); }, [selSettlementId, selSettlement, loadDeductionContext]);
+
+  // Exact-amount matches against the shortfall come first.
+  const candidatesRanked = useMemo(() => {
+    if (!hasShortfall) return [];
+    return [...candInvoices]
+      .map(c => ({ c, delta: Math.abs(c.remaining_amount - shortfall) }))
+      .sort((a, b) => a.delta - b.delta)
+      .slice(0, 8);
+  }, [candInvoices, shortfall, hasShortfall]);
+
+  const previewDeduction = async (invoiceId: number) => {
+    if (!selSettlement) return;
+    setDeductBusy(true);
+    const { data, error } = await supabase.rpc("preview_settlement_provider_invoice_deduction" as any, {
+      p_settlement_id: selSettlement.id, p_invoice_id: invoiceId, p_amount: null,
+    });
+    setDeductBusy(false);
+    if (error) { toast.error(error.message); return; }
+    setDeductPreview(data);
+  };
+
+  const confirmDeduction = async () => {
+    if (!selSettlement || !deductPreview) return;
+    const ref = deductPreview.internal_reference ?? deductPreview.supplier_invoice_number ?? "";
+    if (!window.confirm(`تأكيد خصم فاتورة الوسيط ${ref} بمبلغ ${fmt(deductPreview.invoice?.remaining_amount ?? 0)} ر.س من صافي هذه التسوية؟ لن يتأثر البنك أو الكاش.`)) return;
+    setDeductBusy(true);
+    const { error } = await supabase.rpc("confirm_settlement_provider_invoice_deduction" as any, {
+      p_settlement_id: selSettlement.id,
+      p_invoice_id: deductPreview.invoice.id,
+      p_amount: null,
+      p_notes: null,
+    });
+    setDeductBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم ربط فاتورة الوسيط وخصمها من صافي التسوية");
+    setDeductPreview(null);
+    await load();
+  };
+
+
   const resetFilters = () => {
     setSFilterProvider(""); setSFilterPayout(""); setSFilterMatch(""); setSSearch(""); setSDateFrom(""); setSDateTo("");
     setIFilterProvider(""); setIFilterAlloc(""); setIFilterAccount(""); setIShowAll(false); setISearch("");
