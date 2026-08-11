@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
-import { FileMinus, FilePlus, Search } from "lucide-react";
+import { Eye, FileMinus, FilePlus, Search } from "lucide-react";
+import { ViewNoteDialog } from "@/components/finance/CreditDebitNotesPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/finance/credit-debit-notes")({
   ssr: false,
@@ -24,8 +25,9 @@ function NotesListPage() {
   const [q, setQ] = useState("");
   const [type, setType] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [openNoteId, setOpenNoteId] = useState<number | null>(null);
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, refetch } = useQuery({
     queryKey: ["cdn-all"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -101,11 +103,12 @@ function NotesListPage() {
               <th className="text-right p-2">الضريبة</th>
               <th className="text-right p-2">الإجمالي</th>
               <th className="text-right p-2">الحالة</th>
+              <th className="text-right p-2">إجراءات</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={8} className="p-4 text-center text-muted-foreground">جاري التحميل…</td></tr>}
-            {!isLoading && filtered.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">لا توجد إشعارات.</td></tr>}
+            {isLoading && <tr><td colSpan={9} className="p-4 text-center text-muted-foreground">جاري التحميل…</td></tr>}
+            {!isLoading && filtered.length === 0 && <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">لا توجد إشعارات.</td></tr>}
             {filtered.map((r) => {
               const isSales = r.note_type.startsWith("sales");
               const linkTo = isSales
@@ -132,12 +135,28 @@ function NotesListPage() {
                       : "bg-amber-500/10 border-amber-500/30 text-amber-200"
                     }`}>{STATUS_LABEL[r.status]}</span>
                   </td>
+                  <td className="p-2">
+                    <button
+                      onClick={() => setOpenNoteId(Number(r.id))}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gold/40 bg-gold/10 text-gold text-[11px] hover:bg-gold/20"
+                    >
+                      <Eye size={11} /> عرض الإشعار
+                    </button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {openNoteId !== null && (
+        <ViewNoteDialog
+          noteId={openNoteId}
+          onClose={() => setOpenNoteId(null)}
+          onChanged={() => refetch()}
+        />
+      )}
     </div>
   );
 }

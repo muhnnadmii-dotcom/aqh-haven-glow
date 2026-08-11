@@ -394,7 +394,7 @@ function Cell({ label, value, highlight }: { label: string; value: string; highl
 
 /* ----------- View dialog with approve/edit-items ----------- */
 
-function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number; onClose: () => void; onChanged: () => void }) {
+export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number; onClose: () => void; onChanged: () => void }) {
   const qc = useQueryClient();
   const roles = useFinanceRoles();
   const [overrideReason, setOverrideReason] = useState("");
