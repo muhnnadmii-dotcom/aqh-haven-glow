@@ -27,6 +27,7 @@ type Settlement = {
   fees_vat_amount: number;
   payout_fee: number;
   adjustments_amount: number;
+  provider_invoice_deductions_amount?: number | null;
   status: string;
   payout_status: string | null;
   reconciliation_status?: string | null;
