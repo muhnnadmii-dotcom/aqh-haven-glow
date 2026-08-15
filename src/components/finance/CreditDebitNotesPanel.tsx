@@ -420,6 +420,49 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
     },
   });
 
+  const { data: journals = [], refetch: refetchJournals } = useQuery({
+    queryKey: ["cdn-detail-journals", noteId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("journal_entries" as any)
+        .select("id, entry_number, entry_date, status, source_type, total_debit, total_credit")
+        .in("source_type", ["credit_debit_note_approval", "credit_debit_note_cancel"])
+        .eq("source_id", String(noteId))
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const { data: linkedInvoice } = useQuery({
+    enabled: !!note,
+    queryKey: ["cdn-detail-invoice", noteId, note?.original_sales_invoice_id, note?.original_purchase_invoice_id],
+    queryFn: async () => {
+      if (note?.original_sales_invoice_id) {
+        const { data } = await supabase
+          .from("sales_invoices" as any)
+          .select("id, invoice_number, total_amount, paid_amount, remaining_amount, payment_status")
+          .eq("id", note.original_sales_invoice_id).maybeSingle();
+        return data ? { kind: "sales" as const, ...(data as any) } : null;
+      }
+      if (note?.original_purchase_invoice_id) {
+        const { data } = await supabase
+          .from("purchase_invoices" as any)
+          .select("id, internal_reference, supplier_invoice_number, total_amount, paid_amount, remaining_amount, payment_status")
+          .eq("id", note.original_purchase_invoice_id).maybeSingle();
+        return data ? { kind: "purchase" as const, ...(data as any) } : null;
+      }
+      return null;
+    },
+  });
+
+  const refreshAll = () => {
+    refetch();
+    refetchJournals();
+    onChanged();
+    qc.invalidateQueries();
+  };
+
   const approve = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc("approve_credit_debit_note" as any, {
@@ -429,12 +472,25 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("تم اعتماد الإشعار");
-      refetch();
-      onChanged();
-      qc.invalidateQueries();
+      toast.success("تم اعتماد الإشعار وتحديث رصيد الفاتورة");
+      refreshAll();
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e?.message || "تعذر اعتماد الإشعار"),
+  });
+
+  const cancel = useMutation({
+    mutationFn: async (reason: string) => {
+      const { error } = await supabase.rpc("cancel_credit_debit_note" as any, {
+        p_note_id: noteId,
+        p_reason: reason,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم إلغاء الإشعار وإعادة رصيد الفاتورة");
+      refreshAll();
+    },
+    onError: (e: any) => toast.error(e?.message || "تعذر إلغاء الإشعار"),
   });
 
   if (isLoading || !note) {
@@ -447,6 +503,17 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
 
   const isDraft = note.status === "draft";
   const isApproved = note.status === "approved";
+  const invoiceHref = note.original_sales_invoice_id
+    ? `/admin/finance/sales-invoices/${note.original_sales_invoice_id}`
+    : note.original_purchase_invoice_id
+      ? `/admin/finance/purchase-invoices/${note.original_purchase_invoice_id}`
+      : null;
+  const invoiceLabel = linkedInvoice
+    ? (linkedInvoice.kind === "sales"
+        ? linkedInvoice.invoice_number
+        : (linkedInvoice.internal_reference || linkedInvoice.supplier_invoice_number))
+    : "الفاتورة الأصلية";
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
@@ -463,11 +530,42 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 text-[12px]">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[12px]">
+          <Cell label="الحالة" value={STATUS_LABEL[note.status] ?? note.status} />
           <Cell label="التاريخ" value={note.issue_date} />
           <Cell label="النوع" value={note.note_type.endsWith("credit_note") ? "دائن" : "مدين"} />
+          <Cell label="الإجمالي قبل الضريبة" value={SAR(note.subtotal)} />
+          <Cell label="الضريبة" value={SAR(note.vat_amount)} />
           <Cell label="الإجمالي" value={SAR(note.total_amount)} highlight />
         </div>
+
+        <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-[11px] space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted-foreground">الفاتورة الأصلية</span>
+            {invoiceHref ? (
+              <a href={invoiceHref} className="text-gold hover:underline">{invoiceLabel} · فتح الفاتورة</a>
+            ) : <span>—</span>}
+          </div>
+          {linkedInvoice && (
+            <div className="text-muted-foreground">
+              الإجمالي: {SAR(linkedInvoice.total_amount)} · المدفوع: {SAR(linkedInvoice.paid_amount)} ·
+              المتبقي: {SAR(linkedInvoice.remaining_amount)} · حالة السداد: {linkedInvoice.payment_status}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-[11px] space-y-1">
+          <div className="text-muted-foreground">القيود المحاسبية</div>
+          {journals.length === 0 ? (
+            <div className="text-muted-foreground">لا يوجد قيد مرتبط (خارج نطاق الترحيل التلقائي أو لم يُعتمد بعد).</div>
+          ) : journals.map((j) => (
+            <div key={j.id} className="flex items-center justify-between gap-2">
+              <span>{j.entry_number} · {j.entry_date} · {j.source_type === "credit_debit_note_cancel" ? "قيد عكسي" : "قيد الاعتماد"}</span>
+              <span className={j.status === "reversed" ? "text-muted-foreground" : "text-emerald-300"}>{j.status}</span>
+            </div>
+          ))}
+        </div>
+
 
         <div className="overflow-x-auto rounded-lg border border-white/10">
           <table className="w-full text-[12px] min-w-[560px]">
@@ -526,6 +624,24 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
             </div>
           </div>
         )}
+
+        {note.status !== "cancelled" && (roles.canManage || (isDraft && roles.canAccountant)) && (
+          <div className="flex justify-end border-t border-white/10 pt-3">
+            <button
+              onClick={() => {
+                const reason = window.prompt("سبب الإلغاء (إلزامي):", "");
+                if (!reason || !reason.trim()) return;
+                cancel.mutate(reason.trim());
+              }}
+              disabled={cancel.isPending}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[12px] bg-rose-500/15 border border-rose-500/30 text-rose-200 disabled:opacity-50"
+            >
+              {cancel.isPending && <Loader2 size={13} className="animate-spin" />}
+              <Ban size={13} /> {isApproved ? "إلغاء الإشعار وعكس القيد" : "إلغاء المسودة"}
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );

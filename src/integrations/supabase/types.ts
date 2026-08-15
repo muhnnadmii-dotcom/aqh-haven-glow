@@ -5027,6 +5027,18 @@ export type Database = {
         }
       }
       cdn_recalc_totals: { Args: { p_note_id: number }; Returns: undefined }
+      cdn_sync_linked_invoice: {
+        Args: { p_note_id: number }
+        Returns: undefined
+      }
+      cdn_sync_purchase_invoice: {
+        Args: { p_invoice_id: number }
+        Returns: undefined
+      }
+      cdn_sync_sales_invoice: {
+        Args: { p_invoice_id: number }
+        Returns: undefined
+      }
       clear_auto_imported_settlement_dates: {
         Args: never
         Returns: {
@@ -5614,6 +5626,8 @@ export type Database = {
         | "owner_withdrawal"
         | "internal_transfer"
         | "payment_settlement_payout"
+        | "credit_debit_note_approval"
+        | "credit_debit_note_cancel"
       payment_provider_type: "payment_gateway" | "bnpl" | "marketplace"
       payment_settlement_line_type:
         | "sale"
@@ -5986,6 +6000,8 @@ export const Constants = {
         "owner_withdrawal",
         "internal_transfer",
         "payment_settlement_payout",
+        "credit_debit_note_approval",
+        "credit_debit_note_cancel",
       ],
       payment_provider_type: ["payment_gateway", "bnpl", "marketplace"],
       payment_settlement_line_type: [
