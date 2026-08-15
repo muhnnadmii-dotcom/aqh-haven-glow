@@ -530,11 +530,42 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 text-[12px]">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[12px]">
+          <Cell label="الحالة" value={STATUS_LABEL[note.status] ?? note.status} />
           <Cell label="التاريخ" value={note.issue_date} />
           <Cell label="النوع" value={note.note_type.endsWith("credit_note") ? "دائن" : "مدين"} />
+          <Cell label="الإجمالي قبل الضريبة" value={SAR(note.subtotal)} />
+          <Cell label="الضريبة" value={SAR(note.vat_amount)} />
           <Cell label="الإجمالي" value={SAR(note.total_amount)} highlight />
         </div>
+
+        <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-[11px] space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted-foreground">الفاتورة الأصلية</span>
+            {invoiceHref ? (
+              <a href={invoiceHref} className="text-gold hover:underline">{invoiceLabel} · فتح الفاتورة</a>
+            ) : <span>—</span>}
+          </div>
+          {linkedInvoice && (
+            <div className="text-muted-foreground">
+              الإجمالي: {SAR(linkedInvoice.total_amount)} · المدفوع: {SAR(linkedInvoice.paid_amount)} ·
+              المتبقي: {SAR(linkedInvoice.remaining_amount)} · حالة السداد: {linkedInvoice.payment_status}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-[11px] space-y-1">
+          <div className="text-muted-foreground">القيود المحاسبية</div>
+          {journals.length === 0 ? (
+            <div className="text-muted-foreground">لا يوجد قيد مرتبط (خارج نطاق الترحيل التلقائي أو لم يُعتمد بعد).</div>
+          ) : journals.map((j) => (
+            <div key={j.id} className="flex items-center justify-between gap-2">
+              <span>{j.entry_number} · {j.entry_date} · {j.source_type === "credit_debit_note_cancel" ? "قيد عكسي" : "قيد الاعتماد"}</span>
+              <span className={j.status === "reversed" ? "text-muted-foreground" : "text-emerald-300"}>{j.status}</span>
+            </div>
+          ))}
+        </div>
+
 
         <div className="overflow-x-auto rounded-lg border border-white/10">
           <table className="w-full text-[12px] min-w-[560px]">
