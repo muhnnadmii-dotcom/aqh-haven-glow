@@ -624,6 +624,24 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
             </div>
           </div>
         )}
+
+        {note.status !== "cancelled" && (roles.canManage || (isDraft && roles.canAccountant)) && (
+          <div className="flex justify-end border-t border-white/10 pt-3">
+            <button
+              onClick={() => {
+                const reason = window.prompt("سبب الإلغاء (إلزامي):", "");
+                if (!reason || !reason.trim()) return;
+                cancel.mutate(reason.trim());
+              }}
+              disabled={cancel.isPending}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[12px] bg-rose-500/15 border border-rose-500/30 text-rose-200 disabled:opacity-50"
+            >
+              {cancel.isPending && <Loader2 size={13} className="animate-spin" />}
+              <Ban size={13} /> {isApproved ? "إلغاء الإشعار وعكس القيد" : "إلغاء المسودة"}
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );
