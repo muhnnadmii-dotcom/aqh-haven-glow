@@ -420,6 +420,49 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
     },
   });
 
+  const { data: journals = [], refetch: refetchJournals } = useQuery({
+    queryKey: ["cdn-detail-journals", noteId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("journal_entries" as any)
+        .select("id, entry_number, entry_date, status, source_type, total_debit, total_credit")
+        .in("source_type", ["credit_debit_note_approval", "credit_debit_note_cancel"])
+        .eq("source_id", String(noteId))
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const { data: linkedInvoice } = useQuery({
+    enabled: !!note,
+    queryKey: ["cdn-detail-invoice", noteId, note?.original_sales_invoice_id, note?.original_purchase_invoice_id],
+    queryFn: async () => {
+      if (note?.original_sales_invoice_id) {
+        const { data } = await supabase
+          .from("sales_invoices" as any)
+          .select("id, invoice_number, total_amount, paid_amount, remaining_amount, payment_status")
+          .eq("id", note.original_sales_invoice_id).maybeSingle();
+        return data ? { kind: "sales" as const, ...(data as any) } : null;
+      }
+      if (note?.original_purchase_invoice_id) {
+        const { data } = await supabase
+          .from("purchase_invoices" as any)
+          .select("id, internal_reference, supplier_invoice_number, total_amount, paid_amount, remaining_amount, payment_status")
+          .eq("id", note.original_purchase_invoice_id).maybeSingle();
+        return data ? { kind: "purchase" as const, ...(data as any) } : null;
+      }
+      return null;
+    },
+  });
+
+  const refreshAll = () => {
+    refetch();
+    refetchJournals();
+    onChanged();
+    qc.invalidateQueries();
+  };
+
   const approve = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc("approve_credit_debit_note" as any, {
@@ -429,12 +472,25 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("تم اعتماد الإشعار");
-      refetch();
-      onChanged();
-      qc.invalidateQueries();
+      toast.success("تم اعتماد الإشعار وتحديث رصيد الفاتورة");
+      refreshAll();
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e?.message || "تعذر اعتماد الإشعار"),
+  });
+
+  const cancel = useMutation({
+    mutationFn: async (reason: string) => {
+      const { error } = await supabase.rpc("cancel_credit_debit_note" as any, {
+        p_note_id: noteId,
+        p_reason: reason,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم إلغاء الإشعار وإعادة رصيد الفاتورة");
+      refreshAll();
+    },
+    onError: (e: any) => toast.error(e?.message || "تعذر إلغاء الإشعار"),
   });
 
   if (isLoading || !note) {
@@ -447,6 +503,17 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
 
   const isDraft = note.status === "draft";
   const isApproved = note.status === "approved";
+  const invoiceHref = note.original_sales_invoice_id
+    ? `/admin/finance/sales-invoices/${note.original_sales_invoice_id}`
+    : note.original_purchase_invoice_id
+      ? `/admin/finance/purchase-invoices/${note.original_purchase_invoice_id}`
+      : null;
+  const invoiceLabel = linkedInvoice
+    ? (linkedInvoice.kind === "sales"
+        ? linkedInvoice.invoice_number
+        : (linkedInvoice.internal_reference || linkedInvoice.supplier_invoice_number))
+    : "الفاتورة الأصلية";
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
