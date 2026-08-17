@@ -282,7 +282,7 @@ type ParsedRow = {
   total_discount: number;
   // حقول مصدر معلوماتية فقط
   discount_code: string | null;
-  payment_references: string[];
+  payment_references: PaymentRef[];
   source_updated_at: string | null;
   external_order_reference: string | null;
   source_products_raw: string | null;
