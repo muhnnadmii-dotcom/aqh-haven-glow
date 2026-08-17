@@ -272,7 +272,24 @@ function SalesInvoiceEditor() {
             <Info label="طريقة الدفع الأصلية">{header.original_payment_method ?? "—"}</Info>
             <Info label="وسيط الدفع">{PROVIDER_LABEL[header.payment_provider] ?? header.payment_provider ?? "—"}</Info>
             <Info label="حالة التسوية">{SETTLEMENT_LABEL[header.settlement_status] ?? "—"}</Info>
+            <Info label="رمز الكوبون">{header.discount_code ?? "—"}</Info>
+            <Info label="رقم مرجع الطلب">{header.external_order_reference ?? "—"}</Info>
+            <Info label="رقم الجوال (لقطة)">{header.customer_phone_snapshot ?? "—"}</Info>
+            <Info label="آخر تحديث للطلب">
+              {header.source_updated_at ? new Date(header.source_updated_at).toLocaleString("en-US") : "—"}
+            </Info>
+            <Info label="مراجع عملية الدفع">
+              {Array.isArray(header.payment_references) && header.payment_references.length > 0
+                ? (header.payment_references as any[]).map((x) => String(x)).join(" · ")
+                : "—"}
+            </Info>
           </div>
+          {header.source_products_raw ? (
+            <div className="rounded-lg bg-black/20 border border-white/10 p-3">
+              <div className="text-[11px] text-muted-foreground mb-1">أسماء المنتجات مع SKU (من ملف سلة — معلوماتي فقط)</div>
+              <div className="text-[12px] whitespace-pre-wrap break-words">{header.source_products_raw}</div>
+            </div>
+          ) : null}
           {header.payment_status === "paid" &&
             header.payment_provider &&
             ["salla_payments", "tabby", "tamara"].includes(header.payment_provider) &&

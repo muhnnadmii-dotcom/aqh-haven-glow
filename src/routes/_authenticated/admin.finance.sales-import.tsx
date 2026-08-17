@@ -53,7 +53,15 @@ const FIELDS = [
   { key: "discount_coupon", label: "خصم الكوبون", required: false, aliases: ["قيمة خصم الكوبون", "خصم الكوبون", "coupon", "كوبون"] },
   { key: "discount_offers", label: "خصم العروض الخاصة", required: false, aliases: ["قيمة خصم العروض الخاصة", "خصم العروض", "offers discount"] },
   { key: "discount_abandoned", label: "خصم السلة المتروكة", required: false, aliases: ["قيمة عرض السلة المتروكة", "السلة المتروكة", "abandoned cart"] },
+  // حقول مصدر معلوماتية فقط — لا تؤثر على المبالغ أو الضريبة أو حالة الدفع
+  { key: "discount_code", label: "رمز الكوبون", required: false, aliases: ["رمز الكوبون", "كود الخصم", "رمز الخصم", "coupon code", "discount code"] },
+  { key: "payment_references", label: "رقم مرجع عملية الدفع", required: false, aliases: ["رقم مرجع عملية الدفع", "مرجع عملية الدفع", "مرجع الدفع", "payment reference", "transaction reference"] },
+  { key: "source_updated_at", label: "تاريخ آخر تحديث للطلب", required: false, aliases: ["تاريخ آخر تحديث للطلب", "تاريخ التحديث", "آخر تحديث", "updated at", "last updated"] },
+  { key: "external_order_reference", label: "رقم مرجع الطلب", required: false, aliases: ["رقم مرجع الطلب", "مرجع الطلب", "order reference", "reference id"] },
+  { key: "source_products_raw", label: "أسماء المنتجات مع SKU", required: false, aliases: ["اسماء المنتجات مع SKU", "أسماء المنتجات مع SKU", "المنتجات", "products", "product names"] },
+  { key: "customer_phone_snapshot", label: "رقم الجوال", required: false, aliases: ["رقم الجوال", "الجوال", "جوال العميل", "phone", "mobile"] },
 ] as const;
+
 
 type FieldKey = typeof FIELDS[number]["key"];
 
@@ -115,6 +123,40 @@ function parseDate(v: any): string | null {
   const t = new Date(s);
   return isNaN(t.getTime()) ? null : `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
 }
+
+// timestamptz معلوماتي (تاريخ آخر تحديث للطلب) — يُخزَّن كنص ISO أو null
+function parseTimestamp(v: any): string | null {
+  if (isBlank(v)) return null;
+  if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
+  if (typeof v === "number") {
+    const d = XLSX.SSF.parse_date_code(v);
+    if (!d) return null;
+    const t = Date.UTC(d.y, (d.m || 1) - 1, d.d || 1, d.H || 0, d.M || 0, Math.floor(d.S || 0));
+    return new Date(t).toISOString();
+  }
+  const s = String(v).trim();
+  const t = new Date(s.replace(" ", "T"));
+  if (!isNaN(t.getTime())) return t.toISOString();
+  const d = parseDate(s);
+  return d ? new Date(`${d}T00:00:00Z`).toISOString() : null;
+}
+
+// مراجع الدفع: قد تكون JSON array أو نص مفصول بفواصل — معلوماتية فقط
+function parsePaymentRefs(v: any): string[] {
+  if (isBlank(v)) return [];
+  if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+  const s = String(v).trim();
+  if (s.startsWith("[") || s.startsWith("{")) {
+    try {
+      const j = JSON.parse(s);
+      if (Array.isArray(j)) return j.map((x) => (typeof x === "object" ? JSON.stringify(x) : String(x))).map((x) => x.trim()).filter(Boolean);
+      if (j && typeof j === "object") return Object.values(j).map((x: any) => String(x).trim()).filter(Boolean);
+      return [String(j).trim()].filter(Boolean);
+    } catch { /* fall through to plain split */ }
+  }
+  return s.split(/[,،;|\n]+/).map((x) => x.trim()).filter(Boolean);
+}
+
 
 // دقيق مالي (خانتان عشريتان)
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -220,6 +262,13 @@ type ParsedRow = {
   total_before_vat: number;
   product_before_vat: number;
   total_discount: number;
+  // حقول مصدر معلوماتية فقط
+  discount_code: string | null;
+  payment_references: string[];
+  source_updated_at: string | null;
+  external_order_reference: string | null;
+  source_products_raw: string | null;
+  customer_phone_snapshot: string | null;
   cancelled: boolean;
   duplicate: boolean;
   issues: DataIssue[];
@@ -386,6 +435,13 @@ function SalesImportPage() {
         total_before_vat: totalBeforeVat,
         product_before_vat: productBeforeVat,
         total_discount: totalDiscount,
+        // حقول مصدر معلوماتية فقط — لا تغيّر المبالغ أو الضريبة أو حالة الدفع
+        discount_code: isBlank(get("discount_code")) ? null : String(get("discount_code")).trim(),
+        payment_references: parsePaymentRefs(get("payment_references")),
+        source_updated_at: parseTimestamp(get("source_updated_at")),
+        external_order_reference: isBlank(get("external_order_reference")) ? null : String(get("external_order_reference")).trim(),
+        source_products_raw: isBlank(get("source_products_raw")) ? null : String(get("source_products_raw")).trim(),
+        customer_phone_snapshot: isBlank(get("customer_phone_snapshot")) ? null : String(get("customer_phone_snapshot")).trim(),
         cancelled,
         duplicate: false,
         issues,
