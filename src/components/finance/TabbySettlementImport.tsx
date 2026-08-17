@@ -514,7 +514,7 @@ export function TabbySettlementImport({
                           سبق اعتماد هذه الحركة ضمن التسوية «{dupInfo.reference}»
                           <Link
                             to="/admin/finance/settlement-lines"
-                            search={{ settlement: dupInfo.settlement_id }}
+                            search={{ settlement: dupInfo.settlement_id, provider: undefined, order: undefined }}
                             target="_blank"
                             className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-red-400/40 text-red-200 hover:bg-red-500/20"
                           >
