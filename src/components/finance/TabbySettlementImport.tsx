@@ -508,11 +508,22 @@ export function TabbySettlementImport({
                     <td className="px-2 py-1.5 text-end tabular-nums">{fmt(r.total_deduction)}</td>
                     <td className="px-2 py-1.5 text-end tabular-nums text-gold">{fmt(r.net_amount)}</td>
                     <td className="px-2 py-1.5">
-                      {dup
-                        ? <span className="text-red-300 inline-flex items-center gap-1"><AlertTriangle size={11} /> مكرر (سيُتخطى)</span>
-                        : r.needs_review
-                          ? <span className="text-amber-300 inline-flex items-center gap-1"><AlertTriangle size={11} /> {r.reasons.join("، ")}</span>
-                          : <span className="text-emerald-300 inline-flex items-center gap-1"><CheckCircle2 size={11} /> جاهز</span>}
+                      {dupInfo ? (
+                        <span className="text-red-300 inline-flex items-center gap-1 flex-wrap">
+                          <AlertTriangle size={11} />
+                          سبق اعتماد هذه الحركة ضمن التسوية «{dupInfo.reference}»
+                          <Link
+                            to="/admin/finance/settlement-lines"
+                            search={{ settlement: dupInfo.settlement_id }}
+                            target="_blank"
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-red-400/40 text-red-200 hover:bg-red-500/20"
+                          >
+                            <ExternalLink size={10} /> فتح التسوية
+                          </Link>
+                        </span>
+                      ) : r.needs_review
+                        ? <span className="text-amber-300 inline-flex items-center gap-1"><AlertTriangle size={11} /> {r.reasons.join("، ")}</span>
+                        : <span className="text-emerald-300 inline-flex items-center gap-1"><CheckCircle2 size={11} /> جاهز</span>}
                     </td>
                   </tr>
                 );
