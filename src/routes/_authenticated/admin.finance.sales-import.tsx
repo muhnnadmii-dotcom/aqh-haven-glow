@@ -141,21 +141,36 @@ function parseTimestamp(v: any): string | null {
   return d ? new Date(`${d}T00:00:00Z`).toISOString() : null;
 }
 
-// مراجع الدفع: قد تكون JSON array أو نص مفصول بفواصل — معلوماتية فقط
-function parsePaymentRefs(v: any): string[] {
+// مراجع الدفع: تُحفظ كما هي (كائنات {provider,reference,amount}) — معلوماتية فقط
+type PaymentRef = Record<string, any>;
+function toRefObject(x: any): PaymentRef | null {
+  if (x == null) return null;
+  if (typeof x === "object") return x as PaymentRef;
+  const s = String(x).trim();
+  if (!s) return null;
+  if (s.startsWith("{")) {
+    try {
+      const j = JSON.parse(s);
+      if (j && typeof j === "object" && !Array.isArray(j)) return j as PaymentRef;
+    } catch { /* fall through */ }
+  }
+  return { reference: s };
+}
+
+function parsePaymentRefs(v: any): PaymentRef[] {
   if (isBlank(v)) return [];
-  if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+  if (Array.isArray(v)) return v.map(toRefObject).filter(Boolean) as PaymentRef[];
   const s = String(v).trim();
   if (s.startsWith("[") || s.startsWith("{")) {
     try {
       const j = JSON.parse(s);
-      if (Array.isArray(j)) return j.map((x) => (typeof x === "object" ? JSON.stringify(x) : String(x))).map((x) => x.trim()).filter(Boolean);
-      if (j && typeof j === "object") return Object.values(j).map((x: any) => String(x).trim()).filter(Boolean);
-      return [String(j).trim()].filter(Boolean);
+      if (Array.isArray(j)) return j.map(toRefObject).filter(Boolean) as PaymentRef[];
+      if (j && typeof j === "object") return [j as PaymentRef];
     } catch { /* fall through to plain split */ }
   }
-  return s.split(/[,،;|\n]+/).map((x) => x.trim()).filter(Boolean);
+  return s.split(/[,،;|\n]+/).map((x) => toRefObject(x)).filter(Boolean) as PaymentRef[];
 }
+
 
 
 // دقيق مالي (خانتان عشريتان)
