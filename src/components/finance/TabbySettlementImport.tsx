@@ -100,35 +100,47 @@ export function TabbySettlementImport({
     const t = computeTabbyFileTotals(built, g);
     setLines(built); setGroups(g); setTotals(t);
 
-    // Duplicate probe: fingerprints already stored on any payment_settlement_lines.
-    // We wrap in try/catch — PostgREST JSON-path .in() filter may be rejected in some setups; a failed probe just disables per-row dedup.
+    // Duplicate probe: a fingerprint only blocks re-import when its line belongs to a
+    // settlement that was actually committed and kept (not draft/cancelled).
     const fps = built.map((l) => l.row_fingerprint);
-    const seen = new Set<string>();
+    const found = new Map<string, ExistingLineInfo>();
     try {
       for (const chunk of chunkArr(fps, 200)) {
         const { data, error } = await (supabase as any)
           .from("payment_settlement_lines")
-          .select("raw_row")
+          .select("id,created_at,raw_row,settlement_id,payment_settlements!inner(id,status,settlement_reference,report_reference,source_file_name,settlement_date)")
           .in("raw_row->>_row_fingerprint", chunk);
         if (error) throw error;
         (data ?? []).forEach((r: any) => {
           const fp = r?.raw_row?._row_fingerprint;
-          if (fp) seen.add(String(fp));
+          const s = r?.payment_settlements;
+          if (!fp || !s) return;
+          if (!COMMITTED_SETTLEMENT_STATUSES.has(String(s.status))) return; // draft/cancelled → not a duplicate
+          found.set(String(fp), {
+            settlement_id: s.id,
+            reference: s.report_reference || s.settlement_reference || s.source_file_name || s.settlement_date || s.id,
+            status: String(s.status),
+            settlement_date: s.settlement_date ?? null,
+            source_file_name: s.source_file_name ?? null,
+            line_id: r.id,
+            imported_at: r.created_at ?? null,
+          });
         });
       }
     } catch {
       // silently fall back — file-hash guard still prevents whole-file duplicates.
     }
-    setExistingFps(seen);
+    setExistingByFp(found);
 
     if (providerRow?.id) {
       const { data: sameFile } = await (supabase as any)
         .from("payment_settlements")
-        .select("id,notes,source_file_name")
+        .select("id,notes,source_file_name,status")
         .eq("provider_id", providerRow.id)
         .ilike("notes", `%file_hash=${fileHash.slice(0, 16)}%`)
-        .limit(1);
-      setExistingFileHash((sameFile ?? []).length ? fileHash : null);
+        .limit(5);
+      const kept = (sameFile ?? []).filter((s: any) => COMMITTED_SETTLEMENT_STATUSES.has(String(s.status)));
+      setExistingFileHash(kept.length ? fileHash : null);
     }
 
     onGotoPreview();
