@@ -876,10 +876,15 @@ function SalesImportPage() {
                 <span>تحديث مسودات: <b>{chunkTotals.updated_drafts}</b></span>
                 <span>جديد: <b>{chunkTotals.new}</b></span>
                 <span>ملغي: <b>{chunkTotals.cancelled}</b></span>
-                <span>متجاوَز: <b>{chunkTotals.skipped}</b></span>
+                <span className={chunkTotals.needs_credit_note ? "text-amber-300" : ""}>إشعار دائن مطلوب: <b>{chunkTotals.needs_credit_note}</b></span>
+                <span className={chunkTotals.conflicts ? "text-amber-300" : ""}>تعارض (مراجعة): <b>{chunkTotals.conflicts}</b></span>
+                <span>يحتاج مراجعة: <b>{chunkTotals.needs_review}</b></span>
+                <span>بلا تغيير: <b>{chunkTotals.unchanged}</b></span>
+                <span className={chunkTotals.blocked ? "text-red-300" : ""}>أخطاء: <b>{chunkTotals.blocked}</b></span>
                 <span className={chunkTotals.failed ? "text-red-300" : ""}>فاشل: <b>{chunkTotals.failed}</b></span>
                 <span className="text-muted-foreground">معتمد: {chunkTotals.approved}</span>
               </div>
+
 
               {chunks.filter((c) => c.status === "failed").map((c) => (
                 <div key={`e-${c.index}`} className="text-red-300">دفعة {c.index + 1}: {c.error}</div>
