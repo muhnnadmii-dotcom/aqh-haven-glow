@@ -324,6 +324,8 @@ function SalesImportPage() {
   const [savedMappings, setSavedMappings] = useState<any[]>([]);
   const [templateName, setTemplateName] = useState("");
   const [committing, setCommitting] = useState(false);
+  const [chunks, setChunks] = useState<ChunkState[]>([]);
+  const [batchId, setBatchId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
