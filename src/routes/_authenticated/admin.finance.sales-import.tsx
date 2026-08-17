@@ -802,13 +802,66 @@ function SalesImportPage() {
                 className="px-4 py-2 rounded-lg bg-gold text-black text-[12px] font-semibold hover:bg-gold/90 disabled:opacity-50 inline-flex items-center gap-1.5"
               >
                 {committing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                استيراد الطلبات الجديدة ({stats.selectedImportable})
+                اعتماد المحدد ({stats.selectedImportable})
               </button>
-              <button onClick={() => { setRows([]); setSelected(new Set()); }} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5">
+              <button onClick={() => { setRows([]); setSelected(new Set()); setChunks([]); setBatchId(null); }} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5">
                 <RotateCcw size={14} /> إلغاء
               </button>
             </div>
           </div>
+
+          {chunks.length > 0 && (
+            <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.02] p-3 text-[11px] space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-[12px]">
+                  تقدّم الاعتماد: {chunks.filter((c) => c.status === "done").length} / {chunks.length} دفعة
+                </span>
+                {chunks.some((c) => c.status === "failed") && (
+                  <button
+                    onClick={retryFailedChunks}
+                    disabled={committing}
+                    className="px-2.5 py-1 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 disabled:opacity-50 inline-flex items-center gap-1"
+                  >
+                    <RotateCcw size={12} /> إعادة محاولة الدفعات الفاشلة ({chunks.filter((c) => c.status === "failed").length})
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {chunks.map((c) => (
+                  <span
+                    key={c.index}
+                    title={c.error ?? ""}
+                    className={
+                      "px-2 py-0.5 rounded border " +
+                      (c.status === "done" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                        : c.status === "failed" ? "bg-red-500/15 text-red-300 border-red-500/30"
+                        : c.status === "running" ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
+                        : "bg-white/5 text-muted-foreground border-white/15")
+                    }
+                  >
+                    دفعة {c.index + 1} ({c.rowNos.length})
+                    {c.status === "failed" ? " — فشلت" : c.status === "running" ? " — جارٍ" : c.status === "done" ? " — تمت" : ""}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1 border-t border-white/10">
+                <span className="text-muted-foreground">الإجمالي:</span>
+                <span>تحديث بيانات مصدر: <b>{chunkTotals.metadata_updated}</b></span>
+                <span>تحديث مسودات: <b>{chunkTotals.updated_drafts}</b></span>
+                <span>جديد: <b>{chunkTotals.new}</b></span>
+                <span>ملغي: <b>{chunkTotals.cancelled}</b></span>
+                <span>متجاوَز: <b>{chunkTotals.skipped}</b></span>
+                <span className={chunkTotals.failed ? "text-red-300" : ""}>فاشل: <b>{chunkTotals.failed}</b></span>
+                <span className="text-muted-foreground">معتمد: {chunkTotals.approved}</span>
+              </div>
+
+              {chunks.filter((c) => c.status === "failed").map((c) => (
+                <div key={`e-${c.index}`} className="text-red-300">دفعة {c.index + 1}: {c.error}</div>
+              ))}
+            </div>
+          )}
 
           {/* بطاقة تفصيل أسباب المراجعة */}
           <div className="mb-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] p-2 text-[11px]">
