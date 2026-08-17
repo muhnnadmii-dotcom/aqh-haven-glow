@@ -201,8 +201,10 @@ function SalesBatchesPage() {
                 <th className="p-2 text-right">مستورد</th>
                 <th className="p-2 text-right">مكرر</th>
                 <th className="p-2 text-right">مراجعة</th>
+                <th className="p-2 text-right">إشعار دائن</th>
                 <th className="p-2 text-right">أخطاء</th>
                 <th className="p-2 text-right">الحالة</th>
+
               </tr>
             </thead>
             <tbody>
