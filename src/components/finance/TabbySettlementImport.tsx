@@ -6,11 +6,11 @@
 // Transfer Date). No sales invoices, incomes, or accounting entries are created
 // here — settlement rows and lines only.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, AlertTriangle, Loader2, ShieldAlert, Search } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { CheckCircle2, AlertTriangle, Loader2, ShieldAlert, Search, ExternalLink } from "lucide-react";
 import {
   TABBY_FIELDS,
   TABBY_SIGNATURE_HEADERS,
@@ -39,6 +39,23 @@ type Props = {
 const fmt = (n: number) => (isFinite(n) ? n.toFixed(2) : "—");
 const chunkArr = <T,>(a: T[], n: number) => { const out: T[][] = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
 
+// A line only counts as "already imported" when it lives inside a settlement that
+// was committed and kept. Cancelled/draft settlements must never block re-import.
+const COMMITTED_SETTLEMENT_STATUSES = new Set([
+  "imported", "under_review", "matched", "partially_matched",
+  "awaiting_payout", "paid", "fully_matched", "closed",
+]);
+
+type ExistingLineInfo = {
+  settlement_id: string;
+  reference: string;
+  status: string;
+  settlement_date: string | null;
+  source_file_name: string | null;
+  line_id: string;
+  imported_at: string | null;
+};
+
 export function TabbySettlementImport({
   step, aoa, headerRow, file, fileHash, providerRow, canManage, onBack, onGotoPreview,
 }: Props) {
@@ -51,12 +68,20 @@ export function TabbySettlementImport({
   const [lines, setLines] = useState<TabbyParsedLine[] | null>(null);
   const [groups, setGroups] = useState<TabbyGroupTotals[] | null>(null);
   const [totals, setTotals] = useState<TabbyFileTotals | null>(null);
-  const [existingFps, setExistingFps] = useState<Set<string>>(new Set());
+  const [existingByFp, setExistingByFp] = useState<Map<string, ExistingLineInfo>>(new Map());
   const [existingFileHash, setExistingFileHash] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
   const [groupFilter, setGroupFilter] = useState<string>("");   // payout_date filter
   const [orderQuery, setOrderQuery] = useState<string>("");
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+
+  // Full state reset whenever a different file (hash) is loaded — no parsed rows,
+  // fingerprints or preview caches may survive from the previous file.
+  useEffect(() => {
+    setLines(null); setGroups(null); setTotals(null);
+    setExistingByFp(new Map()); setExistingFileHash(null);
+    setGroupFilter(""); setOrderQuery(""); setExpandedGroup(null);
+  }, [fileHash]);
 
   const missingRequired = TABBY_FIELDS.filter((f) => f.required).filter((f) => mapping[f.key] == null);
 
@@ -75,35 +100,47 @@ export function TabbySettlementImport({
     const t = computeTabbyFileTotals(built, g);
     setLines(built); setGroups(g); setTotals(t);
 
-    // Duplicate probe: fingerprints already stored on any payment_settlement_lines.
-    // We wrap in try/catch — PostgREST JSON-path .in() filter may be rejected in some setups; a failed probe just disables per-row dedup.
+    // Duplicate probe: a fingerprint only blocks re-import when its line belongs to a
+    // settlement that was actually committed and kept (not draft/cancelled).
     const fps = built.map((l) => l.row_fingerprint);
-    const seen = new Set<string>();
+    const found = new Map<string, ExistingLineInfo>();
     try {
       for (const chunk of chunkArr(fps, 200)) {
         const { data, error } = await (supabase as any)
           .from("payment_settlement_lines")
-          .select("raw_row")
+          .select("id,created_at,raw_row,settlement_id,payment_settlements!inner(id,status,settlement_reference,report_reference,source_file_name,settlement_date)")
           .in("raw_row->>_row_fingerprint", chunk);
         if (error) throw error;
         (data ?? []).forEach((r: any) => {
           const fp = r?.raw_row?._row_fingerprint;
-          if (fp) seen.add(String(fp));
+          const s = r?.payment_settlements;
+          if (!fp || !s) return;
+          if (!COMMITTED_SETTLEMENT_STATUSES.has(String(s.status))) return; // draft/cancelled → not a duplicate
+          found.set(String(fp), {
+            settlement_id: s.id,
+            reference: s.report_reference || s.settlement_reference || s.source_file_name || s.settlement_date || s.id,
+            status: String(s.status),
+            settlement_date: s.settlement_date ?? null,
+            source_file_name: s.source_file_name ?? null,
+            line_id: r.id,
+            imported_at: r.created_at ?? null,
+          });
         });
       }
     } catch {
       // silently fall back — file-hash guard still prevents whole-file duplicates.
     }
-    setExistingFps(seen);
+    setExistingByFp(found);
 
     if (providerRow?.id) {
       const { data: sameFile } = await (supabase as any)
         .from("payment_settlements")
-        .select("id,notes,source_file_name")
+        .select("id,notes,source_file_name,status")
         .eq("provider_id", providerRow.id)
         .ilike("notes", `%file_hash=${fileHash.slice(0, 16)}%`)
-        .limit(1);
-      setExistingFileHash((sameFile ?? []).length ? fileHash : null);
+        .limit(5);
+      const kept = (sameFile ?? []).filter((s: any) => COMMITTED_SETTLEMENT_STATUSES.has(String(s.status)));
+      setExistingFileHash(kept.length ? fileHash : null);
     }
 
     onGotoPreview();
@@ -128,8 +165,8 @@ export function TabbySettlementImport({
   }, [lines, groupFilter, orderQuery]);
 
   const newLinesCount = useMemo(
-    () => lines ? lines.filter((l) => !existingFps.has(l.row_fingerprint)).length : 0,
-    [lines, existingFps]
+    () => lines ? lines.filter((l) => !existingByFp.has(l.row_fingerprint)).length : 0,
+    [lines, existingByFp]
   );
   const skippedCount = (lines?.length ?? 0) - newLinesCount;
 
@@ -146,7 +183,7 @@ export function TabbySettlementImport({
       const uid = u.user?.id ?? null;
 
       for (const g of groups) {
-        const groupLines = g.lines.filter((l) => !existingFps.has(l.row_fingerprint));
+        const groupLines = g.lines.filter((l) => !existingByFp.has(l.row_fingerprint));
         if (!groupLines.length) { skippedLines += g.lines.length; continue; }
 
         const isPartial = groupLines.length !== g.lines.length;
@@ -354,7 +391,7 @@ export function TabbySettlementImport({
         </div>
         <div className="text-[10px] text-muted-foreground mt-2 flex flex-wrap gap-3">
           <span>بصمة الملف: <span className="font-mono">{fileHash.slice(0, 16)}</span></span>
-          <span>بصمات مكرّرة من ملفات سابقة: <b className={existingFps.size ? "text-amber-300" : "text-muted-foreground"}>{existingFps.size}</b></span>
+          <span>بصمات مكرّرة من ملفات سابقة: <b className={existingByFp.size ? "text-amber-300" : "text-muted-foreground"}>{existingByFp.size}</b></span>
           <span>حركات جديدة ستُضاف: <b className="text-emerald-300">{newLinesCount}</b></span>
           {skippedCount > 0 && <span>سيتم تخطي: <b className="text-amber-300">{skippedCount}</b></span>}
         </div>
@@ -456,7 +493,8 @@ export function TabbySettlementImport({
             </thead>
             <tbody>
               {filteredLines.slice(0, 500).map((r) => {
-                const dup = existingFps.has(r.row_fingerprint);
+                const dupInfo = existingByFp.get(r.row_fingerprint);
+                const dup = !!dupInfo;
                 return (
                   <tr key={r.rowNo} className={`border-t border-white/5 ${dup ? "bg-red-500/10" : r.needs_review ? "bg-amber-500/5" : ""}`}>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.rowNo}</td>
@@ -470,11 +508,22 @@ export function TabbySettlementImport({
                     <td className="px-2 py-1.5 text-end tabular-nums">{fmt(r.total_deduction)}</td>
                     <td className="px-2 py-1.5 text-end tabular-nums text-gold">{fmt(r.net_amount)}</td>
                     <td className="px-2 py-1.5">
-                      {dup
-                        ? <span className="text-red-300 inline-flex items-center gap-1"><AlertTriangle size={11} /> مكرر (سيُتخطى)</span>
-                        : r.needs_review
-                          ? <span className="text-amber-300 inline-flex items-center gap-1"><AlertTriangle size={11} /> {r.reasons.join("، ")}</span>
-                          : <span className="text-emerald-300 inline-flex items-center gap-1"><CheckCircle2 size={11} /> جاهز</span>}
+                      {dupInfo ? (
+                        <span className="text-red-300 inline-flex items-center gap-1 flex-wrap">
+                          <AlertTriangle size={11} />
+                          سبق اعتماد هذه الحركة ضمن التسوية «{dupInfo.reference}»
+                          <Link
+                            to="/admin/finance/settlement-lines"
+                            search={{ settlement: dupInfo.settlement_id, provider: undefined, order: undefined }}
+                            target="_blank"
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-red-400/40 text-red-200 hover:bg-red-500/20"
+                          >
+                            <ExternalLink size={10} /> فتح التسوية
+                          </Link>
+                        </span>
+                      ) : r.needs_review
+                        ? <span className="text-amber-300 inline-flex items-center gap-1"><AlertTriangle size={11} /> {r.reasons.join("، ")}</span>
+                        : <span className="text-emerald-300 inline-flex items-center gap-1"><CheckCircle2 size={11} /> جاهز</span>}
                     </td>
                   </tr>
                 );

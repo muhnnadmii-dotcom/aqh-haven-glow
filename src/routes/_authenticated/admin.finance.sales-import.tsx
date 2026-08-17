@@ -415,13 +415,27 @@ function SalesImportPage() {
       p_rows: parsed as any,
     });
     if (pErr) { toast.error(`تعذّر تحضير المعاينة: ${pErr.message}`); return; }
+    // The RPC returns one merged object per row: { rowNo, external_order_id, action, reason, ... }.
+    // Only accept entries that actually carry an action; anything else is a protocol problem
+    // and must be surfaced instead of silently marking every row as "blocked".
     const byRow = new Map<number, any>();
-    (preview || []).forEach((p: any) => byRow.set(Number(p.rowNo), p));
+    (Array.isArray(preview) ? preview : []).forEach((p: any) => {
+      if (p && p.action != null && p.rowNo != null) byRow.set(Number(p.rowNo), p);
+    });
+    if (parsed.length && byRow.size === 0) {
+      toast.error("تعذّر قراءة نتيجة التصنيف من الخادم — لم يتم تصنيف أي صف. لم تُحفظ أي بيانات.");
+      return;
+    }
     parsed.forEach((r) => {
       const p = byRow.get(r.rowNo);
-      r.classification = (p?.action as Classification) ?? "blocked";
-      r.action_reason = p?.reason ?? null;
-      r.existing_status = p?.existing_status ?? null;
+      if (!p) {
+        r.classification = "blocked";
+        r.action_reason = "لم يصل تصنيف من الخادم لهذا الصف";
+        return;
+      }
+      r.classification = p.action as Classification;
+      r.action_reason = p.reason ?? null;
+      r.existing_status = p.existing_status ?? null;
       if (r.classification === "conflict_existing_final" && !r.issues.includes("conflicting_existing_order")) {
         r.issues.push("conflicting_existing_order");
       }
@@ -751,9 +765,19 @@ function SalesImportPage() {
                       <td className="p-1.5">{r.shipping_vat || "—"}</td>
                       <td className="p-1.5">{r.total_discount || "—"}</td>
                       <td className="p-1.5 text-[10px] text-amber-200">
+                        {r.action_reason && (
+                          <div className={r.classification === "blocked" ? "text-red-300 font-semibold" : "text-sky-200"}>
+                            {r.action_reason}
+                            {r.classification === "blocked" && (
+                              <span className="text-red-200/80">
+                                {" "}({!r.external_order_id ? "رقم الطلب" : !r.order_date ? "تاريخ الطلب" : "إجمالي الطلب"})
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {r.issues.length
                           ? r.issues.map((x) => <div key={x}>• {ISSUE_LABEL[x]}</div>)
-                          : "—"}
+                          : (!r.action_reason ? "—" : null)}
                       </td>
                     </tr>
                   );

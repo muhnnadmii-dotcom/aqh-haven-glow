@@ -319,6 +319,15 @@ function SettlementImportPage() {
   }
 
   async function onFile(f: File) {
+    // Picking a new file must wipe every trace of the previous one: parsed rows,
+    // wizard step, settlement metadata and provider-specific caches.
+    setRows([]);
+    setStep(1);
+    setStatusFilter("");
+    setSettlementRef(""); setSettlementDate(""); setPeriodStart(""); setPeriodEnd("");
+    setPayoutFee("0"); setSourceExpectedNet("");
+    setTamaraHeader(null); setTamaraSummary(null); setTamaraMapping({});
+    setAoa([]); setHeaders([]); setHeaderRow(0); setFileHash("");
     setFile(f);
     const buf = await f.arrayBuffer();
     setFileHash(await sha256Hex(buf));
