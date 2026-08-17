@@ -53,7 +53,15 @@ const FIELDS = [
   { key: "discount_coupon", label: "خصم الكوبون", required: false, aliases: ["قيمة خصم الكوبون", "خصم الكوبون", "coupon", "كوبون"] },
   { key: "discount_offers", label: "خصم العروض الخاصة", required: false, aliases: ["قيمة خصم العروض الخاصة", "خصم العروض", "offers discount"] },
   { key: "discount_abandoned", label: "خصم السلة المتروكة", required: false, aliases: ["قيمة عرض السلة المتروكة", "السلة المتروكة", "abandoned cart"] },
+  // حقول مصدر معلوماتية فقط — لا تؤثر على المبالغ أو الضريبة أو حالة الدفع
+  { key: "discount_code", label: "رمز الكوبون", required: false, aliases: ["رمز الكوبون", "كود الخصم", "رمز الخصم", "coupon code", "discount code"] },
+  { key: "payment_references", label: "رقم مرجع عملية الدفع", required: false, aliases: ["رقم مرجع عملية الدفع", "مرجع عملية الدفع", "مرجع الدفع", "payment reference", "transaction reference"] },
+  { key: "source_updated_at", label: "تاريخ آخر تحديث للطلب", required: false, aliases: ["تاريخ آخر تحديث للطلب", "تاريخ التحديث", "آخر تحديث", "updated at", "last updated"] },
+  { key: "external_order_reference", label: "رقم مرجع الطلب", required: false, aliases: ["رقم مرجع الطلب", "مرجع الطلب", "order reference", "reference id"] },
+  { key: "source_products_raw", label: "أسماء المنتجات مع SKU", required: false, aliases: ["اسماء المنتجات مع SKU", "أسماء المنتجات مع SKU", "المنتجات", "products", "product names"] },
+  { key: "customer_phone_snapshot", label: "رقم الجوال", required: false, aliases: ["رقم الجوال", "الجوال", "جوال العميل", "phone", "mobile"] },
 ] as const;
+
 
 type FieldKey = typeof FIELDS[number]["key"];
 
