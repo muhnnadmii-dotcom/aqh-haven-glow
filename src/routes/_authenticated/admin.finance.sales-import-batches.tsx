@@ -208,8 +208,8 @@ function SalesBatchesPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={10} className="p-4 text-center text-muted-foreground">جارٍ التحميل…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={10} className="p-4 text-center text-muted-foreground">لا توجد عمليات استيراد بعد.</td></tr>}
+              {loading && <tr><td colSpan={11} className="p-4 text-center text-muted-foreground">جارٍ التحميل…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={11} className="p-4 text-center text-muted-foreground">لا توجد عمليات استيراد بعد.</td></tr>}
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-white/5">
                   <td className="p-2">{new Date(r.created_at).toLocaleString("en-US")}</td>
@@ -220,7 +220,9 @@ function SalesBatchesPage() {
                   <td className="p-2 text-emerald-300">{r.imported_rows}</td>
                   <td className="p-2 text-orange-300">{r.duplicate_rows}</td>
                   <td className="p-2 text-amber-300">{r.needs_review_rows}</td>
+                  <td className="p-2 text-amber-300">{Number(r.summary_json?.needs_credit_note ?? 0)}</td>
                   <td className="p-2 text-red-300">{r.error_rows}</td>
+
                   <td className="p-2">
                     <span className="px-2 py-0.5 rounded border border-white/15 bg-white/5 text-[11px]">{r.status}</span>
                   </td>
