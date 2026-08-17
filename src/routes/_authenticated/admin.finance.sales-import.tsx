@@ -180,6 +180,7 @@ type Classification =
   | "new"
   | "new_missing_invoice_number"
   | "update_existing_draft"
+  | "metadata_only_update"
   | "unchanged"
   | "conflict_existing_final"
   | "cancelled_new"
@@ -188,7 +189,7 @@ type Classification =
   | "blocked";
 
 const ALL_CLASSIFICATIONS: Classification[] = [
-  "new", "new_missing_invoice_number", "update_existing_draft", "unchanged",
+  "new", "new_missing_invoice_number", "update_existing_draft", "metadata_only_update", "unchanged",
   "conflict_existing_final", "cancelled_new", "cancel_draft", "needs_credit_note", "blocked",
 ];
 
@@ -196,6 +197,7 @@ const CLASSIFICATION_LABEL: Record<Classification, string> = {
   new: "جديد — مكتمل",
   new_missing_invoice_number: "جديد — بلا رقم فاتورة (مسودة)",
   update_existing_draft: "تحديث مسودة موجودة",
+  metadata_only_update: "تحديث بيانات مصدر فقط",
   unchanged: "لا تغيير",
   conflict_existing_final: "تعارض مع فاتورة نهائية",
   cancelled_new: "طلب ملغي (سجل فقط)",
@@ -208,6 +210,7 @@ const CLASSIFICATION_CLASS: Record<Classification, string> = {
   new: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   new_missing_invoice_number: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   update_existing_draft: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+  metadata_only_update: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   unchanged: "bg-white/10 text-muted-foreground border-white/20",
   conflict_existing_final: "bg-orange-500/15 text-orange-300 border-orange-500/30",
   cancelled_new: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30",
