@@ -415,13 +415,27 @@ function SalesImportPage() {
       p_rows: parsed as any,
     });
     if (pErr) { toast.error(`تعذّر تحضير المعاينة: ${pErr.message}`); return; }
+    // The RPC returns one merged object per row: { rowNo, external_order_id, action, reason, ... }.
+    // Only accept entries that actually carry an action; anything else is a protocol problem
+    // and must be surfaced instead of silently marking every row as "blocked".
     const byRow = new Map<number, any>();
-    (preview || []).forEach((p: any) => byRow.set(Number(p.rowNo), p));
+    (Array.isArray(preview) ? preview : []).forEach((p: any) => {
+      if (p && p.action != null && p.rowNo != null) byRow.set(Number(p.rowNo), p);
+    });
+    if (parsed.length && byRow.size === 0) {
+      toast.error("تعذّر قراءة نتيجة التصنيف من الخادم — لم يتم تصنيف أي صف. لم تُحفظ أي بيانات.");
+      return;
+    }
     parsed.forEach((r) => {
       const p = byRow.get(r.rowNo);
-      r.classification = (p?.action as Classification) ?? "blocked";
-      r.action_reason = p?.reason ?? null;
-      r.existing_status = p?.existing_status ?? null;
+      if (!p) {
+        r.classification = "blocked";
+        r.action_reason = "لم يصل تصنيف من الخادم لهذا الصف";
+        return;
+      }
+      r.classification = p.action as Classification;
+      r.action_reason = p.reason ?? null;
+      r.existing_status = p.existing_status ?? null;
       if (r.classification === "conflict_existing_final" && !r.issues.includes("conflicting_existing_order")) {
         r.issues.push("conflicting_existing_order");
       }
