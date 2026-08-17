@@ -435,6 +435,13 @@ function SalesImportPage() {
         total_before_vat: totalBeforeVat,
         product_before_vat: productBeforeVat,
         total_discount: totalDiscount,
+        // حقول مصدر معلوماتية فقط — لا تغيّر المبالغ أو الضريبة أو حالة الدفع
+        discount_code: isBlank(get("discount_code")) ? null : String(get("discount_code")).trim(),
+        payment_references: parsePaymentRefs(get("payment_references")),
+        source_updated_at: parseTimestamp(get("source_updated_at")),
+        external_order_reference: isBlank(get("external_order_reference")) ? null : String(get("external_order_reference")).trim(),
+        source_products_raw: isBlank(get("source_products_raw")) ? null : String(get("source_products_raw")).trim(),
+        customer_phone_snapshot: isBlank(get("customer_phone_snapshot")) ? null : String(get("customer_phone_snapshot")).trim(),
         cancelled,
         duplicate: false,
         issues,
