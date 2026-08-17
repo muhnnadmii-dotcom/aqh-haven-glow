@@ -180,6 +180,7 @@ type Classification =
   | "new"
   | "new_missing_invoice_number"
   | "update_existing_draft"
+  | "metadata_only_update"
   | "unchanged"
   | "conflict_existing_final"
   | "cancelled_new"
@@ -188,7 +189,7 @@ type Classification =
   | "blocked";
 
 const ALL_CLASSIFICATIONS: Classification[] = [
-  "new", "new_missing_invoice_number", "update_existing_draft", "unchanged",
+  "new", "new_missing_invoice_number", "update_existing_draft", "metadata_only_update", "unchanged",
   "conflict_existing_final", "cancelled_new", "cancel_draft", "needs_credit_note", "blocked",
 ];
 
@@ -196,6 +197,7 @@ const CLASSIFICATION_LABEL: Record<Classification, string> = {
   new: "جديد — مكتمل",
   new_missing_invoice_number: "جديد — بلا رقم فاتورة (مسودة)",
   update_existing_draft: "تحديث مسودة موجودة",
+  metadata_only_update: "تحديث بيانات مصدر فقط",
   unchanged: "لا تغيير",
   conflict_existing_final: "تعارض مع فاتورة نهائية",
   cancelled_new: "طلب ملغي (سجل فقط)",
@@ -208,6 +210,7 @@ const CLASSIFICATION_CLASS: Record<Classification, string> = {
   new: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
   new_missing_invoice_number: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   update_existing_draft: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+  metadata_only_update: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   unchanged: "bg-white/10 text-muted-foreground border-white/20",
   conflict_existing_final: "bg-orange-500/15 text-orange-300 border-orange-500/30",
   cancelled_new: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30",
@@ -280,9 +283,20 @@ type ParsedRow = {
 };
 
 const SELECTABLE_ACTIONS: Classification[] = [
-  "new", "new_missing_invoice_number", "update_existing_draft",
+  "new", "new_missing_invoice_number", "update_existing_draft", "metadata_only_update",
   "cancelled_new", "cancel_draft", "needs_credit_note", "conflict_existing_final",
 ];
+
+// حجم الدفعة الواحدة لكل استدعاء/transaction — يمنع statement timeout على الملفات الكبيرة
+const CHUNK_SIZE = 200;
+
+type ChunkState = {
+  index: number;
+  rowNos: number[];
+  status: "pending" | "running" | "done" | "failed";
+  error?: string;
+  result?: Record<string, number>;
+};
 
 function countBuckets(rows: ParsedRow[]) {
   const acc = Object.fromEntries(ALL_CLASSIFICATIONS.map((k) => [k, 0])) as Record<Classification, number>;
@@ -310,6 +324,8 @@ function SalesImportPage() {
   const [savedMappings, setSavedMappings] = useState<any[]>([]);
   const [templateName, setTemplateName] = useState("");
   const [committing, setCommitting] = useState(false);
+  const [chunks, setChunks] = useState<ChunkState[]>([]);
+  const [batchId, setBatchId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -547,49 +563,99 @@ function SalesImportPage() {
   }
   function clearSelection() { setSelected(new Set()); }
 
-  async function commit() {
-    if (!rows.length) return;
-    if (!canWrite) { toast.error("لا تملك صلاحية الاستيراد"); return; }
-    const importable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r));
-    if (!importable.length) { toast.error("لا توجد صفوف قابلة للتنفيذ ضمن التحديد"); return; }
+  // تنفيذ دفعة واحدة (≤ CHUNK_SIZE صف) داخل transaction واحدة على الخادم
+  async function runChunk(chunkRows: ParsedRow[], batchId: string | null) {
+    const payload = chunkRows.map((r) => ({ ...r, selected: true }));
+    const { data, error } = await (supabase as any).rpc("salla_import_commit", {
+      p_batch: {
+        file_name: file?.name ?? "salla-import",
+        sheet_name: sheet || null,
+        mapping,
+        header_row: headerRow,
+        batch_id: batchId,
+      },
+      p_rows: payload as any,
+    });
+    if (error) throw error;
+    return (data ?? {}) as Record<string, any>;
+  }
 
-    const b = countBuckets(importable);
-    const ok = window.confirm(
-      `سيتم تنفيذ ${importable.length} صف داخل عملية واحدة على الخادم:\n` +
-      `• فواتير جديدة مكتملة (ستُعتمد): ${b.new}\n` +
-      `• جديدة بلا رقم فاتورة (تبقى مسودة): ${b.new_missing_invoice_number}\n` +
-      `• تحديث مسودات موجودة: ${b.update_existing_draft}\n` +
-      `• تعارض مع فواتير نهائية (تُعلَّم للمراجعة فقط): ${b.conflict_existing_final}\n` +
-      `• ملغي: ${b.cancelled_new + b.cancel_draft}، إشعار دائن مطلوب: ${b.needs_credit_note}\n\n` +
-      `حالة الدفع لا تُحدَّد من طريقة الدفع — تُحتسب من التسويات أو المقبوضات الفعلية.\n\nمتابعة؟`
-    );
-    if (!ok) return;
-
+  async function runChunks(list: ChunkState[], startBatchId: string | null) {
+    let batchId = startBatchId;
     setCommitting(true);
     try {
-      const payload = rows.map((r) => ({ ...r, selected: selected.has(r.rowNo) && canImportRow(r) }));
-      const { data, error } = await (supabase as any).rpc("salla_import_commit", {
-        p_batch: {
-          file_name: file?.name ?? "salla-import",
-          sheet_name: sheet || null,
-          mapping,
-          header_row: headerRow,
-        },
-        p_rows: payload as any,
-      });
-      if (error) throw error;
-      const res = data ?? {};
-      toast.success(
-        `تم التنفيذ: جديد ${res.new ?? 0}، تحديث مسودات ${res.updated_drafts ?? 0}، معتمد ${res.approved ?? 0}، بنود ${res.items_created ?? 0}، لا تغيير ${res.unchanged ?? 0}، تعارض ${res.conflicts ?? 0}، للمراجعة ${res.needs_review ?? 0}، إشعار دائن ${res.needs_credit_note ?? 0}.`
-      );
-      setRows([]); setSelected(new Set()); setFile(null); setSheets([]); setSheet(""); setAoa([]); setMapping({});
-      if (fileRef.current) fileRef.current.value = "";
-    } catch (e: any) {
-      toast.error(`فشل الاستيراد ولم يُحفظ أي تغيير: ${e.message ?? e}`);
+      for (const ch of list) {
+        setChunks((prev) => prev.map((c) => (c.index === ch.index ? { ...c, status: "running", error: undefined } : c)));
+        const chunkRows = rows.filter((r) => ch.rowNos.includes(r.rowNo));
+        try {
+          const res = await runChunk(chunkRows, batchId);
+          if (!batchId && res.batch_id) { batchId = String(res.batch_id); setBatchId(batchId); }
+          setChunks((prev) => prev.map((c) => (c.index === ch.index ? { ...c, status: "done", result: res as any } : c)));
+        } catch (e: any) {
+          setChunks((prev) => prev.map((c) => (c.index === ch.index ? { ...c, status: "failed", error: e?.message ?? String(e) } : c)));
+        }
+      }
     } finally {
       setCommitting(false);
     }
   }
+
+  async function commit() {
+    if (!rows.length) return;
+    if (!canWrite) { toast.error("لا تملك صلاحية الاستيراد"); return; }
+    // لا تُرسل الصفوف غير القابلة للإجراء (no_change / blocked)
+    const importable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r));
+    if (!importable.length) { toast.error("لا توجد صفوف قابلة للتنفيذ ضمن التحديد"); return; }
+
+    const b = countBuckets(importable);
+    const nChunks = Math.ceil(importable.length / CHUNK_SIZE);
+    const ok = window.confirm(
+      `سيتم اعتماد ${importable.length} صف على ${nChunks} دفعة (حد أقصى ${CHUNK_SIZE} صف لكل دفعة):\n` +
+      `• فواتير جديدة مكتملة (ستُعتمد): ${b.new}\n` +
+      `• جديدة بلا رقم فاتورة (تبقى مسودة): ${b.new_missing_invoice_number}\n` +
+      `• تحديث مسودات موجودة: ${b.update_existing_draft}\n` +
+      `• تحديث بيانات مصدر فقط (فواتير نهائية): ${b.metadata_only_update}\n` +
+      `• تعارض مع فواتير نهائية (مراجعة + بيانات مصدر فقط): ${b.conflict_existing_final}\n` +
+      `• ملغي: ${b.cancelled_new + b.cancel_draft}، إشعار دائن مطلوب: ${b.needs_credit_note}\n\n` +
+      `تحديث بيانات المصدر لا يمس المبالغ أو الضريبة أو أرقام الفواتير أو حالة الدفع أو القيود.\n\nمتابعة؟`
+    );
+    if (!ok) return;
+
+    const list: ChunkState[] = [];
+    for (let i = 0; i < importable.length; i += CHUNK_SIZE) {
+      list.push({
+        index: list.length,
+        rowNos: importable.slice(i, i + CHUNK_SIZE).map((r) => r.rowNo),
+        status: "pending",
+      });
+    }
+    setChunks(list);
+    setBatchId(null);
+    await runChunks(list, null);
+  }
+
+  async function retryFailedChunks() {
+    const failed = chunks.filter((c) => c.status === "failed");
+    if (!failed.length) return;
+    await runChunks(failed, batchId);
+  }
+
+  const chunkTotals = useMemo(() => {
+    const acc = { metadata_updated: 0, updated_drafts: 0, new: 0, cancelled: 0, skipped: 0, failed: 0, approved: 0 };
+    chunks.forEach((c) => {
+      if (c.status === "failed") { acc.failed += c.rowNos.length; return; }
+      const r = c.result as any;
+      if (!r) return;
+      acc.metadata_updated += Number(r.metadata_updated ?? 0);
+      acc.updated_drafts += Number(r.updated_drafts ?? 0);
+      acc.new += Number(r.new ?? 0);
+      acc.cancelled += Number(r.cancelled ?? 0) + Number(r.needs_credit_note ?? 0);
+      acc.skipped += Number(r.unchanged ?? 0) + Number(r.blocked ?? 0);
+      acc.approved += Number(r.approved ?? 0);
+    });
+    return acc;
+  }, [chunks]);
+
 
 
 
@@ -736,13 +802,66 @@ function SalesImportPage() {
                 className="px-4 py-2 rounded-lg bg-gold text-black text-[12px] font-semibold hover:bg-gold/90 disabled:opacity-50 inline-flex items-center gap-1.5"
               >
                 {committing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                استيراد الطلبات الجديدة ({stats.selectedImportable})
+                اعتماد المحدد ({stats.selectedImportable})
               </button>
-              <button onClick={() => { setRows([]); setSelected(new Set()); }} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5">
+              <button onClick={() => { setRows([]); setSelected(new Set()); setChunks([]); setBatchId(null); }} className="px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-[12px] inline-flex items-center gap-1.5">
                 <RotateCcw size={14} /> إلغاء
               </button>
             </div>
           </div>
+
+          {chunks.length > 0 && (
+            <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.02] p-3 text-[11px] space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-[12px]">
+                  تقدّم الاعتماد: {chunks.filter((c) => c.status === "done").length} / {chunks.length} دفعة
+                </span>
+                {chunks.some((c) => c.status === "failed") && (
+                  <button
+                    onClick={retryFailedChunks}
+                    disabled={committing}
+                    className="px-2.5 py-1 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 disabled:opacity-50 inline-flex items-center gap-1"
+                  >
+                    <RotateCcw size={12} /> إعادة محاولة الدفعات الفاشلة ({chunks.filter((c) => c.status === "failed").length})
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {chunks.map((c) => (
+                  <span
+                    key={c.index}
+                    title={c.error ?? ""}
+                    className={
+                      "px-2 py-0.5 rounded border " +
+                      (c.status === "done" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                        : c.status === "failed" ? "bg-red-500/15 text-red-300 border-red-500/30"
+                        : c.status === "running" ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
+                        : "bg-white/5 text-muted-foreground border-white/15")
+                    }
+                  >
+                    دفعة {c.index + 1} ({c.rowNos.length})
+                    {c.status === "failed" ? " — فشلت" : c.status === "running" ? " — جارٍ" : c.status === "done" ? " — تمت" : ""}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1 border-t border-white/10">
+                <span className="text-muted-foreground">الإجمالي:</span>
+                <span>تحديث بيانات مصدر: <b>{chunkTotals.metadata_updated}</b></span>
+                <span>تحديث مسودات: <b>{chunkTotals.updated_drafts}</b></span>
+                <span>جديد: <b>{chunkTotals.new}</b></span>
+                <span>ملغي: <b>{chunkTotals.cancelled}</b></span>
+                <span>متجاوَز: <b>{chunkTotals.skipped}</b></span>
+                <span className={chunkTotals.failed ? "text-red-300" : ""}>فاشل: <b>{chunkTotals.failed}</b></span>
+                <span className="text-muted-foreground">معتمد: {chunkTotals.approved}</span>
+              </div>
+
+              {chunks.filter((c) => c.status === "failed").map((c) => (
+                <div key={`e-${c.index}`} className="text-red-300">دفعة {c.index + 1}: {c.error}</div>
+              ))}
+            </div>
+          )}
 
           {/* بطاقة تفصيل أسباب المراجعة */}
           <div className="mb-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] p-2 text-[11px]">
