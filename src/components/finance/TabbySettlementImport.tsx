@@ -165,8 +165,8 @@ export function TabbySettlementImport({
   }, [lines, groupFilter, orderQuery]);
 
   const newLinesCount = useMemo(
-    () => lines ? lines.filter((l) => !existingFps.has(l.row_fingerprint)).length : 0,
-    [lines, existingFps]
+    () => lines ? lines.filter((l) => !existingByFp.has(l.row_fingerprint)).length : 0,
+    [lines, existingByFp]
   );
   const skippedCount = (lines?.length ?? 0) - newLinesCount;
 
@@ -183,7 +183,7 @@ export function TabbySettlementImport({
       const uid = u.user?.id ?? null;
 
       for (const g of groups) {
-        const groupLines = g.lines.filter((l) => !existingFps.has(l.row_fingerprint));
+        const groupLines = g.lines.filter((l) => !existingByFp.has(l.row_fingerprint));
         if (!groupLines.length) { skippedLines += g.lines.length; continue; }
 
         const isPartial = groupLines.length !== g.lines.length;
@@ -391,7 +391,7 @@ export function TabbySettlementImport({
         </div>
         <div className="text-[10px] text-muted-foreground mt-2 flex flex-wrap gap-3">
           <span>بصمة الملف: <span className="font-mono">{fileHash.slice(0, 16)}</span></span>
-          <span>بصمات مكرّرة من ملفات سابقة: <b className={existingFps.size ? "text-amber-300" : "text-muted-foreground"}>{existingFps.size}</b></span>
+          <span>بصمات مكرّرة من ملفات سابقة: <b className={existingByFp.size ? "text-amber-300" : "text-muted-foreground"}>{existingByFp.size}</b></span>
           <span>حركات جديدة ستُضاف: <b className="text-emerald-300">{newLinesCount}</b></span>
           {skippedCount > 0 && <span>سيتم تخطي: <b className="text-amber-300">{skippedCount}</b></span>}
         </div>
@@ -493,7 +493,7 @@ export function TabbySettlementImport({
             </thead>
             <tbody>
               {filteredLines.slice(0, 500).map((r) => {
-                const dup = existingFps.has(r.row_fingerprint);
+                const dup = existingByFp.has(r.row_fingerprint);
                 return (
                   <tr key={r.rowNo} className={`border-t border-white/5 ${dup ? "bg-red-500/10" : r.needs_review ? "bg-amber-500/5" : ""}`}>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.rowNo}</td>
