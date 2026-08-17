@@ -262,6 +262,13 @@ type ParsedRow = {
   total_before_vat: number;
   product_before_vat: number;
   total_discount: number;
+  // حقول مصدر معلوماتية فقط
+  discount_code: string | null;
+  payment_references: string[];
+  source_updated_at: string | null;
+  external_order_reference: string | null;
+  source_products_raw: string | null;
+  customer_phone_snapshot: string | null;
   cancelled: boolean;
   duplicate: boolean;
   issues: DataIssue[];
