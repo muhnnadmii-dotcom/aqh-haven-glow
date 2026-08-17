@@ -765,9 +765,19 @@ function SalesImportPage() {
                       <td className="p-1.5">{r.shipping_vat || "—"}</td>
                       <td className="p-1.5">{r.total_discount || "—"}</td>
                       <td className="p-1.5 text-[10px] text-amber-200">
+                        {r.action_reason && (
+                          <div className={r.classification === "blocked" ? "text-red-300 font-semibold" : "text-sky-200"}>
+                            {r.action_reason}
+                            {r.classification === "blocked" && (
+                              <span className="text-red-200/80">
+                                {" "}({!r.external_order_id ? "رقم الطلب" : !r.order_date ? "تاريخ الطلب" : "إجمالي الطلب"})
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {r.issues.length
                           ? r.issues.map((x) => <div key={x}>• {ISSUE_LABEL[x]}</div>)
-                          : "—"}
+                          : (!r.action_reason ? "—" : null)}
                       </td>
                     </tr>
                   );
