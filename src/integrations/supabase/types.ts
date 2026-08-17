@@ -5073,6 +5073,14 @@ export type Database = {
         Returns: Json
       }
       ensure_accounting_period: { Args: { p_date: string }; Returns: string }
+      ensure_sales_collection_journal: {
+        Args: { p_invoice_id: number }
+        Returns: string
+      }
+      ensure_settlement_payout_journal: {
+        Args: { p_allocation_id: string }
+        Returns: string
+      }
       finance_archive_import_batch: {
         Args: { p_batch_id: string; p_reason: string }
         Returns: Json
@@ -5433,6 +5441,10 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sync_gateway_sales_invoice: {
+        Args: { p_create_draft?: boolean; p_invoice_id: number }
+        Returns: string
+      }
       sync_income_settlement_link: {
         Args: { _income_id: string }
         Returns: undefined
