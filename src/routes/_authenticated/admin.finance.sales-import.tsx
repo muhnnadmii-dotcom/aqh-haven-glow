@@ -656,7 +656,11 @@ function SalesImportPage() {
   }
 
   const chunkTotals = useMemo(() => {
-    const acc = { metadata_updated: 0, updated_drafts: 0, new: 0, cancelled: 0, skipped: 0, failed: 0, approved: 0 };
+    const acc = {
+      metadata_updated: 0, updated_drafts: 0, new: 0, cancelled: 0,
+      needs_credit_note: 0, conflicts: 0, needs_review: 0,
+      unchanged: 0, blocked: 0, failed: 0, approved: 0,
+    };
     chunks.forEach((c) => {
       if (c.status === "failed") { acc.failed += c.rowNos.length; return; }
       const r = c.result as any;
@@ -664,12 +668,17 @@ function SalesImportPage() {
       acc.metadata_updated += Number(r.metadata_updated ?? 0);
       acc.updated_drafts += Number(r.updated_drafts ?? 0);
       acc.new += Number(r.new ?? 0);
-      acc.cancelled += Number(r.cancelled ?? 0) + Number(r.needs_credit_note ?? 0);
-      acc.skipped += Number(r.unchanged ?? 0) + Number(r.blocked ?? 0);
+      acc.cancelled += Number(r.cancelled ?? 0);
+      acc.needs_credit_note += Number(r.needs_credit_note ?? 0);
+      acc.conflicts += Number(r.conflicts ?? 0);
+      acc.needs_review += Number(r.needs_review ?? 0);
+      acc.unchanged += Number(r.unchanged ?? 0);
+      acc.blocked += Number(r.blocked ?? 0);
       acc.approved += Number(r.approved ?? 0);
     });
     return acc;
   }, [chunks]);
+
 
 
 
