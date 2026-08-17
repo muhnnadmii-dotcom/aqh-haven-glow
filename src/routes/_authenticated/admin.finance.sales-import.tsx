@@ -124,6 +124,40 @@ function parseDate(v: any): string | null {
   return isNaN(t.getTime()) ? null : `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
 }
 
+// timestamptz معلوماتي (تاريخ آخر تحديث للطلب) — يُخزَّن كنص ISO أو null
+function parseTimestamp(v: any): string | null {
+  if (isBlank(v)) return null;
+  if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
+  if (typeof v === "number") {
+    const d = XLSX.SSF.parse_date_code(v);
+    if (!d) return null;
+    const t = Date.UTC(d.y, (d.m || 1) - 1, d.d || 1, d.H || 0, d.M || 0, Math.floor(d.S || 0));
+    return new Date(t).toISOString();
+  }
+  const s = String(v).trim();
+  const t = new Date(s.replace(" ", "T"));
+  if (!isNaN(t.getTime())) return t.toISOString();
+  const d = parseDate(s);
+  return d ? new Date(`${d}T00:00:00Z`).toISOString() : null;
+}
+
+// مراجع الدفع: قد تكون JSON array أو نص مفصول بفواصل — معلوماتية فقط
+function parsePaymentRefs(v: any): string[] {
+  if (isBlank(v)) return [];
+  if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+  const s = String(v).trim();
+  if (s.startsWith("[") || s.startsWith("{")) {
+    try {
+      const j = JSON.parse(s);
+      if (Array.isArray(j)) return j.map((x) => (typeof x === "object" ? JSON.stringify(x) : String(x))).map((x) => x.trim()).filter(Boolean);
+      if (j && typeof j === "object") return Object.values(j).map((x: any) => String(x).trim()).filter(Boolean);
+      return [String(j).trim()].filter(Boolean);
+    } catch { /* fall through to plain split */ }
+  }
+  return s.split(/[,،;|\n]+/).map((x) => x.trim()).filter(Boolean);
+}
+
+
 // دقيق مالي (خانتان عشريتان)
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
