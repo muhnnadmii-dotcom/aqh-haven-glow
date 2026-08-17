@@ -6,11 +6,11 @@
 // Transfer Date). No sales invoices, incomes, or accounting entries are created
 // here — settlement rows and lines only.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, AlertTriangle, Loader2, ShieldAlert, Search } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { CheckCircle2, AlertTriangle, Loader2, ShieldAlert, Search, ExternalLink } from "lucide-react";
 import {
   TABBY_FIELDS,
   TABBY_SIGNATURE_HEADERS,
