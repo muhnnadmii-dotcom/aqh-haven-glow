@@ -3754,11 +3754,14 @@ export type Database = {
           currency: string
           customer_id: string | null
           customer_name_snapshot: string | null
+          customer_phone_snapshot: string | null
           data_completeness_status: Database["public"]["Enums"]["sales_data_completeness"]
           discount_amount: number
+          discount_code: string | null
           due_date: string | null
           external_invoice_number: string | null
           external_order_id: string | null
+          external_order_reference: string | null
           id: number
           import_batch_id: string | null
           import_row_snapshot: Json | null
@@ -3776,6 +3779,7 @@ export type Database = {
           payment_provider:
             | Database["public"]["Enums"]["sales_payment_provider"]
             | null
+          payment_references: Json | null
           payment_status: Database["public"]["Enums"]["sales_invoice_payment_status"]
           refund_amount: number
           remaining_amount: number
@@ -3785,6 +3789,8 @@ export type Database = {
             | null
           shipping_before_vat: number
           shipping_vat: number
+          source_products_raw: string | null
+          source_updated_at: string | null
           status: Database["public"]["Enums"]["sales_invoice_status"]
           subtotal: number
           supply_date: string | null
@@ -3801,11 +3807,14 @@ export type Database = {
           currency?: string
           customer_id?: string | null
           customer_name_snapshot?: string | null
+          customer_phone_snapshot?: string | null
           data_completeness_status?: Database["public"]["Enums"]["sales_data_completeness"]
           discount_amount?: number
+          discount_code?: string | null
           due_date?: string | null
           external_invoice_number?: string | null
           external_order_id?: string | null
+          external_order_reference?: string | null
           id?: number
           import_batch_id?: string | null
           import_row_snapshot?: Json | null
@@ -3823,6 +3832,7 @@ export type Database = {
           payment_provider?:
             | Database["public"]["Enums"]["sales_payment_provider"]
             | null
+          payment_references?: Json | null
           payment_status?: Database["public"]["Enums"]["sales_invoice_payment_status"]
           refund_amount?: number
           remaining_amount?: number
@@ -3832,6 +3842,8 @@ export type Database = {
             | null
           shipping_before_vat?: number
           shipping_vat?: number
+          source_products_raw?: string | null
+          source_updated_at?: string | null
           status?: Database["public"]["Enums"]["sales_invoice_status"]
           subtotal?: number
           supply_date?: string | null
@@ -3848,11 +3860,14 @@ export type Database = {
           currency?: string
           customer_id?: string | null
           customer_name_snapshot?: string | null
+          customer_phone_snapshot?: string | null
           data_completeness_status?: Database["public"]["Enums"]["sales_data_completeness"]
           discount_amount?: number
+          discount_code?: string | null
           due_date?: string | null
           external_invoice_number?: string | null
           external_order_id?: string | null
+          external_order_reference?: string | null
           id?: number
           import_batch_id?: string | null
           import_row_snapshot?: Json | null
@@ -3870,6 +3885,7 @@ export type Database = {
           payment_provider?:
             | Database["public"]["Enums"]["sales_payment_provider"]
             | null
+          payment_references?: Json | null
           payment_status?: Database["public"]["Enums"]["sales_invoice_payment_status"]
           refund_amount?: number
           remaining_amount?: number
@@ -3879,6 +3895,8 @@ export type Database = {
             | null
           shipping_before_vat?: number
           shipping_vat?: number
+          source_products_raw?: string | null
+          source_updated_at?: string | null
           status?: Database["public"]["Enums"]["sales_invoice_status"]
           subtotal?: number
           supply_date?: string | null
@@ -4925,11 +4943,14 @@ export type Database = {
           currency: string
           customer_id: string | null
           customer_name_snapshot: string | null
+          customer_phone_snapshot: string | null
           data_completeness_status: Database["public"]["Enums"]["sales_data_completeness"]
           discount_amount: number
+          discount_code: string | null
           due_date: string | null
           external_invoice_number: string | null
           external_order_id: string | null
+          external_order_reference: string | null
           id: number
           import_batch_id: string | null
           import_row_snapshot: Json | null
@@ -4947,6 +4968,7 @@ export type Database = {
           payment_provider:
             | Database["public"]["Enums"]["sales_payment_provider"]
             | null
+          payment_references: Json | null
           payment_status: Database["public"]["Enums"]["sales_invoice_payment_status"]
           refund_amount: number
           remaining_amount: number
@@ -4956,6 +4978,8 @@ export type Database = {
             | null
           shipping_before_vat: number
           shipping_vat: number
+          source_products_raw: string | null
+          source_updated_at: string | null
           status: Database["public"]["Enums"]["sales_invoice_status"]
           subtotal: number
           supply_date: string | null
