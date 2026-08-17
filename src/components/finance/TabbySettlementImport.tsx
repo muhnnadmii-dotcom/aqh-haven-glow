@@ -493,7 +493,8 @@ export function TabbySettlementImport({
             </thead>
             <tbody>
               {filteredLines.slice(0, 500).map((r) => {
-                const dup = existingByFp.has(r.row_fingerprint);
+                const dupInfo = existingByFp.get(r.row_fingerprint);
+                const dup = !!dupInfo;
                 return (
                   <tr key={r.rowNo} className={`border-t border-white/5 ${dup ? "bg-red-500/10" : r.needs_review ? "bg-amber-500/5" : ""}`}>
                     <td className="px-2 py-1.5 text-muted-foreground">{r.rowNo}</td>
