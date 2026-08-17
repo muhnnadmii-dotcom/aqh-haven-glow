@@ -561,49 +561,99 @@ function SalesImportPage() {
   }
   function clearSelection() { setSelected(new Set()); }
 
-  async function commit() {
-    if (!rows.length) return;
-    if (!canWrite) { toast.error("لا تملك صلاحية الاستيراد"); return; }
-    const importable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r));
-    if (!importable.length) { toast.error("لا توجد صفوف قابلة للتنفيذ ضمن التحديد"); return; }
+  // تنفيذ دفعة واحدة (≤ CHUNK_SIZE صف) داخل transaction واحدة على الخادم
+  async function runChunk(chunkRows: ParsedRow[], batchId: string | null) {
+    const payload = chunkRows.map((r) => ({ ...r, selected: true }));
+    const { data, error } = await (supabase as any).rpc("salla_import_commit", {
+      p_batch: {
+        file_name: file?.name ?? "salla-import",
+        sheet_name: sheet || null,
+        mapping,
+        header_row: headerRow,
+        batch_id: batchId,
+      },
+      p_rows: payload as any,
+    });
+    if (error) throw error;
+    return (data ?? {}) as Record<string, any>;
+  }
 
-    const b = countBuckets(importable);
-    const ok = window.confirm(
-      `سيتم تنفيذ ${importable.length} صف داخل عملية واحدة على الخادم:\n` +
-      `• فواتير جديدة مكتملة (ستُعتمد): ${b.new}\n` +
-      `• جديدة بلا رقم فاتورة (تبقى مسودة): ${b.new_missing_invoice_number}\n` +
-      `• تحديث مسودات موجودة: ${b.update_existing_draft}\n` +
-      `• تعارض مع فواتير نهائية (تُعلَّم للمراجعة فقط): ${b.conflict_existing_final}\n` +
-      `• ملغي: ${b.cancelled_new + b.cancel_draft}، إشعار دائن مطلوب: ${b.needs_credit_note}\n\n` +
-      `حالة الدفع لا تُحدَّد من طريقة الدفع — تُحتسب من التسويات أو المقبوضات الفعلية.\n\nمتابعة؟`
-    );
-    if (!ok) return;
-
+  async function runChunks(list: ChunkState[], startBatchId: string | null) {
+    let batchId = startBatchId;
     setCommitting(true);
     try {
-      const payload = rows.map((r) => ({ ...r, selected: selected.has(r.rowNo) && canImportRow(r) }));
-      const { data, error } = await (supabase as any).rpc("salla_import_commit", {
-        p_batch: {
-          file_name: file?.name ?? "salla-import",
-          sheet_name: sheet || null,
-          mapping,
-          header_row: headerRow,
-        },
-        p_rows: payload as any,
-      });
-      if (error) throw error;
-      const res = data ?? {};
-      toast.success(
-        `تم التنفيذ: جديد ${res.new ?? 0}، تحديث مسودات ${res.updated_drafts ?? 0}، معتمد ${res.approved ?? 0}، بنود ${res.items_created ?? 0}، لا تغيير ${res.unchanged ?? 0}، تعارض ${res.conflicts ?? 0}، للمراجعة ${res.needs_review ?? 0}، إشعار دائن ${res.needs_credit_note ?? 0}.`
-      );
-      setRows([]); setSelected(new Set()); setFile(null); setSheets([]); setSheet(""); setAoa([]); setMapping({});
-      if (fileRef.current) fileRef.current.value = "";
-    } catch (e: any) {
-      toast.error(`فشل الاستيراد ولم يُحفظ أي تغيير: ${e.message ?? e}`);
+      for (const ch of list) {
+        setChunks((prev) => prev.map((c) => (c.index === ch.index ? { ...c, status: "running", error: undefined } : c)));
+        const chunkRows = rows.filter((r) => ch.rowNos.includes(r.rowNo));
+        try {
+          const res = await runChunk(chunkRows, batchId);
+          if (!batchId && res.batch_id) { batchId = String(res.batch_id); setBatchId(batchId); }
+          setChunks((prev) => prev.map((c) => (c.index === ch.index ? { ...c, status: "done", result: res as any } : c)));
+        } catch (e: any) {
+          setChunks((prev) => prev.map((c) => (c.index === ch.index ? { ...c, status: "failed", error: e?.message ?? String(e) } : c)));
+        }
+      }
     } finally {
       setCommitting(false);
     }
   }
+
+  async function commit() {
+    if (!rows.length) return;
+    if (!canWrite) { toast.error("لا تملك صلاحية الاستيراد"); return; }
+    // لا تُرسل الصفوف غير القابلة للإجراء (no_change / blocked)
+    const importable = rows.filter((r) => selected.has(r.rowNo) && canImportRow(r));
+    if (!importable.length) { toast.error("لا توجد صفوف قابلة للتنفيذ ضمن التحديد"); return; }
+
+    const b = countBuckets(importable);
+    const nChunks = Math.ceil(importable.length / CHUNK_SIZE);
+    const ok = window.confirm(
+      `سيتم اعتماد ${importable.length} صف على ${nChunks} دفعة (حد أقصى ${CHUNK_SIZE} صف لكل دفعة):\n` +
+      `• فواتير جديدة مكتملة (ستُعتمد): ${b.new}\n` +
+      `• جديدة بلا رقم فاتورة (تبقى مسودة): ${b.new_missing_invoice_number}\n` +
+      `• تحديث مسودات موجودة: ${b.update_existing_draft}\n` +
+      `• تحديث بيانات مصدر فقط (فواتير نهائية): ${b.metadata_only_update}\n` +
+      `• تعارض مع فواتير نهائية (مراجعة + بيانات مصدر فقط): ${b.conflict_existing_final}\n` +
+      `• ملغي: ${b.cancelled_new + b.cancel_draft}، إشعار دائن مطلوب: ${b.needs_credit_note}\n\n` +
+      `تحديث بيانات المصدر لا يمس المبالغ أو الضريبة أو أرقام الفواتير أو حالة الدفع أو القيود.\n\nمتابعة؟`
+    );
+    if (!ok) return;
+
+    const list: ChunkState[] = [];
+    for (let i = 0; i < importable.length; i += CHUNK_SIZE) {
+      list.push({
+        index: list.length,
+        rowNos: importable.slice(i, i + CHUNK_SIZE).map((r) => r.rowNo),
+        status: "pending",
+      });
+    }
+    setChunks(list);
+    setBatchId(null);
+    await runChunks(list, null);
+  }
+
+  async function retryFailedChunks() {
+    const failed = chunks.filter((c) => c.status === "failed");
+    if (!failed.length) return;
+    await runChunks(failed, batchId);
+  }
+
+  const chunkTotals = useMemo(() => {
+    const acc = { metadata_updated: 0, updated_drafts: 0, new: 0, cancelled: 0, skipped: 0, failed: 0, approved: 0 };
+    chunks.forEach((c) => {
+      if (c.status === "failed") { acc.failed += c.rowNos.length; return; }
+      const r = c.result as any;
+      if (!r) return;
+      acc.metadata_updated += Number(r.metadata_updated ?? 0);
+      acc.updated_drafts += Number(r.updated_drafts ?? 0);
+      acc.new += Number(r.new ?? 0);
+      acc.cancelled += Number(r.cancelled ?? 0) + Number(r.needs_credit_note ?? 0);
+      acc.skipped += Number(r.unchanged ?? 0) + Number(r.blocked ?? 0);
+      acc.approved += Number(r.approved ?? 0);
+    });
+    return acc;
+  }, [chunks]);
+
 
 
 
