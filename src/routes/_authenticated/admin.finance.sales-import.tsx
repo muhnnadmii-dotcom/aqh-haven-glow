@@ -141,21 +141,36 @@ function parseTimestamp(v: any): string | null {
   return d ? new Date(`${d}T00:00:00Z`).toISOString() : null;
 }
 
-// مراجع الدفع: قد تكون JSON array أو نص مفصول بفواصل — معلوماتية فقط
-function parsePaymentRefs(v: any): string[] {
+// مراجع الدفع: تُحفظ كما هي (كائنات {provider,reference,amount}) — معلوماتية فقط
+type PaymentRef = Record<string, any>;
+function toRefObject(x: any): PaymentRef | null {
+  if (x == null) return null;
+  if (typeof x === "object") return x as PaymentRef;
+  const s = String(x).trim();
+  if (!s) return null;
+  if (s.startsWith("{")) {
+    try {
+      const j = JSON.parse(s);
+      if (j && typeof j === "object" && !Array.isArray(j)) return j as PaymentRef;
+    } catch { /* fall through */ }
+  }
+  return { reference: s };
+}
+
+function parsePaymentRefs(v: any): PaymentRef[] {
   if (isBlank(v)) return [];
-  if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+  if (Array.isArray(v)) return v.map(toRefObject).filter(Boolean) as PaymentRef[];
   const s = String(v).trim();
   if (s.startsWith("[") || s.startsWith("{")) {
     try {
       const j = JSON.parse(s);
-      if (Array.isArray(j)) return j.map((x) => (typeof x === "object" ? JSON.stringify(x) : String(x))).map((x) => x.trim()).filter(Boolean);
-      if (j && typeof j === "object") return Object.values(j).map((x: any) => String(x).trim()).filter(Boolean);
-      return [String(j).trim()].filter(Boolean);
+      if (Array.isArray(j)) return j.map(toRefObject).filter(Boolean) as PaymentRef[];
+      if (j && typeof j === "object") return [j as PaymentRef];
     } catch { /* fall through to plain split */ }
   }
-  return s.split(/[,،;|\n]+/).map((x) => x.trim()).filter(Boolean);
+  return s.split(/[,،;|\n]+/).map((x) => toRefObject(x)).filter(Boolean) as PaymentRef[];
 }
+
 
 
 // دقيق مالي (خانتان عشريتان)
@@ -267,7 +282,7 @@ type ParsedRow = {
   total_discount: number;
   // حقول مصدر معلوماتية فقط
   discount_code: string | null;
-  payment_references: string[];
+  payment_references: PaymentRef[];
   source_updated_at: string | null;
   external_order_reference: string | null;
   source_products_raw: string | null;
@@ -641,7 +656,11 @@ function SalesImportPage() {
   }
 
   const chunkTotals = useMemo(() => {
-    const acc = { metadata_updated: 0, updated_drafts: 0, new: 0, cancelled: 0, skipped: 0, failed: 0, approved: 0 };
+    const acc = {
+      metadata_updated: 0, updated_drafts: 0, new: 0, cancelled: 0,
+      needs_credit_note: 0, conflicts: 0, needs_review: 0,
+      unchanged: 0, blocked: 0, failed: 0, approved: 0,
+    };
     chunks.forEach((c) => {
       if (c.status === "failed") { acc.failed += c.rowNos.length; return; }
       const r = c.result as any;
@@ -649,12 +668,17 @@ function SalesImportPage() {
       acc.metadata_updated += Number(r.metadata_updated ?? 0);
       acc.updated_drafts += Number(r.updated_drafts ?? 0);
       acc.new += Number(r.new ?? 0);
-      acc.cancelled += Number(r.cancelled ?? 0) + Number(r.needs_credit_note ?? 0);
-      acc.skipped += Number(r.unchanged ?? 0) + Number(r.blocked ?? 0);
+      acc.cancelled += Number(r.cancelled ?? 0);
+      acc.needs_credit_note += Number(r.needs_credit_note ?? 0);
+      acc.conflicts += Number(r.conflicts ?? 0);
+      acc.needs_review += Number(r.needs_review ?? 0);
+      acc.unchanged += Number(r.unchanged ?? 0);
+      acc.blocked += Number(r.blocked ?? 0);
       acc.approved += Number(r.approved ?? 0);
     });
     return acc;
   }, [chunks]);
+
 
 
 
@@ -852,10 +876,15 @@ function SalesImportPage() {
                 <span>تحديث مسودات: <b>{chunkTotals.updated_drafts}</b></span>
                 <span>جديد: <b>{chunkTotals.new}</b></span>
                 <span>ملغي: <b>{chunkTotals.cancelled}</b></span>
-                <span>متجاوَز: <b>{chunkTotals.skipped}</b></span>
+                <span className={chunkTotals.needs_credit_note ? "text-amber-300" : ""}>إشعار دائن مطلوب: <b>{chunkTotals.needs_credit_note}</b></span>
+                <span className={chunkTotals.conflicts ? "text-amber-300" : ""}>تعارض (مراجعة): <b>{chunkTotals.conflicts}</b></span>
+                <span>يحتاج مراجعة: <b>{chunkTotals.needs_review}</b></span>
+                <span>بلا تغيير: <b>{chunkTotals.unchanged}</b></span>
+                <span className={chunkTotals.blocked ? "text-red-300" : ""}>أخطاء: <b>{chunkTotals.blocked}</b></span>
                 <span className={chunkTotals.failed ? "text-red-300" : ""}>فاشل: <b>{chunkTotals.failed}</b></span>
                 <span className="text-muted-foreground">معتمد: {chunkTotals.approved}</span>
               </div>
+
 
               {chunks.filter((c) => c.status === "failed").map((c) => (
                 <div key={`e-${c.index}`} className="text-red-300">دفعة {c.index + 1}: {c.error}</div>

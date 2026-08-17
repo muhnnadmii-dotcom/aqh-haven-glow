@@ -280,9 +280,19 @@ function SalesInvoiceEditor() {
             </Info>
             <Info label="مراجع عملية الدفع">
               {Array.isArray(header.payment_references) && header.payment_references.length > 0
-                ? (header.payment_references as any[]).map((x) => String(x)).join(" · ")
+                ? (header.payment_references as any[])
+                    .map((x) => {
+                      if (x && typeof x === "object") {
+                        const parts = [x.provider, x.reference, x.amount != null ? String(x.amount) : null]
+                          .filter((p) => p != null && String(p).trim() !== "");
+                        return parts.length ? parts.join(" — ") : JSON.stringify(x);
+                      }
+                      return String(x);
+                    })
+                    .join(" · ")
                 : "—"}
             </Info>
+
           </div>
           {header.source_products_raw ? (
             <div className="rounded-lg bg-black/20 border border-white/10 p-3">
