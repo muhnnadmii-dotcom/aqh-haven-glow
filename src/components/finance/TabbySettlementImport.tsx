@@ -39,6 +39,23 @@ type Props = {
 const fmt = (n: number) => (isFinite(n) ? n.toFixed(2) : "—");
 const chunkArr = <T,>(a: T[], n: number) => { const out: T[][] = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
 
+// A line only counts as "already imported" when it lives inside a settlement that
+// was committed and kept. Cancelled/draft settlements must never block re-import.
+const COMMITTED_SETTLEMENT_STATUSES = new Set([
+  "imported", "under_review", "matched", "partially_matched",
+  "awaiting_payout", "paid", "fully_matched", "closed",
+]);
+
+type ExistingLineInfo = {
+  settlement_id: string;
+  reference: string;
+  status: string;
+  settlement_date: string | null;
+  source_file_name: string | null;
+  line_id: string;
+  imported_at: string | null;
+};
+
 export function TabbySettlementImport({
   step, aoa, headerRow, file, fileHash, providerRow, canManage, onBack, onGotoPreview,
 }: Props) {
@@ -51,12 +68,20 @@ export function TabbySettlementImport({
   const [lines, setLines] = useState<TabbyParsedLine[] | null>(null);
   const [groups, setGroups] = useState<TabbyGroupTotals[] | null>(null);
   const [totals, setTotals] = useState<TabbyFileTotals | null>(null);
-  const [existingFps, setExistingFps] = useState<Set<string>>(new Set());
+  const [existingByFp, setExistingByFp] = useState<Map<string, ExistingLineInfo>>(new Map());
   const [existingFileHash, setExistingFileHash] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
   const [groupFilter, setGroupFilter] = useState<string>("");   // payout_date filter
   const [orderQuery, setOrderQuery] = useState<string>("");
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+
+  // Full state reset whenever a different file (hash) is loaded — no parsed rows,
+  // fingerprints or preview caches may survive from the previous file.
+  useEffect(() => {
+    setLines(null); setGroups(null); setTotals(null);
+    setExistingByFp(new Map()); setExistingFileHash(null);
+    setGroupFilter(""); setOrderQuery(""); setExpandedGroup(null);
+  }, [fileHash]);
 
   const missingRequired = TABBY_FIELDS.filter((f) => f.required).filter((f) => mapping[f.key] == null);
 
