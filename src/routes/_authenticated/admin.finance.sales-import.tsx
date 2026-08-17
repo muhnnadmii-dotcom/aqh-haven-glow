@@ -283,9 +283,20 @@ type ParsedRow = {
 };
 
 const SELECTABLE_ACTIONS: Classification[] = [
-  "new", "new_missing_invoice_number", "update_existing_draft",
+  "new", "new_missing_invoice_number", "update_existing_draft", "metadata_only_update",
   "cancelled_new", "cancel_draft", "needs_credit_note", "conflict_existing_final",
 ];
+
+// حجم الدفعة الواحدة لكل استدعاء/transaction — يمنع statement timeout على الملفات الكبيرة
+const CHUNK_SIZE = 200;
+
+type ChunkState = {
+  index: number;
+  rowNos: number[];
+  status: "pending" | "running" | "done" | "failed";
+  error?: string;
+  result?: Record<string, number>;
+};
 
 function countBuckets(rows: ParsedRow[]) {
   const acc = Object.fromEntries(ALL_CLASSIFICATIONS.map((k) => [k, 0])) as Record<Classification, number>;
