@@ -292,6 +292,11 @@ type ParsedRow = {
   external_order_reference: string | null;
   source_products_raw: string | null;
   customer_phone_snapshot: string | null;
+  // بيانات الشحن (معلوماتية)
+  shipping_company: string | null;
+  shipment_number: string | null;
+  policy_issued_at: string | null;
+  tracking_url: string | null;
   cancelled: boolean;
   duplicate: boolean;
   issues: DataIssue[];
@@ -478,6 +483,10 @@ function SalesImportPage() {
         external_order_reference: isBlank(get("external_order_reference")) ? null : String(get("external_order_reference")).trim(),
         source_products_raw: isBlank(get("source_products_raw")) ? null : String(get("source_products_raw")).trim(),
         customer_phone_snapshot: isBlank(get("customer_phone_snapshot")) ? null : String(get("customer_phone_snapshot")).trim(),
+        shipping_company: isBlank(get("shipping_company")) ? null : String(get("shipping_company")).trim(),
+        shipment_number: isBlank(get("shipment_number")) ? null : String(get("shipment_number")).trim(),
+        policy_issued_at: parseDate(get("policy_issued_at")),
+        tracking_url: isBlank(get("tracking_url")) ? null : String(get("tracking_url")).trim(),
         cancelled,
         duplicate: false,
         issues,
@@ -597,6 +606,22 @@ function SalesImportPage() {
       p_rows: payload as any,
     });
     if (error) throw error;
+
+    // تحديث بيانات الشحن بشكل idempotent — لا ينشئ فواتير ولا يغيّر الحالة المحاسبية
+    const shipRows = chunkRows
+      .filter((r) => r.external_order_id && (r.shipping_company || r.shipment_number || r.policy_issued_at || r.tracking_url))
+      .map((r) => ({
+        external_order_id: r.external_order_id,
+        shipping_company: r.shipping_company,
+        shipment_number: r.shipment_number,
+        policy_issued_at: r.policy_issued_at,
+        tracking_url: r.tracking_url,
+      }));
+    if (shipRows.length) {
+      const { error: shipErr } = await (supabase as any).rpc("salla_apply_shipping_metadata", { p_rows: shipRows });
+      if (shipErr) console.error("shipping metadata", shipErr);
+    }
+
     return (data ?? {}) as Record<string, any>;
   }
 
