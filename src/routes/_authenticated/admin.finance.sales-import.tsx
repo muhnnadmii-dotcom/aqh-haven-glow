@@ -60,6 +60,11 @@ const FIELDS = [
   { key: "external_order_reference", label: "رقم مرجع الطلب", required: false, aliases: ["رقم مرجع الطلب", "مرجع الطلب", "order reference", "reference id"] },
   { key: "source_products_raw", label: "أسماء المنتجات مع SKU", required: false, aliases: ["اسماء المنتجات مع SKU", "أسماء المنتجات مع SKU", "المنتجات", "products", "product names"] },
   { key: "customer_phone_snapshot", label: "رقم الجوال", required: false, aliases: ["رقم الجوال", "الجوال", "جوال العميل", "phone", "mobile"] },
+  // بيانات الشحن — معلوماتية فقط، تُحدَّث بشكل idempotent دون المساس بالحالة المحاسبية
+  { key: "shipping_company", label: "شركة الشحن / الفرع", required: false, aliases: ["شركة الشحن / الفرع", "شركة الشحن", "الشحن / الفرع", "shipping company", "carrier"] },
+  { key: "shipment_number", label: "رقم البوليصة", required: false, aliases: ["رقم البوليصة", "البوليصة", "رقم الشحنة", "waybill", "tracking number", "awb"] },
+  { key: "policy_issued_at", label: "تاريخ اصدار البوليصة", required: false, aliases: ["تاريخ اصدار البوليصة", "تاريخ إصدار البوليصة", "تاريخ البوليصة", "policy date", "shipment date"] },
+  { key: "tracking_url", label: "رابط تتبع الطلب", required: false, aliases: ["رابط تتبع الطلب", "رابط التتبع", "تتبع الطلب", "tracking url", "tracking link"] },
 ] as const;
 
 
