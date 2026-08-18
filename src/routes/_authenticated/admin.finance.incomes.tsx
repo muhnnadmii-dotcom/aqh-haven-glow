@@ -463,6 +463,14 @@ function IncomesPage() {
           { value: "none", label: "بدون وسيط" },
         ]} />
         <Select v={fLink} onChange={(v) => setFLink(v as any)} ph="حالة الربط" opts={(Object.keys(LINK_LABELS) as LinkStatus[]).map((k) => ({ value: k, label: LINK_LABELS[k] }))} />
+        <Select v={fCust} onChange={(v) => setFCust(v as any)} ph="حوالات العملاء" opts={[
+          { value: "needs_link", label: "تحتاج ربط" },
+          { value: "unlinked", label: TRANSFER_LABELS.unlinked },
+          { value: "advance_pending", label: TRANSFER_LABELS.advance_pending },
+          { value: "suspected_duplicate", label: TRANSFER_LABELS.suspected_duplicate },
+          { value: "linked", label: TRANSFER_LABELS.linked },
+        ]} />
+
         <Select v={fTxnType} onChange={setFTxnType} ph="نوع الحركة" opts={INCOMING_TYPES.map((t) => ({ value: t.value, label: t.label }))} />
         <Select v={fMonth} onChange={setFMonth} ph="الشهر" opts={months.map((m) => ({ value: m, label: m }))} />
         <Select v={fSource} onChange={setFSource} ph="المصدر الأصلي" opts={sources.map((s) => ({ value: s.id, label: s.name }))} />
