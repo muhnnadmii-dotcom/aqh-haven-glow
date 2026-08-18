@@ -987,7 +987,16 @@ function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any)
         if (error) throw error;
         toast.success("تم الحفظ");
       }
+      if (unlinkedCustomerWarning && !accountantOnly) {
+        toast.warning(
+          f.transaction_type === "customer_advance"
+            ? "ستُحفظ كدفعة مقدمة معلقة حتى تُطبّق على فاتورة."
+            : "ستُحفظ الحوالة كمقبوض غير مرتبط وستبقى في التنبيهات حتى ربطها. لم تُنشأ أي فاتورة تلقائيًا.",
+          { duration: 7000 },
+        );
+      }
       onSaved();
+
     } catch (e: any) {
       toast.error("تعذر الحفظ: " + (e.message ?? "خطأ"));
     } finally { setSaving(false); }
