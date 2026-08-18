@@ -118,12 +118,47 @@ function IncomesPage() {
   const [fLinkRaw, setFLinkRaw] = useUrlState("link", "");
   const fLink = fLinkRaw as "" | LinkStatus;
   const setFLink = (v: "" | LinkStatus) => setFLinkRaw(v);
+  const [fCustRaw, setFCustRaw] = useUrlState("cust", "");
+  const fCust = fCustRaw as TransferFilter;
+  const setFCust = (v: TransferFilter) => setFCustRaw(v);
   const initialPage = useInitialUrlPage();
+
+  // Customer direct-transfer link states (single source of truth = SQL view).
+  const [custRows, setCustRows] = useState<TransferStatusRow[]>([]);
+  const [custLoaded, setCustLoaded] = useState(false);
+  const [linkTarget, setLinkTarget] = useState<Income | null>(null);
+  const reloadCust = useCallback(async () => {
+    try {
+      setCustRows(await fetchTransferStatuses());
+    } catch {
+      setCustRows([]);
+    } finally {
+      setCustLoaded(true);
+    }
+  }, []);
+  useEffect(() => { reloadCust(); }, [reloadCust]);
+  const custMap = useMemo(() => new Map(custRows.map((r) => [r.income_id, r])), [custRows]);
+  const custSummary = useMemo(() => {
+    const s = { unlinked: 0, unlinkedAmt: 0, advance: 0, advanceAmt: 0, dup: 0, dupAmt: 0, linked: 0 };
+    for (const r of custRows) {
+      if (r.link_state === "unlinked") { s.unlinked++; s.unlinkedAmt += r.amount; }
+      else if (r.link_state === "advance_pending") { s.advance++; s.advanceAmt += r.amount; }
+      else if (r.link_state === "suspected_duplicate") { s.dup++; s.dupAmt += r.amount; }
+      else s.linked++;
+    }
+    return s;
+  }, [custRows]);
+  const custFilterIds = useMemo(
+    () => (fCust ? custRows.filter((r) => matchesFilter(r.link_state, fCust)).map((r) => r.income_id) : []),
+    [custRows, fCust],
+  );
+  const custFilterKey = fCust ? `${fCust}:${custFilterIds.length}` : "";
 
   const resetFilters = () => {
     setQ(""); setFMonth(""); setFSource(""); setFAccount(""); setFInternal("");
-    setFAcct(""); setFAtt(""); setFTxnType(""); setFAccStatus(""); setFProvider(""); setFLink("");
+    setFAcct(""); setFAtt(""); setFTxnType(""); setFAccStatus(""); setFProvider(""); setFLink(""); setFCust("");
   };
+
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
