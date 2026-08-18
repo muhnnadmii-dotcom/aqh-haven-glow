@@ -2110,6 +2110,13 @@ export type Database = {
             foreignKeyName: "finance_incomes_split_parent_id_fkey"
             columns: ["split_parent_id"]
             isOneToOne: false
+            referencedRelation: "finance_customer_transfer_status"
+            referencedColumns: ["income_id"]
+          },
+          {
+            foreignKeyName: "finance_incomes_split_parent_id_fkey"
+            columns: ["split_parent_id"]
+            isOneToOne: false
             referencedRelation: "finance_incomes"
             referencedColumns: ["id"]
           },
@@ -2718,6 +2725,13 @@ export type Database = {
           wallet_top_up_amount?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "payment_settlements_bank_income_id_fkey"
+            columns: ["bank_income_id"]
+            isOneToOne: false
+            referencedRelation: "finance_customer_transfer_status"
+            referencedColumns: ["income_id"]
+          },
           {
             foreignKeyName: "payment_settlements_bank_income_id_fkey"
             columns: ["bank_income_id"]
@@ -4387,6 +4401,13 @@ export type Database = {
             foreignKeyName: "settlement_bank_allocations_transaction_id_fkey"
             columns: ["transaction_id"]
             isOneToOne: false
+            referencedRelation: "finance_customer_transfer_status"
+            referencedColumns: ["income_id"]
+          },
+          {
+            foreignKeyName: "settlement_bank_allocations_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
             referencedRelation: "finance_incomes"
             referencedColumns: ["id"]
           },
@@ -4818,6 +4839,39 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_customer_transfer_status: {
+        Row: {
+          account_type: string | null
+          amount: number | null
+          collection_type: string | null
+          dup_count: number | null
+          income_date: string | null
+          income_id: string | null
+          inv_channel: string | null
+          inv_status: string | null
+          invoice_number: string | null
+          link_state: string | null
+          note: string | null
+          sales_invoice_id: number | null
+          transaction_type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_incomes_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_incomes_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_gateway_collection_exceptions"
+            referencedColumns: ["invoice_id"]
+          },
+        ]
+      }
       v_gateway_collection_exceptions: {
         Row: {
           invoice_id: number | null
@@ -5137,6 +5191,25 @@ export type Database = {
         Args: { p_batch_id: string; p_reason: string }
         Returns: Json
       }
+      finance_customer_transfer_suggestions: {
+        Args: { p_income_id: string }
+        Returns: {
+          confidence: string
+          customer_name: string
+          invoice_id: number
+          invoice_number: string
+          issue_date: string
+          payment_method: string
+          reason: string
+          remaining_amount: number
+          score: number
+          total_amount: number
+        }[]
+      }
+      finance_customer_transfers_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       finance_expenses_backfill_link: {
         Args: { p_limit?: number; p_only_supplier_kind?: string }
         Returns: {
@@ -5160,6 +5233,10 @@ export type Database = {
           name: string
         }[]
       }
+      finance_link_income_to_invoice: {
+        Args: { p_income_id: string; p_invoice_id: number }
+        Returns: Json
+      }
       finance_log_manual_audit: {
         Args: {
           p_action: string
@@ -5172,6 +5249,8 @@ export type Database = {
         }
         Returns: string
       }
+      finance_norm_name: { Args: { p_raw: string }; Returns: string }
+      finance_norm_phone: { Args: { p_raw: string }; Returns: string }
       finance_overview: {
         Args: { p_from: string; p_to: string }
         Returns: Json
@@ -5494,6 +5573,7 @@ export type Database = {
         Returns: Json
       }
       salla_import_preview: { Args: { p_rows: Json }; Returns: Json }
+      salla_manual_duplicate_warning: { Args: { p_row: Json }; Returns: string }
       settlement_allocated_total: {
         Args: { _settlement_id: string }
         Returns: number
