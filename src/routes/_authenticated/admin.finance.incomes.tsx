@@ -217,6 +217,11 @@ function IncomesPage() {
       if (!p) return { rows: [], total: 0 };
       query = query.eq("payment_provider_id", p.id);
     }
+    if (fCust) {
+      if (!custLoaded) return { rows: [], total: 0 };
+      if (custFilterIds.length === 0) return { rows: [], total: 0 };
+      query = query.in("id", custFilterIds);
+    }
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     const { data, count, error } = await query.range(from, to);
@@ -234,9 +239,11 @@ function IncomesPage() {
       setPageAllocs([]);
     }
     return { rows: incRows, total: count ?? 0 };
-  }, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, providerByCode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, providerByCode, fCust, custFilterKey, custLoaded]);
 
-  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider], undefined, initialPage);
+  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, fCust, custFilterKey, custLoaded], undefined, initialPage);
+
   useSyncPageToUrl(pg.page);
   const [rows, setLocalRows] = useState<Income[]>([]);
   useEffect(() => { setLocalRows(pg.rows); }, [pg.rows]);
