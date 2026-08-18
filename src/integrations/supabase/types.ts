@@ -3781,13 +3781,16 @@ export type Database = {
             | null
           payment_references: Json | null
           payment_status: Database["public"]["Enums"]["sales_invoice_payment_status"]
+          policy_issued_at: string | null
           refund_amount: number
           remaining_amount: number
           sales_channel: Database["public"]["Enums"]["sales_channel_type"]
           settlement_status:
             | Database["public"]["Enums"]["sales_invoice_settlement_status"]
             | null
+          shipment_number: string | null
           shipping_before_vat: number
+          shipping_company: string | null
           shipping_vat: number
           source_products_raw: string | null
           source_updated_at: string | null
@@ -3796,6 +3799,7 @@ export type Database = {
           supply_date: string | null
           taxable_amount: number
           total_amount: number
+          tracking_url: string | null
           updated_at: string
           vat_amount: number
         }
@@ -3834,13 +3838,16 @@ export type Database = {
             | null
           payment_references?: Json | null
           payment_status?: Database["public"]["Enums"]["sales_invoice_payment_status"]
+          policy_issued_at?: string | null
           refund_amount?: number
           remaining_amount?: number
           sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
           settlement_status?:
             | Database["public"]["Enums"]["sales_invoice_settlement_status"]
             | null
+          shipment_number?: string | null
           shipping_before_vat?: number
+          shipping_company?: string | null
           shipping_vat?: number
           source_products_raw?: string | null
           source_updated_at?: string | null
@@ -3849,6 +3856,7 @@ export type Database = {
           supply_date?: string | null
           taxable_amount?: number
           total_amount?: number
+          tracking_url?: string | null
           updated_at?: string
           vat_amount?: number
         }
@@ -3887,13 +3895,16 @@ export type Database = {
             | null
           payment_references?: Json | null
           payment_status?: Database["public"]["Enums"]["sales_invoice_payment_status"]
+          policy_issued_at?: string | null
           refund_amount?: number
           remaining_amount?: number
           sales_channel?: Database["public"]["Enums"]["sales_channel_type"]
           settlement_status?:
             | Database["public"]["Enums"]["sales_invoice_settlement_status"]
             | null
+          shipment_number?: string | null
           shipping_before_vat?: number
+          shipping_company?: string | null
           shipping_vat?: number
           source_products_raw?: string | null
           source_updated_at?: string | null
@@ -3902,6 +3913,7 @@ export type Database = {
           supply_date?: string | null
           taxable_amount?: number
           total_amount?: number
+          tracking_url?: string | null
           updated_at?: string
           vat_amount?: number
         }
@@ -4062,8 +4074,12 @@ export type Database = {
           original_total: number | null
           payment_method: string | null
           payment_status: string | null
+          policy_issued_at: string | null
           raw_snapshot: Json | null
           refund_total: number | null
+          shipment_number: string | null
+          shipping_company: string | null
+          tracking_url: string | null
           updated_at: string
         }
         Insert: {
@@ -4079,8 +4095,12 @@ export type Database = {
           original_total?: number | null
           payment_method?: string | null
           payment_status?: string | null
+          policy_issued_at?: string | null
           raw_snapshot?: Json | null
           refund_total?: number | null
+          shipment_number?: string | null
+          shipping_company?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -4096,8 +4116,12 @@ export type Database = {
           original_total?: number | null
           payment_method?: string | null
           payment_status?: string | null
+          policy_issued_at?: string | null
           raw_snapshot?: Json | null
           refund_total?: number | null
+          shipment_number?: string | null
+          shipping_company?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -4970,13 +4994,16 @@ export type Database = {
             | null
           payment_references: Json | null
           payment_status: Database["public"]["Enums"]["sales_invoice_payment_status"]
+          policy_issued_at: string | null
           refund_amount: number
           remaining_amount: number
           sales_channel: Database["public"]["Enums"]["sales_channel_type"]
           settlement_status:
             | Database["public"]["Enums"]["sales_invoice_settlement_status"]
             | null
+          shipment_number: string | null
           shipping_before_vat: number
+          shipping_company: string | null
           shipping_vat: number
           source_products_raw: string | null
           source_updated_at: string | null
@@ -4985,6 +5012,7 @@ export type Database = {
           supply_date: string | null
           taxable_amount: number
           total_amount: number
+          tracking_url: string | null
           updated_at: string
           vat_amount: number
         }
@@ -5319,6 +5347,7 @@ export type Database = {
       next_purchase_invoice_number: { Args: never; Returns: string }
       next_sales_invoice_number: { Args: never; Returns: string }
       normalize_order_id: { Args: { _v: string }; Returns: string }
+      normalize_shipping_company: { Args: { p_raw: string }; Returns: string }
       post_journal_entry: {
         Args: {
           p_description: string
@@ -5448,6 +5477,7 @@ export type Database = {
         Args: { p_invoice_id: number }
         Returns: undefined
       }
+      salla_apply_shipping_metadata: { Args: { p_rows: Json }; Returns: Json }
       salla_backfill_apply_v2: { Args: { p_preview_id: string }; Returns: Json }
       salla_backfill_preview_v2: {
         Args: { p_from?: string; p_invoice_ids?: number[]; p_to?: string }
