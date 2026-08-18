@@ -22,6 +22,16 @@ import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, t
 import { AuditPanel } from "@/components/finance/AuditPanel";
 import { RowAttachmentControl } from "@/components/finance/RowAttachmentControl";
 import { ReviewStatusEditor } from "@/components/finance/ReviewStatusEditor";
+import { CustomerTransferLinkDialog } from "@/components/finance/CustomerTransferLinkDialog";
+import {
+  fetchTransferStatuses,
+  matchesFilter,
+  TRANSFER_LABELS,
+  TRANSFER_TONES,
+  type TransferFilter,
+  type TransferStatusRow,
+} from "@/lib/finance/customer-transfers";
+
 
 export const Route = createFileRoute("/_authenticated/admin/finance/incomes")({
   ssr: false,
@@ -108,12 +118,47 @@ function IncomesPage() {
   const [fLinkRaw, setFLinkRaw] = useUrlState("link", "");
   const fLink = fLinkRaw as "" | LinkStatus;
   const setFLink = (v: "" | LinkStatus) => setFLinkRaw(v);
+  const [fCustRaw, setFCustRaw] = useUrlState("cust", "");
+  const fCust = fCustRaw as TransferFilter;
+  const setFCust = (v: TransferFilter) => setFCustRaw(v);
   const initialPage = useInitialUrlPage();
+
+  // Customer direct-transfer link states (single source of truth = SQL view).
+  const [custRows, setCustRows] = useState<TransferStatusRow[]>([]);
+  const [custLoaded, setCustLoaded] = useState(false);
+  const [linkTarget, setLinkTarget] = useState<Income | null>(null);
+  const reloadCust = useCallback(async () => {
+    try {
+      setCustRows(await fetchTransferStatuses());
+    } catch {
+      setCustRows([]);
+    } finally {
+      setCustLoaded(true);
+    }
+  }, []);
+  useEffect(() => { reloadCust(); }, [reloadCust]);
+  const custMap = useMemo(() => new Map(custRows.map((r) => [r.income_id, r])), [custRows]);
+  const custSummary = useMemo(() => {
+    const s = { unlinked: 0, unlinkedAmt: 0, advance: 0, advanceAmt: 0, dup: 0, dupAmt: 0, linked: 0 };
+    for (const r of custRows) {
+      if (r.link_state === "unlinked") { s.unlinked++; s.unlinkedAmt += r.amount; }
+      else if (r.link_state === "advance_pending") { s.advance++; s.advanceAmt += r.amount; }
+      else if (r.link_state === "suspected_duplicate") { s.dup++; s.dupAmt += r.amount; }
+      else s.linked++;
+    }
+    return s;
+  }, [custRows]);
+  const custFilterIds = useMemo(
+    () => (fCust ? custRows.filter((r) => matchesFilter(r.link_state, fCust)).map((r) => r.income_id) : []),
+    [custRows, fCust],
+  );
+  const custFilterKey = fCust ? `${fCust}:${custFilterIds.length}` : "";
 
   const resetFilters = () => {
     setQ(""); setFMonth(""); setFSource(""); setFAccount(""); setFInternal("");
-    setFAcct(""); setFAtt(""); setFTxnType(""); setFAccStatus(""); setFProvider(""); setFLink("");
+    setFAcct(""); setFAtt(""); setFTxnType(""); setFAccStatus(""); setFProvider(""); setFLink(""); setFCust("");
   };
+
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
@@ -172,6 +217,11 @@ function IncomesPage() {
       if (!p) return { rows: [], total: 0 };
       query = query.eq("payment_provider_id", p.id);
     }
+    if (fCust) {
+      if (!custLoaded) return { rows: [], total: 0 };
+      if (custFilterIds.length === 0) return { rows: [], total: 0 };
+      query = query.in("id", custFilterIds);
+    }
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     const { data, count, error } = await query.range(from, to);
@@ -189,9 +239,11 @@ function IncomesPage() {
       setPageAllocs([]);
     }
     return { rows: incRows, total: count ?? 0 };
-  }, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, providerByCode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, providerByCode, fCust, custFilterKey, custLoaded]);
 
-  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider], undefined, initialPage);
+  const pg = usePaginatedQuery(fetcher, [showDeleted, debouncedQ, fMonth, fSource, fAccount, fInternal, fAcct, fAtt, fTxnType, fAccStatus, fProvider, fCust, custFilterKey, custLoaded], undefined, initialPage);
+
   useSyncPageToUrl(pg.page);
   const [rows, setLocalRows] = useState<Income[]>([]);
   useEffect(() => { setLocalRows(pg.rows); }, [pg.rows]);
@@ -372,6 +424,24 @@ function IncomesPage() {
         <SummaryCard label="تحتاج مراجعة" value={summary.needsReview} tone="text-red-300" active={fLink === "needs_review"} onClick={() => setFLink(fLink === "needs_review" ? "" : "needs_review")} />
       </div>
 
+      {/* Direct customer transfers (non-gateway) */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+        <div className="mb-2 text-[12px] text-muted-foreground">
+          حوالات العملاء المباشرة (بدون وسطاء الدفع) — الربط يدوي بالكامل ولا تُنشأ فاتورة تلقائيًا.
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <SummaryCard label="تحتاج ربط (الكل)" value={`${custSummary.unlinked + custSummary.advance + custSummary.dup}`} tone="text-amber-300"
+            active={fCust === "needs_link"} onClick={() => setFCust(fCust === "needs_link" ? "" : "needs_link")} />
+          <SummaryCard label={`غير مرتبطة · ${fmtSAR(custSummary.unlinkedAmt)}`} value={custSummary.unlinked} tone="text-amber-300"
+            active={fCust === "unlinked"} onClick={() => setFCust(fCust === "unlinked" ? "" : "unlinked")} />
+          <SummaryCard label={`دفعات مقدمة معلقة · ${fmtSAR(custSummary.advanceAmt)}`} value={custSummary.advance} tone="text-sky-300"
+            active={fCust === "advance_pending"} onClick={() => setFCust(fCust === "advance_pending" ? "" : "advance_pending")} />
+          <SummaryCard label={`اشتباه تكرار · ${fmtSAR(custSummary.dupAmt)}`} value={custSummary.dup} tone="text-red-300"
+            active={fCust === "suspected_duplicate"} onClick={() => setFCust(fCust === "suspected_duplicate" ? "" : "suspected_duplicate")} />
+        </div>
+      </div>
+
+
       {unclassifiedCount > 0 && (
         <button
           onClick={() => setFAccStatus("unclassified")}
@@ -393,6 +463,14 @@ function IncomesPage() {
           { value: "none", label: "بدون وسيط" },
         ]} />
         <Select v={fLink} onChange={(v) => setFLink(v as any)} ph="حالة الربط" opts={(Object.keys(LINK_LABELS) as LinkStatus[]).map((k) => ({ value: k, label: LINK_LABELS[k] }))} />
+        <Select v={fCust} onChange={(v) => setFCust(v as any)} ph="حوالات العملاء" opts={[
+          { value: "needs_link", label: "تحتاج ربط" },
+          { value: "unlinked", label: TRANSFER_LABELS.unlinked },
+          { value: "advance_pending", label: TRANSFER_LABELS.advance_pending },
+          { value: "suspected_duplicate", label: TRANSFER_LABELS.suspected_duplicate },
+          { value: "linked", label: TRANSFER_LABELS.linked },
+        ]} />
+
         <Select v={fTxnType} onChange={setFTxnType} ph="نوع الحركة" opts={INCOMING_TYPES.map((t) => ({ value: t.value, label: t.label }))} />
         <Select v={fMonth} onChange={setFMonth} ph="الشهر" opts={months.map((m) => ({ value: m, label: m }))} />
         <Select v={fSource} onChange={setFSource} ph="المصدر الأصلي" opts={sources.map((s) => ({ value: s.id, label: s.name }))} />
@@ -449,10 +527,15 @@ function IncomesPage() {
                 <td className="px-3 py-2">
                   {en.isProviderIncome ? (
                     <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border whitespace-nowrap ${LINK_TONES[en.linkStatus]}`}>{LINK_LABELS[en.linkStatus]}</span>
+                  ) : custMap.get(r.id) ? (
+                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border whitespace-nowrap ${TRANSFER_TONES[custMap.get(r.id)!.link_state]}`}>
+                      {TRANSFER_LABELS[custMap.get(r.id)!.link_state]}
+                    </span>
                   ) : (
                     <span className="text-muted-foreground text-[10px]">لا ينطبق</span>
                   )}
                 </td>
+
                 <td className="px-3 py-2 font-mono text-[11px]">{en.allocated > 0 ? fmtSAR(en.allocated) : "—"}</td>
                 <td className={`px-3 py-2 font-mono text-[11px] ${en.remaining > 0 && en.isProviderIncome ? "text-orange-300" : ""}`}>{en.isProviderIncome ? fmtSAR(en.remaining) : "—"}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
@@ -489,11 +572,17 @@ function IncomesPage() {
                     <button onClick={() => setEditing(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px]">
                       <Pencil size={11} /> فتح
                     </button>
+                    {roles.canManage && !r.deleted_at && custMap.get(r.id) && custMap.get(r.id)!.link_state !== "linked" && (
+                      <button onClick={() => setLinkTarget(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold/10 hover:bg-gold/20 text-gold text-[11px]" title="ربط بالفاتورة">
+                        <Link2 size={11} /> ربط بالفاتورة
+                      </button>
+                    )}
                     {roles.canManage && !r.deleted_at && (
                       <button onClick={() => softDelete(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-300 text-[11px]" title="أرشفة / حذف">
                         <Trash2 size={11} />
                       </button>
                     )}
+
                     {roles.canManage && r.deleted_at && (
                       <button onClick={() => restore(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-[11px]" title="استعادة">
                         <RotateCcw size={11} /> استعادة
@@ -545,7 +634,16 @@ function IncomesPage() {
           onOpen={(settlementId: string) => { setLinkedDialog(null); navigate({ to: "/admin/finance/settlement-lines", search: { settlement: settlementId, provider: undefined, order: undefined } }); }}
         />
       )}
+      {linkTarget && (
+        <CustomerTransferLinkDialog
+          income={linkTarget}
+          status={custMap.get(linkTarget.id)}
+          onClose={() => setLinkTarget(null)}
+          onLinked={() => { reloadCust(); load(); }}
+        />
+      )}
     </div>
+
   );
 }
 
@@ -827,11 +925,14 @@ function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any)
     });
   };
 
+  const unlinkedCustomerWarning = isSaleLike && !f.sales_invoice_id;
+
   const save = async () => {
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       const txnType = f.transaction_type || null;
+
       // Auto accounting_status: unclassified when txn type missing, else keep prior or classified
       const accStatus = txnType
         ? (f.accounting_status === "unclassified" ? "classified" : f.accounting_status)
@@ -886,7 +987,16 @@ function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any)
         if (error) throw error;
         toast.success("تم الحفظ");
       }
+      if (unlinkedCustomerWarning && !accountantOnly) {
+        toast.warning(
+          f.transaction_type === "customer_advance"
+            ? "ستُحفظ كدفعة مقدمة معلقة حتى تُطبّق على فاتورة."
+            : "ستُحفظ الحوالة كمقبوض غير مرتبط وستبقى في التنبيهات حتى ربطها. لم تُنشأ أي فاتورة تلقائيًا.",
+          { duration: 7000 },
+        );
+      }
       onSaved();
+
     } catch (e: any) {
       toast.error("تعذر الحفظ: " + (e.message ?? "خطأ"));
     } finally { setSaving(false); }
@@ -978,6 +1088,17 @@ function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any)
           {/* Section 2: Link (conditional) */}
           {(showInvoice || showCollectionType || showRelated) && (
             <SectionCard title="الربط">
+              {unlinkedCustomerWarning && (
+                <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-200 inline-flex items-start gap-2">
+                  <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+                  <span>
+                    {f.transaction_type === "customer_advance"
+                      ? "دفعة مقدمة: ستبقى «معلقة» حتى تُطبّق على فاتورة."
+                      : "بدون فاتورة: ستُحفظ الحوالة كمقبوض غير مرتبط وتبقى ضمن تنبيه «حوالات عملاء تحتاج ربط». لا تُنشأ فاتورة يدوية تلقائيًا."}
+                  </span>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 {showInvoice && (
                   <Field label="فاتورة المبيعات" wide>

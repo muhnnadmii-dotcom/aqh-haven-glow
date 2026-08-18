@@ -89,6 +89,19 @@ export type ShippingCompanyRow = {
   avg_shipping: number | null;
 };
 
+export type CustomerTransfersBlock = {
+  count: number;
+  amount: number;
+  oldest_date: string | null;
+  oldest_age_days: number;
+  unlinked_count: number;
+  unlinked_amount: number;
+  advance_pending_count: number;
+  advance_pending_amount: number;
+  suspected_duplicate_count: number;
+  suspected_duplicate_amount: number;
+};
+
 export type FinanceOverview = {
   range: { from: string; to: string; prev_from: string; prev_to: string };
   kpis: OverviewKpis;
@@ -96,6 +109,7 @@ export type FinanceOverview = {
   gateways: GatewayRow[];
   sales_health: SalesHealth;
   discount_codes: DiscountCodeRow[];
+  customer_transfers?: CustomerTransfersBlock | null;
   shipping: {
     has_data: boolean;
     expenses_total: number;
@@ -103,6 +117,7 @@ export type FinanceOverview = {
     companies: ShippingCompanyRow[];
   };
 };
+
 
 export async function fetchFinanceOverview(from: string, to: string): Promise<FinanceOverview> {
   const { data, error } = await (supabase as any).rpc("finance_overview", { p_from: from, p_to: to });

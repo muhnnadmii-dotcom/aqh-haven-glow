@@ -302,6 +302,8 @@ type ParsedRow = {
   issues: DataIssue[];
   classification: Classification;
   action_reason: string | null;
+  manual_duplicate_warning: string | null;
+
   existing_status: string | null;
   tax_document_status: "present" | "missing";
   vat_return_eligible: boolean;
@@ -492,6 +494,7 @@ function SalesImportPage() {
         issues,
         classification: "new" as Classification, // مبدئي — يُحدَّد من الخادم أدناه
         action_reason: null as string | null,
+        manual_duplicate_warning: null as string | null,
         existing_status: null as string | null,
         tax_document_status: invoiceNumber ? "present" : "missing" as const,
         vat_return_eligible: !!invoiceNumber && !cancelled,
@@ -536,6 +539,7 @@ function SalesImportPage() {
       }
       r.classification = p.action as Classification;
       r.action_reason = p.reason ?? null;
+      r.manual_duplicate_warning = (p as any).manual_duplicate_warning ?? null;
       r.existing_status = p.existing_status ?? null;
       if (r.classification === "conflict_existing_final" && !r.issues.includes("conflicting_existing_order")) {
         r.issues.push("conflicting_existing_order");
@@ -1009,6 +1013,9 @@ function SalesImportPage() {
                               </span>
                             )}
                           </div>
+                        )}
+                        {r.manual_duplicate_warning && (
+                          <div className="text-amber-300">⚠ {r.manual_duplicate_warning}</div>
                         )}
                         {r.issues.length
                           ? r.issues.map((x) => <div key={x}>• {ISSUE_LABEL[x]}</div>)

@@ -131,7 +131,38 @@ export function OverviewPanel({ from, to }: { from: string; to: string }) {
         />
       </div>
 
+      {/* Direct customer transfers needing a linked invoice */}
+      {data.customer_transfers && data.customer_transfers.count > 0 && (
+        <Link
+          to="/admin/finance/incomes"
+          search={{ cust: "needs_link", month: "" } as any}
+          className="block rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 transition hover:bg-amber-500/15"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-[13px] font-semibold text-amber-200">
+              <AlertTriangle className="h-4 w-4" />
+              حوالات عملاء تحتاج ربط
+            </div>
+            <div className="text-[12px] text-amber-100/80">
+              {data.customer_transfers.count} حوالة · {num(data.customer_transfers.amount)} ر.س
+              {data.customer_transfers.oldest_date && (
+                <> · الأقدم {data.customer_transfers.oldest_date} (منذ {data.customer_transfers.oldest_age_days} يوم)</>
+              )}
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+            <SplitPill label="غير مرتبطة" count={data.customer_transfers.unlinked_count} amount={data.customer_transfers.unlinked_amount} />
+            <SplitPill label="دفعات مقدمة معلقة" count={data.customer_transfers.advance_pending_count} amount={data.customer_transfers.advance_pending_amount} />
+            <SplitPill label="اشتباه تكرار" count={data.customer_transfers.suspected_duplicate_count} amount={data.customer_transfers.suspected_duplicate_amount} />
+          </div>
+          <div className="mt-2 text-[10px] text-amber-100/60">
+            لا تشمل حوالات سلة/تابي/تمارا ولا التحويلات الداخلية. اضغط لفتح المقبوضات على فلتر «تحتاج ربط».
+          </div>
+        </Link>
+      )}
+
       {/* Secondary */}
+
       <details className="rounded-xl border border-white/10 bg-white/5 p-3">
         <summary className="cursor-pointer text-[12px] text-muted-foreground">
           الأصول والمخزون وصافي الثروة ومسحوبات المالك
@@ -484,6 +515,17 @@ function DailyChart({ cur, prev }: { cur: { d: string; sales: number }[]; prev: 
             />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function SplitPill({ label, count, amount }: { label: string; count: number; amount: number }) {
+  return (
+    <div className="rounded-lg border border-amber-500/20 bg-black/20 px-3 py-2">
+      <div className="text-amber-100/70">{label}</div>
+      <div className="mt-0.5 font-mono text-amber-100">
+        {count} · {fmtSAR(amount)}
       </div>
     </div>
   );
