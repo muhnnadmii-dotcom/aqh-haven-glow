@@ -564,11 +564,17 @@ function IncomesPage() {
                     <button onClick={() => setEditing(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px]">
                       <Pencil size={11} /> فتح
                     </button>
+                    {roles.canManage && !r.deleted_at && custMap.get(r.id) && custMap.get(r.id)!.link_state !== "linked" && (
+                      <button onClick={() => setLinkTarget(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold/10 hover:bg-gold/20 text-gold text-[11px]" title="ربط بالفاتورة">
+                        <Link2 size={11} /> ربط بالفاتورة
+                      </button>
+                    )}
                     {roles.canManage && !r.deleted_at && (
                       <button onClick={() => softDelete(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-300 text-[11px]" title="أرشفة / حذف">
                         <Trash2 size={11} />
                       </button>
                     )}
+
                     {roles.canManage && r.deleted_at && (
                       <button onClick={() => restore(r)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-[11px]" title="استعادة">
                         <RotateCcw size={11} /> استعادة
