@@ -634,7 +634,16 @@ function IncomesPage() {
           onOpen={(settlementId: string) => { setLinkedDialog(null); navigate({ to: "/admin/finance/settlement-lines", search: { settlement: settlementId, provider: undefined, order: undefined } }); }}
         />
       )}
+      {linkTarget && (
+        <CustomerTransferLinkDialog
+          income={linkTarget}
+          status={custMap.get(linkTarget.id)}
+          onClose={() => setLinkTarget(null)}
+          onLinked={() => { reloadCust(); load(); }}
+        />
+      )}
     </div>
+
   );
 }
 
