@@ -22,6 +22,7 @@ import { Banknote, Coins, Package, Building2, Pencil, X, Check } from "lucide-re
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AccountingPanel } from "@/components/finance/AccountingPanel";
+import { OverviewPanel } from "@/components/finance/OverviewPanel";
 import { CashExtraKpis } from "@/components/finance/CashExtraKpis";
 import { SettlementsPanel } from "@/components/finance/SettlementsPanel";
 import { VatDashPanel } from "@/components/finance/VatDashPanel";
@@ -340,6 +341,13 @@ function FinanceDashboard() {
           <TabsTrigger value="settlements">لوحة التسويات</TabsTrigger>
           <TabsTrigger value="vat">لوحة الضريبة</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview" className="mt-0">
+          <OverviewPanel
+            from={range.dateFrom ?? new Date().toISOString().slice(0, 8) + "01"}
+            to={range.dateTo ?? new Date().toISOString().slice(0, 10)}
+          />
+        </TabsContent>
 
         <TabsContent value="cash" className="space-y-5 mt-0">
       {/* Headline: bank balance (opening + movements) + inventory + assets + net worth */}
