@@ -302,6 +302,8 @@ type ParsedRow = {
   issues: DataIssue[];
   classification: Classification;
   action_reason: string | null;
+  manual_duplicate_warning: string | null;
+
   existing_status: string | null;
   tax_document_status: "present" | "missing";
   vat_return_eligible: boolean;
