@@ -22,6 +22,16 @@ import { AttachmentsPanel, PendingAttachmentsPicker, uploadPendingAttachments, t
 import { AuditPanel } from "@/components/finance/AuditPanel";
 import { RowAttachmentControl } from "@/components/finance/RowAttachmentControl";
 import { ReviewStatusEditor } from "@/components/finance/ReviewStatusEditor";
+import { CustomerTransferLinkDialog } from "@/components/finance/CustomerTransferLinkDialog";
+import {
+  fetchTransferStatuses,
+  matchesFilter,
+  TRANSFER_LABELS,
+  TRANSFER_TONES,
+  type TransferFilter,
+  type TransferStatusRow,
+} from "@/lib/finance/customer-transfers";
+
 
 export const Route = createFileRoute("/_authenticated/admin/finance/incomes")({
   ssr: false,
