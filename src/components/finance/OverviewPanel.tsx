@@ -519,3 +519,14 @@ function DailyChart({ cur, prev }: { cur: { d: string; sales: number }[]; prev: 
     </div>
   );
 }
+
+function SplitPill({ label, count, amount }: { label: string; count: number; amount: number }) {
+  return (
+    <div className="rounded-lg border border-amber-500/20 bg-black/20 px-3 py-2">
+      <div className="text-amber-100/70">{label}</div>
+      <div className="mt-0.5 font-mono text-amber-100">
+        {count} · {fmtSAR(amount)}
+      </div>
+    </div>
+  );
+}
