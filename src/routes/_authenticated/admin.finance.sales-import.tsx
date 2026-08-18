@@ -619,7 +619,8 @@ function SalesImportPage() {
       }));
     if (shipRows.length) {
       const { error: shipErr } = await (supabase as any).rpc("salla_apply_shipping_metadata", { p_rows: shipRows });
-      if (shipErr) console.error("shipping metadata", shipErr);
+      // فشل تحديث الشحن يُفشل الدفعة كاملة حتى يمكن إعادة المحاولة (العملية idempotent)
+      if (shipErr) throw new Error(`فشل تحديث بيانات الشحن: ${shipErr.message ?? shipErr}`);
     }
 
     return (data ?? {}) as Record<string, any>;
