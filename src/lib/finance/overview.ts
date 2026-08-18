@@ -118,3 +118,36 @@ export function delta(cur: number, prev: number): number | null {
 
 export const pct = (part: number, whole: number): number =>
   whole ? (part / whole) * 100 : 0;
+
+/**
+ * JS mirrors of the SQL normalizers — used only for drill-down filtering so the
+ * drawer shows exactly the rows behind an aggregated number.
+ */
+export function normalizePaymentMethod(raw: string | null | undefined): string {
+  const v = (raw ?? "").replace(/^[\s'"`]+|[\s'"`]+$/g, "").trim();
+  if (!v || v === "\\N" || v.toUpperCase() === "N/A") return "غير محدد";
+  const l = v.toLowerCase();
+  if (l.includes("tamara") || v.includes("تمارا")) return "تمارا";
+  if (l.includes("tabby") || v.includes("تابي")) return "تابي";
+  if (l.includes("apple")) return "Apple Pay";
+  if (l.includes("stc") || v.includes("اس تي سي")) return "STC Pay";
+  if (l.includes("mada") || v.includes("مدى")) return "مدى";
+  if (l.includes("visa") || l.includes("master") || l.includes("credit") || v.includes("ئتمان"))
+    return "البطاقة الائتمانية";
+  if (l.includes("bank transfer") || l.includes("bank_transfer") || v.includes("تحويل بنكي") || v.includes("حوالة") || l.includes("iban"))
+    return "تحويل بنكي";
+  if (l.includes("wallet") || v.includes("محفظة")) return "محفظة العميل";
+  if (l.includes("free") || v.includes("مجان")) return "مجاني";
+  return "أخرى";
+}
+
+export function normalizeShippingCompany(raw: string | null | undefined): string | null {
+  const v = (raw ?? "").replace(/^[\s'"`]+|[\s'"`]+$/g, "").trim();
+  if (!v) return null;
+  const l = v.toLowerCase();
+  if (l.includes("aramex") || v.includes("أرامكس") || v.includes("ارامكس")) return "أرامكس";
+  if (l.includes("fastlo")) return "Fastlo";
+  if (/أكواهافن|اكواهافن|أكوا هيفن|اكوا هيفن|أكوا هافن|اكوا هافن/.test(v)) return "مندوب أكوا هيفن";
+  if (v.includes("لا يتطلب شحن")) return "لا يتطلب شحن";
+  return v;
+}
