@@ -925,11 +925,14 @@ function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any)
     });
   };
 
+  const unlinkedCustomerWarning = isSaleLike && !f.sales_invoice_id;
+
   const save = async () => {
     setSaving(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       const txnType = f.transaction_type || null;
+
       // Auto accounting_status: unclassified when txn type missing, else keep prior or classified
       const accStatus = txnType
         ? (f.accounting_status === "unclassified" ? "classified" : f.accounting_status)
