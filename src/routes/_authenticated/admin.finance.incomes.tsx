@@ -519,10 +519,15 @@ function IncomesPage() {
                 <td className="px-3 py-2">
                   {en.isProviderIncome ? (
                     <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border whitespace-nowrap ${LINK_TONES[en.linkStatus]}`}>{LINK_LABELS[en.linkStatus]}</span>
+                  ) : custMap.get(r.id) ? (
+                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border whitespace-nowrap ${TRANSFER_TONES[custMap.get(r.id)!.link_state]}`}>
+                      {TRANSFER_LABELS[custMap.get(r.id)!.link_state]}
+                    </span>
                   ) : (
                     <span className="text-muted-foreground text-[10px]">لا ينطبق</span>
                   )}
                 </td>
+
                 <td className="px-3 py-2 font-mono text-[11px]">{en.allocated > 0 ? fmtSAR(en.allocated) : "—"}</td>
                 <td className={`px-3 py-2 font-mono text-[11px] ${en.remaining > 0 && en.isProviderIncome ? "text-orange-300" : ""}`}>{en.isProviderIncome ? fmtSAR(en.remaining) : "—"}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
