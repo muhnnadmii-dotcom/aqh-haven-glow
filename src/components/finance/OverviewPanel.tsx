@@ -135,7 +135,7 @@ export function OverviewPanel({ from, to }: { from: string; to: string }) {
       {data.customer_transfers && data.customer_transfers.count > 0 && (
         <Link
           to="/admin/finance/incomes"
-          search={{ cust: "needs_link" } as any}
+          search={{ cust: "needs_link", month: "" } as any}
           className="block rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 transition hover:bg-amber-500/15"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
