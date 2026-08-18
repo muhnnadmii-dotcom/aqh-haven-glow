@@ -424,6 +424,24 @@ function IncomesPage() {
         <SummaryCard label="تحتاج مراجعة" value={summary.needsReview} tone="text-red-300" active={fLink === "needs_review"} onClick={() => setFLink(fLink === "needs_review" ? "" : "needs_review")} />
       </div>
 
+      {/* Direct customer transfers (non-gateway) */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+        <div className="mb-2 text-[12px] text-muted-foreground">
+          حوالات العملاء المباشرة (بدون وسطاء الدفع) — الربط يدوي بالكامل ولا تُنشأ فاتورة تلقائيًا.
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <SummaryCard label="تحتاج ربط (الكل)" value={`${custSummary.unlinked + custSummary.advance + custSummary.dup}`} tone="text-amber-300"
+            active={fCust === "needs_link"} onClick={() => setFCust(fCust === "needs_link" ? "" : "needs_link")} />
+          <SummaryCard label={`غير مرتبطة · ${fmtSAR(custSummary.unlinkedAmt)}`} value={custSummary.unlinked} tone="text-amber-300"
+            active={fCust === "unlinked"} onClick={() => setFCust(fCust === "unlinked" ? "" : "unlinked")} />
+          <SummaryCard label={`دفعات مقدمة معلقة · ${fmtSAR(custSummary.advanceAmt)}`} value={custSummary.advance} tone="text-sky-300"
+            active={fCust === "advance_pending"} onClick={() => setFCust(fCust === "advance_pending" ? "" : "advance_pending")} />
+          <SummaryCard label={`اشتباه تكرار · ${fmtSAR(custSummary.dupAmt)}`} value={custSummary.dup} tone="text-red-300"
+            active={fCust === "suspected_duplicate"} onClick={() => setFCust(fCust === "suspected_duplicate" ? "" : "suspected_duplicate")} />
+        </div>
+      </div>
+
+
       {unclassifiedCount > 0 && (
         <button
           onClick={() => setFAccStatus("unclassified")}
