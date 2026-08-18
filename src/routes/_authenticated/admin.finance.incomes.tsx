@@ -1088,6 +1088,17 @@ function IncomeDialog({ row, sources, providers, roles, onClose, onSaved }: any)
           {/* Section 2: Link (conditional) */}
           {(showInvoice || showCollectionType || showRelated) && (
             <SectionCard title="الربط">
+              {unlinkedCustomerWarning && (
+                <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-200 inline-flex items-start gap-2">
+                  <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+                  <span>
+                    {f.transaction_type === "customer_advance"
+                      ? "دفعة مقدمة: ستبقى «معلقة» حتى تُطبّق على فاتورة."
+                      : "بدون فاتورة: ستُحفظ الحوالة كمقبوض غير مرتبط وتبقى ضمن تنبيه «حوالات عملاء تحتاج ربط». لا تُنشأ فاتورة يدوية تلقائيًا."}
+                  </span>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 {showInvoice && (
                   <Field label="فاتورة المبيعات" wide>
