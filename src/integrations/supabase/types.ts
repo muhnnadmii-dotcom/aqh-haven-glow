@@ -5172,6 +5172,10 @@ export type Database = {
         }
         Returns: string
       }
+      finance_overview: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       finance_posting_account_readiness: {
         Args: never
         Returns: {
@@ -5347,6 +5351,7 @@ export type Database = {
       next_purchase_invoice_number: { Args: never; Returns: string }
       next_sales_invoice_number: { Args: never; Returns: string }
       normalize_order_id: { Args: { _v: string }; Returns: string }
+      normalize_payment_method: { Args: { p_raw: string }; Returns: string }
       normalize_shipping_company: { Args: { p_raw: string }; Returns: string }
       post_journal_entry: {
         Args: {
