@@ -100,6 +100,8 @@ export type CustomerTransfersBlock = {
   advance_pending_amount: number;
   suspected_duplicate_count: number;
   suspected_duplicate_amount: number;
+  total_pending_count?: number;
+  total_pending_amount?: number;
 };
 
 export type FinanceOverview = {
