@@ -98,7 +98,18 @@
       radial-gradient(ellipse at bottom, oklch(0.10 0.05 245 / 0.6), transparent 70%);
     background-attachment: fixed;
   }
+
+  select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
 }
+
 
 @utility glass {
   background: linear-gradient(135deg, oklch(1 0 0 / 0.06), oklch(1 0 0 / 0.02));
