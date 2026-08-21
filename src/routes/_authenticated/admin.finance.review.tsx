@@ -138,6 +138,11 @@ function ReviewCenter() {
     queryKey: ["review_providers"],
     queryFn: async () => ((await supabase.from("payment_providers" as any).select("id, name, provider_code, rounding_tolerance").eq("is_active", true)).data as any[]) ?? [],
   });
+  const { data: settlementAllocations = [] } = useQuery({
+    queryKey: ["review_settlement_allocations"],
+    queryFn: async () => ((await supabase.from("settlement_bank_allocations" as any).select("settlement_id, difference_amount, difference_type, difference_note, status").eq("status", "confirmed").limit(2000)).data as any[]) ?? [],
+  });
+
 
   const rows: Row[] = useMemo(() => {
     const inc = incomes.map((r: any): Row => ({
