@@ -22,7 +22,6 @@ import {
   AlertTriangle,
   ArrowUpRight,
   ArrowDownRight,
-  Info,
 } from "lucide-react";
 
 const num = (n: number) => fmtSAR(n);
