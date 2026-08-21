@@ -274,13 +274,12 @@ function ReviewCenter() {
       if (!(Math.abs(Number(s.difference_amount)) > tol)) return false;
       const allocs = (settlementAllocations as any[]).filter((a) => a.settlement_id === s.id);
       if (allocs.length === 0) return true;
-      // explained if any confirmed allocation carries a known difference type, or diff within tolerance
-      return allocs.every((a) => {
+      return allocs.some((a) => {
         const t = String(a.difference_type ?? "").trim();
-        const explained = t !== "" && t !== "unknown_difference";
-        if (explained) return false;
-        return Math.abs(Number(a.difference_amount) || 0) > tol;
+        return Math.abs(Number(a.difference_amount) || 0) > tol
+          && (t === "" || t === "unknown_difference");
       });
+
     });
     return { unclassified, unlinked, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
   }, [rows, settlements, providers, settlementAllocations]);
