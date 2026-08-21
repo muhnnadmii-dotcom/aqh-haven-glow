@@ -138,6 +138,11 @@ function ReviewCenter() {
     queryKey: ["review_providers"],
     queryFn: async () => ((await supabase.from("payment_providers" as any).select("id, name, provider_code, rounding_tolerance").eq("is_active", true)).data as any[]) ?? [],
   });
+  const { data: settlementAllocations = [] } = useQuery({
+    queryKey: ["review_settlement_allocations"],
+    queryFn: async () => ((await supabase.from("settlement_bank_allocations" as any).select("settlement_id, difference_amount, difference_type, difference_note, status").eq("status", "confirmed").limit(2000)).data as any[]) ?? [],
+  });
+
 
   const rows: Row[] = useMemo(() => {
     const inc = incomes.map((r: any): Row => ({
@@ -264,11 +269,22 @@ function ReviewCenter() {
     });
     // Settlement diffs summary
     const settlementDiffs = (settlements as any[]).filter((s) => {
-      const tol = (providers as any[]).find((p) => p.id === s.provider_id)?.rounding_tolerance ?? 0.05;
-      return s.actual_bank_amount != null && Math.abs(Number(s.difference_amount)) > Number(tol);
+      const tol = Number((providers as any[]).find((p) => p.id === s.provider_id)?.rounding_tolerance ?? 0.05);
+      if (s.actual_bank_amount == null) return false;
+      if (!(Math.abs(Number(s.difference_amount)) > tol)) return false;
+      const allocs = (settlementAllocations as any[]).filter((a) => a.settlement_id === s.id);
+      if (allocs.length === 0) return true;
+      // explained if any confirmed allocation carries a known difference type, or diff within tolerance
+      return allocs.every((a) => {
+        const t = String(a.difference_type ?? "").trim();
+        const explained = t !== "" && t !== "unknown_difference";
+        if (explained) return false;
+        return Math.abs(Number(a.difference_amount) || 0) > tol;
+      });
     });
     return { unclassified, unlinked, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
-  }, [rows, settlements, providers]);
+  }, [rows, settlements, providers, settlementAllocations]);
+
 
 
   // Selection
