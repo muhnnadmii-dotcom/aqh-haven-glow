@@ -141,7 +141,7 @@ export function OverviewPanel({ from, to }: { from: string; to: string }) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-[13px] font-semibold text-amber-200">
               <AlertTriangle className="h-4 w-4" />
-              حوالات عملاء تحتاج ربط
+              حوالات عملاء تحتاج إجراء
             </div>
             <div className="text-[12px] text-amber-100/80">
               {data.customer_transfers.count} حوالة · {num(data.customer_transfers.amount)} ر.س
@@ -150,16 +150,37 @@ export function OverviewPanel({ from, to }: { from: string; to: string }) {
               )}
             </div>
           </div>
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
             <SplitPill label="غير مرتبطة" count={data.customer_transfers.unlinked_count} amount={data.customer_transfers.unlinked_amount} />
-            <SplitPill label="دفعات مقدمة معلقة" count={data.customer_transfers.advance_pending_count} amount={data.customer_transfers.advance_pending_amount} />
             <SplitPill label="اشتباه تكرار" count={data.customer_transfers.suspected_duplicate_count} amount={data.customer_transfers.suspected_duplicate_amount} />
           </div>
           <div className="mt-2 text-[10px] text-amber-100/60">
-            لا تشمل حوالات سلة/تابي/تمارا ولا التحويلات الداخلية. اضغط لفتح المقبوضات على فلتر «تحتاج ربط».
+            أخطاء فعلية تحتاج مراجعة: حوالات غير مرتبطة بفاتورة أو يُشتبه بتكرارها. لا تشمل سلة/تابي/تمارا ولا التحويلات الداخلية.
           </div>
         </Link>
       )}
+
+      {data.customer_transfers && data.customer_transfers.advance_pending_count > 0 && (
+        <Link
+          to="/admin/finance/incomes"
+          search={{ cust: "advance_pending", month: "" } as any}
+          className="block rounded-xl border border-sky-500/30 bg-sky-500/10 p-4 transition hover:bg-sky-500/15"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-[13px] font-semibold text-sky-200">
+              <Info className="h-4 w-4" />
+              أرصدة مقدمة لدى العملاء
+            </div>
+            <div className="text-[12px] text-sky-100/80">
+              {data.customer_transfers.advance_pending_count} حوالة · {num(data.customer_transfers.advance_pending_amount)} ر.س
+            </div>
+          </div>
+          <div className="mt-2 text-[10px] text-sky-100/70">
+            دفعات وصلت قبل إصدار أو ربط فاتورة؛ تبقى رصيدًا للعميل حتى استخدامها.
+          </div>
+        </Link>
+      )}
+
 
       {/* Secondary */}
 
