@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { fetchProviderTaxInvoiceAlerts, PROVIDER_TAX_ALERT_LABEL } from "@/lib/finance/provider-tax-invoices";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -142,6 +143,11 @@ function ReviewCenter() {
     queryKey: ["review_settlement_allocations"],
     queryFn: async () => ((await supabase.from("settlement_bank_allocations" as any).select("settlement_id, difference_amount, difference_type, difference_note, status").eq("status", "confirmed").limit(2000)).data as any[]) ?? [],
   });
+  const { data: providerTaxAlerts } = useQuery({
+    queryKey: ["review_provider_tax_alerts"],
+    queryFn: () => fetchProviderTaxInvoiceAlerts(),
+  });
+
 
 
   const rows: Row[] = useMemo(() => {
@@ -350,6 +356,83 @@ function ReviewCenter() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Provider tax invoices panel (independent from income/expense attachment KPI) */}
+      {providerTaxAlerts && (providerTaxAlerts.action_required_count > 0 || providerTaxAlerts.waiting_count > 0) && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-3">
+          <div className="text-sm font-semibold text-amber-300 flex items-center gap-2">
+            <Paperclip className="w-4 h-4" /> فواتير ضريبية للبوابات ({providerTaxAlerts.action_required_count})
+          </div>
+          {providerTaxAlerts.action_required_count > 0 && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
+                <div className="rounded-lg border border-amber-500/20 bg-black/20 px-3 py-2">
+                  <div className="text-muted-foreground">فاتورة الشهر غير مسجلة</div>
+                  <div className="font-mono text-amber-200">{providerTaxAlerts.missing_invoice_count}</div>
+                </div>
+                <div className="rounded-lg border border-amber-500/20 bg-black/20 px-3 py-2">
+                  <div className="text-muted-foreground">ملف PDF مفقود</div>
+                  <div className="font-mono text-amber-200">{providerTaxAlerts.missing_attachment_count}</div>
+                </div>
+                <div className="rounded-lg border border-amber-500/20 bg-black/20 px-3 py-2">
+                  <div className="text-muted-foreground">تحتاج مطابقة مع التسويات</div>
+                  <div className="font-mono text-amber-200">{providerTaxAlerts.unreconciled_count}</div>
+                </div>
+              </div>
+              <div className="space-y-1">
+                {providerTaxAlerts.rows
+                  .filter((r) => r.alert_status !== "awaiting_issue")
+                  .map((r, i) => (
+                    <Link
+                      key={`${r.provider_id}-${r.fee_month}-${r.alert_status}-${i}`}
+                      to="/admin/finance/purchase-invoices"
+                      search={{ month: r.fee_month, sup: r.supplier_id ?? "" } as any}
+                      className="block rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs hover:bg-black/40 transition"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-semibold">{r.provider_name} · شهر {r.fee_month}</span>
+                        <span className="text-amber-300">{PROVIDER_TAX_ALERT_LABEL[r.alert_status]}</span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground tabular-nums">
+                        <span>{r.settlement_count} تسوية</span>
+                        {r.alert_status === "missing_invoice" && (
+                          <>
+                            <span>رسوم {Number(r.settlement_fee_amount).toFixed(2)}</span>
+                            <span>ضريبة {Number(r.settlement_vat_amount).toFixed(2)}</span>
+                          </>
+                        )}
+                        {r.alert_status === "unreconciled" && <span>غير مسوّى {Number(r.unreconciled_amount).toFixed(2)}</span>}
+                        {r.alert_status === "missing_attachment" && <span>{r.missing_attachment_count} بلا مرفق</span>}
+                      </div>
+                      {r.alert_status === "missing_invoice" && (
+                        <div className="mt-1 text-[10px] text-muted-foreground">
+                          أرقام التسويات للمرجع فقط وليست بديلًا عن الفاتورة الضريبية الأصلية.
+                        </div>
+                      )}
+                    </Link>
+                  ))}
+              </div>
+            </>
+          )}
+          {providerTaxAlerts.waiting_count > 0 && (
+            <div className="rounded-lg border border-sky-500/25 bg-sky-500/5 p-2">
+              <div className="text-xs font-semibold text-sky-300 mb-1 flex items-center gap-2">
+                <Info className="w-3.5 h-3.5" /> فواتير الشهر بانتظار الإصدار ({providerTaxAlerts.waiting_count})
+              </div>
+              <div className="space-y-1 text-[11px] text-muted-foreground">
+                {providerTaxAlerts.rows
+                  .filter((r) => r.alert_status === "awaiting_issue")
+                  .map((r, i) => (
+                    <div key={`${r.provider_id}-${r.fee_month}-w-${i}`} className="flex flex-wrap justify-between gap-2">
+                      <span>{r.provider_name} · شهر {r.fee_month}</span>
+                      <span className="tabular-nums">الموعد {r.due_date ?? "—"}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

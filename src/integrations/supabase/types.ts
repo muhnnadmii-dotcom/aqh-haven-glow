@@ -5347,6 +5347,10 @@ export type Database = {
           vat_amount: number
         }[]
       }
+      finance_provider_tax_invoice_alerts: {
+        Args: { p_as_of?: string }
+        Returns: Json
+      }
       finance_restore_import_batch: {
         Args: { p_batch_id: string }
         Returns: Json
