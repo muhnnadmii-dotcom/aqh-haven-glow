@@ -235,7 +235,8 @@ function ReviewCenter() {
       const f = flags(r);
       // chip filter
       if (chip === "unclassified" && !f.isUnclassified) return false;
-      if (chip === "unlinked" && !(f.unlinkedInvoice || f.noAccount || f.missingParty)) return false;
+      if (chip === "unlinked" && !f.completelyUnlinked) return false;
+      if (chip === "no_account" && !f.noAccount) return false;
       if (chip === "no_attach" && !f.noAttachment) return false;
       if (chip === "personal" && !f.personalNeedsReview) return false;
       if (chip === "transfer" && !f.transferMissingCounterpart) return false;
