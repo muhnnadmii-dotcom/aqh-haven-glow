@@ -341,9 +341,10 @@ function ReviewCenter() {
       </div>
 
       {/* KPI chips */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3">
         <KpiChip label="غير مصنف" count={kpis.unclassified} active={chip === "unclassified"} onClick={() => setChip("unclassified")} tone="amber" icon={AlertCircle} />
-        <KpiChip label="غير مرتبط بفاتورة/طرف" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
+        <KpiChip label="بلا فاتورة ولا طرف" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
+        <KpiChip label="بدون حساب مالي" count={kpis.noAccount} active={chip === "no_account"} onClick={() => setChip("no_account")} tone="cyan" icon={Building} />
         <KpiChip label="بوابات دفع بدون تسوية" count={kpis.providerUnlinked} active={chip === "provider_unlinked"} onClick={() => setChip("provider_unlinked")} tone="rose" icon={Landmark} />
         <KpiChip label="بدون مرفق" count={kpis.noAttach} active={chip === "no_attach"} onClick={() => setChip("no_attach")} tone="orange" icon={Paperclip} />
         <KpiChip label="حساب شخصي بلا مراجعة" count={kpis.personal} active={chip === "personal"} onClick={() => setChip("personal")} tone="purple" icon={User} />
