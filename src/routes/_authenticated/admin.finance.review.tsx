@@ -186,7 +186,11 @@ function ReviewCenter() {
 
   // Flags per row
   const flags = (r: Row) => {
-    const isUnclassified = r.accounting_status === "unclassified" || !r.transaction_type || r.business_relation === "unclassified";
+    const isUnclassified =
+      r.accounting_status === "unclassified" ||
+      !r.transaction_type ||
+      r.transaction_type === "unclassified_incoming" ||
+      r.transaction_type === "unclassified_outgoing";
     const noAccount = !r.account_id;
     const noAttachment = r.attachment_status === "not_attached";
     const personalNeedsReview = r.account_type === "personal" && r.internal_review_status !== "reviewed";
@@ -198,11 +202,14 @@ function ReviewCenter() {
     const missingParty = r.kind === "income"
       ? (r.transaction_type === "customer_invoice_collection" && !r.customer_id)
       : (r.transaction_type === "supplier_invoice_payment" && !r.supplier_id);
+    const completelyUnlinked = r.kind === "income"
+      ? (r.transaction_type === "customer_invoice_collection" && !r.sales_invoice_id && !r.customer_id)
+      : (r.transaction_type === "supplier_invoice_payment" && !r.purchase_invoice_id && !r.supplier_id);
     const pm = providerMatch(r);
     const unlinkedProviderSettlement = r.kind === "income" && !!pm && !r.settlement_id;
     const isSplitChild = !!r.split_parent_id;
     const isCompleted = r.internal_review_status === "reviewed" && r.accounting_status === "reviewed";
-    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
+    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, completelyUnlinked, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
   };
 
 
@@ -228,7 +235,8 @@ function ReviewCenter() {
       const f = flags(r);
       // chip filter
       if (chip === "unclassified" && !f.isUnclassified) return false;
-      if (chip === "unlinked" && !(f.unlinkedInvoice || f.noAccount || f.missingParty)) return false;
+      if (chip === "unlinked" && !f.completelyUnlinked) return false;
+      if (chip === "no_account" && !f.noAccount) return false;
       if (chip === "no_attach" && !f.noAttachment) return false;
       if (chip === "personal" && !f.personalNeedsReview) return false;
       if (chip === "transfer" && !f.transferMissingCounterpart) return false;
@@ -262,11 +270,12 @@ function ReviewCenter() {
 
   // KPI counts
   const kpis = useMemo(() => {
-    let unclassified = 0, unlinked = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
+    let unclassified = 0, unlinked = 0, noAccount = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
     rows.forEach((r) => {
       const f = flags(r);
       if (f.isUnclassified) unclassified++;
-      if (f.unlinkedInvoice || f.noAccount || f.missingParty) unlinked++;
+      if (f.completelyUnlinked) unlinked++;
+      if (f.noAccount) noAccount++;
       if (f.noAttachment) noAttach++;
       if (f.personalNeedsReview) personal++;
       if (f.transferMissingCounterpart) transfer++;
@@ -287,7 +296,7 @@ function ReviewCenter() {
       });
 
     });
-    return { unclassified, unlinked, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
+    return { unclassified, unlinked, noAccount, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
   }, [rows, settlements, providers, settlementAllocations]);
 
 
@@ -332,9 +341,10 @@ function ReviewCenter() {
       </div>
 
       {/* KPI chips */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3">
         <KpiChip label="غير مصنف" count={kpis.unclassified} active={chip === "unclassified"} onClick={() => setChip("unclassified")} tone="amber" icon={AlertCircle} />
-        <KpiChip label="غير مرتبط بفاتورة/طرف" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
+        <KpiChip label="بلا فاتورة ولا طرف" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
+        <KpiChip label="بدون حساب مالي" count={kpis.noAccount} active={chip === "no_account"} onClick={() => setChip("no_account")} tone="cyan" icon={Building} />
         <KpiChip label="بوابات دفع بدون تسوية" count={kpis.providerUnlinked} active={chip === "provider_unlinked"} onClick={() => setChip("provider_unlinked")} tone="rose" icon={Landmark} />
         <KpiChip label="بدون مرفق" count={kpis.noAttach} active={chip === "no_attach"} onClick={() => setChip("no_attach")} tone="orange" icon={Paperclip} />
         <KpiChip label="حساب شخصي بلا مراجعة" count={kpis.personal} active={chip === "personal"} onClick={() => setChip("personal")} tone="purple" icon={User} />
