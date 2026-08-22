@@ -277,16 +277,17 @@ function ReviewCenter() {
       }
       return true;
     });
-  }, [rows, chip, fFrom, fTo, fMonth, fDir, fType, fAccount, fAcctType, fSupplier, fCustomer, fAttach, fLinked, fSettled, fReview, q]);
+  }, [rows, chip, fFrom, fTo, fMonth, fDir, fType, fAccount, fAcctType, fSupplier, fCustomer, fAttach, fLinked, fSettled, fReview, q, accountingStartDate]);
 
   // KPI counts
   const kpis = useMemo(() => {
-    let unclassified = 0, unlinked = 0, noAccount = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
+    let unclassified = 0, unlinked = 0, noAccount = 0, histNoAccount = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
     rows.forEach((r) => {
       const f = flags(r);
       if (f.isUnclassified) unclassified++;
       if (f.completelyUnlinked) unlinked++;
       if (f.noAccount) noAccount++;
+      if (f.historicalNoAccount) histNoAccount++;
       if (f.noAttachment) noAttach++;
       if (f.personalNeedsReview) personal++;
       if (f.transferMissingCounterpart) transfer++;
@@ -307,8 +308,9 @@ function ReviewCenter() {
       });
 
     });
-    return { unclassified, unlinked, noAccount, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
-  }, [rows, settlements, providers, settlementAllocations]);
+    return { unclassified, unlinked, noAccount, histNoAccount, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
+  }, [rows, settlements, providers, settlementAllocations, accountingStartDate]);
+
 
 
 
