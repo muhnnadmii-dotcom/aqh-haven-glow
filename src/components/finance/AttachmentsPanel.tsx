@@ -96,9 +96,13 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage, linkedRefs
         <div className="text-[12px] font-semibold flex items-center gap-1.5"><Paperclip size={13} /> المرفقات</div>
         {canManage && (
           <div className="flex items-center gap-2">
-            <select value={type} onChange={(e) => setType(e.target.value)} className="px-2 py-1 rounded bg-background/60 border border-white/10 text-[11px]">
-              {ATTACHMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            {fixedType ? (
+              <span className="px-2 py-1 rounded bg-background/60 border border-white/10 text-[11px] text-muted-foreground">{fixedType}</span>
+            ) : (
+              <select value={type} onChange={(e) => setType(e.target.value)} className="px-2 py-1 rounded bg-background/60 border border-white/10 text-[11px]">
+                {ATTACHMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            )}
             <label className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold/15 border border-gold/30 text-gold text-[11px] cursor-pointer hover:bg-gold/25">
               <Upload size={11} /> {uploading ? "..." : "رفع"}
               <input type="file" hidden multiple onChange={onPick} disabled={uploading} accept={ACCEPT} />
