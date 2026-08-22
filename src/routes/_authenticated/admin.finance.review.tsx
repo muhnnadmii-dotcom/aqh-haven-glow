@@ -186,7 +186,11 @@ function ReviewCenter() {
 
   // Flags per row
   const flags = (r: Row) => {
-    const isUnclassified = r.accounting_status === "unclassified" || !r.transaction_type || r.business_relation === "unclassified";
+    const isUnclassified =
+      r.accounting_status === "unclassified" ||
+      !r.transaction_type ||
+      r.transaction_type === "unclassified_incoming" ||
+      r.transaction_type === "unclassified_outgoing";
     const noAccount = !r.account_id;
     const noAttachment = r.attachment_status === "not_attached";
     const personalNeedsReview = r.account_type === "personal" && r.internal_review_status !== "reviewed";
@@ -198,11 +202,14 @@ function ReviewCenter() {
     const missingParty = r.kind === "income"
       ? (r.transaction_type === "customer_invoice_collection" && !r.customer_id)
       : (r.transaction_type === "supplier_invoice_payment" && !r.supplier_id);
+    const completelyUnlinked = r.kind === "income"
+      ? (r.transaction_type === "customer_invoice_collection" && !r.sales_invoice_id && !r.customer_id)
+      : (r.transaction_type === "supplier_invoice_payment" && !r.purchase_invoice_id && !r.supplier_id);
     const pm = providerMatch(r);
     const unlinkedProviderSettlement = r.kind === "income" && !!pm && !r.settlement_id;
     const isSplitChild = !!r.split_parent_id;
     const isCompleted = r.internal_review_status === "reviewed" && r.accounting_status === "reviewed";
-    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
+    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, completelyUnlinked, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
   };
 
 
