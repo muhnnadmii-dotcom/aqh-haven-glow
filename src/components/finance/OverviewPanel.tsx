@@ -39,6 +39,7 @@ export function OverviewPanel({ from, to }: { from: string; to: string }) {
   const [error, setError] = useState<string | null>(null);
   const [fin, setFin] = useState<DrawerSpec | null>(null);
   const [sales, setSales] = useState<SalesDrillSpec | null>(null);
+  const [taxAlerts, setTaxAlerts] = useState<ProviderTaxInvoiceAlerts | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -46,8 +47,14 @@ export function OverviewPanel({ from, to }: { from: string; to: string }) {
       setLoading(true);
       setError(null);
       try {
-        const d = await fetchFinanceOverview(from, to);
-        if (alive) setData(d);
+        const [d, alerts] = await Promise.all([
+          fetchFinanceOverview(from, to),
+          fetchProviderTaxInvoiceAlerts().catch(() => null),
+        ]);
+        if (alive) {
+          setData(d);
+          setTaxAlerts(alerts);
+        }
       } catch (e: any) {
         if (alive) setError(e?.message ?? "تعذر تحميل البيانات");
       } finally {
