@@ -247,6 +247,7 @@ function ReviewCenter() {
       if (chip === "unclassified" && !f.isUnclassified) return false;
       if (chip === "unlinked" && !f.completelyUnlinked) return false;
       if (chip === "no_account" && !f.noAccount) return false;
+      if (chip === "historical_no_account" && !f.historicalNoAccount) return false;
       if (chip === "no_attach" && !f.noAttachment) return false;
       if (chip === "personal" && !f.personalNeedsReview) return false;
       if (chip === "transfer" && !f.transferMissingCounterpart) return false;
