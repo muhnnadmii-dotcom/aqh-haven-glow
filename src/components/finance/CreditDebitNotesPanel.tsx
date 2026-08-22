@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Trash2, X, FileMinus, FilePlus, Loader2, Lock, Ban, CheckCircle2 } from "lucide-react";
 import { useFinanceRoles } from "@/lib/finance/use-finance-roles";
+import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
 
 type Kind = "sales" | "purchase";
 export type NoteType = "sales_credit_note" | "sales_debit_note" | "purchase_credit_note" | "purchase_debit_note";
