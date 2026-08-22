@@ -27,7 +27,7 @@ export const ATTACHMENT_STATUS = [
 ] as const;
 
 export const ATTACHMENT_TYPES = [
-  "فاتورة", "صورة تحويل", "إيصال", "كشف حساب", "ملف تسوية", "أخرى",
+  "فاتورة", "صورة تحويل", "إيصال", "كشف حساب", "ملف تسوية", "إشعار دائن", "إشعار مدين", "أخرى",
 ];
 
 export function labelOf<T extends readonly { value: string; label: string }[]>(
