@@ -10,6 +10,12 @@ import {
 import { FinanceRowsDrawer, type DrawerSpec } from "./FinanceRowsDrawer";
 import { SalesRowsDrawer, type SalesDrillSpec } from "./SalesRowsDrawer";
 import {
+  fetchProviderTaxInvoiceAlerts,
+  PROVIDER_TAX_ALERT_LABEL,
+  type ProviderTaxInvoiceAlerts,
+  type ProviderTaxAlertRow,
+} from "@/lib/finance/provider-tax-invoices";
+import {
   Wallet,
   TrendingUp,
   Banknote,
