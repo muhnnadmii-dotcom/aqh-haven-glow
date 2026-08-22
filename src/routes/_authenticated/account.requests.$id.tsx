@@ -69,7 +69,12 @@ function CustomerRequestDetail() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setNotFound(true); setLoading(false); return; }
 
-    const r = await supabase.from("service_requests").select("*").eq("id", id).eq("user_id", user.id).maybeSingle();
+    const r = await supabase
+      .from("service_requests")
+      .select("id, type, status, name, phone, city, details, customer_notes, preferred_times, attachments, created_at, updated_at, user_id")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
     if (!r.data) { setNotFound(true); setLoading(false); return; }
     const reqRow = r.data as unknown as Req;
     setReq(reqRow);
