@@ -76,3 +76,30 @@ export const PROVIDER_TAX_ALERT_LABEL: Record<ProviderTaxAlertStatus, string> = 
   unreconciled: "الفاتورة تحتاج مطابقة مع التسويات",
   awaiting_issue: "بانتظار الإصدار",
 };
+
+export type CreateProviderFeeDraftResult = {
+  created: boolean;
+  dry_run?: boolean;
+  invoice_id?: number | string | null;
+  internal_reference?: string | null;
+  status?: string | null;
+  message?: string | null;
+};
+
+/** ينشئ (أو يفتح) مسودة فاتورة رسوم شهرية لمزود دفع. لا اعتماد ولا دفع. */
+export async function createProviderFeeInvoiceDraft(
+  providerId: string,
+  feeMonth: string, // YYYY-MM
+  dryRun = false,
+): Promise<CreateProviderFeeDraftResult> {
+  const { data, error } = await (supabase as any).rpc(
+    "create_provider_fee_invoice_draft",
+    {
+      p_provider_id: providerId,
+      p_fee_month: /^\d{4}-\d{2}$/.test(feeMonth) ? `${feeMonth}-01` : feeMonth,
+      p_dry_run: dryRun,
+    },
+  );
+  if (error) throw error;
+  return (data ?? {}) as CreateProviderFeeDraftResult;
+}
