@@ -194,6 +194,59 @@ export function OverviewPanel({ from, to }: { from: string; to: string }) {
         </Link>
       )}
 
+      {/* Provider tax invoice alerts */}
+      {taxAlerts && taxAlerts.action_required_count > 0 && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-[13px] font-semibold text-red-200">
+              <AlertTriangle className="h-4 w-4" />
+              فواتير ضريبية للبوابات تحتاج إجراء
+            </div>
+            <div className="text-[12px] text-red-100/80">{taxAlerts.action_required_count} حالة</div>
+          </div>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+            <CountPill label="فاتورة الشهر غير مسجلة" count={taxAlerts.missing_invoice_count} />
+            <CountPill label="ملف PDF مفقود" count={taxAlerts.missing_attachment_count} />
+            <CountPill label="تحتاج مطابقة مع التسويات" count={taxAlerts.unreconciled_count} />
+          </div>
+          <div className="mt-3 space-y-2">
+            {taxAlerts.rows
+              .filter((r) => r.alert_status !== "awaiting_issue")
+              .map((r, i) => (
+                <ProviderAlertRow key={`${r.provider_id}-${r.fee_month}-${r.alert_status}-${i}`} r={r} />
+              ))}
+          </div>
+        </div>
+      )}
+
+      {taxAlerts && taxAlerts.waiting_count > 0 && (
+        <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-[13px] font-semibold text-sky-200">
+              <Info className="h-4 w-4" />
+              فواتير الشهر بانتظار الإصدار
+            </div>
+            <div className="text-[12px] text-sky-100/80">{taxAlerts.waiting_count} بوابة</div>
+          </div>
+          <div className="mt-3 space-y-1 text-[11px]">
+            {taxAlerts.rows
+              .filter((r) => r.alert_status === "awaiting_issue")
+              .map((r, i) => (
+                <div
+                  key={`${r.provider_id}-${r.fee_month}-w-${i}`}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-sky-500/20 bg-black/20 px-3 py-2"
+                >
+                  <span className="text-sky-100">{r.provider_name} · شهر {r.fee_month}</span>
+                  <span className="font-mono text-sky-100/80">
+                    الموعد {r.due_date ?? "—"} · {r.settlement_count} تسوية
+                  </span>
+                </div>
+              ))}
+          </div>
+          <div className="mt-2 text-[10px] text-sky-100/70">لا يُحتسب كخطأ؛ ضمن المهلة المسموحة للإصدار.</div>
+        </div>
+      )}
+
 
       {/* Secondary */}
 
