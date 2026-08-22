@@ -142,6 +142,11 @@ function ReviewCenter() {
     queryKey: ["review_settlement_allocations"],
     queryFn: async () => ((await supabase.from("settlement_bank_allocations" as any).select("settlement_id, difference_amount, difference_type, difference_note, status").eq("status", "confirmed").limit(2000)).data as any[]) ?? [],
   });
+  const { data: providerTaxAlerts } = useQuery({
+    queryKey: ["review_provider_tax_alerts"],
+    queryFn: () => fetchProviderTaxInvoiceAlerts(),
+  });
+
 
 
   const rows: Row[] = useMemo(() => {
