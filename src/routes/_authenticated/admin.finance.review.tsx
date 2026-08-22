@@ -358,6 +358,7 @@ function ReviewCenter() {
         <KpiChip label="غير مصنف" count={kpis.unclassified} active={chip === "unclassified"} onClick={() => setChip("unclassified")} tone="amber" icon={AlertCircle} />
         <KpiChip label="بلا فاتورة ولا طرف" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
         <KpiChip label="بدون حساب مالي" count={kpis.noAccount} active={chip === "no_account"} onClick={() => setChip("no_account")} tone="cyan" icon={Building} />
+        <KpiChip label="حركات تاريخية بلا حساب" count={kpis.histNoAccount} active={chip === "historical_no_account"} onClick={() => setChip("historical_no_account")} tone="blue" icon={History} />
         <KpiChip label="بوابات دفع بدون تسوية" count={kpis.providerUnlinked} active={chip === "provider_unlinked"} onClick={() => setChip("provider_unlinked")} tone="rose" icon={Landmark} />
         <KpiChip label="بدون مرفق" count={kpis.noAttach} active={chip === "no_attach"} onClick={() => setChip("no_attach")} tone="orange" icon={Paperclip} />
         <KpiChip label="حساب شخصي بلا مراجعة" count={kpis.personal} active={chip === "personal"} onClick={() => setChip("personal")} tone="purple" icon={User} />
