@@ -5174,6 +5174,14 @@ export type Database = {
         }
         Returns: Json
       }
+      create_provider_fee_invoice_draft: {
+        Args: {
+          p_dry_run?: boolean
+          p_fee_month: string
+          p_provider_id: string
+        }
+        Returns: Json
+      }
       delete_settlement_full: {
         Args: { _reason: string; _settlement_id: string }
         Returns: Json
