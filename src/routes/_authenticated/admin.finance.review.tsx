@@ -270,11 +270,12 @@ function ReviewCenter() {
 
   // KPI counts
   const kpis = useMemo(() => {
-    let unclassified = 0, unlinked = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
+    let unclassified = 0, unlinked = 0, noAccount = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
     rows.forEach((r) => {
       const f = flags(r);
       if (f.isUnclassified) unclassified++;
-      if (f.unlinkedInvoice || f.noAccount || f.missingParty) unlinked++;
+      if (f.completelyUnlinked) unlinked++;
+      if (f.noAccount) noAccount++;
       if (f.noAttachment) noAttach++;
       if (f.personalNeedsReview) personal++;
       if (f.transferMissingCounterpart) transfer++;
