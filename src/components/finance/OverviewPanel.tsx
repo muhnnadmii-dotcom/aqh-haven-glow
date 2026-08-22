@@ -15,6 +15,7 @@ import {
   type ProviderTaxInvoiceAlerts,
   type ProviderTaxAlertRow,
 } from "@/lib/finance/provider-tax-invoices";
+import { ProviderFeeDraftButton, ProviderUnreconciledDetails } from "@/components/finance/ProviderTaxAlertExtras";
 import {
   Wallet,
   TrendingUp,
