@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Inbox, X, Paperclip, CheckCircle2, User, Building, Link2, AlertCircle, ArrowLeftRight, Info, Split, Landmark, TrendingDown } from "lucide-react";
+import { Loader2, Inbox, X, Paperclip, CheckCircle2, User, Building, Link2, AlertCircle, ArrowLeftRight, Info, Split, Landmark, TrendingDown, History } from "lucide-react";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
