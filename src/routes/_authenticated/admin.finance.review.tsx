@@ -199,7 +199,9 @@ function ReviewCenter() {
       !r.transaction_type ||
       r.transaction_type === "unclassified_incoming" ||
       r.transaction_type === "unclassified_outgoing";
-    const noAccount = !r.account_id;
+    const isHistorical = !!accountingStartDate && !!r.date && r.date < accountingStartDate;
+    const noAccount = !r.account_id && !isHistorical;
+    const historicalNoAccount = !r.account_id && isHistorical;
     const noAttachment = r.attachment_status === "not_attached";
     const personalNeedsReview = r.account_type === "personal" && r.internal_review_status !== "reviewed";
     const isTransferType = r.transaction_type === "internal_transfer_in" || r.transaction_type === "internal_transfer_out";
