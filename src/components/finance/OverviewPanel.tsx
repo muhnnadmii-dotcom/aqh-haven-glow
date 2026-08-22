@@ -15,6 +15,7 @@ import {
   type ProviderTaxInvoiceAlerts,
   type ProviderTaxAlertRow,
 } from "@/lib/finance/provider-tax-invoices";
+import { ProviderFeeDraftButton, ProviderUnreconciledDetails } from "@/components/finance/ProviderTaxAlertExtras";
 import {
   Wallet,
   TrendingUp,
@@ -618,34 +619,38 @@ function CountPill({ label, count }: { label: string; count: number }) {
 
 function ProviderAlertRow({ r }: { r: ProviderTaxAlertRow }) {
   return (
-    <Link
-      to="/admin/finance/purchase-invoices"
-      search={{ month: r.fee_month, sup: r.supplier_id ?? "" } as any}
-      className="block rounded-lg border border-red-500/20 bg-black/20 px-3 py-2 transition hover:bg-black/40"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
-        <span className="font-semibold text-red-100">
-          {r.provider_name} · شهر {r.fee_month}
-        </span>
-        <span className="text-red-200/90">{PROVIDER_TAX_ALERT_LABEL[r.alert_status]}</span>
-      </div>
-      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-red-100/70 font-mono">
-        <span>{r.settlement_count} تسوية</span>
-        {r.alert_status === "missing_invoice" && (
-          <>
-            <span>رسوم التسويات {num(r.settlement_fee_amount)}</span>
-            <span>ضريبة التسويات {num(r.settlement_vat_amount)}</span>
-          </>
-        )}
-        {r.alert_status === "unreconciled" && <span>غير مسوّى {num(r.unreconciled_amount)}</span>}
-        {r.alert_status === "missing_attachment" && <span>{r.missing_attachment_count} فاتورة بلا مرفق</span>}
-      </div>
-      {r.alert_status === "missing_invoice" && (
-        <div className="mt-1 text-[10px] text-red-100/60">
-          أرقام التسويات للمرجع فقط وليست بديلًا عن الفاتورة الضريبية الأصلية من البوابة.
+    <div className="rounded-lg border border-red-500/20 bg-black/20 px-3 py-2">
+      <Link
+        to="/admin/finance/purchase-invoices"
+        search={{ month: r.fee_month, sup: r.supplier_id ?? "" } as any}
+        className="block transition hover:opacity-80"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
+          <span className="font-semibold text-red-100">
+            {r.provider_name} · شهر {r.fee_month}
+          </span>
+          <span className="text-red-200/90">{PROVIDER_TAX_ALERT_LABEL[r.alert_status]}</span>
         </div>
-      )}
-    </Link>
+        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-red-100/70 font-mono">
+          <span>{r.settlement_count} تسوية</span>
+          {r.alert_status === "missing_invoice" && (
+            <>
+              <span>رسوم التسويات {num(r.settlement_fee_amount)}</span>
+              <span>ضريبة التسويات {num(r.settlement_vat_amount)}</span>
+            </>
+          )}
+          {r.alert_status === "unreconciled" && <span>غير مسوّى {num(r.unreconciled_amount)}</span>}
+          {r.alert_status === "missing_attachment" && <span>{r.missing_attachment_count} فاتورة بلا مرفق</span>}
+        </div>
+        {r.alert_status === "missing_invoice" && (
+          <div className="mt-1 text-[10px] text-red-100/60">
+            أرقام التسويات للمرجع فقط وليست بديلًا عن الفاتورة الضريبية الأصلية من البوابة.
+          </div>
+        )}
+      </Link>
+      <ProviderFeeDraftButton row={r} />
+      <ProviderUnreconciledDetails row={r} />
+    </div>
   );
 }
 

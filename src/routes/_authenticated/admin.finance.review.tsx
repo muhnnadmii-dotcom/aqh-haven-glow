@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { fetchProviderTaxInvoiceAlerts, PROVIDER_TAX_ALERT_LABEL } from "@/lib/finance/provider-tax-invoices";
+import { ProviderFeeDraftButton, ProviderUnreconciledDetails } from "@/components/finance/ProviderTaxAlertExtras";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -395,33 +396,39 @@ function ReviewCenter() {
                 {providerTaxAlerts.rows
                   .filter((r) => r.alert_status !== "awaiting_issue")
                   .map((r, i) => (
-                    <Link
+                    <div
                       key={`${r.provider_id}-${r.fee_month}-${r.alert_status}-${i}`}
-                      to="/admin/finance/purchase-invoices"
-                      search={{ month: r.fee_month, sup: r.supplier_id ?? "" } as any}
-                      className="block rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs hover:bg-black/40 transition"
+                      className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-semibold">{r.provider_name} · شهر {r.fee_month}</span>
-                        <span className="text-amber-300">{PROVIDER_TAX_ALERT_LABEL[r.alert_status]}</span>
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground tabular-nums">
-                        <span>{r.settlement_count} تسوية</span>
-                        {r.alert_status === "missing_invoice" && (
-                          <>
-                            <span>رسوم {Number(r.settlement_fee_amount).toFixed(2)}</span>
-                            <span>ضريبة {Number(r.settlement_vat_amount).toFixed(2)}</span>
-                          </>
-                        )}
-                        {r.alert_status === "unreconciled" && <span>غير مسوّى {Number(r.unreconciled_amount).toFixed(2)}</span>}
-                        {r.alert_status === "missing_attachment" && <span>{r.missing_attachment_count} بلا مرفق</span>}
-                      </div>
-                      {r.alert_status === "missing_invoice" && (
-                        <div className="mt-1 text-[10px] text-muted-foreground">
-                          أرقام التسويات للمرجع فقط وليست بديلًا عن الفاتورة الضريبية الأصلية.
+                      <Link
+                        to="/admin/finance/purchase-invoices"
+                        search={{ month: r.fee_month, sup: r.supplier_id ?? "" } as any}
+                        className="block hover:opacity-80 transition"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-semibold">{r.provider_name} · شهر {r.fee_month}</span>
+                          <span className="text-amber-300">{PROVIDER_TAX_ALERT_LABEL[r.alert_status]}</span>
                         </div>
-                      )}
-                    </Link>
+                        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground tabular-nums">
+                          <span>{r.settlement_count} تسوية</span>
+                          {r.alert_status === "missing_invoice" && (
+                            <>
+                              <span>رسوم {Number(r.settlement_fee_amount).toFixed(2)}</span>
+                              <span>ضريبة {Number(r.settlement_vat_amount).toFixed(2)}</span>
+                            </>
+                          )}
+                          {r.alert_status === "unreconciled" && <span>غير مسوّى {Number(r.unreconciled_amount).toFixed(2)}</span>}
+                          {r.alert_status === "missing_attachment" && <span>{r.missing_attachment_count} بلا مرفق</span>}
+                        </div>
+                        {r.alert_status === "missing_invoice" && (
+                          <div className="mt-1 text-[10px] text-muted-foreground">
+                            أرقام التسويات للمرجع فقط وليست بديلًا عن الفاتورة الضريبية الأصلية.
+                          </div>
+                        )}
+                      </Link>
+                      <ProviderFeeDraftButton row={r} />
+                      <ProviderUnreconciledDetails row={r} />
+                    </div>
                   ))}
               </div>
             </>
