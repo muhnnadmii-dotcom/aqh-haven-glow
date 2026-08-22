@@ -148,6 +148,13 @@ function ReviewCenter() {
     queryKey: ["review_provider_tax_alerts"],
     queryFn: () => fetchProviderTaxInvoiceAlerts(),
   });
+  const { data: accountingStartDate = null } = useQuery({
+    queryKey: ["accounting_settings_start_date"],
+    queryFn: async () => {
+      const { data } = await supabase.from("accounting_settings").select("accounting_start_date").eq("id", 1).maybeSingle();
+      return (data?.accounting_start_date as string | null) ?? null;
+    },
+  });
 
 
 
