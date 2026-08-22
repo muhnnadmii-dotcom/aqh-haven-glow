@@ -5776,6 +5776,7 @@ export type Database = {
         | "supplier"
         | "quote"
         | "purchase_invoice"
+        | "credit_debit_note"
       finance_transaction_direction: "incoming" | "outgoing"
       journal_entry_status: "draft" | "posted" | "reversed"
       journal_source_type:
@@ -6149,6 +6150,7 @@ export const Constants = {
         "supplier",
         "quote",
         "purchase_invoice",
+        "credit_debit_note",
       ],
       finance_transaction_direction: ["incoming", "outgoing"],
       journal_entry_status: ["draft", "posted", "reversed"],

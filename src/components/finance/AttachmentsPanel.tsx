@@ -8,18 +8,18 @@ type Att = { id: string; file_url: string; file_name: string; file_type: string 
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.csv";
 
-export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote" | "purchase_invoice";
-const isBigintRelated = (t: FinanceAttachRelatedType) => t === "purchase_invoice";
+export type FinanceAttachRelatedType = "income" | "expense" | "supplier" | "quote" | "purchase_invoice" | "credit_debit_note";
+const isBigintRelated = (t: FinanceAttachRelatedType) => t === "purchase_invoice" || t === "credit_debit_note";
 
 export type LinkedRef = { relatedType: FinanceAttachRelatedType; relatedId: string };
 
-export function AttachmentsPanel({ relatedType, relatedId, canManage, linkedRefs = [] }: { relatedType: FinanceAttachRelatedType; relatedId: string; canManage: boolean; linkedRefs?: LinkedRef[] }) {
+export function AttachmentsPanel({ relatedType, relatedId, canManage, linkedRefs = [], fixedType }: { relatedType: FinanceAttachRelatedType; relatedId: string; canManage: boolean; linkedRefs?: LinkedRef[]; fixedType?: string }) {
   const [rows, setRows] = useState<Att[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [type, setType] = useState(ATTACHMENT_TYPES[0]);
+  const [type, setType] = useState(fixedType ?? ATTACHMENT_TYPES[0]);
   const [dragOver, setDragOver] = useState(false);
   const typeRef = useRef(type);
-  useEffect(() => { typeRef.current = type; }, [type]);
+  useEffect(() => { typeRef.current = fixedType ?? type; }, [type, fixedType]);
 
   const uploadFiles = async (files: File[]) => {
     if (!files.length) return;
@@ -96,9 +96,13 @@ export function AttachmentsPanel({ relatedType, relatedId, canManage, linkedRefs
         <div className="text-[12px] font-semibold flex items-center gap-1.5"><Paperclip size={13} /> المرفقات</div>
         {canManage && (
           <div className="flex items-center gap-2">
-            <select value={type} onChange={(e) => setType(e.target.value)} className="px-2 py-1 rounded bg-background/60 border border-white/10 text-[11px]">
-              {ATTACHMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            {fixedType ? (
+              <span className="px-2 py-1 rounded bg-background/60 border border-white/10 text-[11px] text-muted-foreground">{fixedType}</span>
+            ) : (
+              <select value={type} onChange={(e) => setType(e.target.value)} className="px-2 py-1 rounded bg-background/60 border border-white/10 text-[11px]">
+                {ATTACHMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            )}
             <label className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gold/15 border border-gold/30 text-gold text-[11px] cursor-pointer hover:bg-gold/25">
               <Upload size={11} /> {uploading ? "..." : "رفع"}
               <input type="file" hidden multiple onChange={onPick} disabled={uploading} accept={ACCEPT} />

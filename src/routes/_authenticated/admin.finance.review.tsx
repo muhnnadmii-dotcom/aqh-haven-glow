@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Inbox, X, Paperclip, CheckCircle2, User, Building, Link2, AlertCircle, ArrowLeftRight, Info, Split, Landmark, TrendingDown } from "lucide-react";
+import { Loader2, Inbox, X, Paperclip, CheckCircle2, User, Building, Link2, AlertCircle, ArrowLeftRight, Info, Split, Landmark, TrendingDown, History } from "lucide-react";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { AttachmentsPanel } from "@/components/finance/AttachmentsPanel";
@@ -148,6 +148,13 @@ function ReviewCenter() {
     queryKey: ["review_provider_tax_alerts"],
     queryFn: () => fetchProviderTaxInvoiceAlerts(),
   });
+  const { data: accountingStartDate = null } = useQuery({
+    queryKey: ["accounting_settings_start_date"],
+    queryFn: async () => {
+      const { data } = await supabase.from("accounting_settings").select("accounting_start_date").eq("id", 1).maybeSingle();
+      return (data?.accounting_start_date as string | null) ?? null;
+    },
+  });
 
 
 
@@ -192,7 +199,9 @@ function ReviewCenter() {
       !r.transaction_type ||
       r.transaction_type === "unclassified_incoming" ||
       r.transaction_type === "unclassified_outgoing";
-    const noAccount = !r.account_id;
+    const isHistorical = !!accountingStartDate && !!r.date && r.date < accountingStartDate;
+    const noAccount = !r.account_id && !isHistorical;
+    const historicalNoAccount = !r.account_id && isHistorical;
     const noAttachment = r.attachment_status === "not_attached";
     const personalNeedsReview = r.account_type === "personal" && r.internal_review_status !== "reviewed";
     const isTransferType = r.transaction_type === "internal_transfer_in" || r.transaction_type === "internal_transfer_out";
@@ -210,7 +219,7 @@ function ReviewCenter() {
     const unlinkedProviderSettlement = r.kind === "income" && !!pm && !r.settlement_id;
     const isSplitChild = !!r.split_parent_id;
     const isCompleted = r.internal_review_status === "reviewed" && r.accounting_status === "reviewed";
-    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, completelyUnlinked, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
+    return { isUnclassified, noAccount, historicalNoAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, completelyUnlinked, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
   };
 
 
@@ -238,6 +247,7 @@ function ReviewCenter() {
       if (chip === "unclassified" && !f.isUnclassified) return false;
       if (chip === "unlinked" && !f.completelyUnlinked) return false;
       if (chip === "no_account" && !f.noAccount) return false;
+      if (chip === "historical_no_account" && !f.historicalNoAccount) return false;
       if (chip === "no_attach" && !f.noAttachment) return false;
       if (chip === "personal" && !f.personalNeedsReview) return false;
       if (chip === "transfer" && !f.transferMissingCounterpart) return false;
@@ -267,16 +277,17 @@ function ReviewCenter() {
       }
       return true;
     });
-  }, [rows, chip, fFrom, fTo, fMonth, fDir, fType, fAccount, fAcctType, fSupplier, fCustomer, fAttach, fLinked, fSettled, fReview, q]);
+  }, [rows, chip, fFrom, fTo, fMonth, fDir, fType, fAccount, fAcctType, fSupplier, fCustomer, fAttach, fLinked, fSettled, fReview, q, accountingStartDate]);
 
   // KPI counts
   const kpis = useMemo(() => {
-    let unclassified = 0, unlinked = 0, noAccount = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
+    let unclassified = 0, unlinked = 0, noAccount = 0, histNoAccount = 0, noAttach = 0, personal = 0, transfer = 0, providerUnlinked = 0, completed = 0;
     rows.forEach((r) => {
       const f = flags(r);
       if (f.isUnclassified) unclassified++;
       if (f.completelyUnlinked) unlinked++;
       if (f.noAccount) noAccount++;
+      if (f.historicalNoAccount) histNoAccount++;
       if (f.noAttachment) noAttach++;
       if (f.personalNeedsReview) personal++;
       if (f.transferMissingCounterpart) transfer++;
@@ -297,8 +308,9 @@ function ReviewCenter() {
       });
 
     });
-    return { unclassified, unlinked, noAccount, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
-  }, [rows, settlements, providers, settlementAllocations]);
+    return { unclassified, unlinked, noAccount, histNoAccount, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
+  }, [rows, settlements, providers, settlementAllocations, accountingStartDate]);
+
 
 
 
@@ -346,6 +358,7 @@ function ReviewCenter() {
         <KpiChip label="غير مصنف" count={kpis.unclassified} active={chip === "unclassified"} onClick={() => setChip("unclassified")} tone="amber" icon={AlertCircle} />
         <KpiChip label="بلا فاتورة ولا طرف" count={kpis.unlinked} active={chip === "unlinked"} onClick={() => setChip("unlinked")} tone="blue" icon={Link2} />
         <KpiChip label="بدون حساب مالي" count={kpis.noAccount} active={chip === "no_account"} onClick={() => setChip("no_account")} tone="cyan" icon={Building} />
+        <KpiChip label="حركات تاريخية بلا حساب" count={kpis.histNoAccount} active={chip === "historical_no_account"} onClick={() => setChip("historical_no_account")} tone="blue" icon={History} />
         <KpiChip label="بوابات دفع بدون تسوية" count={kpis.providerUnlinked} active={chip === "provider_unlinked"} onClick={() => setChip("provider_unlinked")} tone="rose" icon={Landmark} />
         <KpiChip label="بدون مرفق" count={kpis.noAttach} active={chip === "no_attach"} onClick={() => setChip("no_attach")} tone="orange" icon={Paperclip} />
         <KpiChip label="حساب شخصي بلا مراجعة" count={kpis.personal} active={chip === "personal"} onClick={() => setChip("personal")} tone="purple" icon={User} />
