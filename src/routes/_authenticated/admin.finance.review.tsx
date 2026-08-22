@@ -219,7 +219,7 @@ function ReviewCenter() {
     const unlinkedProviderSettlement = r.kind === "income" && !!pm && !r.settlement_id;
     const isSplitChild = !!r.split_parent_id;
     const isCompleted = r.internal_review_status === "reviewed" && r.accounting_status === "reviewed";
-    return { isUnclassified, noAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, completelyUnlinked, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
+    return { isUnclassified, noAccount, historicalNoAccount, noAttachment, personalNeedsReview, transferMissingCounterpart, unlinkedInvoice, missingParty, completelyUnlinked, unlinkedProviderSettlement, isSplitChild, isCompleted, providerName: pm?.name ?? null };
   };
 
 
