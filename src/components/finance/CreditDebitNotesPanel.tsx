@@ -566,6 +566,13 @@ export function ViewNoteDialog({ noteId, onClose, onChanged }: { noteId: number;
           ))}
         </div>
 
+        <AttachmentsPanel
+          relatedType="credit_debit_note"
+          relatedId={String(noteId)}
+          canManage={roles.canManage}
+          fixedType={note.note_type.endsWith("credit_note") ? "إشعار دائن" : "إشعار مدين"}
+        />
+
 
         <div className="overflow-x-auto rounded-lg border border-white/10">
           <table className="w-full text-[12px] min-w-[560px]">
