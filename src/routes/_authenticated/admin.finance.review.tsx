@@ -296,7 +296,7 @@ function ReviewCenter() {
       });
 
     });
-    return { unclassified, unlinked, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
+    return { unclassified, unlinked, noAccount, noAttach, personal, transfer, providerUnlinked, completed, settlementDiffs };
   }, [rows, settlements, providers, settlementAllocations]);
 
 
